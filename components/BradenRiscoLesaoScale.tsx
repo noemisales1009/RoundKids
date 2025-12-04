@@ -44,13 +44,13 @@ const escalasConfig = {
         opcoes: scoreOptions1_4,
         interpreta: (score: number) => interpretarBraden(score, 'Braden (Adulto)'),
         cores: { 
-            bg: 'bg-orange-600', 
-            hover: 'hover:bg-orange-500', 
-            text: 'text-orange-300', 
-            bgProgress: 'bg-orange-500', 
-            bgBase: 'bg-orange-700', 
-            hoverBase: 'hover:bg-orange-600',
-            border: 'border-orange-500'
+            bg: 'bg-orange-600 dark:bg-orange-600', 
+            hover: 'hover:bg-orange-500 dark:hover:bg-orange-500', 
+            text: 'text-orange-300 dark:text-orange-300', 
+            bgProgress: 'bg-orange-500 dark:bg-orange-500', 
+            bgBase: 'bg-orange-700 dark:bg-orange-700', 
+            hoverBase: 'hover:bg-orange-600 dark:hover:bg-orange-600',
+            border: 'border-orange-500 dark:border-orange-500'
         },
         itens: [
             { 
@@ -107,13 +107,13 @@ const escalasConfig = {
         opcoes: scoreOptions1_4,
         interpreta: (score: number) => interpretarBraden(score, 'Braden Q'),
         cores: { 
-            bg: 'bg-pink-600', 
-            hover: 'hover:bg-pink-500', 
-            text: 'text-pink-300', 
-            bgProgress: 'bg-pink-500', 
-            bgBase: 'bg-pink-700', 
-            hoverBase: 'hover:bg-pink-600',
-            border: 'border-pink-500'
+            bg: 'bg-pink-600 dark:bg-pink-600', 
+            hover: 'hover:bg-pink-500 dark:hover:bg-pink-500', 
+            text: 'text-pink-300 dark:text-pink-300', 
+            bgProgress: 'bg-pink-500 dark:bg-pink-500', 
+            bgBase: 'bg-pink-700 dark:bg-pink-700', 
+            hoverBase: 'hover:bg-pink-600 dark:hover:bg-pink-600',
+            border: 'border-pink-500 dark:border-pink-500'
         },
         itens: [
             { 
@@ -177,13 +177,13 @@ const escalasConfig = {
         opcoes: scoreOptions1_4,
         interpreta: (score: number) => interpretarBraden(score, 'Braden Q Ampliada'),
         cores: { 
-            bg: 'bg-teal-600', 
-            hover: 'hover:bg-teal-500', 
-            text: 'text-teal-300', 
-            bgProgress: 'bg-teal-500', 
-            bgBase: 'bg-teal-700', 
-            hoverBase: 'hover:bg-teal-600',
-            border: 'border-teal-500'
+            bg: 'bg-teal-600 dark:bg-teal-600', 
+            hover: 'hover:bg-teal-500 dark:hover:bg-teal-500', 
+            text: 'text-teal-300 dark:text-teal-300', 
+            bgProgress: 'bg-teal-500 dark:bg-teal-500', 
+            bgBase: 'bg-teal-700 dark:bg-teal-700', 
+            hoverBase: 'hover:bg-teal-600 dark:hover:bg-teal-600',
+            border: 'border-teal-500 dark:border-teal-500'
         },
         itens: [
             { 
