@@ -36,8 +36,8 @@ const interpretarBraden = (score: number, scaleTitle: string) => {
 const escalasConfig = {
     // --- Braden (Adulto > 8 anos) ---
     braden: {
-        titulo: 'Braden (Adulto)',
-        nomeCompleto: 'Escala de Braden (Enfermaria)',
+        titulo: 'Braden',
+        nomeCompleto: 'Escala de Braden',
         idade: 'Maiores de 8 anos',
         tipo: 'score',
         totalMax: 23,
@@ -97,10 +97,10 @@ const escalasConfig = {
             },
         ],
     },
-    // --- Braden Q (Pediátrica PADRÃO) ---
+    // --- Braden Q (Enfermaria) ---
     bradenq: {
-        titulo: 'Braden Q (Pediátrica)',
-        nomeCompleto: 'Braden Q (Enfermaria e UTI)',
+        titulo: 'Braden Q',
+        nomeCompleto: 'Braden Q (Enfermaria)',
         idade: '21 dias de vida a 8 anos',
         tipo: 'score',
         totalMax: 28,
@@ -170,7 +170,7 @@ const escalasConfig = {
     // --- Braden Q (Ampliada/Versão Completa) ---
     bradenq_ampliada: {
         titulo: 'Braden Q Ampliada',
-        nomeCompleto: 'Braden Q (UTI Neo e Ped)',
+        nomeCompleto: 'Braden Q Ampliada (UTI Neo e Pediátrica)',
         idade: '21 dias de vida a 8 anos',
         tipo: 'score',
         totalMax: 28,
@@ -464,12 +464,12 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                     >
                         <div>
                             <span className="block font-bold">{escalasConfig.braden.titulo}</span>
-                            <span className="text-xs text-orange-200">{escalasConfig.braden.idade}</span>
+                            <span className="text-xs text-orange-200">{escalasConfig.braden.nomeCompleto}</span>
                         </div>
                         <span className="text-2xl">👨</span>
                     </button>
 
-                    {/* Braden Q (Pediátrica PADRÃO) */}
+                    {/* Braden Q (Enfermaria) */}
                     <button
                         onClick={() => iniciarAvaliacao('bradenq')}
                         className="w-full bg-pink-700 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-xl shadow-md transition text-left flex justify-between items-center"
@@ -481,7 +481,7 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                         <span className="text-2xl">👧</span>
                     </button>
 
-                    {/* Braden Q AMPLIADA (Versão Completa UTI) */}
+                    {/* Braden Q Ampliada (UTI Neo e Pediátrica) */}
                     <button
                         onClick={() => iniciarAvaliacao('bradenq_ampliada')}
                         className="w-full bg-teal-700 hover:bg-teal-600 text-white font-bold py-3 px-6 rounded-xl shadow-md transition text-left flex justify-between items-center"
@@ -565,7 +565,7 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
     // 3. Tela de Resultado (RESULTADO)
     if (tela === 'resultado' && configAtual && resultadoAvaliacao) {
         return (
-            <div className="w-full max-w-2xl mx-auto p-4 bg-slate-950 min-h-screen text-gray-100 font-sans flex flex-col items-center pt-10 dark:bg-slate-950">
+            <div className="w-full max-w-md mx-auto p-4 bg-slate-950 min-h-screen text-gray-100 font-sans flex flex-col items-center pt-10 dark:bg-slate-950">
                 <div className="w-full text-left mb-6">
                     <button onClick={() => setTela('intro')} className="flex items-center text-gray-400 hover:text-white transition-colors">
                         <BackIcon />
@@ -573,41 +573,44 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                     </button>
                 </div>
 
-                <div className={`relative w-48 h-48 flex items-center justify-center mb-8`}>
+                <div className={`relative w-full flex items-center justify-center mb-8 py-12`}>
                     {/* Círculo de fundo com cor dinâmica */}
-                    <div className={`absolute inset-0 rounded-full opacity-20 ${resultadoAvaliacao.bg} blur-xl animate-pulse`}></div>
+                    <div className={`absolute inset-0 rounded-full opacity-20 ${resultadoAvaliacao.bg} blur-xl animate-pulse w-48 h-48 mx-auto`}></div>
                     <div className={`relative w-40 h-40 ${corClasses.bgBase} rounded-full border-4 ${resultadoAvaliacao.border} flex flex-col items-center justify-center shadow-2xl`}>
                         <span className="text-6xl font-black text-white">{resultadoAvaliacao.pontuacao}</span>
                         <span className="text-xs text-gray-300 uppercase tracking-widest mt-1">{configAtual.titulo}</span>
                     </div>
-                    <div className="absolute -bottom-4 bg-slate-800 px-4 py-1 rounded-full border border-slate-700 shadow-lg text-lg">
-                        Resultado
-                    </div>
                 </div>
 
-                <div className="text-center space-y-2 mb-8">
-                    <h2 className={`text-3xl font-bold ${resultadoAvaliacao.cor}`}>{resultadoAvaliacao.texto}</h2>
-                    <p className="text-gray-400 max-w-xs mx-auto">{resultadoAvaliacao.detalhe}</p>
+                <div className="text-center mb-2 -mt-6">
+                    <span className="inline-block bg-slate-800 px-4 py-1 rounded-full border border-slate-700 shadow-lg text-sm font-semibold text-gray-300">
+                        Resultado
+                    </span>
+                </div>
+
+                <div className="text-center space-y-2 mb-8 w-full">
+                    <h2 className={`text-4xl font-bold ${resultadoAvaliacao.cor}`}>{resultadoAvaliacao.texto}</h2>
+                    <p className="text-gray-400 text-sm">{resultadoAvaliacao.detalhe}</p>
                 </div>
 
                 {/* Tabela de Classificação de Risco */}
-                <div className="w-full bg-slate-900 rounded-xl p-5 border border-slate-800 space-y-4 mt-4">
-                    <h3 className="font-bold text-gray-300 border-b border-slate-800 pb-2">Classificação de Risco {configAtual.titulo}</h3>
-                    {configAtual.titulo.includes('Adulto') && (
-                        <ul className="text-sm space-y-1">
-                            <li className="flex justify-between items-center text-green-400"><span>19–23</span><span className="text-right">Sem risco</span></li>
-                            <li className="flex justify-between items-center text-yellow-400"><span>15–18</span><span className="text-right">Baixo risco</span></li>
-                            <li className="flex justify-between items-center text-orange-400"><span>13–14</span><span className="text-right">Risco moderado</span></li>
-                            <li className="flex justify-between items-center text-red-400"><span>10–12</span><span className="text-right">Alto risco</span></li>
-                            <li className="flex justify-between items-center text-red-600"><span>≤ 9</span><span className="text-right">Risco muito alto</span></li>
+                <div className="w-full bg-slate-900 rounded-xl p-5 border border-slate-800 space-y-3 mt-6">
+                    <h3 className="font-bold text-gray-300 border-b border-slate-800 pb-3 text-sm">Classificação de Risco {configAtual.titulo}</h3>
+                    {configAtual.titulo === 'Braden' && (
+                        <ul className="text-sm space-y-2">
+                            <li className="flex justify-between items-center text-green-400 hover:bg-slate-800/50 px-2 py-1 rounded"><span className="font-semibold">19–23</span><span>Sem risco</span></li>
+                            <li className="flex justify-between items-center text-yellow-400 hover:bg-slate-800/50 px-2 py-1 rounded"><span className="font-semibold">15–18</span><span>Baixo risco</span></li>
+                            <li className="flex justify-between items-center text-orange-400 hover:bg-slate-800/50 px-2 py-1 rounded"><span className="font-semibold">13–14</span><span>Risco moderado</span></li>
+                            <li className="flex justify-between items-center text-red-400 hover:bg-slate-800/50 px-2 py-1 rounded"><span className="font-semibold">10–12</span><span>Alto risco</span></li>
+                            <li className="flex justify-between items-center text-red-600 hover:bg-slate-800/50 px-2 py-1 rounded"><span className="font-semibold">≤ 9</span><span>Risco muito alto</span></li>
                         </ul>
                     )}
-                    {(configAtual.titulo.includes('Braden Q')) && (
-                        <ul className="text-sm space-y-1">
-                            <li className="flex justify-between items-center text-green-400"><span>20–28</span><span className="text-right">Sem risco</span></li>
-                            <li className="flex justify-between items-center text-yellow-400"><span>16–19</span><span className="text-right">Risco moderado</span></li>
-                            <li className="flex justify-between items-center text-red-400"><span>13–15</span><span className="text-right">Risco alto</span></li>
-                            <li className="flex justify-between items-center text-red-600"><span>≤ 12</span><span className="text-right">Risco muito alto</span></li>
+                    {configAtual.titulo.includes('Braden Q') && (
+                        <ul className="text-sm space-y-2">
+                            <li className="flex justify-between items-center text-green-400 hover:bg-slate-800/50 px-2 py-1 rounded"><span className="font-semibold">20–28</span><span>Sem risco</span></li>
+                            <li className="flex justify-between items-center text-yellow-400 hover:bg-slate-800/50 px-2 py-1 rounded"><span className="font-semibold">16–19</span><span>Risco moderado</span></li>
+                            <li className="flex justify-between items-center text-red-400 hover:bg-slate-800/50 px-2 py-1 rounded"><span className="font-semibold">13–15</span><span>Risco alto</span></li>
+                            <li className="flex justify-between items-center text-red-600 hover:bg-slate-800/50 px-2 py-1 rounded"><span className="font-semibold">≤ 12</span><span>Risco muito alto</span></li>
                         </ul>
                     )}
                 </div>
