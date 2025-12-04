@@ -197,6 +197,12 @@ const AppLayout: React.FC = () => {
                         <div className="max-w-4xl mx-auto">
                             <Outlet />
                         </div>
+                        {/* Footer with Credits */}
+                        <div className="mt-12 pt-6 border-t border-slate-200 dark:border-slate-800">
+                            <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+                                Idealizado por Dra. Lélia Braga / Criado por Noemi Sales
+                            </p>
+                        </div>
                     </main>
                 </div>
             </div>
