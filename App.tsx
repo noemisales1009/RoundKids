@@ -3600,6 +3600,7 @@ const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
 const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User>(INITIAL_USER);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const loadUser = async () => {
@@ -3634,6 +3635,7 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 // No session available - user is logged out
                 // Don't load stale user data from localStorage
             }
+            setIsLoading(false);
         };
         loadUser();
     }, []);
@@ -3661,7 +3663,7 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     };
 
     return (
-        <UserContext.Provider value={{ user, updateUser }}>
+        <UserContext.Provider value={{ user, updateUser, isLoading }}>
             {children}
         </UserContext.Provider>
     );

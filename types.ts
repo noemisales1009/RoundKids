@@ -185,6 +185,7 @@ export interface NotificationContextType {
 export interface UserContextType {
   user: User;
   updateUser: (userData: Partial<User>) => void;
+  isLoading: boolean;
 }
 
 export interface ThemeContextType {
