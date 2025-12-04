@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useContext } from 'react';
 import { supabase } from '../supabaseClient';
-import { PatientsContext } from '../contexts';
+import { PatientsContext, ThemeContext } from '../contexts';
 
 // ==========================================
 // 🛏️ CONFIGURAÇÃO DAS ESCALAS DE RISCO DE LESÃO
@@ -262,7 +262,7 @@ const SaveIcon = () => (
 );
 
 // Componente Card de Pergunta de Risco (Braden)
-const BradenQuestionCard = ({ item, valor, onChange }: any) => {
+const BradenQuestionCard = ({ item, valor, onChange, theme }: any) => {
     const isSelected = valor !== undefined && valor !== null && valor !== '';
 
     const availableOptions = item.pontos.map((p: number, index: number) => ({
@@ -276,14 +276,14 @@ const BradenQuestionCard = ({ item, valor, onChange }: any) => {
             id={item.id}
             className={`p-4 rounded-xl shadow-md mb-3 transition-all duration-300
             ${isSelected
-                ? 'bg-indigo-900/30 border border-indigo-600'
-                : 'bg-slate-800 border border-slate-700 hover:border-slate-600'}
+                ? theme === 'light' ? 'bg-blue-50 border border-blue-300' : 'bg-indigo-900/30 border border-indigo-600'
+                : theme === 'light' ? 'bg-white border border-gray-300 hover:border-gray-400' : 'bg-slate-800 border border-slate-700 hover:border-slate-600'}
         `}
         >
             <div className="mb-4 flex justify-between items-start">
                 <div>
-                    <label className="block text-base font-bold text-gray-100">{item.label}</label>
-                    <p className="text-sm text-gray-400 mt-1">{item.desc}</p>
+                    <label className={`block text-base font-bold ${theme === 'light' ? 'text-slate-900' : 'text-gray-100'}`}>{item.label}</label>
+                    <p className={`text-sm mt-1 ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>{item.desc}</p>
                 </div>
                 {isSelected && <CheckIcon />}
             </div>
@@ -292,7 +292,10 @@ const BradenQuestionCard = ({ item, valor, onChange }: any) => {
                 <select
                     value={valor === undefined || valor === null ? '' : valor}
                     onChange={(e) => onChange(parseInt(e.target.value))}
-                    className="w-full bg-slate-900 border border-slate-700 text-gray-100 p-3 pr-12 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                    className={`w-full p-3 pr-12 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors
+                        ${theme === 'light' 
+                            ? 'bg-gray-50 border border-gray-300 text-slate-900' 
+                            : 'bg-slate-900 border border-slate-700 text-gray-100'}`}
                 >
                     <option value="" disabled>
                         Pontuação: 1 a {item.pontos.length}
@@ -332,10 +335,17 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
     const [isSaving, setIsSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState<'success' | 'error' | null>(null);
     const patientsContext = useContext(PatientsContext);
+    const { theme } = useContext(ThemeContext) || { theme: 'dark' };
 
     // Configuração da escala atual
     const configAtual = escalaAtiva ? escalasConfig[escalaAtiva] : null;
     const corClasses = configAtual ? escalasConfig[escalaAtiva!].cores : {};
+    
+    // Classes dinâmicas baseadas no tema
+    const bgDinamic = theme === 'light' ? 'bg-gray-50' : 'bg-slate-950';
+    const bgFormDinamic = theme === 'light' ? 'bg-white' : 'bg-slate-800';
+    const textDinamic = theme === 'light' ? 'text-slate-900' : 'text-gray-100';
+    const borderDinamic = theme === 'light' ? 'border-gray-200' : 'border-slate-700';
 
     // CÁLCULO DE PROGRESSO
     const itensRespondidos = configAtual ? Object.keys(respostas).filter(key => respostas[key] !== undefined && respostas[key] !== null).length : 0;
@@ -445,7 +455,7 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
     // 1. Menu Principal (INTRO)
     if (tela === 'intro') {
         return (
-            <div className="w-full max-w-2xl mx-auto p-4 bg-slate-950 min-h-screen text-gray-100 font-sans dark:bg-slate-950">
+            <div className={`w-full max-w-2xl mx-auto p-4 ${bgDinamic} min-h-screen ${textDinamic} font-sans`}>
                 <header className="mb-8 text-center pt-6">
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-900 rounded-2xl mb-4 shadow-lg border border-orange-700">
                         <span className="text-3xl">🛏️</span>
@@ -454,7 +464,7 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                     <p className="text-sm text-orange-300 font-medium">Escalas Braden e Braden Q</p>
                 </header>
 
-                <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl mb-6 space-y-3">
+                <div className={`${bgFormDinamic} p-6 rounded-2xl border ${borderDinamic} shadow-xl mb-6 space-y-3`}>
                     <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 border-b border-gray-700 pb-2">SELECIONE A ESCALA</h2>
 
                     {/* Braden (Adulto > 8 anos) */}
@@ -499,9 +509,9 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
         const scoreSubtitle = `Risco atual: ${resultadoAvaliacao?.texto || 'Aguardando'}`;
 
         return (
-            <div className="w-full max-w-2xl mx-auto p-4 bg-slate-950 min-h-screen text-gray-100 flex flex-col dark:bg-slate-950">
+            <div className={`w-full max-w-2xl mx-auto p-4 ${bgDinamic} min-h-screen ${textDinamic} flex flex-col`}>
                 {/* Header Fixo */}
-                <div className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-sm pb-4 pt-2 border-b border-slate-800 mb-4">
+                <div className={`sticky top-0 z-10 ${bgDinamic}/95 backdrop-blur-sm pb-4 pt-2 border-b ${borderDinamic} mb-4`}>
                     <div className="flex items-center justify-between mb-2">
                         <button onClick={() => setTela('intro')} className="p-2 -ml-2 text-gray-400 hover:text-white rounded-full hover:bg-slate-800">
                             <BackIcon />
@@ -514,7 +524,7 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                     </div>
 
                     {/* Barra de Progresso */}
-                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div className={`w-full ${theme === 'light' ? 'bg-gray-200' : 'bg-slate-800'} h-2 rounded-full overflow-hidden`}>
                         <div
                             className={`${corClasses.bgProgress} h-full transition-all duration-500 ease-out`}
                             style={{ width: `${progresso}%` }}
@@ -534,12 +544,13 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                             item={item}
                             valor={respostas[item.id]}
                             onChange={(val: number) => handleResposta(item.id, val)}
+                            theme={theme}
                         />
                     ))}
                 </div>
 
                 {/* Botão Flutuante de Conclusão */}
-                <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent">
+                <div className={`fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t ${theme === 'light' ? 'from-gray-50 via-gray-50' : 'from-slate-950 via-slate-950'} to-transparent`}>
                     <div className="max-w-md mx-auto">
                         <button
                             onClick={finalizarAvaliacao}
@@ -562,7 +573,7 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
     // 3. Tela de Resultado (RESULTADO)
     if (tela === 'resultado' && configAtual && resultadoAvaliacao) {
         return (
-            <div className="w-full max-w-md mx-auto p-4 bg-slate-950 min-h-screen text-gray-100 font-sans flex flex-col items-center pt-10 dark:bg-slate-950">
+            <div className={`w-full max-w-md mx-auto p-4 ${bgDinamic} min-h-screen ${textDinamic} font-sans flex flex-col items-center pt-10`}>
                 <div className="w-full text-left mb-6">
                     <button onClick={() => setTela('intro')} className="flex items-center text-gray-400 hover:text-white transition-colors">
                         <BackIcon />
@@ -591,23 +602,23 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                 </div>
 
                 {/* Tabela de Classificação de Risco */}
-                <div className="w-full bg-slate-900 rounded-xl p-5 border border-slate-800 space-y-3 mt-6">
-                    <h3 className="font-bold text-gray-300 border-b border-slate-800 pb-3 text-sm">Classificação de Risco {configAtual.titulo}</h3>
+                <div className={`w-full ${bgFormDinamic} rounded-xl p-5 border ${borderDinamic} space-y-3 mt-6`}>
+                    <h3 className={`font-bold ${textDinamic} border-b ${borderDinamic} pb-3 text-sm`}>Classificação de Risco {configAtual.titulo}</h3>
                     {configAtual.titulo === 'Braden' && (
                         <ul className="text-sm space-y-2">
-                            <li className="flex justify-between items-center text-green-400 hover:bg-slate-800/50 px-2 py-1 rounded"><span className="font-semibold">19–23</span><span>Sem risco</span></li>
-                            <li className="flex justify-between items-center text-yellow-400 hover:bg-slate-800/50 px-2 py-1 rounded"><span className="font-semibold">15–18</span><span>Baixo risco</span></li>
-                            <li className="flex justify-between items-center text-orange-400 hover:bg-slate-800/50 px-2 py-1 rounded"><span className="font-semibold">13–14</span><span>Risco moderado</span></li>
-                            <li className="flex justify-between items-center text-red-400 hover:bg-slate-800/50 px-2 py-1 rounded"><span className="font-semibold">10–12</span><span>Alto risco</span></li>
-                            <li className="flex justify-between items-center text-red-600 hover:bg-slate-800/50 px-2 py-1 rounded"><span className="font-semibold">≤ 9</span><span>Risco muito alto</span></li>
+                            <li className={`flex justify-between items-center text-green-400 ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">19–23</span><span>Sem risco</span></li>
+                            <li className={`flex justify-between items-center text-yellow-400 ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">15–18</span><span>Baixo risco</span></li>
+                            <li className={`flex justify-between items-center text-orange-400 ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">13–14</span><span>Risco moderado</span></li>
+                            <li className={`flex justify-between items-center text-red-400 ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">10–12</span><span>Alto risco</span></li>
+                            <li className={`flex justify-between items-center text-red-600 ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">≤ 9</span><span>Risco muito alto</span></li>
                         </ul>
                     )}
                     {configAtual.titulo.includes('Braden Q') && (
                         <ul className="text-sm space-y-2">
-                            <li className="flex justify-between items-center text-green-400 hover:bg-slate-800/50 px-2 py-1 rounded"><span className="font-semibold">20–28</span><span>Sem risco</span></li>
-                            <li className="flex justify-between items-center text-yellow-400 hover:bg-slate-800/50 px-2 py-1 rounded"><span className="font-semibold">16–19</span><span>Risco moderado</span></li>
-                            <li className="flex justify-between items-center text-red-400 hover:bg-slate-800/50 px-2 py-1 rounded"><span className="font-semibold">13–15</span><span>Risco alto</span></li>
-                            <li className="flex justify-between items-center text-red-600 hover:bg-slate-800/50 px-2 py-1 rounded"><span className="font-semibold">≤ 12</span><span>Risco muito alto</span></li>
+                            <li className={`flex justify-between items-center text-green-400 ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">20–28</span><span>Sem risco</span></li>
+                            <li className={`flex justify-between items-center text-yellow-400 ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">16–19</span><span>Risco moderado</span></li>
+                            <li className={`flex justify-between items-center text-red-400 ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">13–15</span><span>Risco alto</span></li>
+                            <li className={`flex justify-between items-center text-red-600 ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">≤ 12</span><span>Risco muito alto</span></li>
                         </ul>
                     )}
                 </div>
