@@ -114,6 +114,10 @@ const Header: React.FC<{ title: string; onMenuClick: () => void }> = ({ title, o
             return -1;
         }
 
+        if (location.pathname === '/history') {
+            return '/dashboard';
+        }
+
         if (pathParts.length > 1) {
             const patientId = pathParts[1];
             if (pathParts[0] === 'status') {

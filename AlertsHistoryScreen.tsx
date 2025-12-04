@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { supabase } from './supabaseClient';
-import { Link, useNavigate } from 'react-router-dom';
-import { FileTextIcon, CloseIcon, BackArrowIcon } from './components/icons';
+import { Link } from 'react-router-dom';
+import { FileTextIcon, CloseIcon } from './components/icons';
 
 import { NotificationContext } from './contexts';
 
@@ -11,7 +11,6 @@ interface AlertsHistoryScreenProps {
 
 export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHeader }) => {
     useHeader('Histórico Geral');
-    const navigate = useNavigate();
     const { showNotification } = useContext(NotificationContext)!;
 
     const [alerts, setAlerts] = useState<any[]>([]);
@@ -177,16 +176,6 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
 
     return (
         <div className="space-y-6">
-            {/* Botão Voltar */}
-            <button
-                onClick={() => navigate(-1)}
-                className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition"
-                aria-label="Voltar"
-            >
-                <BackArrowIcon className="w-5 h-5" />
-                <span className="font-medium">Voltar</span>
-            </button>
-
             {/* Filtros */}
             <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
