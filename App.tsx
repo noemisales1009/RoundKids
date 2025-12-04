@@ -1160,7 +1160,7 @@ const PatientDetailScreen: React.FC = () => {
     };
 
     const handleDeleteDevice = (patientId: number | string, deviceId: number | string) => {
-        if (window.confirm("Tem certeza que deseja apagar este dispositivo?")) {
+        if (window.confirm("Tem certeza que deseja arquivar este dispositivo?")) {
             deleteDeviceFromPatient(patientId, deviceId);
             showNotification({ message: 'Dispositivo removido.', type: 'info' });
         }
@@ -1326,7 +1326,7 @@ const PatientDetailScreen: React.FC = () => {
                                                     {!device.removalDate ? (
                                                         <button onClick={() => setRemovalModalOpen(device.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Retirada</button>
                                                     ) : (
-                                                        <button onClick={() => handleDeleteDevice(patient.id, device.id)} className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded-full transition" aria-label="Apagar dispositivo">
+                                                        <button onClick={() => handleDeleteDevice(patient.id, device.id)} className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded-full transition" aria-label="Arquivar dispositivo">
                                                             <CloseIcon className="w-4 h-4" />
                                                         </button>
                                                     )}
