@@ -3604,38 +3604,44 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
     useEffect(() => {
         const loadUser = async () => {
-            // 1. Check for Supabase Auth Session
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                const { data, error } = await supabase
-                    .from('users')
-                    .select('*')
-                    .eq('id', session.user.id)
-                    .single();
+            try {
+                // 1. Check for Supabase Auth Session
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) {
+                    const { data, error } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('id', session.user.id)
+                        .single();
 
-                if (data) {
-                    // Update state from DB
-                    const dbUser = {
-                        id: data.id, // Store user ID
-                        name: data.name || '',
-                        title: data.role || '', // Mapping DB 'role' to App 'title'
-                        avatarUrl: data.foto || '', // Mapping DB 'foto' to App 'avatarUrl'
-                        sector: data.sector || '', // Mapping DB 'sector'
-                        access_level: (data.access_level || 'geral') as 'adm' | 'geral', // Mapping DB 'access_level'
-                    };
-                    setUser(dbUser);
-                    // ✅ SEGURANÇA: Não armazenar dados sensíveis em localStorage
-                    // Supabase gerencia a sessão em cookies HttpOnly automaticamente
-                } else if (error) {
-                    console.error('Erro ao carregar usuário');
-                    // Clear localStorage on error to prevent stale data
-                    localStorage.removeItem('round_juju_user');
+                    if (data) {
+                        // Update state from DB
+                        const dbUser = {
+                            id: data.id, // Store user ID
+                            name: data.name || 'Usuário',
+                            title: data.role || '', // Mapping DB 'role' to App 'title'
+                            avatarUrl: data.foto || `https://i.pravatar.cc/150?u=${data.email}`, // Mapping DB 'foto' to App 'avatarUrl'
+                            sector: data.sector || '', // Mapping DB 'sector'
+                            access_level: (data.access_level || 'geral') as 'adm' | 'geral', // Mapping DB 'access_level'
+                        };
+                        setUser(dbUser);
+                        // ✅ SEGURANÇA: Não armazenar dados sensíveis em localStorage
+                        // Supabase gerencia a sessão em cookies HttpOnly automaticamente
+                    } else if (error) {
+                        console.error('Erro ao carregar usuário:', error);
+                        // Clear localStorage on error to prevent stale data
+                        localStorage.removeItem('round_juju_user');
+                    }
+                } else {
+                    // No session available - user is logged out
+                    // Don't load stale user data from localStorage
+                    console.log('Nenhuma sessão ativa');
                 }
-            } else {
-                // No session available - user is logged out
-                // Don't load stale user data from localStorage
+            } catch (err) {
+                console.error('Erro ao carregar usuário:', err);
+            } finally {
+                setIsLoading(false);
             }
-            setIsLoading(false);
         };
         loadUser();
     }, []);
