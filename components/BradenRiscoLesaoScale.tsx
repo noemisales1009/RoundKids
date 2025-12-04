@@ -466,7 +466,6 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                             <span className="block font-bold">{escalasConfig.braden.titulo}</span>
                             <span className="text-xs text-orange-200">{escalasConfig.braden.nomeCompleto}</span>
                         </div>
-                        <span className="text-2xl">👨</span>
                     </button>
 
                     {/* Braden Q (Enfermaria) */}
@@ -478,7 +477,6 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                             <span className="block font-bold">{escalasConfig.bradenq.titulo}</span>
                             <span className="text-xs text-pink-200">{escalasConfig.bradenq.nomeCompleto}</span>
                         </div>
-                        <span className="text-2xl">👧</span>
                     </button>
 
                     {/* Braden Q Ampliada (UTI Neo e Pediátrica) */}
@@ -490,7 +488,6 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                             <span className="block font-bold">{escalasConfig.bradenq_ampliada.titulo}</span>
                             <span className="text-xs text-teal-200">{escalasConfig.bradenq_ampliada.nomeCompleto}</span>
                         </div>
-                        <span className="text-2xl">🏥</span>
                     </button>
                 </div>
             </div>
@@ -543,7 +540,7 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
 
                 {/* Botão Flutuante de Conclusão */}
                 <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent">
-                    <div className="max-w-2xl mx-auto">
+                    <div className="max-w-md mx-auto">
                         <button
                             onClick={finalizarAvaliacao}
                             disabled={!resultadoAvaliacao?.isCompleto}
@@ -637,13 +634,9 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                                 Salvando...
                             </span>
                         ) : saveStatus === 'success' ? (
-                            <span className="flex items-center text-lg">
-                                <CheckIcon /> Avaliação Salva com Sucesso!
-                            </span>
+                            <span>Avaliação Salva com Sucesso!</span>
                         ) : (
-                            <span className="flex items-center text-lg">
-                                <SaveIcon /> Salvar Avaliação
-                            </span>
+                            <span>Salvar Avaliação</span>
                         )}
                     </button>
 
