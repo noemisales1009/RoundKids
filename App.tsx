@@ -1762,18 +1762,12 @@ const AddMedicationModal: React.FC<{ patientId: number | string; onClose: () => 
     const [dosageValue, setDosageValue] = useState('');
     const [dosageUnit, setDosageUnit] = useState(MEDICATION_DOSAGE_UNITS[0]);
     const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
-    const [endDate, setEndDate] = useState('');
-    const [status, setStatus] = useState('Ativa');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!name || !dosageValue || !dosageUnit || !startDate) return;
-        if ((status === 'Finalizada' || status === 'Suspensa') && !endDate) {
-            showNotification({ message: 'Data de término é obrigatória para medicações finalizadas ou suspensas.', type: 'error' });
-            return;
-        }
         const dosage = `${dosageValue} ${dosageUnit}`;
-        addMedicationToPatient(patientId, { name, dosage, startDate, endDate: endDate || null, status });
+        addMedicationToPatient(patientId, { name, dosage, startDate });
         showNotification({ message: 'Medicação cadastrada com sucesso!', type: 'success' });
         onClose();
     };
@@ -1813,20 +1807,6 @@ const AddMedicationModal: React.FC<{ patientId: number | string; onClose: () => 
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Início</label>
                         <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Status</label>
-                        <select value={status} onChange={e => setStatus(e.target.value)} className="mt-1 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200">
-                            <option value="Ativa">Ativa</option>
-                            <option value="Suspensa">Suspensa</option>
-                            <option value="Finalizada">Finalizada</option>
-                        </select>
-                    </div>
-                    {(status === 'Suspensa' || status === 'Finalizada') && (
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Término *</label>
-                            <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" required />
-                        </div>
-                    )}
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Cadastrar</button>
                 </form>
             </div>
@@ -1839,8 +1819,6 @@ const EditMedicationModal: React.FC<{ medication: Medication; patientId: number 
     const { showNotification } = useContext(NotificationContext)!;
     const [name, setName] = useState(medication.name);
     const [startDate, setStartDate] = useState(medication.startDate);
-    const [endDate, setEndDate] = useState(medication.endDate || '');
-    const [status, setStatus] = useState(medication.status || 'Ativa');
 
     const [initialValue, initialUnit] = useMemo(() => {
         const dosageString = medication.dosage || '';
@@ -1858,12 +1836,8 @@ const EditMedicationModal: React.FC<{ medication: Medication; patientId: number 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!name || !dosageValue || !dosageUnit || !startDate) return;
-        if ((status === 'Finalizada' || status === 'Suspensa') && !endDate) {
-            showNotification({ message: 'Data de término é obrigatória para medicações finalizadas ou suspensas.', type: 'error' });
-            return;
-        }
         const dosage = `${dosageValue} ${dosageUnit}`;
-        updateMedicationInPatient(patientId, { ...medication, name, dosage, startDate, endDate: endDate || null, status });
+        updateMedicationInPatient(patientId, { ...medication, name, dosage, startDate });
         showNotification({ message: 'Medicação atualizada com sucesso!', type: 'success' });
         onClose();
     };
@@ -1904,20 +1878,6 @@ const EditMedicationModal: React.FC<{ medication: Medication; patientId: number 
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Início</label>
                         <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Status</label>
-                        <select value={status} onChange={e => setStatus(e.target.value)} className="mt-1 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200">
-                            <option value="Ativa">Ativa</option>
-                            <option value="Suspensa">Suspensa</option>
-                            <option value="Finalizada">Finalizada</option>
-                        </select>
-                    </div>
-                    {(status === 'Suspensa' || status === 'Finalizada') && (
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Término *</label>
-                            <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" required />
-                        </div>
-                    )}
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar Alterações</button>
                 </form>
             </div>
@@ -3080,8 +3040,6 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 name: m.nome_medicacao,
                 dosage: `${m.dosagem_valor} ${m.unidade_medida}`,
                 startDate: m.data_inicio,
-                endDate: m.data_fim,
-                status: m.status || 'Ativa',
                 isArchived: m.is_archived
             });
             return acc;
@@ -3202,9 +3160,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             nome_medicacao: medication.name,
             dosagem_valor: valor,
             unidade_medida: unidade,
-            data_inicio: medication.startDate,
-            data_fim: medication.endDate || null,
-            status: medication.status || 'Ativa'
+            data_inicio: medication.startDate
         }]);
         if (!error) fetchPatients();
     };
@@ -3301,9 +3257,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 nome_medicacao: medicationData.name,
                 dosagem_valor: valor,
                 unidade_medida: unidade,
-                data_inicio: medicationData.startDate,
-                data_fim: medicationData.endDate || null,
-                status: medicationData.status || 'Ativa'
+                data_inicio: medicationData.startDate
             })
             .eq('id', medicationData.id);
         if (!error) fetchPatients();
