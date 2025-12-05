@@ -310,11 +310,11 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                                     )}
 
                                     {/* Descrição do Alerta */}
-                                    <p className="font-bold text-slate-800 dark:text-slate-200">
+                                    <div className="font-bold text-slate-800 dark:text-slate-200 whitespace-pre-wrap break-words">
                                         {alert.alertaclinico?.includes('-') 
-                                            ? alert.alertaclinico.substring(alert.alertaclinico.indexOf('-') + 1).trim()
+                                            ? alert.alertaclinico.substring(alert.alertaclinico.indexOf('-')).trim()
                                             : alert.alertaclinico}
-                                    </p>
+                                    </div>
 
                                     {/* Informações */}
                                     <div className="mt-2 text-sm text-slate-600 dark:text-slate-400 space-y-1">
