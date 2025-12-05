@@ -1128,7 +1128,7 @@ const EditCultureModal: React.FC<{ culture: Culture; patientId: number | string;
 const PatientDetailScreen: React.FC = () => {
     const { patientId } = useParams<{ patientId: string }>();
     const { patients, addRemovalDateToDevice, deleteDeviceFromPatient, addEndDateToMedication, deleteMedicationFromPatient, deleteExamFromPatient, deleteSurgicalProcedureFromPatient, addScaleScoreToPatient, addCultureToPatient, deleteCultureFromPatient } = useContext(PatientsContext)!;
-    const { tasks } = useContext(TasksContext)!;
+    const { tasks, updateTaskStatus } = useContext(TasksContext)!;
     const { user } = useContext(UserContext)!;
     const patient = patients.find(p => p.id.toString() === patientId);
 
@@ -1317,17 +1317,31 @@ const PatientDetailScreen: React.FC = () => {
                                     };
                                     
                                     const colors = statusColors[alert.status as keyof typeof statusColors] || statusColors['no_prazo'];
+                                    const isConcluido = alert.status === 'concluido';
                                     
                                     return (
                                         <div key={`alert-${alert.id}`} className={`${colors.bg} ${colors.border} p-3 rounded-lg`}>
                                             <div className="flex justify-between items-start">
                                                 <div className="flex-1">
-                                                    <p className={`font-bold ${colors.text}`}>{alert.description}</p>
+                                                    <p className={`font-bold ${colors.text} ${isConcluido ? 'line-through' : ''}`}>{alert.description}</p>
                                                     <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Responsável: {alert.responsible}</p>
                                                     <p className="text-sm text-slate-600 dark:text-slate-400">Prazo: {alert.deadline}</p>
-                                                    <span className={`inline-block mt-2 px-2 py-1 rounded-md text-xs font-semibold ${colors.text}`}>
-                                                        {alert.status.replace('_', ' ').toUpperCase()}
-                                                    </span>
+                                                    <div className="flex items-center gap-2 mt-2">
+                                                        <span className={`inline-block px-2 py-1 rounded-md text-xs font-semibold ${colors.text}`}>
+                                                            {alert.status.replace('_', ' ').toUpperCase()}
+                                                        </span>
+                                                        {!isConcluido && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    updateTaskStatus(alert.id, 'concluido');
+                                                                    showNotification({ message: 'Alerta marcado como concluído!', type: 'success' });
+                                                                }}
+                                                                className="text-xs px-3 py-1 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-md transition"
+                                                            >
+                                                                ✓ Concluir
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
