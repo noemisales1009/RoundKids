@@ -7,6 +7,7 @@ import { BackArrowIcon, PlusIcon, WarningIcon, ClockIcon, AlertIcon, CheckCircle
 import { ComfortBScale } from './components/ComfortBScale';
 import { DeliriumScale } from './components/DeliriumScale';
 import DeliriumPediatricoScale from './components/DeliriumPediatricoScale';
+import CAMICUPediatricoScale from './components/CAMICUPediatricoScale';
 import { GlasgowScale } from './components/GlasgowScale';
 import { CRSRScale } from './components/CRSRScale';
 import { FLACCScale } from './components/FLACCScale';
@@ -1151,7 +1152,7 @@ const PatientDetailScreen: React.FC = () => {
     const [isEditInfoModalOpen, setEditInfoModalOpen] = useState(false);
     const [showPatientAlerts, setShowPatientAlerts] = useState(false);
     const [isCreateAlertModalOpen, setCreateAlertModalOpen] = useState(false);
-    const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'delirium-pediatrico' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'braden-risco-lesao' | 'vni-cnaf' | 'fss'>('list');
+    const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'cam-icu' | 'delirium-pediatrico' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'braden-risco-lesao' | 'vni-cnaf' | 'fss'>('list');
 
     const { showNotification } = useContext(NotificationContext)!;
 
@@ -1557,7 +1558,10 @@ const PatientDetailScreen: React.FC = () => {
                                     <div className="flex items-center gap-3"><BarChartIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala COMFORT-B</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </div>
                                 <div onClick={() => setScaleView('delirium')} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition">
-                                    <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala CAM-ICU Pediátrico</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                    <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala CAM-ICU Pediátrico</p><p className="text-xs text-slate-500 dark:text-slate-400">psCAM-ICU • pCAM-ICU</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                </div>
+                                <div onClick={() => setScaleView('cam-icu')} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                                    <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">CAM-ICU Pediátrico</p><p className="text-xs text-slate-500 dark:text-slate-400">psCAM-ICU • pCAM-ICU</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </div>
                                 <div onClick={() => setScaleView('delirium-pediatrico')} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition">
                                     <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala de Delirium Pediátrico</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
@@ -1590,6 +1594,7 @@ const PatientDetailScreen: React.FC = () => {
                         )}
                         {scaleView === 'comfort-b' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><ComfortBScale onSaveScore={handleSaveScaleScore} /></div></div>)}
                         {scaleView === 'delirium' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><DeliriumScale onSaveScore={handleSaveScaleScore} /></div></div>)}
+                        {scaleView === 'cam-icu' && (<div className='bg-slate-800 dark:bg-slate-900 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 dark:hover:bg-slate-800 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><CAMICUPediatricoScale onSaveScore={handleSaveScaleScore} /></div></div>)}
                         {scaleView === 'delirium-pediatrico' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><DeliriumPediatricoScale onSaveScore={handleSaveScaleScore} /></div></div>)}
                         {scaleView === 'glasgow' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><GlasgowScale onSaveScore={handleSaveScaleScore} /></div></div>)}
                         {scaleView === 'crs-r' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><CRSRScale onSaveScore={handleSaveScaleScore} /></div></div>)}
