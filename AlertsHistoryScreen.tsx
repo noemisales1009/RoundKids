@@ -71,9 +71,10 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
         fetchAllAlerts();
     }, []);
 
-    // Filtrar alertas
+    // Filtrar e ordenar alertas
     const filteredAlerts = useMemo(() => {
-        return alerts.filter(alert => {
+        // Primeiro, aplicar filtros
+        const filtered = alerts.filter(alert => {
             // Filtro por busca (nome ou leito)
             const matchesSearch = searchTerm === '' ||
                 alert.patient_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -88,6 +89,28 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                 alert.live_status === selectedStatus;
 
             return matchesSearch && matchesDate && matchesStatus;
+        });
+
+        // Depois, ordenar por leito (crescente) e depois por paciente e data (decrescente)
+        return filtered.sort((a, b) => {
+            // Primeiro ordenar por leito (crescente)
+            const bedA = a.bed_number || Infinity;
+            const bedB = b.bed_number || Infinity;
+            
+            if (bedA !== bedB) {
+                return bedA - bedB;
+            }
+
+            // Se mesmo leito, ordenar por paciente
+            const patientA = a.patient_name || '';
+            const patientB = b.patient_name || '';
+            
+            if (patientA !== patientB) {
+                return patientA.localeCompare(patientB);
+            }
+
+            // Se mesmo paciente, ordenar por data (mais recentes primeiro)
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         });
     }, [alerts, searchTerm, selectedDate, selectedStatus]);
 
@@ -231,48 +254,82 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                         <p className="text-slate-500 dark:text-slate-400">Nenhum alerta encontrado com os filtros aplicados.</p>
                     </div>
                 ) : (
-                    filteredAlerts.map((alert) => {
-                        const statusColors = {
-                            no_prazo: 'border-blue-500',
-                            fora_do_prazo: 'border-red-500',
-                            concluido: 'border-green-500',
-                            alerta: 'border-yellow-500'
-                        };
+                    (() => {
+                        let currentBed: number | null = null;
+                        let currentPatient: string | null = null;
+                        const elements: JSX.Element[] = [];
 
-                        return (
-                            <div key={`${alert.source}-${alert.id_alerta}`} className={`bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border-l-4 ${statusColors[alert.live_status as keyof typeof statusColors] || 'border-slate-500'}`}>
-                                {/* Nome do Paciente e Leito */}
-                                {alert.patient_name && (
-                                    <div className="mb-2">
-                                        <Link to={`/patient/${alert.patient_id}`} className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 hover:underline">
-                                            {alert.patient_name}
-                                        </Link>
-                                        <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">
-                                            Leito: <strong>{alert.bed_number || 'N/A'}</strong>
-                                        </span>
+                        filteredAlerts.forEach((alert, index) => {
+                            // Adicionar separador de leito
+                            if (currentBed !== alert.bed_number) {
+                                elements.push(
+                                    <div key={`bed-separator-${alert.bed_number}`} className="mt-6 mb-4 pt-4 border-t-2 border-slate-300 dark:border-slate-700">
+                                        <div className="inline-block px-4 py-2 bg-blue-100 dark:bg-blue-900 rounded-full">
+                                            <span className="text-sm font-bold text-blue-800 dark:text-blue-200">
+                                                Leito {alert.bed_number || 'N/A'}
+                                            </span>
+                                        </div>
                                     </div>
-                                )}
+                                );
+                                currentBed = alert.bed_number;
+                                currentPatient = null;
+                            }
 
-                                {/* Descrição do Alerta */}
-                                <p className="font-bold text-slate-800 dark:text-slate-200">{alert.alertaclinico}</p>
+                            // Adicionar separador de paciente dentro do leito
+                            if (currentPatient !== alert.patient_name) {
+                                if (currentPatient !== null) {
+                                    elements.push(
+                                        <div key={`patient-separator-${alert.patient_id}-${index}`} className="my-3 h-px bg-slate-200 dark:bg-slate-700"></div>
+                                    );
+                                }
+                                currentPatient = alert.patient_name;
+                            }
 
-                                {/* Informações */}
-                                <div className="mt-2 text-sm text-slate-600 dark:text-slate-400 space-y-1">
-                                    <p>Responsável: {alert.responsavel}</p>
-                                    <p>Prazo Limite: {alert.prazo_limite_formatado || 'N/A'}</p>
-                                    <p>Status: <span className="font-semibold">{alert.live_status?.replace('_', ' ')}</span></p>
-                                    <p>Criado em: {new Date(alert.created_at).toLocaleString('pt-BR')}</p>
+                            // Adicionar alerta
+                            const statusColors = {
+                                no_prazo: 'border-blue-500',
+                                fora_do_prazo: 'border-red-500',
+                                concluido: 'border-green-500',
+                                alerta: 'border-yellow-500'
+                            };
+
+                            elements.push(
+                                <div key={`${alert.source}-${alert.id_alerta}`} className={`bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border-l-4 ${statusColors[alert.live_status as keyof typeof statusColors] || 'border-slate-500'}`}>
+                                    {/* Nome do Paciente e Leito */}
+                                    {alert.patient_name && (
+                                        <div className="mb-2">
+                                            <Link to={`/patient/${alert.patient_id}`} className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 hover:underline">
+                                                {alert.patient_name}
+                                            </Link>
+                                            <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">
+                                                Leito: <strong>{alert.bed_number || 'N/A'}</strong>
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Descrição do Alerta */}
+                                    <p className="font-bold text-slate-800 dark:text-slate-200">{alert.alertaclinico}</p>
+
+                                    {/* Informações */}
+                                    <div className="mt-2 text-sm text-slate-600 dark:text-slate-400 space-y-1">
+                                        <p>Responsável: {alert.responsavel}</p>
+                                        <p>Prazo Limite: {alert.prazo_limite_formatado || 'N/A'}</p>
+                                        <p>Status: <span className="font-semibold">{alert.live_status?.replace('_', ' ')}</span></p>
+                                        <p>Criado em: {new Date(alert.created_at).toLocaleString('pt-BR')}</p>
+                                    </div>
+
+                                    {/* Justificativa */}
+                                    {alert.justificativa && (
+                                        <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs italic text-blue-600 dark:text-blue-400">
+                                            <strong>Justificativa:</strong> {alert.justificativa}
+                                        </div>
+                                    )}
                                 </div>
+                            );
+                        });
 
-                                {/* Justificativa */}
-                                {alert.justificativa && (
-                                    <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs italic text-blue-600 dark:text-blue-400">
-                                        <strong>Justificativa:</strong> {alert.justificativa}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })
+                        return elements;
+                    })()
                 )}
             </div>
         </div>
