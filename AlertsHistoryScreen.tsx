@@ -310,13 +310,11 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                                     )}
 
                                     {/* Descrição do Alerta */}
-                                    <div className="font-bold text-slate-800 dark:text-slate-200 space-y-1">
+                                    <div className="font-bold text-slate-800 dark:text-slate-200">
                                         {alert.alertaclinico?.includes('?') 
                                             ? alert.alertaclinico.substring(alert.alertaclinico.indexOf('?') + 1).trim().split('\n').map((line, idx) => {
-                                                const trimmed = line.trim();
-                                                return trimmed.startsWith('-') ? (
-                                                  <div key={idx}>° {trimmed.substring(1).trim()}</div>
-                                                ) : trimmed ? (
+                                                const trimmed = line.trim().replace(/^-\s*/, '');
+                                                return trimmed ? (
                                                   <div key={idx}>° {trimmed}</div>
                                                 ) : null;
                                               })
