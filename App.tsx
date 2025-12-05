@@ -1557,9 +1557,6 @@ const PatientDetailScreen: React.FC = () => {
                                 <div onClick={() => setScaleView('comfort-b')} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition">
                                     <div className="flex items-center gap-3"><BarChartIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala COMFORT-B</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </div>
-                                <div onClick={() => setScaleView('delirium')} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition">
-                                    <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala CAM-ICU Pediátrico</p><p className="text-xs text-slate-500 dark:text-slate-400">psCAM-ICU • pCAM-ICU</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
-                                </div>
                                 <div onClick={() => setScaleView('cam-icu')} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition">
                                     <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">CAM-ICU Pediátrico</p><p className="text-xs text-slate-500 dark:text-slate-400">psCAM-ICU • pCAM-ICU</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </div>
