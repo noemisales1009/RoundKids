@@ -1163,7 +1163,6 @@ const PatientDetailScreen: React.FC = () => {
     const [isEditInfoModalOpen, setEditInfoModalOpen] = useState(false);
     const [showPatientAlerts, setShowPatientAlerts] = useState(false);
     const [isCreateAlertModalOpen, setCreateAlertModalOpen] = useState(false);
-    const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
     const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'cam-icu' | 'delirium-pediatrico' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'braden-risco-lesao' | 'vni-cnaf' | 'fss'>('list');
 
     const { showNotification } = useContext(NotificationContext)!;
@@ -1302,8 +1301,7 @@ const PatientDetailScreen: React.FC = () => {
                     patient.id && 
                     task.patientId.toString() === patient.id.toString() &&
                     task.status !== 'concluido' &&
-                    task.status !== 'Concluido' &&
-                    !dismissedAlerts.has(`${task.id}-${task.source}`)
+                    task.status !== 'Concluido'
                 );
                 
                 return patientAlerts.length > 0 ? (
@@ -1350,11 +1348,6 @@ const PatientDetailScreen: React.FC = () => {
                                                         {!isConcluido && (
                                                             <button
                                                                 onClick={async () => {
-                                                                    // Remove imediatamente da tela
-                                                                    const alertKey = `${alert.id}-${alert.source}`;
-                                                                    setDismissedAlerts(prev => new Set(prev).add(alertKey));
-                                                                    
-                                                                    // Sincroniza com o banco
                                                                     await updateTaskStatus(alert.id, 'concluido', alert.source);
                                                                     showNotification({ message: 'Alerta marcado como concluído!', type: 'success' });
                                                                 }}
@@ -3472,12 +3465,13 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
     const fetchTasks = async () => {
         if (supabase) {
-            // Fetch from 'tasks', 'alertas_paciente', 'alerts', and 'categorias' tables
-            const [tasksRes, alertsRes, alertsTableRes, categoriasRes] = await Promise.all([
+            // Fetch from 'tasks', 'alertas_paciente', 'alerts', 'categorias' e 'alert_completions'
+            const [tasksRes, alertsRes, alertsTableRes, categoriasRes, completionsRes] = await Promise.all([
                 supabase.from('tasks').select('*').then(res => ({ ...res, error: res.error }), err => ({ data: null, error: err })),
                 supabase.from('alertas_paciente').select('*').then(res => ({ ...res, error: res.error }), err => ({ data: null, error: err })),
                 supabase.from('alerts').select('*').eq('status', 'ativo').then(res => ({ ...res, error: res.error }), err => ({ data: null, error: err })), // Only active alerts
-                supabase.from('categorias').select('id, nome').then(res => ({ ...res, error: res.error }), err => ({ data: null, error: err }))
+                supabase.from('categorias').select('id, nome').then(res => ({ ...res, error: res.error }), err => ({ data: null, error: err })),
+                supabase.from('alert_completions').select('*').then(res => ({ ...res, error: res.error }), err => ({ data: null, error: err }))
             ]);
 
             // Create a map of categoria_id -> category name for quick lookup
@@ -3488,26 +3482,39 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 });
             }
 
+            // Create a map of completed alerts (alert_id + source -> completedAt)
+            const completedAlertsMap = new Map<string, string>();
+            if (completionsRes.data && !completionsRes.error) {
+                completionsRes.data.forEach((comp: any) => {
+                    completedAlertsMap.set(`${comp.alert_id}-${comp.source}`, comp.completed_at);
+                });
+            }
+
             let mappedTasks: Task[] = [];
 
             // Map standard checklist tasks
             if (tasksRes.data && !tasksRes.error) {
-                mappedTasks = tasksRes.data.map((t: any) => ({
-                    id: t.id,
-                    patientId: t.patient_id,
-                    categoryId: t.category_id,
-                    description: t.description,
-                    responsible: t.responsible,
-                    deadline: t.deadline,
-                    status: t.status,
-                    justification: t.justification,
-                    completedAt: t.completed_at,
-                    patientName: t.patient_name,
-                    categoryName: t.category,
-                    timeLabel: t.time_label,
-                    options: t.options,
-                    source: 'tasks' as const,
-                }));
+                mappedTasks = tasksRes.data.map((t: any) => {
+                    const completionKey = `${t.id}-tasks`;
+                    const completedAt = completedAlertsMap.get(completionKey);
+                    
+                    return {
+                        id: t.id,
+                        patientId: t.patient_id,
+                        categoryId: t.category_id,
+                        description: t.description,
+                        responsible: t.responsible,
+                        deadline: t.deadline,
+                        status: completedAt ? 'concluido' : t.status,
+                        justification: t.justification,
+                        completedAt: completedAt || t.completed_at,
+                        patientName: t.patient_name,
+                        categoryName: t.category,
+                        timeLabel: t.time_label,
+                        options: t.options,
+                        source: 'tasks' as const,
+                    };
+                });
             }
 
             // Map new 'alertas_paciente' tasks
@@ -3517,6 +3524,8 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     const hours = parseInt(a.hora_selecionada?.split(' ')[0] || '0');
                     const created = new Date(a.created_at);
                     const deadline = new Date(created.getTime() + hours * 60 * 60 * 1000).toISOString();
+                    const completionKey = `${a.id}-alertas_paciente`;
+                    const completedAt = completedAlertsMap.get(completionKey);
 
                     return {
                         id: a.id,
@@ -3525,8 +3534,8 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                         description: a.alerta_descricao,
                         responsible: a.responsavel,
                         deadline: deadline,
-                        status: (a.status === 'alerta' || a.status === 'Pendente' || a.status === 'Aberto') ? 'alerta' : (a.status === 'concluido' ? 'concluido' : 'alerta'),
-                        completedAt: a.concluido_em,
+                        status: completedAt ? 'concluido' : ((a.status === 'alerta' || a.status === 'Pendente' || a.status === 'Aberto') ? 'alerta' : (a.status === 'concluido' ? 'concluido' : 'alerta')),
+                        completedAt: completedAt || a.concluido_em,
                         categoryName: 'Geral',
                         timeLabel: a.hora_selecionada,
                         source: 'alertas_paciente' as const,
@@ -3574,12 +3583,25 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     };
 
     const updateTaskStatus = async (taskId: number | string, status: TaskStatus, source?: 'tasks' | 'alertas_paciente') => {
-        if (source === 'alertas_paciente') {
+        if (status === 'concluido' && source) {
+            // Converte taskId para número para BIGINT
+            const alertIdNum = typeof taskId === 'string' ? parseInt(taskId) : taskId;
+            
+            // Salva na tabela de conclusões
+            const { error: completionError } = await supabase.from('alert_completions')
+                .upsert({ 
+                    alert_id: alertIdNum,
+                    source: source,
+                    completed_at: new Date().toISOString()
+                }, { onConflict: 'alert_id,source' });
+            
+            if (!completionError) {
+                await new Promise(resolve => setTimeout(resolve, 300));
+                fetchTasks();
+            }
+        } else if (source === 'alertas_paciente') {
             const dbStatus = status === 'concluido' ? 'concluido' : 'alerta';
             const updateData: any = { status: dbStatus };
-            if (status === 'concluido') {
-                updateData.concluido_em = new Date().toISOString();
-            }
             const { error } = await supabase.from('alertas_paciente')
                 .update(updateData)
                 .eq('id', taskId);
@@ -3589,9 +3611,6 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             }
         } else {
             const updateData: any = { status };
-            if (status === 'concluido') {
-                updateData.completed_at = new Date().toISOString();
-            }
             const { error } = await supabase.from('tasks')
                 .update(updateData)
                 .eq('id', taskId);
