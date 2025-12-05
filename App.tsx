@@ -1289,7 +1289,8 @@ const PatientDetailScreen: React.FC = () => {
                     task.patientId && 
                     patient.id && 
                     task.patientId.toString() === patient.id.toString() &&
-                    task.status !== 'concluido'
+                    task.status !== 'concluido' &&
+                    task.status !== 'Concluido'
                 );
                 
                 return patientAlerts.length > 0 ? (
