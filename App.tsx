@@ -1335,8 +1335,8 @@ const PatientDetailScreen: React.FC = () => {
                                                         </span>
                                                         {!isConcluido && (
                                                             <button
-                                                                onClick={() => {
-                                                                    updateTaskStatus(alert.id, 'concluido');
+                                                                onClick={async () => {
+                                                                    await updateTaskStatus(alert.id, 'concluido');
                                                                     showNotification({ message: 'Alerta marcado como concluído!', type: 'success' });
                                                                 }}
                                                                 className="text-xs px-3 py-1 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-md transition"
