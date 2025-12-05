@@ -3561,12 +3561,18 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             const { error } = await supabase.from('alertas_paciente')
                 .update({ status: dbStatus })
                 .eq('id', taskId);
-            if (!error) fetchTasks();
+            if (!error) {
+                await new Promise(resolve => setTimeout(resolve, 300));
+                fetchTasks();
+            }
         } else {
             const { error } = await supabase.from('tasks')
                 .update({ status })
                 .eq('id', taskId);
-            if (!error) fetchTasks();
+            if (!error) {
+                await new Promise(resolve => setTimeout(resolve, 300));
+                fetchTasks();
+            }
         }
     };
 
