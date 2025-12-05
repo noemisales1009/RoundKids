@@ -40,19 +40,19 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                     return {
                         ...t,
                         source: 'tasks',
-                        patient_name: patientInfo?.name || t.patient_name,
-                        bed_number: patientInfo?.bed_number || null
+                        patient_name: patientInfo?.name || t.patient_name || 'Desconhecido',
+                        bed_number: patientInfo?.bed_number || t.bed_number || null
                     };
-                }),
+                }).filter(t => patientsMap.has(t.patient_id)), // Filtrar apenas alertas com pacientes válidos
                 ...(alertsResult.data || []).map(a => {
                     const patientInfo = a.patient_id ? patientsMap.get(a.patient_id) : null;
                     return {
                         ...a,
                         source: 'alertas',
-                        patient_name: patientInfo?.name || a.patient_name,
-                        bed_number: patientInfo?.bed_number || null
+                        patient_name: patientInfo?.name || a.patient_name || 'Desconhecido',
+                        bed_number: patientInfo?.bed_number || a.bed_number || null
                     };
-                })
+                }).filter(a => patientsMap.has(a.patient_id)) // Filtrar apenas alertas com pacientes válidos
             ];
 
             // Ordenar por data de criação (mais recentes primeiro)
@@ -315,9 +315,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                                     {/* Informações */}
                                     <div className="mt-2 text-sm text-slate-600 dark:text-slate-400 space-y-1">
                                         <p>Responsável: {alert.responsavel}</p>
-                                        <p>Prazo Limite: {alert.prazo_limite_formatado || 'N/A'}</p>
-                                        <p>Status: <span className="font-semibold">{alert.live_status?.replace('_', ' ')}</span></p>
-                                        <p>Criado em: {new Date(alert.created_at).toLocaleString('pt-BR')}</p>
+                                        <p>Prazo: {alert.prazo_limite_formatado || 'N/A'}</p>
                                     </div>
 
                                     {/* Justificativa */}
