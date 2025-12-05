@@ -1128,6 +1128,7 @@ const EditCultureModal: React.FC<{ culture: Culture; patientId: number | string;
 const PatientDetailScreen: React.FC = () => {
     const { patientId } = useParams<{ patientId: string }>();
     const { patients, addRemovalDateToDevice, deleteDeviceFromPatient, addEndDateToMedication, deleteMedicationFromPatient, deleteExamFromPatient, deleteSurgicalProcedureFromPatient, addScaleScoreToPatient, addCultureToPatient, deleteCultureFromPatient } = useContext(PatientsContext)!;
+    const { tasks } = useContext(TasksContext)!;
     const { user } = useContext(UserContext)!;
     const patient = patients.find(p => p.id.toString() === patientId);
 
@@ -1148,6 +1149,7 @@ const PatientDetailScreen: React.FC = () => {
     const [isRemovalModalOpen, setRemovalModalOpen] = useState<number | string | null>(null);
     const [isEndDateModalOpen, setEndDateModalOpen] = useState<number | string | null>(null);
     const [isEditInfoModalOpen, setEditInfoModalOpen] = useState(false);
+    const [showPatientAlerts, setShowPatientAlerts] = useState(false);
     const [isCreateAlertModalOpen, setCreateAlertModalOpen] = useState(false);
     const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'delirium-pediatrico' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'braden-risco-lesao' | 'vni-cnaf' | 'fss'>('list');
 
@@ -1279,6 +1281,63 @@ const PatientDetailScreen: React.FC = () => {
                     Ver Histórico Completo
                 </div>
             </Link>
+
+            {/* Alertas do Paciente */}
+            {(() => {
+                const patientAlerts = tasks.filter(task => 
+                    task.patientId && 
+                    patient.id && 
+                    task.patientId.toString() === patient.id.toString()
+                );
+                
+                return patientAlerts.length > 0 ? (
+                    <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                        <button 
+                            onClick={() => setShowPatientAlerts(!showPatientAlerts)}
+                            className="w-full flex items-center justify-between cursor-pointer"
+                        >
+                            <div className="flex items-center gap-2">
+                                <BellIcon className="w-5 h-5 text-red-500" />
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Alertas do Paciente</h3>
+                                <span className="inline-flex items-center justify-center w-6 h-6 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 font-bold text-xs rounded-full">
+                                    {patientAlerts.length}
+                                </span>
+                            </div>
+                            <ChevronRightIcon className={`w-5 h-5 text-slate-400 transition-transform ${showPatientAlerts ? 'rotate-90' : ''}`} />
+                        </button>
+                        
+                        {showPatientAlerts && (
+                            <div className="mt-4 space-y-3 border-t border-slate-200 dark:border-slate-700 pt-4">
+                                {patientAlerts.map((alert) => {
+                                    const statusColors = {
+                                        'no_prazo': { bg: 'bg-blue-50 dark:bg-blue-900/30', border: 'border-l-4 border-blue-500', text: 'text-blue-700 dark:text-blue-300' },
+                                        'fora_do_prazo': { bg: 'bg-red-50 dark:bg-red-900/30', border: 'border-l-4 border-red-500', text: 'text-red-700 dark:text-red-300' },
+                                        'concluido': { bg: 'bg-green-50 dark:bg-green-900/30', border: 'border-l-4 border-green-500', text: 'text-green-700 dark:text-green-300' },
+                                        'alerta': { bg: 'bg-yellow-50 dark:bg-yellow-900/30', border: 'border-l-4 border-yellow-500', text: 'text-yellow-700 dark:text-yellow-300' },
+                                    };
+                                    
+                                    const colors = statusColors[alert.status as keyof typeof statusColors] || statusColors['no_prazo'];
+                                    
+                                    return (
+                                        <div key={`alert-${alert.id}`} className={`${colors.bg} ${colors.border} p-3 rounded-lg`}>
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex-1">
+                                                    <p className={`font-bold ${colors.text}`}>{alert.description}</p>
+                                                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Responsável: {alert.responsible}</p>
+                                                    <p className="text-sm text-slate-600 dark:text-slate-400">Prazo: {alert.deadline}</p>
+                                                    <span className={`inline-block mt-2 px-2 py-1 rounded-md text-xs font-semibold ${colors.text}`}>
+                                                        {alert.status.replace('_', ' ').toUpperCase()}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                ) : null;
+            })()}
 
             {/* ... Tabs and Content ... */}
             <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm">
