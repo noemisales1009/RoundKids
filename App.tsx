@@ -1320,6 +1320,7 @@ const PatientDetailScreen: React.FC = () => {
                                     
                                     const colors = statusColors[alert.status as keyof typeof statusColors] || statusColors['no_prazo'];
                                     const isConcluido = alert.status === 'concluido';
+                                    const formattedDeadline = new Date(alert.deadline).toLocaleString('pt-BR');
                                     
                                     return (
                                         <div key={`alert-${alert.id}`} className={`${colors.bg} ${colors.border} p-3 rounded-lg`}>
@@ -1327,7 +1328,7 @@ const PatientDetailScreen: React.FC = () => {
                                                 <div className="flex-1">
                                                     <p className={`font-bold ${colors.text} ${isConcluido ? 'line-through' : ''}`}>{alert.description}</p>
                                                     <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Responsável: {alert.responsible}</p>
-                                                    <p className="text-sm text-slate-600 dark:text-slate-400">Prazo: {alert.deadline}</p>
+                                                    <p className="text-sm text-slate-600 dark:text-slate-400">Prazo: {formattedDeadline}</p>
                                                     <div className="flex items-center gap-2 mt-2">
                                                         <span className={`inline-block px-2 py-1 rounded-md text-xs font-semibold ${colors.text}`}>
                                                             {alert.status.replace('_', ' ').toUpperCase()}
