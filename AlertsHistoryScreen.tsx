@@ -295,15 +295,17 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
 
                             elements.push(
                                 <div key={`${alert.source}-${alert.id_alerta}`} className={`bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border-l-4 ${statusColors[alert.live_status as keyof typeof statusColors] || 'border-slate-500'}`}>
-                                    {/* Nome do Paciente e Leito */}
+                                    {/* Nome do Paciente e Leito - Header */}
                                     {alert.patient_name && (
-                                        <div className="mb-2">
-                                            <Link to={`/patient/${alert.patient_id}`} className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 hover:underline">
-                                                {alert.patient_name}
-                                            </Link>
-                                            <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">
-                                                Leito: <strong>{alert.bed_number || 'N/A'}</strong>
-                                            </span>
+                                        <div className="mb-3 pb-3 border-b border-slate-200 dark:border-slate-700">
+                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                                                <Link to={`/patient/${alert.patient_id}`} className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:underline">
+                                                    {alert.patient_name}
+                                                </Link>
+                                                <span className="text-sm sm:text-base font-semibold text-slate-600 dark:text-slate-300">
+                                                    Leito: {alert.bed_number || 'N/A'}
+                                                </span>
+                                            </div>
                                         </div>
                                     )}
 
