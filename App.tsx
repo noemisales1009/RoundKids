@@ -1642,6 +1642,10 @@ const PatientDetailScreen: React.FC = () => {
             {isAddCultureModalOpen && <AddCultureModal patientId={patient.id} onClose={() => setAddCultureModalOpen(false)} />}
             {editingCulture && <EditCultureModal culture={editingCulture} patientId={patient.id} onClose={() => setEditingCulture(null)} />}
             {isRemovalModalOpen && <AddRemovalDateModal deviceId={isRemovalModalOpen} patientId={patient.id} onClose={() => setRemovalModalOpen(null)} />}
+            {isEndDateModalOpen && <AddEndDateModal deviceId={isEndDateModalOpen} patientId={patient.id} onClose={() => setEndDateModalOpen(null)} />}
+            {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} onClose={() => setEditInfoModalOpen(false)} />}
+            {isCreateAlertModalOpen && <CreateAlertModalComponent patientId={patient.id} onClose={() => setCreateAlertModalOpen(false)} />}
+            
             {isEndDateModalOpen && <AddEndDateModal medicationId={isEndDateModalOpen} patientId={patient.id} onClose={() => setEndDateModalOpen(null)} />}
             {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} currentMotherName={patient.motherName} currentDiagnosis={patient.ctd} onClose={() => setEditInfoModalOpen(false)} />}
             {isCreateAlertModalOpen && <CreateAlertModal patientId={patient.id} onClose={() => setCreateAlertModalOpen(false)} />}
