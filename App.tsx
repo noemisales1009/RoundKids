@@ -3506,7 +3506,7 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                         description: a.alerta_descricao,
                         responsible: a.responsavel,
                         deadline: deadline,
-                        status: (a.status === 'Pendente' || a.status === 'Aberto') ? 'alerta' : (a.status === 'Concluido' ? 'concluido' : 'alerta'),
+                        status: (a.status === 'alerta' || a.status === 'Pendente' || a.status === 'Aberto') ? 'alerta' : (a.status === 'concluido' ? 'concluido' : 'alerta'),
                         categoryName: 'Geral',
                         timeLabel: a.hora_selecionada,
                         source: 'alertas_paciente' as const,
@@ -3555,7 +3555,7 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
     const updateTaskStatus = async (taskId: number | string, status: TaskStatus, source?: 'tasks' | 'alertas_paciente') => {
         if (source === 'alertas_paciente') {
-            const dbStatus = status === 'concluido' ? 'Concluido' : 'Pendente';
+            const dbStatus = status === 'concluido' ? 'concluido' : 'alerta';
             const { error } = await supabase.from('alertas_paciente')
                 .update({ status: dbStatus })
                 .eq('id', taskId);
