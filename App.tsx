@@ -1163,6 +1163,7 @@ const PatientDetailScreen: React.FC = () => {
     const [isEditInfoModalOpen, setEditInfoModalOpen] = useState(false);
     const [showPatientAlerts, setShowPatientAlerts] = useState(false);
     const [isCreateAlertModalOpen, setCreateAlertModalOpen] = useState(false);
+    const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
     const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'cam-icu' | 'delirium-pediatrico' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'braden-risco-lesao' | 'vni-cnaf' | 'fss'>('list');
 
     const { showNotification } = useContext(NotificationContext)!;
@@ -1301,7 +1302,8 @@ const PatientDetailScreen: React.FC = () => {
                     patient.id && 
                     task.patientId.toString() === patient.id.toString() &&
                     task.status !== 'concluido' &&
-                    task.status !== 'Concluido'
+                    task.status !== 'Concluido' &&
+                    !dismissedAlerts.has(`${task.id}-${task.source}`)
                 );
                 
                 return patientAlerts.length > 0 ? (
@@ -1348,12 +1350,10 @@ const PatientDetailScreen: React.FC = () => {
                                                         {!isConcluido && (
                                                             <button
                                                                 onClick={async () => {
-                                                                    // Atualização otimista - remove imediatamente da tela
-                                                                    setTasks(tasks.map(t => 
-                                                                        t.id === alert.id && t.source === alert.source 
-                                                                            ? { ...t, status: 'concluido', completedAt: new Date().toISOString() }
-                                                                            : t
-                                                                    ));
+                                                                    // Remove imediatamente da tela
+                                                                    const alertKey = `${alert.id}-${alert.source}`;
+                                                                    setDismissedAlerts(prev => new Set(prev).add(alertKey));
+                                                                    
                                                                     // Sincroniza com o banco
                                                                     await updateTaskStatus(alert.id, 'concluido', alert.source);
                                                                     showNotification({ message: 'Alerta marcado como concluído!', type: 'success' });
