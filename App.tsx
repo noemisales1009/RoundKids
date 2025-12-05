@@ -374,20 +374,36 @@ const DashboardScreen: React.FC = () => {
         const fetchDashboardData = async () => {
             setLoading(true);
             try {
-                const { data, error } = await supabase
-                    .from('dashboard_summary')
-                    .select('*')
-                    .single();
+                // Buscar dados do dashboard_summary e da tabela alert_completions
+                const [dashboardRes, completionsRes] = await Promise.all([
+                    supabase.from('dashboard_summary').select('*').single(),
+                    supabase.from('alert_completions').select('id').then(res => ({ ...res, error: res.error }))
+                ]);
 
-                if (error) {
-                    console.error('Erro ao buscar dados do dashboard:', error);
-                } else if (data) {
+                let totalConcluidos = 0;
+                
+                // Se a view dashboard_summary existe, pega de lá
+                if (!dashboardRes.error && dashboardRes.data) {
+                    totalConcluidos = dashboardRes.data.totalConcluidos || 0;
+                }
+                
+                // Soma com os concluídos na tabela alert_completions
+                if (completionsRes.data && !completionsRes.error) {
+                    totalConcluidos += completionsRes.data.length;
+                }
+
+                if (dashboardRes.error && dashboardRes.error.code !== 'PGRST116') {
+                    console.error('Erro ao buscar dados do dashboard:', dashboardRes.error);
+                } else if (dashboardRes.data) {
                     setDashboardData({
-                        totalAlertas: data.totalAlertas || 0,
-                        totalNoPrazo: data.totalNoPrazo || 0,
-                        totalForaDoPrazo: data.totalForaDoPrazo || 0,
-                        totalConcluidos: data.totalConcluidos || 0
+                        totalAlertas: dashboardRes.data.totalAlertas || 0,
+                        totalNoPrazo: dashboardRes.data.totalNoPrazo || 0,
+                        totalForaDoPrazo: dashboardRes.data.totalForaDoPrazo || 0,
+                        totalConcluidos: totalConcluidos
                     });
+                } else {
+                    // Se não houver dashboard_summary, usa apenas alert_completions
+                    setDashboardData(prev => ({ ...prev, totalConcluidos }));
                 }
             } catch (err) {
                 console.error('Erro ao buscar dados do dashboard:', err);
