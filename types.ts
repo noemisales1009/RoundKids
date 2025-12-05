@@ -111,6 +111,7 @@ export interface Task {
   deadline: string; // ISO String for date and time
   status: TaskStatus;
   justification?: string;
+  completedAt?: string; // ISO String for completion date and time
   // New fields for DB integration
   patientName?: string;
   categoryName?: string;

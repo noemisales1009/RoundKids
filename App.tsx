@@ -657,14 +657,25 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
-        const patientAlerts = tasks.filter(task => task.patientId && patient.id && task.patientId.toString() === patient.id.toString() && task.status === 'alerta');
+        const patientAlerts = tasks.filter(task => task.patientId && patient.id && task.patientId.toString() === patient.id.toString());
         patientAlerts.forEach(alert => {
+            // Alerta criado
             events.push({
                 timestamp: alert.deadline,
                 icon: BellIcon,
                 description: `Alerta Criado: ${alert.description}.`,
                 hasTime: true,
             });
+            
+            // Alerta concluído (se houver)
+            if (alert.status === 'concluido' && alert.completedAt) {
+                events.push({
+                    timestamp: alert.completedAt,
+                    icon: CheckCircleIcon,
+                    description: `Alerta Concluído: ${alert.description}.`,
+                    hasTime: true,
+                });
+            }
         });
 
         patient.scaleScores?.forEach(score => {
@@ -1337,6 +1348,13 @@ const PatientDetailScreen: React.FC = () => {
                                                         {!isConcluido && (
                                                             <button
                                                                 onClick={async () => {
+                                                                    // Atualização otimista - remove imediatamente da tela
+                                                                    setTasks(tasks.map(t => 
+                                                                        t.id === alert.id && t.source === alert.source 
+                                                                            ? { ...t, status: 'concluido', completedAt: new Date().toISOString() }
+                                                                            : t
+                                                                    ));
+                                                                    // Sincroniza com o banco
                                                                     await updateTaskStatus(alert.id, 'concluido', alert.source);
                                                                     showNotification({ message: 'Alerta marcado como concluído!', type: 'success' });
                                                                 }}
@@ -3483,6 +3501,7 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     deadline: t.deadline,
                     status: t.status,
                     justification: t.justification,
+                    completedAt: t.completed_at,
                     patientName: t.patient_name,
                     categoryName: t.category,
                     timeLabel: t.time_label,
@@ -3507,6 +3526,7 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                         responsible: a.responsavel,
                         deadline: deadline,
                         status: (a.status === 'alerta' || a.status === 'Pendente' || a.status === 'Aberto') ? 'alerta' : (a.status === 'concluido' ? 'concluido' : 'alerta'),
+                        completedAt: a.concluido_em,
                         categoryName: 'Geral',
                         timeLabel: a.hora_selecionada,
                         source: 'alertas_paciente' as const,
@@ -3556,16 +3576,24 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     const updateTaskStatus = async (taskId: number | string, status: TaskStatus, source?: 'tasks' | 'alertas_paciente') => {
         if (source === 'alertas_paciente') {
             const dbStatus = status === 'concluido' ? 'concluido' : 'alerta';
+            const updateData: any = { status: dbStatus };
+            if (status === 'concluido') {
+                updateData.concluido_em = new Date().toISOString();
+            }
             const { error } = await supabase.from('alertas_paciente')
-                .update({ status: dbStatus })
+                .update(updateData)
                 .eq('id', taskId);
             if (!error) {
                 await new Promise(resolve => setTimeout(resolve, 300));
                 fetchTasks();
             }
         } else {
+            const updateData: any = { status };
+            if (status === 'concluido') {
+                updateData.completed_at = new Date().toISOString();
+            }
             const { error } = await supabase.from('tasks')
-                .update({ status })
+                .update(updateData)
                 .eq('id', taskId);
             if (!error) {
                 await new Promise(resolve => setTimeout(resolve, 300));
