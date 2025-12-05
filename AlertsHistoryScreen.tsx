@@ -69,6 +69,11 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
 
     useEffect(() => {
         fetchAllAlerts();
+        
+        // Refrescar a cada 5 segundos
+        const interval = setInterval(fetchAllAlerts, 5000);
+        
+        return () => clearInterval(interval);
     }, []);
 
     // Filtrar e ordenar alertas

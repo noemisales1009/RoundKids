@@ -397,7 +397,7 @@ const DashboardScreen: React.FC = () => {
         };
 
         fetchDashboardData();
-    }, []);
+    }, [tasks]);
 
     const summaryData = useMemo(() => {
         return [
