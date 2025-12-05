@@ -116,6 +116,7 @@ export interface Task {
   categoryName?: string;
   timeLabel?: string;
   options?: any; // JSONB
+  source?: 'tasks' | 'alertas_paciente'; // Source table for updates
 }
 
 // --- USER & THEME ---

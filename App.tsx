@@ -1337,7 +1337,7 @@ const PatientDetailScreen: React.FC = () => {
                                                         {!isConcluido && (
                                                             <button
                                                                 onClick={async () => {
-                                                                    await updateTaskStatus(alert.id, 'concluido');
+                                                                    await updateTaskStatus(alert.id, 'concluido', alert.source);
                                                                     showNotification({ message: 'Alerta marcado como concluído!', type: 'success' });
                                                                 }}
                                                                 className="text-xs px-3 py-1 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-md transition"
@@ -3486,7 +3486,8 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     patientName: t.patient_name,
                     categoryName: t.category,
                     timeLabel: t.time_label,
-                    options: t.options
+                    options: t.options,
+                    source: 'tasks' as const,
                 }));
             }
 
@@ -3499,16 +3500,16 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     const deadline = new Date(created.getTime() + hours * 60 * 60 * 1000).toISOString();
 
                     return {
-                        id: a.id, // UUID from new table
+                        id: a.id,
                         patientId: a.patient_id,
-                        categoryId: 0, // General category for these alerts
+                        categoryId: 0,
                         description: a.alerta_descricao,
                         responsible: a.responsavel,
                         deadline: deadline,
-                        // Map 'Pendente' to 'alerta' for UI compatibility
                         status: (a.status === 'Pendente' || a.status === 'Aberto') ? 'alerta' : (a.status === 'Concluido' ? 'concluido' : 'alerta'),
                         categoryName: 'Geral',
                         timeLabel: a.hora_selecionada,
+                        source: 'alertas_paciente' as const,
                     };
                 });
                 mappedTasks = [...mappedTasks, ...mappedAlerts];
@@ -3552,12 +3553,8 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         if (!error) fetchTasks();
     };
 
-    const updateTaskStatus = async (taskId: number | string, status: TaskStatus) => {
-        // Check if ID is UUID (string) -> updates 'alertas_paciente', else 'tasks'
-        // Simple heuristic: if taskId is string and long, it's likely UUID from new table
-        const isUuid = typeof taskId === 'string' && taskId.length > 30;
-
-        if (isUuid) {
+    const updateTaskStatus = async (taskId: number | string, status: TaskStatus, source?: 'tasks' | 'alertas_paciente') => {
+        if (source === 'alertas_paciente') {
             const dbStatus = status === 'concluido' ? 'Concluido' : 'Pendente';
             const { error } = await supabase.from('alertas_paciente')
                 .update({ status: dbStatus })
