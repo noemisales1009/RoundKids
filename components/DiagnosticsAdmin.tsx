@@ -27,10 +27,6 @@ export const DiagnosticsAdmin: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Estado para novo pergunta
-  const [newQuestionTitle, setNewQuestionTitle] = useState('');
-  const [newQuestionType, setNewQuestionType] = useState<'principal' | 'secundario'>('principal');
-
   // Estado para nova opção
   const [selectedQuestionId, setSelectedQuestionId] = useState<number | null>(null);
   const [newOptionLabel, setNewOptionLabel] = useState('');
@@ -63,33 +59,6 @@ export const DiagnosticsAdmin: React.FC = () => {
       alert('❌ Erro ao carregar dados');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const addQuestion = async () => {
-    if (!newQuestionTitle.trim()) {
-      alert('⚠️ Digite um título para a pergunta');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const { data, error } = await supabase
-        .from('perguntas_diagnistico')
-        .insert([{ titulo: newQuestionTitle, tipo: newQuestionType }])
-        .select();
-
-      if (error) throw error;
-
-      setQuestions([...questions, data[0]]);
-      setNewQuestionTitle('');
-      setNewQuestionType('principal');
-      alert('✅ Pergunta adicionada com sucesso!');
-    } catch (error) {
-      console.error('Erro ao adicionar pergunta:', error);
-      alert('❌ Erro ao adicionar pergunta');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -208,61 +177,6 @@ export const DiagnosticsAdmin: React.FC = () => {
       <h2 className={`font-bold text-2xl ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
         ⚙️ Administração de Diagnósticos
       </h2>
-
-      {/* Seção: Adicionar Nova Pergunta */}
-      <div className={`p-4 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-        <h3 className={`font-bold text-lg mb-4 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-          ➕ Adicionar Nova Pergunta
-        </h3>
-
-        <div className="space-y-3">
-          <div>
-            <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-              Título da Pergunta
-            </label>
-            <input
-              type="text"
-              value={newQuestionTitle}
-              onChange={(e) => setNewQuestionTitle(e.target.value)}
-              placeholder="Ex: Insuficiência respiratória aguda secundária"
-              className={`w-full px-3 py-2 rounded border ${isDark
-                ? 'bg-slate-700 border-slate-600 text-slate-200'
-                : 'bg-white border-slate-300 text-slate-800'
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            />
-          </div>
-
-          <div>
-            <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-              Tipo
-            </label>
-            <select
-              value={newQuestionType}
-              onChange={(e) => setNewQuestionType(e.target.value as 'principal' | 'secundario')}
-              className={`w-full px-3 py-2 rounded border ${isDark
-                ? 'bg-slate-700 border-slate-600 text-slate-200'
-                : 'bg-white border-slate-300 text-slate-800'
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            >
-              <option value="principal">🏥 Principal</option>
-              <option value="secundario">📋 Secundário</option>
-            </select>
-          </div>
-
-          <button
-            onClick={addQuestion}
-            disabled={saving}
-            className={`w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg font-semibold transition ${
-              saving
-                ? `${isDark ? 'bg-slate-700' : 'bg-slate-300'} cursor-not-allowed`
-                : `bg-green-600 hover:bg-green-700 text-white`
-            }`}
-          >
-            <SaveIcon className="w-4 h-4" />
-            {saving ? 'Adicionando...' : 'Adicionar Pergunta'}
-          </button>
-        </div>
-      </div>
 
       {/* Seção: Perguntas Principais */}
       {mainQuestions.length > 0 && (

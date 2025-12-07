@@ -20,7 +20,7 @@ interface DiagnosticOption {
 }
 
 interface PatientDiagnostic {
-  id: number;
+  id?: number;
   patient_id: string;
   pergunta_id: number;
   opcao_id: number;
@@ -100,58 +100,78 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const handleSave = async () => {
     setSaving(true);
     try {
-      const diagnosticsToSave: PatientDiagnostic[] = [];
+      // Separar diagnósticos resolvidos e não resolvidos
+      const allDiagnostics = options
+        .filter(option => checkedOptions[option.id])
+        .map(option => ({
+          patient_id: patientId,
+          pergunta_id: option.pergunta_id,
+          opcao_id: option.id,
+          texto_digitado: inputValues[option.id] || null,
+          status: selectedStatus[option.id] || 'nao_resolvido' as const
+        }));
 
-      options.forEach(option => {
-        const isChecked = checkedOptions[option.id] || false;
-        
-        if (isChecked) {
-          const status = selectedStatus[option.id] || 'nao_resolvido';
-          const textoDigitado = inputValues[option.id] || undefined;
+      // Apenas não resolvidos ficam na tabela ativa
+      const diagnosticsToKeep = allDiagnostics.filter(d => d.status === 'nao_resolvido');
+      
+      // Resolvidos vão para histórico
+      const diagnosticsResolved = allDiagnostics.filter(d => d.status === 'resolvido');
 
-          diagnosticsToSave.push({
-            id: 0,
-            patient_id: patientId,
-            pergunta_id: option.pergunta_id,
-            opcao_id: option.id,
-            texto_digitado: textoDigitado,
-            status: status as 'resolvido' | 'nao_resolvido'
-          });
-        }
-      });
-
-      // Deletar registros antigos
+      // Deletar registros antigos da tabela ativa
       const { error: deleteError } = await supabase
         .from('paciente_diagnosticos')
         .delete()
         .eq('patient_id', patientId);
 
       if (deleteError) {
-        console.warn('Aviso: Erro ao deletar diagnósticos antigos', deleteError);
+        console.error('Erro ao deletar diagnósticos antigos:', deleteError);
       }
 
-      if (diagnosticsToSave.length > 0) {
-        const { error, data } = await supabase
+      // Inserir apenas não resolvidos na tabela ativa
+      if (diagnosticsToKeep.length > 0) {
+        const { error } = await supabase
           .from('paciente_diagnosticos')
-          .insert(diagnosticsToSave);
+          .insert(diagnosticsToKeep);
 
         if (error) {
-          console.error('Erro detalhado:', error);
+          console.error('Erro ao inserir diagnósticos:', error);
           throw new Error(`Erro ao salvar: ${error.message}`);
-        }
-
-        // Salvar também no histórico (ignora se tabela não existir)
-        try {
-          await supabase
-            .from('diagnosticos_historico')
-            .insert(diagnosticsToSave);
-        } catch (historyError) {
-          console.warn('Aviso: Histórico não foi salvo (tabela pode não existir)', historyError);
         }
       }
 
+      // Salvar TUDO no histórico (resolvidos + não resolvidos)
+      if (allDiagnostics.length > 0) {
+        try {
+          const historyData = allDiagnostics.map(d => ({
+            ...d,
+            created_at: new Date().toISOString()
+          }));
+          
+          await supabase
+            .from('diagnosticos_historico')
+            .insert(historyData);
+        } catch (historyError) {
+          console.warn('Aviso: Histórico não foi salvo', historyError);
+        }
+      }
+
+      // Recarregar dados para refletir mudanças
+      const { data: diagnosticsData } = await supabase
+        .from('paciente_diagnosticos')
+        .select('*')
+        .eq('patient_id', patientId);
+
+      setDiagnostics(diagnosticsData || []);
+
+      // Limpar checkboxes de resolvidos
+      const newCheckedOptions = { ...checkedOptions };
+      diagnosticsResolved.forEach(d => {
+        newCheckedOptions[d.opcao_id] = false;
+      });
+      setCheckedOptions(newCheckedOptions);
+
       if (onSave) {
-        onSave(diagnosticsToSave);
+        onSave(diagnosticsToKeep as PatientDiagnostic[]);
       }
 
       alert('✅ Diagnósticos salvos com sucesso!');
@@ -189,7 +209,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
   return (
     <div className={`space-y-4 p-3 sm:p-4 rounded-lg ${isDark ? 'bg-slate-900' : 'bg-slate-50'}`}>
-      <h3 className={`font-bold text-lg sm:text-xl ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+      <h3 className={`font-bold text-lg sm:text-xl ${isDark ? 'text-white' : 'text-slate-800'}`}>
         Diagnósticos
       </h3>
 
@@ -202,12 +222,12 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {selectedByGroup.principal.length > 0 && (
               <div>
-                <p className={`text-xs font-semibold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                <p className={`text-xs font-semibold ${isDark ? 'text-slate-100' : 'text-slate-600'}`}>
                   Principais: {selectedByGroup.principal.length}
                 </p>
                 <ul className="text-xs space-y-1 mt-1">
                   {selectedByGroup.principal.map(opt => (
-                    <li key={opt.id} className={`flex items-start gap-2 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <li key={opt.id} className={`flex items-start gap-2 ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
                       <span>✓</span>
                       <span className="break-words">{opt.label}</span>
                     </li>
@@ -217,12 +237,12 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
             )}
             {selectedByGroup.secundario.length > 0 && (
               <div>
-                <p className={`text-xs font-semibold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                <p className={`text-xs font-semibold ${isDark ? 'text-slate-100' : 'text-slate-600'}`}>
                   Secundários: {selectedByGroup.secundario.length}
                 </p>
                 <ul className="text-xs space-y-1 mt-1">
                   {selectedByGroup.secundario.map(opt => (
-                    <li key={opt.id} className={`flex items-start gap-2 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <li key={opt.id} className={`flex items-start gap-2 ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
                       <span>✓</span>
                       <span className="break-words">{opt.label}</span>
                     </li>
@@ -263,7 +283,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                         onClick={() => setExpandedQuestion(isQuestionExpanded ? null : question.id)}
                         className={`w-full text-left p-2 sm:p-3 rounded-lg transition-all flex items-center justify-between text-sm sm:text-base ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-100 hover:bg-slate-200'}`}
                       >
-                        <span className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                        <span className={`font-medium ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
                           {question.titulo}
                         </span>
                         <ChevronRightIcon className={`w-4 h-4 transition-transform flex-shrink-0 ${isQuestionExpanded ? 'rotate-90' : ''}`} />
@@ -277,22 +297,41 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
                             return (
                               <div key={option.id} className="space-y-2">
-                                <label className="flex items-center gap-2 sm:gap-3 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={isCurrentlyChecked}
-                                    onChange={(e) => {
-                                      setCheckedOptions(prev => ({
+                                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                                  <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-[200px]">
+                                    <input
+                                      type="checkbox"
+                                      checked={isCurrentlyChecked}
+                                      onChange={(e) => {
+                                        setCheckedOptions(prev => ({
+                                          ...prev,
+                                          [option.id]: e.target.checked
+                                        }));
+                                      }}
+                                      className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+                                    />
+                                    <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
+                                      {option.label}
+                                    </span>
+                                  </label>
+                                  
+                                  {isCurrentlyChecked && (
+                                    <select
+                                      value={selectedStatus[option.id] || 'nao_resolvido'}
+                                      onChange={(e) => setSelectedStatus(prev => ({
                                         ...prev,
-                                        [option.id]: e.target.checked
-                                      }));
-                                    }}
-                                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
-                                  />
-                                  <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                                    {option.label}
-                                  </span>
-                                </label>
+                                        [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
+                                      }))}
+                                      className={`px-2 py-1 text-xs sm:text-sm rounded border flex-shrink-0 ${isDark
+                                        ? 'bg-slate-700 border-slate-600 text-slate-200'
+                                        : 'bg-white border-slate-300 text-slate-800'
+                                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                    >
+                                      <option value="nao_resolvido">❌ Não Res.</option>
+                                      <option value="resolvido">✅ Resolvido</option>
+                                    </select>
+                                  )}
+                                </div>
 
                                 {isCurrentlyChecked && option.has_input && (
                                   <div className="ml-6 sm:ml-7 space-y-2 animate-in slide-in-from-top-2 duration-200">
@@ -309,40 +348,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                         : 'bg-white border-slate-300 text-slate-800'
                                       } focus:outline-none focus:ring-2 focus:ring-blue-500`}
                                     />
-
-                                    <select
-                                      value={selectedStatus[option.id] || 'nao_resolvido'}
-                                      onChange={(e) => setSelectedStatus(prev => ({
-                                        ...prev,
-                                        [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
-                                      }))}
-                                      className={`w-full px-2 py-1.5 text-xs sm:text-sm rounded border ${isDark
-                                        ? 'bg-slate-800 border-slate-600 text-slate-200'
-                                        : 'bg-white border-slate-300 text-slate-800'
-                                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                    >
-                                      <option value="nao_resolvido">❌ Não Resolvido</option>
-                                      <option value="resolvido">✅ Resolvido</option>
-                                    </select>
-                                  </div>
-                                )}
-
-                                {isCurrentlyChecked && !option.has_input && (
-                                  <div className="ml-6 sm:ml-7 animate-in slide-in-from-top-2 duration-200">
-                                    <select
-                                      value={selectedStatus[option.id] || 'nao_resolvido'}
-                                      onChange={(e) => setSelectedStatus(prev => ({
-                                        ...prev,
-                                        [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
-                                      }))}
-                                      className={`w-full px-2 py-1.5 text-xs sm:text-sm rounded border ${isDark
-                                        ? 'bg-slate-800 border-slate-600 text-slate-200'
-                                        : 'bg-white border-slate-300 text-slate-800'
-                                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                    >
-                                      <option value="nao_resolvido">❌ Não Resolvido</option>
-                                      <option value="resolvido">✅ Resolvido</option>
-                                    </select>
                                   </div>
                                 )}
                               </div>
@@ -386,7 +391,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                         onClick={() => setExpandedQuestion(isQuestionExpanded ? null : question.id)}
                         className={`w-full text-left p-2 sm:p-3 rounded-lg transition-all flex items-center justify-between text-sm sm:text-base ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-100 hover:bg-slate-200'}`}
                       >
-                        <span className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                        <span className={`font-medium ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
                           {question.titulo}
                         </span>
                         <ChevronRightIcon className={`w-4 h-4 transition-transform flex-shrink-0 ${isQuestionExpanded ? 'rotate-90' : ''}`} />
@@ -400,22 +405,41 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
                             return (
                               <div key={option.id} className="space-y-2">
-                                <label className="flex items-center gap-2 sm:gap-3 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={isCurrentlyChecked}
-                                    onChange={(e) => {
-                                      setCheckedOptions(prev => ({
+                                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                                  <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-[200px]">
+                                    <input
+                                      type="checkbox"
+                                      checked={isCurrentlyChecked}
+                                      onChange={(e) => {
+                                        setCheckedOptions(prev => ({
+                                          ...prev,
+                                          [option.id]: e.target.checked
+                                        }));
+                                      }}
+                                      className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+                                    />
+                                    <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
+                                      {option.label}
+                                    </span>
+                                  </label>
+                                  
+                                  {isCurrentlyChecked && (
+                                    <select
+                                      value={selectedStatus[option.id] || 'nao_resolvido'}
+                                      onChange={(e) => setSelectedStatus(prev => ({
                                         ...prev,
-                                        [option.id]: e.target.checked
-                                      }));
-                                    }}
-                                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
-                                  />
-                                  <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                                    {option.label}
-                                  </span>
-                                </label>
+                                        [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
+                                      }))}
+                                      className={`px-2 py-1 text-xs sm:text-sm rounded border flex-shrink-0 ${isDark
+                                        ? 'bg-slate-700 border-slate-600 text-slate-200'
+                                        : 'bg-white border-slate-300 text-slate-800'
+                                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                    >
+                                      <option value="nao_resolvido">❌ Não Res.</option>
+                                      <option value="resolvido">✅ Resolvido</option>
+                                    </select>
+                                  )}
+                                </div>
 
                                 {isCurrentlyChecked && option.has_input && (
                                   <div className="ml-6 sm:ml-7 space-y-2 animate-in slide-in-from-top-2 duration-200">
@@ -432,40 +456,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                         : 'bg-white border-slate-300 text-slate-800'
                                       } focus:outline-none focus:ring-2 focus:ring-blue-500`}
                                     />
-
-                                    <select
-                                      value={selectedStatus[option.id] || 'nao_resolvido'}
-                                      onChange={(e) => setSelectedStatus(prev => ({
-                                        ...prev,
-                                        [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
-                                      }))}
-                                      className={`w-full px-2 py-1.5 text-xs sm:text-sm rounded border ${isDark
-                                        ? 'bg-slate-800 border-slate-600 text-slate-200'
-                                        : 'bg-white border-slate-300 text-slate-800'
-                                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                    >
-                                      <option value="nao_resolvido">❌ Não Resolvido</option>
-                                      <option value="resolvido">✅ Resolvido</option>
-                                    </select>
-                                  </div>
-                                )}
-
-                                {isCurrentlyChecked && !option.has_input && (
-                                  <div className="ml-6 sm:ml-7 animate-in slide-in-from-top-2 duration-200">
-                                    <select
-                                      value={selectedStatus[option.id] || 'nao_resolvido'}
-                                      onChange={(e) => setSelectedStatus(prev => ({
-                                        ...prev,
-                                        [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
-                                      }))}
-                                      className={`w-full px-2 py-1.5 text-xs sm:text-sm rounded border ${isDark
-                                        ? 'bg-slate-800 border-slate-600 text-slate-200'
-                                        : 'bg-white border-slate-300 text-slate-800'
-                                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                    >
-                                      <option value="nao_resolvido">❌ Não Resolvido</option>
-                                      <option value="resolvido">✅ Resolvido</option>
-                                    </select>
                                   </div>
                                 )}
                               </div>

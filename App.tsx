@@ -22,6 +22,7 @@ import { AbstinenceScale } from './components/AbstinenceScale';
 import { ConsciousnessScale } from './components/ConsciousnessScale';
 import { DiagnosticsSection } from './components/DiagnosticsSection';
 import { DiagnosticsAdmin } from './components/DiagnosticsAdmin';
+import { PerguntasAdmin } from './components/PerguntasAdmin';
 import { SecondaryNavigation } from './components/SecondaryNavigation';
 import { supabase } from './supabaseClient';
 import { AlertsHistoryScreen } from './AlertsHistoryScreen';
@@ -47,8 +48,14 @@ const Sidebar: React.FC = () => {
         { path: '/patients', label: 'Leitos', icon: BedIcon },
         { path: '/history', label: 'Histórico Geral', icon: FileTextIcon },
         { path: '/settings', label: 'Ajustes', icon: SettingsIcon },
-        { path: '/diagnostics-admin', label: 'Admin Diagnósticos', icon: SettingsIcon },
     ];
+
+    const adminNavItems = [
+        { path: '/diagnostics-admin', label: 'Admin Diagnósticos', icon: SettingsIcon },
+        { path: '/perguntas-admin', label: 'Admin Perguntas', icon: SettingsIcon },
+    ];
+
+    const visibleNavItems = user?.access_level === 'adm' ? [...navItems, ...adminNavItems] : navItems;
 
     const activeLinkClass = "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200";
     const inactiveLinkClass = "text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200";
@@ -65,7 +72,7 @@ const Sidebar: React.FC = () => {
                 <span className="text-xl font-bold text-slate-800 dark:text-slate-200">Round Juju</span>
             </div>
             <nav className="flex-1 px-4 py-4 space-y-2">
-                {navItems.map(item => (
+                {visibleNavItems.map(item => (
                     <NavLink
                         key={item.path}
                         to={item.path}
@@ -613,8 +620,34 @@ const PatientHistoryScreen: React.FC = () => {
     const { patients } = useContext(PatientsContext)!;
     const { tasks } = useContext(TasksContext)!;
     const patient = patients.find(p => p.id.toString() === patientId);
+    const [diagnosticHistory, setDiagnosticHistory] = useState<any[]>([]);
 
     useHeader(patient ? `Histórico: ${patient.name}` : 'Histórico do Paciente');
+
+    // Buscar histórico de diagnósticos do Supabase
+    useEffect(() => {
+        const loadDiagnosticHistory = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('diagnosticos_historico')
+                    .select('*')
+                    .eq('patient_id', patientId)
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.error('Erro ao buscar histórico de diagnósticos:', error);
+                    return;
+                }
+
+                setDiagnosticHistory(data || []);
+            } catch (err) {
+                console.error('Erro:', err);
+            }
+        };
+
+        loadDiagnosticHistory();
+    }, [patientId]);
 
     type TimelineEvent = {
         timestamp: string;
@@ -710,6 +743,17 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
+        // Adicionar histórico de diagnósticos
+        diagnosticHistory.forEach(diag => {
+            const statusText = diag.status === 'resolvido' ? '✅ Resolvido' : '❌ Não Resolvido';
+            events.push({
+                timestamp: diag.created_at || new Date().toISOString(),
+                icon: FileTextIcon,
+                description: `Diagnóstico Registrado: ${diag.texto_digitado || 'N/A'} - Status: ${statusText}.`,
+                hasTime: true,
+            });
+        });
+
         events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
         const groupedEvents = events.reduce((acc, event) => {
@@ -722,7 +766,7 @@ const PatientHistoryScreen: React.FC = () => {
         }, {} as Record<string, TimelineEvent[]>);
 
         return groupedEvents;
-    }, [patient, tasks]);
+    }, [patient, tasks, diagnosticHistory]);
 
     const handleGeneratePdf = () => {
         // ... (PDF generation logic remains the same)
@@ -1297,7 +1341,6 @@ const PatientDetailScreen: React.FC = () => {
                 <div className="flex flex-col gap-1 text-slate-500 dark:text-slate-400 mt-3">
                     <span className="font-medium">Idade: <span className="font-normal">{formatAge(patient.dob)}</span></span>
                     <span className="font-medium">Mãe: <span className="font-normal">{patient.motherName}</span></span>
-                    <span className="font-medium">Diagnóstico: <span className="font-normal">{patient.ctd}</span></span>
                 </div>
             </div>
 
@@ -3877,6 +3920,7 @@ const App: React.FC = () => {
                                         <Route path="history" element={<AlertsHistoryScreen useHeader={useHeader} />} />
                                         <Route path="settings" element={<SettingsScreen />} />
                                         <Route path="diagnostics-admin" element={<DiagnosticsAdmin />} />
+                                        <Route path="perguntas-admin" element={<PerguntasAdmin />} />
                                     </Route>
                                 </Routes>
                             </TasksProvider>
