@@ -119,25 +119,33 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         }
       });
 
-      await supabase
+      // Deletar registros antigos
+      const { error: deleteError } = await supabase
         .from('paciente_diagnosticos')
         .delete()
         .eq('patient_id', patientId);
 
+      if (deleteError) {
+        console.warn('Aviso: Erro ao deletar diagnósticos antigos', deleteError);
+      }
+
       if (diagnosticsToSave.length > 0) {
-        const { error } = await supabase
+        const { error, data } = await supabase
           .from('paciente_diagnosticos')
           .insert(diagnosticsToSave);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro detalhado:', error);
+          throw new Error(`Erro ao salvar: ${error.message}`);
+        }
 
-        // Salvar também no histórico
-        const { error: historyError } = await supabase
-          .from('diagnosticos_historico')
-          .insert(diagnosticsToSave);
-
-        if (historyError) {
-          console.warn('Aviso: Histórico não foi salvo', historyError);
+        // Salvar também no histórico (ignora se tabela não existir)
+        try {
+          await supabase
+            .from('diagnosticos_historico')
+            .insert(diagnosticsToSave);
+        } catch (historyError) {
+          console.warn('Aviso: Histórico não foi salvo (tabela pode não existir)', historyError);
         }
       }
 
@@ -146,9 +154,9 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       }
 
       alert('✅ Diagnósticos salvos com sucesso!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar diagnósticos:', error);
-      alert('❌ Erro ao salvar diagnósticos. Tente novamente.');
+      alert(`❌ ${error.message || 'Erro ao salvar diagnósticos. Tente novamente.'}`);
     } finally {
       setSaving(false);
     }
