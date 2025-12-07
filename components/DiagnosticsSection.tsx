@@ -222,12 +222,12 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {selectedByGroup.principal.length > 0 && (
               <div>
-                <p className={`text-xs font-semibold ${isDark ? 'text-slate-100' : 'text-slate-600'}`}>
+                <p className={`text-xs font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
                   Principais: {selectedByGroup.principal.length}
                 </p>
                 <ul className="text-xs space-y-1 mt-1">
                   {selectedByGroup.principal.map(opt => (
-                    <li key={opt.id} className={`flex items-start gap-2 ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
+                    <li key={opt.id} className={`flex items-start gap-2 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                       <span>✓</span>
                       <span className="break-words">{opt.label}</span>
                     </li>
@@ -237,12 +237,12 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
             )}
             {selectedByGroup.secundario.length > 0 && (
               <div>
-                <p className={`text-xs font-semibold ${isDark ? 'text-slate-100' : 'text-slate-600'}`}>
+                <p className={`text-xs font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
                   Secundários: {selectedByGroup.secundario.length}
                 </p>
                 <ul className="text-xs space-y-1 mt-1">
                   {selectedByGroup.secundario.map(opt => (
-                    <li key={opt.id} className={`flex items-start gap-2 ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
+                    <li key={opt.id} className={`flex items-start gap-2 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                       <span>✓</span>
                       <span className="break-words">{opt.label}</span>
                     </li>
@@ -283,7 +283,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                         onClick={() => setExpandedQuestion(isQuestionExpanded ? null : question.id)}
                         className={`w-full text-left p-2 sm:p-3 rounded-lg transition-all flex items-center justify-between text-sm sm:text-base ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-100 hover:bg-slate-200'}`}
                       >
-                        <span className={`font-medium ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
+                        <span className={`font-medium ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                           {question.titulo}
                         </span>
                         <ChevronRightIcon className={`w-4 h-4 transition-transform flex-shrink-0 ${isQuestionExpanded ? 'rotate-90' : ''}`} />
@@ -310,7 +310,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                       }}
                                       className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
                                     />
-                                    <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
+                                    <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                                       {option.label}
                                     </span>
                                   </label>
@@ -391,7 +391,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                         onClick={() => setExpandedQuestion(isQuestionExpanded ? null : question.id)}
                         className={`w-full text-left p-2 sm:p-3 rounded-lg transition-all flex items-center justify-between text-sm sm:text-base ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-100 hover:bg-slate-200'}`}
                       >
-                        <span className={`font-medium ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
+                        <span className={`font-medium ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                           {question.titulo}
                         </span>
                         <ChevronRightIcon className={`w-4 h-4 transition-transform flex-shrink-0 ${isQuestionExpanded ? 'rotate-90' : ''}`} />
@@ -418,7 +418,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                       }}
                                       className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
                                     />
-                                    <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
+                                    <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                                       {option.label}
                                     </span>
                                   </label>
