@@ -365,18 +365,12 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
     setSaveStatus(null);
 
     try {
-      const newAssessment = {
-        escala: escalaConfig.titulo,
-        nomeCompleto: escalaConfig.nomeCompleto,
-        data: new Date().toISOString(),
-        pontuacao: resultadoAvaliacao.pontuacao,
-        resultado: resultadoAvaliacao.texto,
-        indicacao: resultadoAvaliacao.indicacao,
-        respostas: JSON.stringify(respostas),
-      };
-
       if (onSaveScore) {
-        onSaveScore(newAssessment);
+        onSaveScore({
+          scaleName: 'FSS',
+          score: resultadoAvaliacao.pontuacao,
+          interpretation: resultadoAvaliacao.texto,
+        });
       }
 
       setSaveStatus('success');
