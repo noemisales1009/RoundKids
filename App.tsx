@@ -21,6 +21,7 @@ import { DeliriumMasterScale } from './components/DeliriumMasterScale';
 import { AbstinenceScale } from './components/AbstinenceScale';
 import { ConsciousnessScale } from './components/ConsciousnessScale';
 import { DiagnosticsSection } from './components/DiagnosticsSection';
+import { DiagnosticsAdmin } from './components/DiagnosticsAdmin';
 import { SecondaryNavigation } from './components/SecondaryNavigation';
 import { supabase } from './supabaseClient';
 import { AlertsHistoryScreen } from './AlertsHistoryScreen';
@@ -46,6 +47,7 @@ const Sidebar: React.FC = () => {
         { path: '/patients', label: 'Leitos', icon: BedIcon },
         { path: '/history', label: 'Histórico Geral', icon: FileTextIcon },
         { path: '/settings', label: 'Ajustes', icon: SettingsIcon },
+        { path: '/diagnostics-admin', label: 'Admin Diagnósticos', icon: SettingsIcon },
     ];
 
     const activeLinkClass = "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200";
@@ -3884,6 +3886,7 @@ const App: React.FC = () => {
                                         <Route path="status/:status" element={<TaskStatusScreen />} />
                                         <Route path="history" element={<AlertsHistoryScreen useHeader={useHeader} />} />
                                         <Route path="settings" element={<SettingsScreen />} />
+                                        <Route path="diagnostics-admin" element={<DiagnosticsAdmin />} />
                                     </Route>
                                 </Routes>
                             </TasksProvider>
