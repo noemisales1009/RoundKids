@@ -3021,10 +3021,13 @@ const SettingsScreen: React.FC = () => {
                     // Append timestamp to avoid caching issues if user reuploads quickly (though filename is unique)
                     setAvatarPreview(data.publicUrl);
                     showNotification({ message: 'Foto enviada com sucesso!', type: 'success' });
+                    // Auto-save to database
+                    updateUser({ avatarUrl: data.publicUrl });
                 }
             } catch (error: any) {
                 console.error("Erro no upload:", error);
-                showNotification({ message: 'Erro ao enviar foto. Verifique se o bucket "roundfoto" é PÚBLICO no painel do Supabase.', type: 'error' });
+                const errorMsg = error?.message || 'Erro desconhecido';
+                showNotification({ message: `Erro ao enviar foto: ${errorMsg}. Verifique se o bucket "roundfoto" é PÚBLICO.`, type: 'error' });
             }
         }
     };
