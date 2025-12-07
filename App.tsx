@@ -1583,6 +1583,35 @@ const PatientDetailScreen: React.FC = () => {
                 {mainTab === 'scales' && (
                     <div className="p-4">
                         {scaleView === 'list' && (
+                            <div className="space-y-4">
+                                {patient.scaleScores && patient.scaleScores.length > 0 && (
+                                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 border-l-4 border-blue-500 p-4 rounded-lg">
+                                        <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
+                                            <span className="text-lg">📊</span> Histórico de Avaliações ({patient.scaleScores.length})
+                                        </h3>
+                                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                                            {patient.scaleScores.map((score, idx) => (
+                                                <div key={idx} className="bg-white dark:bg-slate-700 p-3 rounded border border-slate-200 dark:border-slate-600">
+                                                    <div className="flex justify-between items-start gap-2">
+                                                        <div className="flex-1">
+                                                            <p className="font-semibold text-slate-800 dark:text-slate-100">{score.scaleName}</p>
+                                                            <p className="text-sm text-slate-600 dark:text-slate-300">Pontuação: <span className="font-bold text-blue-600 dark:text-blue-400">{score.score}</span></p>
+                                                            {score.interpretation && (
+                                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Interpretação: {score.interpretation}</p>
+                                                            )}
+                                                        </div>
+                                                        <div className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                                                            {new Date(score.date).toLocaleDateString('pt-BR')} <br /> {new Date(score.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">Escalas Disponíveis</h3>
+                                </div>
                             <div className="space-y-3">
                                 {/* List of Scales - (unchanged structure, just collapsed for brevity) */}
                                 <div onClick={() => setScaleView('comfort-b')} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition">
@@ -1615,6 +1644,7 @@ const PatientDetailScreen: React.FC = () => {
                                 <div onClick={() => setScaleView('fss')} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition">
                                     <div className="flex items-center gap-3"><DumbbellIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala de Status Funcional (FSS)</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </div>
+                            </div>
                             </div>
                         )}
                         {scaleView === 'comfort-b' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><ComfortBScale onSaveScore={handleSaveScaleScore} /></div></div>)}
