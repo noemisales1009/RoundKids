@@ -20,6 +20,7 @@ import { FSSScale } from './components/FSSScale';
 import { DeliriumMasterScale } from './components/DeliriumMasterScale';
 import { AbstinenceScale } from './components/AbstinenceScale';
 import { ConsciousnessScale } from './components/ConsciousnessScale';
+import { DiagnosticsSection } from './components/DiagnosticsSection';
 import { SecondaryNavigation } from './components/SecondaryNavigation';
 import { supabase } from './supabaseClient';
 import { AlertsHistoryScreen } from './AlertsHistoryScreen';
@@ -1167,7 +1168,7 @@ const PatientDetailScreen: React.FC = () => {
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
     const [mainTab, setMainTab] = useState<'data' | 'scales'>('data');
-    const [dataTab, setDataTab] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures'>('devices');
+    const [dataTab, setDataTab] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diagnosticos'>('devices');
     const [isAddDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
     const [editingDevice, setEditingDevice] = useState<Device | null>(null);
     const [isAddExamModalOpen, setAddExamModalOpen] = useState(false);
@@ -1287,6 +1288,7 @@ const PatientDetailScreen: React.FC = () => {
         { id: 'medications', label: 'Medicações', icon: PillIcon },
         { id: 'surgical', label: 'Cirúrgico', icon: ScalpelIcon },
         { id: 'cultures', label: 'Culturas', icon: BeakerIcon },
+        { id: 'diagnosticos', label: 'Diagnósticos', icon: AlertIcon },
     ];
 
     return (
@@ -1313,6 +1315,9 @@ const PatientDetailScreen: React.FC = () => {
                     Ver Histórico Completo
                 </div>
             </Link>
+
+            {/* Diagnósticos Clínicos */}
+            <DiagnosticsSection patientId={patient.id.toString()} />
 
             {/* Alertas do Paciente */}
             {(() => {
