@@ -450,8 +450,8 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
   // TELA 2: FORM
   if (tela === 'form') {
     return (
-      <div className={`w-full max-w-2xl mx-auto p-4 sm:p-6 min-h-screen flex flex-col ${isDark ? 'bg-slate-950 text-gray-100' : 'bg-white text-gray-900'}`}>
-        <div className={`sticky top-0 z-10 pb-4 pt-2 mb-4 backdrop-blur-sm ${isDark ? 'bg-slate-950/95 border-slate-800' : 'bg-white/95 border-slate-200'} border-b`}>
+      <div className={`w-full flex flex-col min-h-screen ${isDark ? 'bg-slate-950 text-gray-100' : 'bg-white text-gray-900'}`}>
+        <div className={`sticky top-0 z-10 max-w-2xl mx-auto w-full pb-4 pt-2 backdrop-blur-sm ${isDark ? 'bg-slate-950/95 border-slate-800' : 'bg-white/95 border-slate-200'} border-b px-4 sm:px-6`}>
           <div className="flex items-center justify-between mb-2">
             <button
               onClick={() => setTela('intro')}
@@ -475,7 +475,7 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
           </div>
         </div>
 
-        <div className="flex-1 space-y-4 pb-24">
+        <div className="flex-1 max-w-2xl mx-auto w-full p-4 sm:p-6 space-y-4 pb-32">
           {escalaConfig.itens.map((item) => (
             <FSSQuestionCard
               key={item.id}
@@ -488,14 +488,14 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
           ))}
         </div>
 
-        <div className={`fixed bottom-0 left-0 right-0 p-4 ${isDark ? 'bg-gradient-to-t from-slate-950 via-slate-950 to-transparent' : 'bg-gradient-to-t from-white via-white to-transparent'}`}>
+        <div className={`fixed bottom-0 left-0 right-0 p-4 sm:p-6 ${isDark ? 'bg-slate-900' : 'bg-slate-50'} border-t ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
           <div className="max-w-2xl mx-auto">
             <button
               onClick={finalizarAvaliacao}
               disabled={!resultadoAvaliacao?.isCompleto}
               className={`w-full py-4 rounded-xl font-bold text-lg shadow-xl transition-all ${
                 resultadoAvaliacao?.isCompleto
-                  ? `${escalaConfig.cores.bg} ${escalaConfig.cores.hover} text-white transform hover:scale-105`
+                  ? `${escalaConfig.cores.bg} ${escalaConfig.cores.hover} text-white transform hover:scale-105 active:scale-95`
                   : isDark
                   ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
                   : 'bg-slate-300 text-slate-600 cursor-not-allowed'
