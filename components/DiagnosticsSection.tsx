@@ -47,6 +47,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
   const [inputValues, setInputValues] = useState<Record<number, string>>({});
   const [selectedStatus, setSelectedStatus] = useState<Record<number, 'resolvido' | 'nao_resolvido'>>({});
+  const [checkedOptions, setCheckedOptions] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     const loadData = async () => {
@@ -61,24 +62,30 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
             .eq('patient_id', patientId)
         ]);
 
-        if (questionsRes.data) setQuestions(questionsRes.data as DiagnosticQuestion[]);
-        if (optionsRes.data) setOptions(optionsRes.data as DiagnosticOption[]);
-        if (diagnosticsRes.data) {
-          setDiagnostics(diagnosticsRes.data as PatientDiagnostic[]);
-          
-          const inputs: Record<number, string> = {};
-          const statuses: Record<number, 'resolvido' | 'nao_resolvido'> = {};
-          
-          (diagnosticsRes.data as PatientDiagnostic[]).forEach(diag => {
-            if (diag.texto_digitado) {
-              inputs[diag.opcao_id] = diag.texto_digitado;
-            }
-            statuses[diag.opcao_id] = diag.status;
-          });
-          
-          setInputValues(inputs);
-          setSelectedStatus(statuses);
-        }
+        if (questionsRes.error) throw questionsRes.error;
+        if (optionsRes.error) throw optionsRes.error;
+        if (diagnosticsRes.error) throw diagnosticsRes.error;
+
+        setQuestions(questionsRes.data || []);
+        setOptions(optionsRes.data || []);
+        setDiagnostics(diagnosticsRes.data || []);
+
+        // Inicializar estado a partir dos dados carregados
+        const checked: Record<number, boolean> = {};
+        const inputs: Record<number, string> = {};
+        const statuses: Record<number, 'resolvido' | 'nao_resolvido'> = {};
+
+        (diagnosticsRes.data || []).forEach(diag => {
+          checked[diag.opcao_id] = true;
+          if (diag.texto_digitado) {
+            inputs[diag.opcao_id] = diag.texto_digitado;
+          }
+          statuses[diag.opcao_id] = diag.status;
+        });
+        
+        setCheckedOptions(checked);
+        setInputValues(inputs);
+        setSelectedStatus(statuses);
       } catch (error) {
         console.error('Erro ao carregar diagnósticos:', error);
       } finally {
@@ -95,9 +102,9 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       const diagnosticsToSave: PatientDiagnostic[] = [];
 
       options.forEach(option => {
-        const checkbox = document.getElementById(`diag-${option.id}`) as HTMLInputElement;
+        const isChecked = checkedOptions[option.id] || false;
         
-        if (checkbox && checkbox.checked) {
+        if (isChecked) {
           const status = selectedStatus[option.id] || 'nao_resolvido';
           const textoDigitado = inputValues[option.id] || undefined;
 
@@ -123,6 +130,15 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           .insert(diagnosticsToSave);
 
         if (error) throw error;
+
+        // Salvar também no histórico
+        const { error: historyError } = await supabase
+          .from('diagnosticos_historico')
+          .insert(diagnosticsToSave);
+
+        if (historyError) {
+          console.warn('Aviso: Histórico não foi salvo', historyError);
+        }
       }
 
       if (onSave) {
@@ -149,135 +165,319 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const mainQuestions = questions.filter(q => q.tipo === 'principal');
   const secondaryQuestions = questions.filter(q => q.tipo === 'secundario');
 
-  const renderGroup = (groupQuestions: DiagnosticQuestion[], groupType: 'principal' | 'secundario', title: string) => {
-    const isExpanded = expandedGroup === groupType;
-
-    return (
-      <div className={`${isDark ? 'bg-slate-800' : 'bg-white'} rounded-lg shadow-sm overflow-hidden border ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-        {/* Header - Clicável */}
-        <button
-          onClick={() => setExpandedGroup(isExpanded ? null : groupType)}
-          className={`w-full flex items-center justify-between p-4 transition-all ${isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-50'}`}
-        >
-          <span className={`font-bold text-lg ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-            {title}
-          </span>
-          <ChevronRightIcon className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-90' : ''} ${isDark ? 'text-slate-400' : 'text-slate-600'}`} />
-        </button>
-
-        {/* Conteúdo - Expandido */}
-        {isExpanded && (
-          <div className={`border-t ${isDark ? 'border-slate-700' : 'border-slate-200'} p-4 space-y-2`}>
-            {groupQuestions.map(question => {
-              const questionOptions = options.filter(opt => opt.pergunta_id === question.id);
-              const isQuestionExpanded = expandedQuestion === question.id;
-
-              return (
-                <div key={question.id}>
-                  {/* Pergunta - Clicável */}
-                  <button
-                    onClick={() => setExpandedQuestion(isQuestionExpanded ? null : question.id)}
-                    className={`w-full text-left p-3 rounded-lg transition-all flex items-center justify-between ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-100 hover:bg-slate-200'}`}
-                  >
-                    <span className={`font-medium text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                      {question.titulo}
-                    </span>
-                    <ChevronRightIcon className={`w-4 h-4 transition-transform ${isQuestionExpanded ? 'rotate-90' : ''} ${isDark ? 'text-slate-400' : 'text-slate-600'}`} />
-                  </button>
-
-                  {/* Opções - Expandidas */}
-                  {isQuestionExpanded && (
-                    <div className={`mt-2 ml-3 space-y-2 p-3 rounded-lg ${isDark ? 'bg-slate-900/50' : 'bg-slate-50'}`}>
-                      {questionOptions.map(option => {
-                        const isChecked = diagnostics.some(d => d.opcao_id === option.id);
-
-                        return (
-                          <div key={option.id} className="space-y-2">
-                            {/* Checkbox */}
-                            <label className="flex items-center gap-3 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                id={`diag-${option.id}`}
-                                defaultChecked={isChecked}
-                                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                              />
-                              <span className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                                {option.label}
-                              </span>
-                            </label>
-
-                            {/* Input dinâmico */}
-                            {option.has_input && (
-                              <div className="ml-7">
-                                <input
-                                  type="text"
-                                  placeholder={option.input_placeholder || 'Digite...'}
-                                  value={inputValues[option.id] || ''}
-                                  onChange={(e) => setInputValues(prev => ({
-                                    ...prev,
-                                    [option.id]: e.target.value
-                                  }))}
-                                  className={`w-full px-2 py-1.5 text-sm rounded border ${isDark 
-                                    ? 'bg-slate-800 border-slate-600 text-slate-200' 
-                                    : 'bg-white border-slate-300 text-slate-800'
-                                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                />
-                              </div>
-                            )}
-
-                            {/* Status */}
-                            {(() => {
-                              const checkbox = document.getElementById(`diag-${option.id}`) as HTMLInputElement;
-                              return checkbox?.checked && (
-                                <div className="ml-7">
-                                  <select
-                                    value={selectedStatus[option.id] || 'nao_resolvido'}
-                                    onChange={(e) => setSelectedStatus(prev => ({
-                                      ...prev,
-                                      [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
-                                    }))}
-                                    className={`w-full px-2 py-1.5 text-sm rounded border ${isDark
-                                      ? 'bg-slate-800 border-slate-600 text-slate-200'
-                                      : 'bg-white border-slate-300 text-slate-800'
-                                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                  >
-                                    <option value="nao_resolvido">❌ Não Resolvido</option>
-                                    <option value="resolvido">✅ Resolvido</option>
-                                  </select>
-                                </div>
-                              );
-                            })()}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
+  // Calcular resumo de seleções
+  const selectedOptions = options.filter(opt => checkedOptions[opt.id]);
+  const selectedByGroup = {
+    principal: selectedOptions.filter(opt => {
+      const question = questions.find(q => q.id === opt.pergunta_id);
+      return question?.tipo === 'principal';
+    }),
+    secundario: selectedOptions.filter(opt => {
+      const question = questions.find(q => q.id === opt.pergunta_id);
+      return question?.tipo === 'secundario';
+    })
   };
 
   return (
-    <div className={`space-y-4 p-4 rounded-lg ${isDark ? 'bg-slate-900' : 'bg-slate-50'}`}>
-      <h3 className={`font-bold text-lg ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+    <div className={`space-y-4 p-3 sm:p-4 rounded-lg ${isDark ? 'bg-slate-900' : 'bg-slate-50'}`}>
+      <h3 className={`font-bold text-lg sm:text-xl ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
         Diagnósticos
       </h3>
 
-      {/* Diagnósticos Principais */}
-      {mainQuestions.length > 0 && renderGroup(mainQuestions, 'principal', '🏥 Diagnósticos Principais')}
+      {/* Resumo de Seleções */}
+      {selectedOptions.length > 0 && (
+        <div className={`p-3 rounded-lg border-l-4 ${isDark ? 'bg-slate-800 border-blue-500' : 'bg-blue-50 border-blue-400'}`}>
+          <p className={`text-sm font-semibold mb-2 ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
+            📋 {selectedOptions.length} diagnóstico(s) selecionado(s)
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {selectedByGroup.principal.length > 0 && (
+              <div>
+                <p className={`text-xs font-semibold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                  Principais: {selectedByGroup.principal.length}
+                </p>
+                <ul className="text-xs space-y-1 mt-1">
+                  {selectedByGroup.principal.map(opt => (
+                    <li key={opt.id} className={`flex items-start gap-2 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                      <span>✓</span>
+                      <span className="break-words">{opt.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {selectedByGroup.secundario.length > 0 && (
+              <div>
+                <p className={`text-xs font-semibold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                  Secundários: {selectedByGroup.secundario.length}
+                </p>
+                <ul className="text-xs space-y-1 mt-1">
+                  {selectedByGroup.secundario.map(opt => (
+                    <li key={opt.id} className={`flex items-start gap-2 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                      <span>✓</span>
+                      <span className="break-words">{opt.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
-      {/* Diagnósticos Secundários */}
-      {secondaryQuestions.length > 0 && renderGroup(secondaryQuestions, 'secundario', '📋 Diagnósticos Secundários')}
+      <div className="space-y-3">
+        {/* Botão Diagnósticos Principais */}
+        {mainQuestions.length > 0 && (
+          <div>
+            <button
+              onClick={() => setExpandedGroup(expandedGroup === 'principal' ? null : 'principal')}
+              className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-lg font-bold transition-all text-sm sm:text-base ${
+                expandedGroup === 'principal'
+                  ? `${isDark ? 'bg-blue-900/40' : 'bg-blue-100'} border-2 ${isDark ? 'border-blue-500' : 'border-blue-400'}`
+                  : `${isDark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-white hover:bg-slate-50'} border-2 ${isDark ? 'border-slate-700' : 'border-slate-200'}`
+              }`}
+            >
+              <span>🏥 Diagnósticos Principais</span>
+              <ChevronRightIcon className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform flex-shrink-0 ${expandedGroup === 'principal' ? 'rotate-90' : ''}`} />
+            </button>
+
+            {/* Conteúdo Diagnósticos Principais */}
+            {expandedGroup === 'principal' && (
+              <div className={`mt-2 p-3 sm:p-4 rounded-lg space-y-3 ${isDark ? 'bg-slate-800' : 'bg-white'} border ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                {mainQuestions.map(question => {
+                  const questionOptions = options.filter(opt => opt.pergunta_id === question.id);
+                  const isQuestionExpanded = expandedQuestion === question.id;
+
+                  return (
+                    <div key={question.id}>
+                      <button
+                        onClick={() => setExpandedQuestion(isQuestionExpanded ? null : question.id)}
+                        className={`w-full text-left p-2 sm:p-3 rounded-lg transition-all flex items-center justify-between text-sm sm:text-base ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-100 hover:bg-slate-200'}`}
+                      >
+                        <span className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                          {question.titulo}
+                        </span>
+                        <ChevronRightIcon className={`w-4 h-4 transition-transform flex-shrink-0 ${isQuestionExpanded ? 'rotate-90' : ''}`} />
+                      </button>
+
+                      {isQuestionExpanded && (
+                        <div className={`mt-2 ml-2 sm:ml-3 space-y-2 p-2 sm:p-3 rounded-lg ${isDark ? 'bg-slate-900/50' : 'bg-slate-50'}`}>
+                          {questionOptions.map(option => {
+                            const isChecked = diagnostics.some(d => d.opcao_id === option.id);
+                            const isCurrentlyChecked = checkedOptions[option.id] !== undefined ? checkedOptions[option.id] : isChecked;
+
+                            return (
+                              <div key={option.id} className="space-y-2">
+                                <label className="flex items-center gap-2 sm:gap-3 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={isCurrentlyChecked}
+                                    onChange={(e) => {
+                                      setCheckedOptions(prev => ({
+                                        ...prev,
+                                        [option.id]: e.target.checked
+                                      }));
+                                    }}
+                                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+                                  />
+                                  <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                                    {option.label}
+                                  </span>
+                                </label>
+
+                                {isCurrentlyChecked && option.has_input && (
+                                  <div className="ml-6 sm:ml-7 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                                    <input
+                                      type="text"
+                                      placeholder={option.input_placeholder || 'Digite...'}
+                                      value={inputValues[option.id] || ''}
+                                      onChange={(e) => setInputValues(prev => ({
+                                        ...prev,
+                                        [option.id]: e.target.value
+                                      }))}
+                                      className={`w-full px-2 py-1.5 text-xs sm:text-sm rounded border ${isDark 
+                                        ? 'bg-slate-800 border-slate-600 text-slate-200' 
+                                        : 'bg-white border-slate-300 text-slate-800'
+                                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                    />
+
+                                    <select
+                                      value={selectedStatus[option.id] || 'nao_resolvido'}
+                                      onChange={(e) => setSelectedStatus(prev => ({
+                                        ...prev,
+                                        [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
+                                      }))}
+                                      className={`w-full px-2 py-1.5 text-xs sm:text-sm rounded border ${isDark
+                                        ? 'bg-slate-800 border-slate-600 text-slate-200'
+                                        : 'bg-white border-slate-300 text-slate-800'
+                                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                    >
+                                      <option value="nao_resolvido">❌ Não Resolvido</option>
+                                      <option value="resolvido">✅ Resolvido</option>
+                                    </select>
+                                  </div>
+                                )}
+
+                                {isCurrentlyChecked && !option.has_input && (
+                                  <div className="ml-6 sm:ml-7 animate-in slide-in-from-top-2 duration-200">
+                                    <select
+                                      value={selectedStatus[option.id] || 'nao_resolvido'}
+                                      onChange={(e) => setSelectedStatus(prev => ({
+                                        ...prev,
+                                        [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
+                                      }))}
+                                      className={`w-full px-2 py-1.5 text-xs sm:text-sm rounded border ${isDark
+                                        ? 'bg-slate-800 border-slate-600 text-slate-200'
+                                        : 'bg-white border-slate-300 text-slate-800'
+                                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                    >
+                                      <option value="nao_resolvido">❌ Não Resolvido</option>
+                                      <option value="resolvido">✅ Resolvido</option>
+                                    </select>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Botão Diagnósticos Secundários */}
+        {secondaryQuestions.length > 0 && (
+          <div>
+            <button
+              onClick={() => setExpandedGroup(expandedGroup === 'secundario' ? null : 'secundario')}
+              className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-lg font-bold transition-all text-sm sm:text-base ${
+                expandedGroup === 'secundario'
+                  ? `${isDark ? 'bg-purple-900/40' : 'bg-purple-100'} border-2 ${isDark ? 'border-purple-500' : 'border-purple-400'}`
+                  : `${isDark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-white hover:bg-slate-50'} border-2 ${isDark ? 'border-slate-700' : 'border-slate-200'}`
+              }`}
+            >
+              <span>📋 Diagnósticos Secundários</span>
+              <ChevronRightIcon className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform flex-shrink-0 ${expandedGroup === 'secundario' ? 'rotate-90' : ''}`} />
+            </button>
+
+            {/* Conteúdo Diagnósticos Secundários */}
+            {expandedGroup === 'secundario' && (
+              <div className={`mt-2 p-3 sm:p-4 rounded-lg space-y-3 ${isDark ? 'bg-slate-800' : 'bg-white'} border ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                {secondaryQuestions.map(question => {
+                  const questionOptions = options.filter(opt => opt.pergunta_id === question.id);
+                  const isQuestionExpanded = expandedQuestion === question.id;
+
+                  return (
+                    <div key={question.id}>
+                      <button
+                        onClick={() => setExpandedQuestion(isQuestionExpanded ? null : question.id)}
+                        className={`w-full text-left p-2 sm:p-3 rounded-lg transition-all flex items-center justify-between text-sm sm:text-base ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-100 hover:bg-slate-200'}`}
+                      >
+                        <span className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                          {question.titulo}
+                        </span>
+                        <ChevronRightIcon className={`w-4 h-4 transition-transform flex-shrink-0 ${isQuestionExpanded ? 'rotate-90' : ''}`} />
+                      </button>
+
+                      {isQuestionExpanded && (
+                        <div className={`mt-2 ml-2 sm:ml-3 space-y-2 p-2 sm:p-3 rounded-lg ${isDark ? 'bg-slate-900/50' : 'bg-slate-50'}`}>
+                          {questionOptions.map(option => {
+                            const isChecked = diagnostics.some(d => d.opcao_id === option.id);
+                            const isCurrentlyChecked = checkedOptions[option.id] !== undefined ? checkedOptions[option.id] : isChecked;
+
+                            return (
+                              <div key={option.id} className="space-y-2">
+                                <label className="flex items-center gap-2 sm:gap-3 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={isCurrentlyChecked}
+                                    onChange={(e) => {
+                                      setCheckedOptions(prev => ({
+                                        ...prev,
+                                        [option.id]: e.target.checked
+                                      }));
+                                    }}
+                                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+                                  />
+                                  <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                                    {option.label}
+                                  </span>
+                                </label>
+
+                                {isCurrentlyChecked && option.has_input && (
+                                  <div className="ml-6 sm:ml-7 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                                    <input
+                                      type="text"
+                                      placeholder={option.input_placeholder || 'Digite...'}
+                                      value={inputValues[option.id] || ''}
+                                      onChange={(e) => setInputValues(prev => ({
+                                        ...prev,
+                                        [option.id]: e.target.value
+                                      }))}
+                                      className={`w-full px-2 py-1.5 text-xs sm:text-sm rounded border ${isDark 
+                                        ? 'bg-slate-800 border-slate-600 text-slate-200' 
+                                        : 'bg-white border-slate-300 text-slate-800'
+                                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                    />
+
+                                    <select
+                                      value={selectedStatus[option.id] || 'nao_resolvido'}
+                                      onChange={(e) => setSelectedStatus(prev => ({
+                                        ...prev,
+                                        [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
+                                      }))}
+                                      className={`w-full px-2 py-1.5 text-xs sm:text-sm rounded border ${isDark
+                                        ? 'bg-slate-800 border-slate-600 text-slate-200'
+                                        : 'bg-white border-slate-300 text-slate-800'
+                                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                    >
+                                      <option value="nao_resolvido">❌ Não Resolvido</option>
+                                      <option value="resolvido">✅ Resolvido</option>
+                                    </select>
+                                  </div>
+                                )}
+
+                                {isCurrentlyChecked && !option.has_input && (
+                                  <div className="ml-6 sm:ml-7 animate-in slide-in-from-top-2 duration-200">
+                                    <select
+                                      value={selectedStatus[option.id] || 'nao_resolvido'}
+                                      onChange={(e) => setSelectedStatus(prev => ({
+                                        ...prev,
+                                        [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
+                                      }))}
+                                      className={`w-full px-2 py-1.5 text-xs sm:text-sm rounded border ${isDark
+                                        ? 'bg-slate-800 border-slate-600 text-slate-200'
+                                        : 'bg-white border-slate-300 text-slate-800'
+                                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                    >
+                                      <option value="nao_resolvido">❌ Não Resolvido</option>
+                                      <option value="resolvido">✅ Resolvido</option>
+                                    </select>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Botão Salvar */}
       <button
         onClick={handleSave}
         disabled={saving}
-        className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-semibold transition ${
+        className={`w-full flex items-center justify-center gap-2 py-2.5 px-3 sm:px-4 rounded-lg font-semibold transition text-sm sm:text-base ${
           saving
             ? `${isDark ? 'bg-slate-700' : 'bg-slate-300'} cursor-not-allowed`
             : `bg-blue-600 hover:bg-blue-700 text-white`
@@ -289,4 +489,3 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     </div>
   );
 };
-
