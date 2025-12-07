@@ -42,7 +42,17 @@ const getTodayDateString = () => new Date().toISOString().split('T')[0];
 
 const Sidebar: React.FC = () => {
     const navigate = useNavigate();
-    const { user } = useContext(UserContext)!;
+    const { user, isLoading } = useContext(UserContext)!;
+    const [shouldReload, setShouldReload] = useState(false);
+
+    // Se o usuário estiver vazio e não estiver carregando, força um reload
+    useEffect(() => {
+        if (!isLoading && (!user.name || user.name === 'Usuário') && !shouldReload) {
+            setShouldReload(true);
+            window.location.reload();
+        }
+    }, [isLoading, user.name, shouldReload]);
+
     const navItems = [
         { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
         { path: '/patients', label: 'Leitos', icon: BedIcon },
