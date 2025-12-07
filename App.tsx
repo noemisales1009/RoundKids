@@ -15,6 +15,7 @@ import { BradenScale } from './components/BradenScale';
 import { BradenQDScale } from './components/BradenQDScale';
 import BradenRiscoLesaoScale from './components/BradenRiscoLesaoScale';
 import { VniCnafScale } from './components/VniCnafScale';
+import { VniCnafPediatricoScale } from './components/VniCnafPediatricoScale';
 import { FSSScale } from './components/FSSScale';
 import { SecondaryNavigation } from './components/SecondaryNavigation';
 import { supabase } from './supabaseClient';
@@ -1179,7 +1180,7 @@ const PatientDetailScreen: React.FC = () => {
     const [isEditInfoModalOpen, setEditInfoModalOpen] = useState(false);
     const [showPatientAlerts, setShowPatientAlerts] = useState(false);
     const [isCreateAlertModalOpen, setCreateAlertModalOpen] = useState(false);
-    const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'cam-icu' | 'delirium-pediatrico' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'braden-risco-lesao' | 'vni-cnaf' | 'fss'>('list');
+    const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'cam-icu' | 'delirium-pediatrico' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'braden-risco-lesao' | 'vni-cnaf' | 'vni-cnaf-pediatrico' | 'fss'>('list');
 
     const { showNotification } = useContext(NotificationContext)!;
 
@@ -1611,7 +1612,7 @@ const PatientDetailScreen: React.FC = () => {
                                     <div className="flex items-center gap-3"><ShieldIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Risco de Lesão por Pressão</p><p className="text-xs text-slate-500 dark:text-slate-400">Braden • Braden Q • Braden Q Ampliada</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </div>
                                 <div onClick={() => setScaleView('vni-cnaf')} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition">
-                                    <div className="flex items-center gap-3"><LungsIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala VNI/CNAF Pediatria</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                    <div className="flex items-center gap-3"><LungsIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">VNI/CNAF Pediatria</p><p className="text-xs text-slate-500 dark:text-slate-400">Resposta à Ventilação Não Invasiva</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </div>
                                 <div onClick={() => setScaleView('fss')} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition">
                                     <div className="flex items-center gap-3"><DumbbellIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala de Status Funcional (FSS)</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
@@ -1629,6 +1630,7 @@ const PatientDetailScreen: React.FC = () => {
                         {scaleView === 'braden-qd' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><BradenQDScale onSaveScore={handleSaveScaleScore} /></div></div>)}
                         {scaleView === 'braden-risco-lesao' && (<div className='bg-slate-900 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-orange-500 dark:text-orange-400 font-semibold mb-4 p-4 hover:bg-slate-800 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><BradenRiscoLesaoScale onSaveScore={handleSaveScaleScore} /></div></div>)}
                         {scaleView === 'vni-cnaf' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><VniCnafScale onSaveScore={handleSaveScaleScore} /></div></div>)}
+                        {scaleView === 'vni-cnaf-pediatrico' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><VniCnafPediatricoScale onSaveScore={handleSaveScaleScore} /></div></div>)}
                         {scaleView === 'fss' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><FSSScale onSaveScore={handleSaveScaleScore} /></div></div>)}
                     </div>
                 )}
