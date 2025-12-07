@@ -3002,7 +3002,7 @@ const SettingsScreen: React.FC = () => {
                 const fileName = `avatars/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
                 const { error: uploadError } = await supabase.storage
-                    .from('roundfoto')
+                    .from('images')
                     .upload(fileName, file, {
                         cacheControl: '3600',
                         upsert: false
@@ -3014,7 +3014,7 @@ const SettingsScreen: React.FC = () => {
 
                 // 3. Obter a URL pública
                 const { data } = supabase.storage
-                    .from('roundfoto')
+                    .from('images')
                     .getPublicUrl(fileName);
 
                 if (data.publicUrl) {
@@ -3027,7 +3027,7 @@ const SettingsScreen: React.FC = () => {
             } catch (error: any) {
                 console.error("Erro no upload:", error);
                 const errorMsg = error?.message || 'Erro desconhecido';
-                showNotification({ message: `Erro ao enviar foto: ${errorMsg}. Verifique se o bucket "roundfoto" é PÚBLICO.`, type: 'error' });
+                showNotification({ message: `Erro ao enviar foto: ${errorMsg}. Verifique se o bucket "images" é PÚBLICO.`, type: 'error' });
             }
         }
     };
