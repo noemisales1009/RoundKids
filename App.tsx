@@ -2976,9 +2976,13 @@ const SettingsScreen: React.FC = () => {
     const [avatarPreview, setAvatarPreview] = useState(user.avatarUrl);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleSave = () => {
+    const handleSave = async () => {
         updateUser({ name, title, avatarUrl: avatarPreview, sector });
         showNotification({ message: 'Perfil salvo com sucesso!', type: 'success' });
+        // Force re-render to reflect changes in sidebar
+        setTimeout(() => {
+            window.dispatchEvent(new Event('userUpdated'));
+        }, 500);
     };
 
     const handleAvatarClick = () => {
