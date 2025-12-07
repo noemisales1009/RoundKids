@@ -2995,12 +2995,14 @@ const SettingsScreen: React.FC = () => {
             };
             reader.readAsDataURL(file);
 
-            // 2. Upload para o Supabase Storage (bucket 'roundfoto')
+            // 2. Upload para o Supabase Storage (bucket 'avatars')
             try {
                 const fileExt = file.name.split('.').pop();
                 // Cria um nome de arquivo único: avatars/timestamp-random.ext
                 const fileName = `avatars/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
+                console.log("Tentando fazer upload para bucket 'avatars':", fileName);
+                
                 const { error: uploadError } = await supabase.storage
                     .from('avatars')
                     .upload(fileName, file, {
@@ -3009,13 +3011,18 @@ const SettingsScreen: React.FC = () => {
                     });
 
                 if (uploadError) {
+                    console.error("Erro do Supabase no upload:", uploadError);
                     throw uploadError;
                 }
+
+                console.log("Upload bem-sucedido, obtendo URL pública...");
 
                 // 3. Obter a URL pública
                 const { data } = supabase.storage
                     .from('avatars')
                     .getPublicUrl(fileName);
+
+                console.log("URL pública obtida:", data.publicUrl);
 
                 if (data.publicUrl) {
                     // Append timestamp to avoid caching issues if user reuploads quickly (though filename is unique)
@@ -3025,9 +3032,9 @@ const SettingsScreen: React.FC = () => {
                     updateUser({ avatarUrl: data.publicUrl });
                 }
             } catch (error: any) {
-                console.error("Erro no upload:", error);
+                console.error("Erro completo no upload:", error);
                 const errorMsg = error?.message || 'Erro desconhecido';
-                showNotification({ message: `Erro ao enviar foto: ${errorMsg}. Crie um bucket "avatars" no Supabase Storage e torne-o PUBLIC.`, type: 'error' });
+                showNotification({ message: `Erro ao enviar foto: ${errorMsg}. Verifique as políticas RLS do bucket "avatars" no Supabase.`, type: 'error' });
             }
         }
     };
