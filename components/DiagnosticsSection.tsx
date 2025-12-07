@@ -34,7 +34,8 @@ interface DiagnosticsSectionProps {
 }
 
 export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientId, onSave }) => {
-  const { isDark } = useContext(ThemeContext) || { isDark: false };
+  const themeContext = useContext(ThemeContext);
+  const isDark = themeContext?.isDark ?? true; // Default to dark mode
 
   const [questions, setQuestions] = useState<DiagnosticQuestion[]>([]);
   const [options, setOptions] = useState<DiagnosticOption[]>([]);
