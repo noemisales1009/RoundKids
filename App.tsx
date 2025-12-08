@@ -1210,7 +1210,7 @@ const PatientDetailScreen: React.FC = () => {
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
     const [mainTab, setMainTab] = useState<'data' | 'scales'>('data');
-    const [dataTab, setDataTab] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diagnosticos'>('devices');
+    const [dataTab, setDataTab] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures'>('devices');
     const [isAddDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
     const [editingDevice, setEditingDevice] = useState<Device | null>(null);
     const [isAddExamModalOpen, setAddExamModalOpen] = useState(false);
@@ -1330,7 +1330,6 @@ const PatientDetailScreen: React.FC = () => {
         { id: 'medications', label: 'Medicações', icon: PillIcon },
         { id: 'surgical', label: 'Cirúrgico', icon: ScalpelIcon },
         { id: 'cultures', label: 'Culturas', icon: BeakerIcon },
-        { id: 'diagnosticos', label: 'Diagnósticos', icon: AlertIcon },
     ];
 
     return (
