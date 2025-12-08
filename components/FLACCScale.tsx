@@ -570,7 +570,7 @@ function FLACCScale() {
           </div>
 
           {/* Perguntas */}
-          <div className="space-y-4 pb-24">
+          <div className="space-y-4">
             {configAtual.dominios.map((item) => (
               <FLACCQuestionCard
                 key={item.id}
@@ -582,29 +582,25 @@ function FLACCScale() {
             ))}
           </div>
 
-          {/* Botão Flutuante */}
-          <div
-            className={`fixed bottom-0 left-0 right-0 p-4 ${
-              isDark ? 'bg-gradient-to-t from-slate-950' : 'bg-gradient-to-t from-gray-50'
-            }`}
-          >
-            <div className="max-w-lg mx-auto">
-              <button
-                onClick={finalizarAvaliacao}
-                disabled={!resultadoAvaliacao?.isCompleto}
-                className={`w-full py-4 rounded-xl font-bold transition-all ${
-                  resultadoAvaliacao?.isCompleto
-                    ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                    : isDark
-                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                {resultadoAvaliacao?.isCompleto
-                  ? 'Ver Resultado'
-                  : `Responda tudo (${itensRespondidos}/${totalItens})`}
-              </button>
-            </div>
+          {/* Botão de Conclusão */}
+          <div className="mt-6 mb-4">
+            <button
+              onClick={finalizarAvaliacao}
+              disabled={!resultadoAvaliacao?.isCompleto}
+              className={`w-full py-3 rounded-xl font-semibold transition-all border ${
+                resultadoAvaliacao?.isCompleto
+                  ? isDark
+                    ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-gray-300 hover:text-gray-100'
+                    : 'bg-gray-200 hover:bg-gray-300 border-gray-300 text-gray-600 hover:text-gray-900'
+                  : isDark
+                  ? 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
+                  : 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              {resultadoAvaliacao?.isCompleto
+                ? 'Ver Resultado'
+                : `Responda tudo (${itensRespondidos}/${totalItens})`}
+            </button>
           </div>
         </div>
       </div>
