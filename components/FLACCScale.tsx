@@ -11,7 +11,6 @@ const escalasConfig = {
     titulo: 'FLACC Padrão',
     nomeCompleto: 'Face, Legs, Activity, Cry, Consolability',
     idade: '0 a 7 anos (não verbal)',
-    colecao: 'flacc_assessments',
     maxScore: 10,
     dominios: [
       {
@@ -70,7 +69,6 @@ const escalasConfig = {
     titulo: 'FLACC-R',
     nomeCompleto: 'FLACC Revisada (Não Verbais)',
     idade: 'Deficiências Neurológicas / Intubados',
-    colecao: 'flaccr_assessments',
     maxScore: 10,
     dominios: [
       {
@@ -368,15 +366,12 @@ function FLACCScale() {
     setSaveStatus('idle');
 
     try {
-      const { error } = await supabase.from(configAtual.colecao).insert({
-        user_id: userContext.user.id,
-        escala: configAtual.titulo,
-        nome_completo: configAtual.nomeCompleto,
-        idade_faixa: configAtual.idade,
-        pontuacao: pontuacaoTotal,
-        resultado: resultadoAvaliacao.texto,
-        respostas: JSON.stringify(respostas),
-        created_at: new Date().toISOString(),
+      const { error } = await supabase.from('scale_scores').insert({
+        patient_id: userContext.user.id,
+        scale_name: configAtual.titulo,
+        score: pontuacaoTotal,
+        interpretation: resultadoAvaliacao.texto,
+        date: new Date().toISOString(),
       });
 
       if (error) throw error;
