@@ -208,21 +208,21 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   };
 
   return (
-    <div className={`space-y-4 p-3 sm:p-4 rounded-lg ${isDark ? 'bg-slate-900' : 'bg-slate-50'}`}>
-      <h3 className={`font-bold text-lg sm:text-xl ${isDark ? 'text-white' : 'text-slate-800'}`}>
+    <div className={`space-y-4 p-3 sm:p-4 rounded-lg border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+      <h3 className={`font-bold text-lg sm:text-xl ${isDark ? 'text-white' : 'text-slate-900'}`}>
         Diagnósticos
       </h3>
 
       {/* Resumo de Seleções */}
       {selectedOptions.length > 0 && (
-        <div className={`p-3 rounded-lg border-l-4 ${isDark ? 'bg-slate-800 border-blue-500' : 'bg-blue-50 border-blue-400'}`}>
-          <p className={`text-sm font-semibold mb-2 ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
+        <div className={`p-3 rounded-lg border-l-4 ${isDark ? 'bg-slate-800 border-blue-500' : 'bg-blue-50 border-blue-300'}`}>
+          <p className={`text-sm font-semibold mb-2 ${isDark ? 'text-blue-300' : 'text-blue-800'}`}>
             📋 {selectedOptions.length} diagnóstico(s) selecionado(s)
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {selectedByGroup.principal.length > 0 && (
               <div>
-                <p className={`text-xs font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
+                <p className={`text-xs font-semibold ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
                   Principais: {selectedByGroup.principal.length}
                 </p>
                 <ul className="text-xs space-y-1 mt-1">
@@ -237,7 +237,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
             )}
             {selectedByGroup.secundario.length > 0 && (
               <div>
-                <p className={`text-xs font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
+                <p className={`text-xs font-semibold ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>
                   Secundários: {selectedByGroup.secundario.length}
                 </p>
                 <ul className="text-xs space-y-1 mt-1">
@@ -262,8 +262,8 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
               onClick={() => setExpandedGroup(expandedGroup === 'principal' ? null : 'principal')}
               className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-lg font-bold transition-all text-sm sm:text-base ${
                 expandedGroup === 'principal'
-                  ? `${isDark ? 'bg-blue-900/40' : 'bg-blue-100'} border-2 ${isDark ? 'border-blue-500' : 'border-blue-400'}`
-                  : `${isDark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-white hover:bg-slate-50'} border-2 ${isDark ? 'border-slate-700' : 'border-slate-200'}`
+                  ? `${isDark ? 'bg-blue-900/40' : 'bg-blue-50'} border-2 ${isDark ? 'border-blue-500' : 'border-blue-300'}`
+                  : `${isDark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-slate-50 hover:bg-slate-100'} border-2 ${isDark ? 'border-slate-700' : 'border-slate-200'}`
               }`}
             >
               <span>🏥 Diagnósticos Principais</span>
@@ -370,8 +370,8 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
               onClick={() => setExpandedGroup(expandedGroup === 'secundario' ? null : 'secundario')}
               className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-lg font-bold transition-all text-sm sm:text-base ${
                 expandedGroup === 'secundario'
-                  ? `${isDark ? 'bg-purple-900/40' : 'bg-purple-100'} border-2 ${isDark ? 'border-purple-500' : 'border-purple-400'}`
-                  : `${isDark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-white hover:bg-slate-50'} border-2 ${isDark ? 'border-slate-700' : 'border-slate-200'}`
+                  ? `${isDark ? 'bg-purple-900/40' : 'bg-purple-50'} border-2 ${isDark ? 'border-purple-500' : 'border-purple-300'}`
+                  : `${isDark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-slate-50 hover:bg-slate-100'} border-2 ${isDark ? 'border-slate-700' : 'border-slate-200'}`
               }`}
             >
               <span>📋 Diagnósticos Secundários</span>
