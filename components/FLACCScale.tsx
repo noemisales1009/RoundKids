@@ -131,9 +131,9 @@ const escalasConfig = {
 // ⚛️ COMPONENTES UI
 // ==========================================
 
-const BackIcon = ({ isDark }: { isDark: boolean }) => (
+const BackIcon = ({ theme }: { theme: 'light' | 'dark' }) => (
   <svg
-    className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-700'}`}
+    className={`w-5 h-5 ${theme === 'light' ? 'text-gray-700' : 'text-gray-400'}`}
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"
@@ -184,12 +184,12 @@ const FLACCQuestionCard = ({
   item,
   valor,
   onChange,
-  isDark,
+  theme,
 }: {
   item: (typeof escalasConfig.flacc.dominios)[0];
   valor?: number;
   onChange: (val: number) => void;
-  isDark: boolean;
+  theme: 'light' | 'dark';
 }) => {
   const isSelected = valor !== undefined && valor !== null;
 
@@ -198,26 +198,26 @@ const FLACCQuestionCard = ({
       id={item.id}
       className={`p-4 rounded-xl shadow-md mb-4 transition-all duration-300 border ${
         isSelected
-          ? isDark
-            ? 'bg-blue-900 border-blue-500'
-            : 'bg-blue-50 border-blue-400'
-          : isDark
-          ? 'bg-slate-800 border-slate-700'
-          : 'bg-white border-gray-300'
+          ? theme === 'light'
+            ? 'bg-blue-50 border-blue-400'
+            : 'bg-blue-900 border-blue-500'
+          : theme === 'light'
+          ? 'bg-white border-gray-300'
+          : 'bg-slate-800 border-slate-700'
       }`}
     >
       <div className="mb-4 flex justify-between items-start">
         <div className="flex-1">
           <label
             className={`block text-sm font-bold ${
-              isDark ? 'text-gray-100' : 'text-gray-900'
+              theme === 'light' ? 'text-gray-900' : 'text-gray-100'
             }`}
           >
             {item.label}
           </label>
           <p
             className={`text-xs ${
-              isDark ? 'text-gray-400' : 'text-gray-600'
+              theme === 'light' ? 'text-gray-600' : 'text-gray-400'
             } mt-1`}
           >
             {item.desc}
@@ -231,9 +231,9 @@ const FLACCQuestionCard = ({
           value={valor !== undefined && valor !== null ? valor : ''}
           onChange={(e) => onChange(parseInt(e.target.value))}
           className={`w-full p-3 pr-8 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500 transition-colors ${
-            isDark
-              ? 'bg-slate-900 border-slate-700 text-gray-100'
-              : 'bg-gray-50 border-gray-400 text-gray-900'
+            theme === 'light'
+              ? 'bg-gray-50 border-gray-400 text-gray-900'
+              : 'bg-slate-900 border-slate-700 text-gray-100'
           } border`}
         >
           <option value="">Selecione (0-2)...</option>
@@ -244,7 +244,7 @@ const FLACCQuestionCard = ({
           ))}
         </select>
         <div className={`pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 ${
-          isDark ? 'text-gray-500' : 'text-gray-400'
+          theme === 'light' ? 'text-gray-400' : 'text-gray-500'
         }`}>
           <svg
             className="fill-current h-4 w-4"
@@ -266,7 +266,7 @@ const FLACCQuestionCard = ({
 function FLACCScale() {
   const themeContext = useContext(ThemeContext);
   const userContext = useContext(UserContext);
-  const isDark = themeContext?.isDark ?? true;
+  const theme = themeContext?.theme ?? 'dark';
 
   const [tela, setTela] = useState<'intro' | 'form' | 'resultado'>('intro');
   const [escalaAtiva, setEscalaAtiva] = useState<'flacc' | 'flaccr' | null>(null);
@@ -400,7 +400,7 @@ function FLACCScale() {
     return (
       <div
         className={`w-full min-h-screen p-4 ${
-          isDark ? 'bg-slate-950 text-gray-100' : 'bg-gray-50 text-gray-900'
+          theme === 'dark' ? 'bg-slate-950 text-gray-100' : 'bg-gray-50 text-gray-900'
         }`}
       >
         <div className="max-w-lg mx-auto">
@@ -408,9 +408,9 @@ function FLACCScale() {
           <div className="mb-8 pt-4">
             <div
               className={`inline-flex items-center justify-center w-16 h-16 ${
-                isDark ? 'bg-orange-700' : 'bg-orange-600'
+                theme === 'dark' ? 'bg-orange-700' : 'bg-orange-600'
               } rounded-2xl mb-4 shadow-lg border ${
-                isDark ? 'border-orange-600' : 'border-orange-500'
+                theme === 'dark' ? 'border-orange-600' : 'border-orange-500'
               }`}
             >
               <span className="text-3xl">🤕</span>
@@ -418,7 +418,7 @@ function FLACCScale() {
             <h1 className="text-3xl font-bold mb-2">Escala FLACC</h1>
             <p
               className={`text-sm ${
-                isDark ? 'text-gray-400' : 'text-gray-600'
+                theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
               } font-medium`}
             >
               Avaliação de Dor em Crianças Não Verbais
@@ -428,14 +428,14 @@ function FLACCScale() {
           {/* Menu de Seleção */}
           <div
             className={`rounded-2xl border shadow-lg p-6 mb-6 ${
-              isDark
+              theme === 'dark'
                 ? 'bg-slate-900 border-slate-800'
                 : 'bg-white border-gray-200'
             }`}
           >
             <h2
               className={`text-xs font-bold uppercase tracking-widest mb-4 pb-3 border-b ${
-                isDark ? 'border-slate-700 text-gray-400' : 'border-gray-200 text-gray-600'
+                theme === 'dark' ? 'border-slate-700 text-gray-400' : 'border-gray-200 text-gray-600'
               }`}
             >
               Selecione a Escala
@@ -444,7 +444,7 @@ function FLACCScale() {
             <button
               onClick={() => iniciarAvaliacao('flacc')}
               className={`w-full py-3 px-4 rounded-xl font-bold transition-all mb-3 text-white ${
-                isDark
+                theme === 'dark'
                   ? 'bg-orange-700 hover:bg-orange-600'
                   : 'bg-orange-600 hover:bg-orange-500'
               }`}
@@ -458,7 +458,7 @@ function FLACCScale() {
             <button
               onClick={() => iniciarAvaliacao('flaccr')}
               className={`w-full py-3 px-4 rounded-xl font-bold transition-all text-white ${
-                isDark
+                theme === 'dark'
                   ? 'bg-red-700 hover:bg-red-600'
                   : 'bg-red-600 hover:bg-red-500'
               }`}
@@ -473,14 +473,14 @@ function FLACCScale() {
           {/* Classificação */}
           <div
             className={`rounded-2xl border shadow-lg p-6 ${
-              isDark
+              theme === 'dark'
                 ? 'bg-slate-900 border-slate-800'
                 : 'bg-white border-gray-200'
             }`}
           >
             <h2
               className={`text-xs font-bold uppercase tracking-widest mb-4 pb-3 border-b ${
-                isDark ? 'border-slate-700 text-gray-400' : 'border-gray-200 text-gray-600'
+                theme === 'dark' ? 'border-slate-700 text-gray-400' : 'border-gray-200 text-gray-600'
               }`}
             >
               Classificação de Dor
@@ -514,14 +514,14 @@ function FLACCScale() {
     return (
       <div
         className={`w-full min-h-screen p-4 ${
-          isDark ? 'bg-slate-950 text-gray-100' : 'bg-gray-50 text-gray-900'
+          theme === 'dark' ? 'bg-slate-950 text-gray-100' : 'bg-gray-50 text-gray-900'
         }`}
       >
         <div className="max-w-lg mx-auto">
           {/* Header Fixo */}
           <div
             className={`sticky top-0 z-10 rounded-2xl border mb-4 p-4 ${
-              isDark
+              theme === 'dark'
                 ? 'bg-slate-900/95 border-slate-800'
                 : 'bg-white/95 border-gray-200'
             } shadow-md backdrop-blur-sm`}
@@ -530,12 +530,12 @@ function FLACCScale() {
               <button
                 onClick={() => setTela('intro')}
                 className={`p-2 rounded-lg transition-colors ${
-                  isDark
+                  theme === 'dark'
                     ? 'hover:bg-slate-800 text-gray-400'
                     : 'hover:bg-gray-100 text-gray-700'
                 }`}
               >
-                <BackIcon isDark={isDark} />
+                <BackIcon theme={theme} />
               </button>
               <div className="text-center">
                 <p className="text-sm font-bold text-blue-500">{configAtual.titulo}</p>
@@ -549,7 +549,7 @@ function FLACCScale() {
             {/* Progresso */}
             <div
               className={`h-2 rounded-full overflow-hidden mb-2 ${
-                isDark ? 'bg-slate-800' : 'bg-gray-200'
+                theme === 'dark' ? 'bg-slate-800' : 'bg-gray-200'
               }`}
             >
               <div
@@ -559,7 +559,7 @@ function FLACCScale() {
             </div>
             <div className="flex justify-between text-xs">
               <span
-                className={isDark ? 'text-gray-400' : 'text-gray-600'}
+                className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
               >
                 {itensRespondidos} de {totalItens}
               </span>
@@ -577,7 +577,7 @@ function FLACCScale() {
                 item={item}
                 valor={respostas[item.id]}
                 onChange={(val) => handleResposta(item.id, val)}
-                isDark={isDark}
+                theme={theme}
               />
             ))}
           </div>
@@ -588,13 +588,13 @@ function FLACCScale() {
               onClick={finalizarAvaliacao}
               disabled={!resultadoAvaliacao?.isCompleto}
               className={`w-full py-3 rounded-xl font-semibold transition-all border ${
-                resultadoAvaliacao?.isCompleto
-                  ? isDark
-                    ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-gray-300 hover:text-gray-100'
-                    : 'bg-gray-200 hover:bg-gray-300 border-gray-300 text-gray-600 hover:text-gray-900'
-                  : isDark
-                  ? 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
-                  : 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
+                !resultadoAvaliacao?.isCompleto
+                  ? theme === 'dark'
+                    ? 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
+                    : 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
+                  : theme === 'dark'
+                  ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-gray-400 hover:text-gray-200'
+                  : 'bg-gray-200 hover:bg-gray-300 border-gray-300 text-gray-600 hover:text-gray-800'
               }`}
             >
               {resultadoAvaliacao?.isCompleto
@@ -612,7 +612,7 @@ function FLACCScale() {
     return (
       <div
         className={`w-full min-h-screen p-4 ${
-          isDark ? 'bg-slate-950 text-gray-100' : 'bg-gray-50 text-gray-900'
+          theme === 'dark' ? 'bg-slate-950 text-gray-100' : 'bg-gray-50 text-gray-900'
         }`}
       >
         <div className="max-w-lg mx-auto">
@@ -620,10 +620,10 @@ function FLACCScale() {
           <button
             onClick={() => setTela('intro')}
             className={`flex items-center mb-6 ${
-              isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-700 hover:text-gray-900'
+              theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-700 hover:text-gray-900'
             } transition-colors`}
           >
-            <BackIcon isDark={isDark} />
+            <BackIcon theme={theme} />
             <span className="ml-2 text-sm">Voltar</span>
           </button>
 
@@ -631,13 +631,13 @@ function FLACCScale() {
           <div className="text-center mb-8">
             <div
               className={`inline-flex items-center justify-center w-32 h-32 rounded-full border-4 ${
-                isDark ? 'bg-slate-900 border-blue-600' : 'bg-blue-50 border-blue-500'
+                theme === 'dark' ? 'bg-slate-900 border-blue-600' : 'bg-blue-50 border-blue-500'
               } mb-4`}
             >
               <div className="text-center">
                 <div className="text-5xl font-black text-blue-500">{pontuacaoTotal}</div>
                 <div className={`text-xs uppercase tracking-wider mt-1 ${
-                  isDark ? 'text-gray-400' : 'text-gray-600'
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
                 }`}>
                   Total
                 </div>
@@ -647,7 +647,7 @@ function FLACCScale() {
             <h2 className={`text-3xl font-bold ${resultadoAvaliacao?.cor} mb-2`}>
               {resultadoAvaliacao?.texto}
             </h2>
-            <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+            <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
               {resultadoAvaliacao?.detalhe}
             </p>
           </div>
@@ -655,14 +655,14 @@ function FLACCScale() {
           {/* Detalhes */}
           <div
             className={`rounded-2xl border shadow-lg p-6 mb-6 ${
-              isDark
+              theme === 'dark'
                 ? 'bg-slate-900 border-slate-800'
                 : 'bg-white border-gray-200'
             }`}
           >
             <h3
               className={`font-bold mb-4 pb-3 border-b ${
-                isDark ? 'border-slate-700' : 'border-gray-200'
+                theme === 'dark' ? 'border-slate-700' : 'border-gray-200'
               }`}
             >
               Interpretação
@@ -744,7 +744,7 @@ function FLACCScale() {
             <button
               onClick={() => setTela('intro')}
               className={`w-full py-4 rounded-xl font-bold transition-colors ${
-                isDark
+                theme === 'dark'
                   ? 'bg-slate-800 hover:bg-slate-700 border border-slate-700'
                   : 'bg-gray-200 hover:bg-gray-300 border border-gray-300'
               }`}
