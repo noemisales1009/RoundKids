@@ -247,7 +247,7 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
   const progresso = totalItens > 0 ? (itensRespondidos / totalItens) * 100 : 0;
 
   const pontuacaoTotal = useMemo(() => {
-    return Object.values(respostas).reduce((acc, val) => {
+    return Object.values(respostas).reduce((acc: number, val: any) => {
       if (typeof val === 'number') return acc + val;
       return acc;
     }, 0);
@@ -257,7 +257,7 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
     if (itensRespondidos < totalItens) {
       return {
         texto: 'Avaliação em Andamento',
-        detalhe: `Pontuação atual: ${pontuacaoTotal} de ${configAtual?.maxScore || 32}.`,
+        detalhe: `Pontuação atual: ${pontuacaoTotal} de ${(configAtual as any)?.maxScore || 32}.`,
         cor: isDark ? 'text-yellow-400' : 'text-yellow-600',
         bg: isDark ? 'bg-yellow-600' : 'bg-yellow-500',
         border: 'border-yellow-500',
@@ -269,7 +269,7 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
 
     if (configAtual && configAtual.tipo === 'score') {
       const score = pontuacaoTotal;
-      const isDelirium = score >= configAtual.corte;
+      const isDelirium = score >= (configAtual as any).corte;
 
       let interpretacao = '';
       if (configAtual.titulo === 'CAPD') {
@@ -301,7 +301,7 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
         pontuacao: score,
         isPositivo: isDelirium,
         texto: interpretacao,
-        detalhe: `Score Total: ${score} de ${configAtual.maxScore}.`,
+        detalhe: `Score Total: ${score} de ${(configAtual as any).maxScore}.`,
         cor,
         bg,
         border: isDelirium ? 'border-red-500' : 'border-green-500',
@@ -520,7 +520,7 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
 
   // ===== TELA 2: FORM =====
   if (tela === 'form' && configAtual) {
-    const scoreDisplay = configAtual.tipo === 'score' ? `${pontuacaoTotal} / ${configAtual.maxScore}` : 'Binário';
+    const scoreDisplay = configAtual.tipo === 'score' ? `${pontuacaoTotal} / ${(configAtual as any).maxScore}` : 'Binário';
 
     return (
       <div
@@ -563,7 +563,7 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
         </div>
 
         {/* Perguntas */}
-        <div className="flex-1 space-y-4 pb-32">
+        <div className="flex-1 space-y-4">
           {configAtual.itens.map((item) => (
             <DeliriumQuestionCard
               key={item.id}
@@ -575,25 +575,20 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
               tipo={configAtual.tipo}
             />
           ))}
-        </div>
 
-        {/* Botão Flutuante */}
-        <div className={`fixed bottom-0 left-0 right-0 p-4 sm:p-6 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'} border-t`}>
-          <div className="max-w-2xl mx-auto">
-            <button
-              onClick={finalizarAvaliacao}
-              disabled={!resultadoAvaliacao?.isCompleto}
-              className={`w-full py-4 rounded-xl font-bold text-lg shadow-xl transition-all ${
-                resultadoAvaliacao?.isCompleto
-                  ? `${corClasses.bg} ${corClasses.hover} text-white hover:scale-105 active:scale-95`
-                  : isDark
-                  ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                  : 'bg-slate-300 text-slate-600 cursor-not-allowed'
-              }`}
-            >
-              {resultadoAvaliacao?.isCompleto ? 'Finalizar e Ver Resultado' : `Responda tudo (${itensRespondidos}/${configAtual.itens.length})`}
-            </button>
-          </div>
+          <button
+            onClick={finalizarAvaliacao}
+            disabled={!resultadoAvaliacao?.isCompleto}
+            className={`w-full py-4 rounded-xl font-bold text-lg shadow-xl transition-all mt-6 ${
+              resultadoAvaliacao?.isCompleto
+                ? `${corClasses.bg} ${corClasses.hover} text-white hover:scale-105 active:scale-95`
+                : isDark
+                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                : 'bg-slate-300 text-slate-600 cursor-not-allowed'
+            }`}
+          >
+            {resultadoAvaliacao?.isCompleto ? 'Finalizar e Ver Resultado' : `Responda tudo (${itensRespondidos}/${configAtual.itens.length})`}
+          </button>
         </div>
       </div>
     );
@@ -630,7 +625,7 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
               {configAtual.tipo === 'score' ? resultadoAvaliacao?.pontuacao : resultadoAvaliacao?.icone}
             </span>
             <span className={`text-xs uppercase tracking-widest mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              {configAtual.tipo === 'score' ? `de ${configAtual.maxScore}` : 'Resultado'}
+              {configAtual.tipo === 'score' ? `de ${(configAtual as any).maxScore}` : 'Resultado'}
             </span>
           </div>
           <div

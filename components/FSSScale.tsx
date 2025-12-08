@@ -245,7 +245,7 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
   const progresso = totalItens > 0 ? (itensRespondidos / totalItens) * 100 : 0;
 
   const pontuacaoTotal = useMemo(() => {
-    return Object.values(respostas).reduce((acc, val) => acc + (val || 0), 0);
+    return Object.values(respostas).reduce((acc: number, val: any) => acc + ((val as number) || 0), 0);
   }, [respostas]);
 
   const resultadoAvaliacao = useMemo(() => {
@@ -469,7 +469,7 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
           </div>
         </div>
 
-        <div className="flex-1 max-w-2xl mx-auto w-full p-4 sm:p-6 space-y-4 pb-32">
+        <div className="flex-1 max-w-2xl mx-auto w-full p-4 sm:p-6 space-y-4">
           {escalaConfig.itens.map((item) => (
             <FSSQuestionCard
               key={item.id}
@@ -480,24 +480,20 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
               isDark={isDark}
             />
           ))}
-        </div>
 
-        <div className={`fixed bottom-0 left-0 right-0 p-4 sm:p-6 ${isDark ? 'bg-slate-900' : 'bg-slate-50'} border-t ${isDark ? 'border-slate-800' : 'border-slate-200'}`}>
-          <div className="max-w-2xl mx-auto">
-            <button
-              onClick={finalizarAvaliacao}
-              disabled={!resultadoAvaliacao?.isCompleto}
-              className={`w-full py-4 rounded-xl font-bold text-lg shadow-xl transition-all ${
-                resultadoAvaliacao?.isCompleto
-                  ? `${escalaConfig.cores.bg} ${escalaConfig.cores.hover} text-white transform hover:scale-105 active:scale-95`
-                  : isDark
-                  ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                  : 'bg-slate-300 text-slate-600 cursor-not-allowed'
-              }`}
-            >
-              {resultadoAvaliacao?.isCompleto ? 'Finalizar e Ver Diagnóstico' : `Responda tudo (${itensRespondidos}/${escalaConfig.itens.length})`}
-            </button>
-          </div>
+          <button
+            onClick={finalizarAvaliacao}
+            disabled={!resultadoAvaliacao?.isCompleto}
+            className={`w-full py-4 rounded-xl font-bold text-lg shadow-xl transition-all mt-6 ${
+              resultadoAvaliacao?.isCompleto
+                ? `${escalaConfig.cores.bg} ${escalaConfig.cores.hover} text-white transform hover:scale-105 active:scale-95`
+                : isDark
+                ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                : 'bg-slate-300 text-slate-600 cursor-not-allowed'
+            }`}
+          >
+            {resultadoAvaliacao?.isCompleto ? 'Finalizar e Ver Diagnóstico' : `Responda tudo (${itensRespondidos}/${escalaConfig.itens.length})`}
+          </button>
         </div>
       </div>
     );

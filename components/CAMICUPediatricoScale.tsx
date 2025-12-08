@@ -365,33 +365,30 @@ export default function CAMICUPediatricoScale({ onSaveScore }: CAMICUScaleProps)
           </div>
         </div>
 
-        <div className="flex-1 space-y-4 pb-24">
+        <div className="flex-1 space-y-4">
           {configAtual?.itens.map((item) => (
-            <QuestionCard 
-              key={item.id}
-              item={item}
-              valor={respostas[item.id]}
-              onChange={(val) => handleResposta(item.id, val)}
-              theme={theme}
-            />
+            <div key={item.id}>
+              <QuestionCard 
+                item={item}
+                valor={respostas[item.id]}
+                onChange={(val) => handleResposta(item.id, val)}
+                theme={theme}
+              />
+            </div>
           ))}
-        </div>
 
-        <div className={`fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t ${theme === 'light' ? 'from-gray-50 via-gray-50' : 'from-slate-950 via-slate-950'} to-transparent`}>
-          <div className="max-w-2xl mx-auto">
-            <button
-              onClick={finalizarAvaliacao}
-              disabled={itensRespondidos < totalItens}
-              className={`
-                w-full py-4 rounded-xl font-bold text-lg shadow-xl transition-all
-                ${itensRespondidos === totalItens 
-                  ? `${theme === 'light' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-500'} text-white transform hover:scale-105` 
-                  : `${theme === 'light' ? 'bg-gray-300 text-gray-600' : 'bg-slate-800 text-slate-500'} cursor-not-allowed`}
-              `}
-            >
-              {itensRespondidos === totalItens ? 'Finalizar e Ver Diagnóstico' : `Responda tudo (${itensRespondidos}/${totalItens})`}
-            </button>
-          </div>
+          <button
+            onClick={finalizarAvaliacao}
+            disabled={itensRespondidos < totalItens}
+            className={`
+              w-full py-4 rounded-xl font-bold text-lg shadow-xl transition-all mt-6
+              ${itensRespondidos === totalItens 
+                ? `${theme === 'light' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-500'} text-white transform hover:scale-105` 
+                : `${theme === 'light' ? 'bg-gray-300 text-gray-600' : 'bg-slate-800 text-slate-500'} cursor-not-allowed`}
+            `}
+          >
+            {itensRespondidos === totalItens ? 'Finalizar e Ver Diagnóstico' : `Responda tudo (${itensRespondidos}/${totalItens})`}
+          </button>
         </div>
       </div>
     );

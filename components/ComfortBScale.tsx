@@ -160,7 +160,7 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
   
   const pontuacaoTotalCalculada = useMemo(() => {
     // Soma os valores das respostas (ignorando null/undefined)
-    return Object.values(respostas).reduce((acc, val) => acc + (val || 0), 0);
+    return Object.values(respostas).reduce((acc: number, val: any) => acc + ((val as number) || 0), 0);
   }, [respostas]);
   
   const interpretacaoAtual = useMemo(() => getInterpretacaoComfortB(pontuacaoTotalCalculada), [pontuacaoTotalCalculada]);

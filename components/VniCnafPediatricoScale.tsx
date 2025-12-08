@@ -150,7 +150,7 @@ export const VniCnafPediatricoScale: React.FC<{ onSaveScore?: (score: any) => vo
   const progresso = totalItens > 0 ? (itensRespondidos / totalItens) * 100 : 0;
 
   const pontuacaoTotal = useMemo(() => {
-    return Object.values(respostas).reduce((acc, val) => acc + (val || 0), 0);
+    return Object.values(respostas).reduce((acc: number, val: any) => acc + (val || 0), 0);
   }, [respostas]);
 
   const resultadoAvaliacao = useMemo((): VNIResultadoAvaliacao => {
@@ -367,25 +367,20 @@ export const VniCnafPediatricoScale: React.FC<{ onSaveScore?: (score: any) => vo
               isDark={isDark}
             />
           ))}
-        </div>
 
-        {/* Botão Flutuante de Conclusão */}
-        <div className={`fixed bottom-0 left-0 right-0 p-4 ${isDark ? 'bg-gradient-to-t from-slate-950 via-slate-950 to-transparent' : 'bg-gradient-to-t from-white via-white to-transparent'}`}>
-          <div className="max-w-2xl mx-auto">
-            <button
-              onClick={finalizarAvaliacao}
-              disabled={!resultadoAvaliacao?.isCompleto}
-              className={`w-full py-4 rounded-xl font-bold text-lg shadow-xl transition-all ${
-                resultadoAvaliacao?.isCompleto
-                  ? `${isDark ? 'bg-cyan-600 hover:bg-cyan-500' : 'bg-cyan-500 hover:bg-cyan-600'} text-white transform hover:scale-105`
-                  : isDark
-                  ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                  : 'bg-slate-300 text-slate-600 cursor-not-allowed'
-              }`}
-            >
-              {resultadoAvaliacao?.isCompleto ? 'Finalizar e Ver Diagnóstico' : `Responda tudo (${itensRespondidos}/${escalaConfig.itens.length})`}
-            </button>
-          </div>
+          <button
+            onClick={finalizarAvaliacao}
+            disabled={!resultadoAvaliacao?.isCompleto}
+            className={`w-full py-4 rounded-xl font-bold text-lg shadow-xl transition-all mt-6 ${
+              resultadoAvaliacao?.isCompleto
+                ? `${isDark ? 'bg-cyan-600 hover:bg-cyan-500' : 'bg-cyan-500 hover:bg-cyan-600'} text-white transform hover:scale-105`
+                : isDark
+                ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                : 'bg-slate-300 text-slate-600 cursor-not-allowed'
+            }`}
+          >
+            {resultadoAvaliacao?.isCompleto ? 'Finalizar e Ver Diagnóstico' : `Responda tudo (${itensRespondidos}/${escalaConfig.itens.length})`}
+          </button>
         </div>
       </div>
     );

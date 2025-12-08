@@ -281,7 +281,7 @@ function FLACCScale() {
   ).length;
   const progresso = totalItens > 0 ? (itensRespondidos / totalItens) * 100 : 0;
   const pontuacaoTotal = useMemo(
-    () => Object.values(respostas).reduce((acc, val) => acc + (val || 0), 0),
+    () => Object.values(respostas).reduce((acc: number, val: any) => acc + ((val as number) || 0), 0),
     [respostas]
   );
 
@@ -567,13 +567,14 @@ function FLACCScale() {
           {/* Perguntas */}
           <div className="space-y-4">
             {configAtual.dominios.map((item) => (
-              <FLACCQuestionCard
-                key={item.id}
-                item={item}
-                valor={respostas[item.id]}
-                onChange={(val) => handleResposta(item.id, val)}
-                theme={theme}
-              />
+              <div key={item.id}>
+                <FLACCQuestionCard
+                  item={item}
+                  valor={respostas[item.id]}
+                  onChange={(val) => handleResposta(item.id, val)}
+                  theme={theme}
+                />
+              </div>
             ))}
           </div>
 

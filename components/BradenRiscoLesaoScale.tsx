@@ -356,7 +356,7 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
     const resultadoAvaliacao = useMemo(() => {
         if (!configAtual) return null;
 
-        const pontuacao = Object.values(respostas).reduce((acc, val) => acc + (val || 0), 0);
+        const pontuacao = Object.values(respostas).reduce((acc: number, val: any) => acc + (val || 0), 0);
 
         // 1. Em Andamento
         if (itensRespondidos < totalItens) {
@@ -537,7 +537,7 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                 </div>
 
                 {/* Lista de Perguntas */}
-                <div className="flex-1 space-y-4 pb-24">
+                <div className="flex-1 space-y-4">
                     {configAtual.itens.map((item) => (
                         <BradenQuestionCard
                             key={item.id}
@@ -547,24 +547,19 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                             theme={theme}
                         />
                     ))}
-                </div>
 
-                {/* Botão Flutuante de Conclusão */}
-                <div className={`fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t ${theme === 'light' ? 'from-gray-50 via-gray-50' : 'from-slate-950 via-slate-950'} to-transparent`}>
-                    <div className="max-w-md mx-auto">
-                        <button
-                            onClick={finalizarAvaliacao}
-                            disabled={!resultadoAvaliacao?.isCompleto}
-                            className={`
-                                w-full py-4 rounded-xl font-bold text-lg shadow-xl transition-all
-                                ${resultadoAvaliacao?.isCompleto
-                                ? `${corClasses.bg} ${corClasses.hover} text-white transform hover:scale-105`
-                                : 'bg-slate-800 text-slate-500 cursor-not-allowed'}
-                            `}
-                        >
-                            {resultadoAvaliacao?.isCompleto ? 'Finalizar e Ver Diagnóstico' : `Responda tudo (${itensRespondidos}/${configAtual.itens.length})`}
-                        </button>
-                    </div>
+                    <button
+                        onClick={finalizarAvaliacao}
+                        disabled={!resultadoAvaliacao?.isCompleto}
+                        className={`
+                            w-full py-4 rounded-xl font-bold text-lg shadow-xl transition-all mt-6
+                            ${resultadoAvaliacao?.isCompleto
+                            ? `${corClasses.bg} ${corClasses.hover} text-white transform hover:scale-105`
+                            : 'bg-slate-800 text-slate-500 cursor-not-allowed'}
+                        `}
+                    >
+                        {resultadoAvaliacao?.isCompleto ? 'Finalizar e Ver Diagnóstico' : `Responda tudo (${itensRespondidos}/${configAtual.itens.length})`}
+                    </button>
                 </div>
             </div>
         );

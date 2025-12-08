@@ -240,6 +240,7 @@ export default function DeliriumPediatricoScale({ onSaveScore }: DeliriumScalePr
   const [tela, setTela] = useState('intro'); // intro, form, camicu_select, resultado
   const [escalaAtiva, setEscalaAtiva] = useState<string | null>(null);
   const [respostas, setRespostas] = useState<{ [key: string]: any }>({});
+  const [historico, setHistorico] = useState<any[]>([]);
   
   // --- Estados ---
   const [isSaving, setIsSaving] = useState(false);

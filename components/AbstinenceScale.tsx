@@ -153,7 +153,7 @@ export const AbstinenceScale: React.FC<ScaleProps> = ({ onSaveScore }) => {
 
   // Cálculo de pontuação
   const pontuacaoTotal = useMemo(() => {
-    return Object.values(respostas).reduce((sum, val) => sum + (val as number || 0), 0);
+    return Object.values(respostas).reduce((sum: number, val: any) => sum + (val as number || 0), 0);
   }, [respostas]);
 
   // Interpretação
