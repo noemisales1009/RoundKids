@@ -302,7 +302,7 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
           />
           <QuestionCard
             ref={refs.calma}
-            label="2. Calma / Agitação"
+            label="2. Calma / Agitação (Calmness)"
             id="calma"
             valor={respostas.calma}
             onChange={(val) => handleSelectChange('calma', val, refs.var3)}
@@ -332,7 +332,7 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
 
           <QuestionCard
             ref={refs.movimento}
-            label="4. Movimentos Físicos"
+            label="4. Movimentos Físicos (Physical Movement)"
             id="movimento"
             valor={respostas.movimento}
             onChange={(val) => handleSelectChange('movimento', val, refs.tonus)}
@@ -340,7 +340,7 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
           />
           <QuestionCard
             ref={refs.tonus}
-            label="5. Tônus Corporal"
+            label="5. Tônus Corporal (Muscle Tone)"
             id="tonus"
             valor={respostas.tonus}
             onChange={(val) => handleSelectChange('tonus', val, refs.tensao)}
@@ -348,7 +348,7 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
           />
           <QuestionCard
             ref={refs.tensao}
-            label="6. Tensão Facial"
+            label="6. Tensão Facial (Facial Tension)"
             id="tensao"
             valor={respostas.tensao}
             onChange={(val) => handleSelectChange('tensao', val, null)} // Último item
