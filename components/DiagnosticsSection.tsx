@@ -117,21 +117,22 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       // Resolvidos vão para histórico
       const diagnosticsResolved = allDiagnostics.filter(d => d.status === 'resolvido');
 
-      // Deletar registros antigos da tabela ativa
-      const { error: deleteError } = await supabase
+      // Buscar diagnósticos existentes para evitar duplicatas
+      const { data: existingDiagnostics } = await supabase
         .from('paciente_diagnosticos')
-        .delete()
+        .select('opcao_id')
         .eq('patient_id', patientId);
 
-      if (deleteError) {
-        console.error('Erro ao deletar diagnósticos antigos:', deleteError);
-      }
+      const existingOpcaoIds = new Set((existingDiagnostics || []).map(d => d.opcao_id));
 
-      // Inserir apenas não resolvidos na tabela ativa
-      if (diagnosticsToKeep.length > 0) {
+      // Filtrar apenas diagnósticos NOVOS (que não existem ainda)
+      const newDiagnostics = diagnosticsToKeep.filter(d => !existingOpcaoIds.has(d.opcao_id));
+
+      // Inserir apenas diagnósticos novos (evita duplicatas)
+      if (newDiagnostics.length > 0) {
         const { error } = await supabase
           .from('paciente_diagnosticos')
-          .insert(diagnosticsToKeep);
+          .insert(newDiagnostics);
 
         if (error) {
           console.error('Erro ao inserir diagnósticos:', error);
