@@ -234,10 +234,10 @@ const FLACCQuestionCard = ({
               : 'bg-slate-900 border-slate-700 text-gray-100'
           } border`}
         >
-          <option value="">Selecione (0-2)...</option>
+          <option value="">Selecione...</option>
           {item.ranges.map((desc, index) => (
             <option key={index} value={index}>
-              {index} – {desc}
+              {desc}
             </option>
           ))}
         </select>
