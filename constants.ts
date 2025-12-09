@@ -59,6 +59,7 @@ export const DEVICE_TYPES: string[] = [
     'CVC 1',
     'CVC 2',
     'CNAF',
+    'CAPAP',
     'PICC1',
     'PICC2',
     'AVP1',
@@ -71,6 +72,7 @@ export const DEVICE_TYPES: string[] = [
     'VENTURY',
     'VNI',
     'VPM',
+    'TQT',
     'Dreno toráxico D',
     'Dreno toráxico E',
     'OUTROS DRENOS',
@@ -610,9 +612,15 @@ export const RESPONSIBLES: string[] = [
     'Enfermeiro', 
     'Fisioterapeuta', 
     'Farmacêutico', 
+    'Fonoaudiólogo',
+    'Terapeuta Ocupacioanal',
     'Nutricionista',
     'Odontólogo', 
+    'Assistente Social',
+    'Psicólogo',
     'Médico / Enfermeiro', 
+    'Médico / Nutricionista',
+    'Médico/Farmacêutico',
     'Médico / Fisioterapeuta'
 ];
 

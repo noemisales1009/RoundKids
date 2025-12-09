@@ -229,7 +229,10 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                   {selectedByGroup.principal.map(opt => (
                     <li key={opt.id} className={`flex items-start gap-2 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                       <span>✓</span>
-                      <span className="break-words">{opt.label}</span>
+                      <span className="break-words">
+                        {opt.label}
+                        {inputValues[opt.id] && <span className={`block text-xs italic ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>"{inputValues[opt.id]}"</span>}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -244,7 +247,10 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                   {selectedByGroup.secundario.map(opt => (
                     <li key={opt.id} className={`flex items-start gap-2 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                       <span>✓</span>
-                      <span className="break-words">{opt.label}</span>
+                      <span className="break-words">
+                        {opt.label}
+                        {inputValues[opt.id] && <span className={`block text-xs italic ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>"{inputValues[opt.id]}"</span>}
+                      </span>
                     </li>
                   ))}
                 </ul>
