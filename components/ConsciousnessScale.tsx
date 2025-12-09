@@ -60,50 +60,6 @@ const escalasConfig = {
       },
     ],
   },
-  crsr: {
-    titulo: 'CRS-R',
-    nomeCompleto: 'Coma Recovery Scale – Revised',
-    maxScore: 23,
-    colorKey: 'indigo',
-    dominios: [
-      {
-        id: 'audicao',
-        label: '1. Audição/Verbal',
-        maxScore: 4,
-        ranges: ['Sem resposta', 'Som não localizado', 'Som localizado', 'Comunicação inconsistente', 'Comunicação funcional'],
-      },
-      {
-        id: 'comunicacao',
-        label: '2. Comunicação',
-        maxScore: 2,
-        ranges: ['Sem comunicação', 'Comunicação não funcional', 'Comunicação funcional'],
-      },
-      {
-        id: 'visao',
-        label: '3. Visão',
-        maxScore: 5,
-        ranges: ['Sem resposta', 'Olhar não sustentado', 'Olhar em movimento', 'Rastreamento', 'Fixação sustentada', 'Reconhecimento objeto'],
-      },
-      {
-        id: 'motora',
-        label: '4. Função Motora',
-        maxScore: 6,
-        ranges: ['Nenhuma', 'Tônus aumentado', 'Movimentos não-específicos', 'Retira ao estímulo', 'Localiza estímulo', 'Ação intencional', 'Utilização funcional'],
-      },
-      {
-        id: 'oromotora',
-        label: '5. Oro-Motora/Verbal',
-        maxScore: 3,
-        ranges: ['Nenhuma resposta', 'Movimentos orais', 'Vocalização não-inteligível', 'Fala inteligível'],
-      },
-      {
-        id: 'arousal',
-        label: '6. Arousal/Alerta',
-        maxScore: 3,
-        ranges: ['Sem alerta', 'Alerta baixo', 'Alerta moderado', 'Alerta alto'],
-      },
-    ],
-  },
 };
 
 const colorConfig = {
@@ -114,14 +70,6 @@ const colorConfig = {
     border: 'border-teal-500 dark:border-teal-600',
     progress: 'bg-teal-500 dark:bg-teal-600',
     light: 'bg-teal-50 dark:bg-slate-700',
-  },
-  indigo: {
-    bg: 'bg-indigo-600 dark:bg-indigo-700',
-    hover: 'hover:bg-indigo-500 dark:hover:bg-indigo-600',
-    text: 'text-indigo-600 dark:text-indigo-400',
-    border: 'border-indigo-500 dark:border-indigo-600',
-    progress: 'bg-indigo-500 dark:bg-indigo-600',
-    light: 'bg-indigo-50 dark:bg-slate-700',
   },
 };
 
@@ -187,7 +135,7 @@ const QuestionCard: React.FC<{
 export const ConsciousnessScale: React.FC<ScaleProps> = ({ onSaveScore }) => {
   const { isDark } = useContext(ThemeContext)!;
   const [tela, setTela] = useState<'intro' | 'form' | 'resultado'>('intro');
-  const [escalaAtiva, setEscalaAtiva] = useState<'four_score' | 'crsr' | null>(null);
+  const [escalaAtiva, setEscalaAtiva] = useState<'four_score' | null>(null);
   const [respostas, setRespostas] = useState<{ [key: string]: number | string }>({});
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<null | 'success' | 'error'>(null);
@@ -237,29 +185,10 @@ export const ConsciousnessScale: React.FC<ScaleProps> = ({ onSaveScore }) => {
       return { texto: 'Grave Extremo', detalhe: 'Comprometimento extremo', cor: 'text-red-500', isCompleto: true };
     }
 
-    if (escalaAtiva === 'crsr') {
-      const score = pontuacaoTotal;
-      if (score >= 19) {
-        return {
-          texto: 'Nível Alto',
-          detalhe: 'Nível alto de consciência',
-          cor: 'text-green-500',
-          isCompleto: true,
-        };
-      }
-      if (score >= 11) {
-        return { texto: 'Nível Médio', detalhe: 'Nível médio de consciência', cor: 'text-yellow-500', isCompleto: true };
-      }
-      if (score >= 5) {
-        return { texto: 'Estado Vegetativo', detalhe: 'Estado vegetativo mínimo', cor: 'text-orange-500', isCompleto: true };
-      }
-      return { texto: 'Coma Profundo', detalhe: 'Coma profundo', cor: 'text-red-500', isCompleto: true };
-    }
-
     return { texto: '', detalhe: '', cor: '', isCompleto: false };
   }, [pontuacaoTotal, itensRespondidos, escalaAtiva]);
 
-  const iniciarAvaliacao = (escala: 'four_score' | 'crsr') => {
+  const iniciarAvaliacao = (escala: 'four_score') => {
     setEscalaAtiva(escala);
     setRespostas({});
     setSaveStatus(null);
@@ -327,15 +256,6 @@ export const ConsciousnessScale: React.FC<ScaleProps> = ({ onSaveScore }) => {
               0 - 16 pts
             </div>
           </button>
-          <button
-            onClick={() => iniciarAvaliacao('crsr')}
-            className={`w-full py-3 px-4 rounded-lg font-bold text-white text-sm sm:text-base transition-all ${colorConfig.indigo.bg} ${colorConfig.indigo.hover}`}
-          >
-            {escalasConfig.crsr.titulo}
-            <div className={`text-xs mt-1 ${isDark ? 'text-indigo-200' : 'text-indigo-100'}`}>
-              0 - 23 pts
-            </div>
-          </button>
         </div>
 
         <div className={`p-4 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-100 border-slate-300'}`}>
@@ -361,27 +281,6 @@ export const ConsciousnessScale: React.FC<ScaleProps> = ({ onSaveScore }) => {
                 <li className="flex justify-between text-red-500">
                   <span>0-3</span>
                   <span>Grave Extremo</span>
-                </li>
-              </ul>
-            </div>
-            <div className={`border-t ${isDark ? 'border-slate-700 pt-3' : 'border-slate-300 pt-3'}`}>
-              <p className="font-bold mb-1">CRS-R:</p>
-              <ul className="space-y-1 ml-2">
-                <li className="flex justify-between text-green-500">
-                  <span>≥ 19</span>
-                  <span>Nível Alto</span>
-                </li>
-                <li className="flex justify-between text-yellow-500">
-                  <span>11-18</span>
-                  <span>Nível Médio</span>
-                </li>
-                <li className="flex justify-between text-orange-500">
-                  <span>5-10</span>
-                  <span>Vegetativo</span>
-                </li>
-                <li className="flex justify-between text-red-500">
-                  <span>0-4</span>
-                  <span>Coma Profundo</span>
                 </li>
               </ul>
             </div>
