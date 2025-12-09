@@ -284,6 +284,281 @@ export const QUESTIONS: Question[] = [
       { id: 'restricao', label: 'INICIAR RESTRIÇÃO HÍDRICA' },
       { id: 'susp_hv', label: 'SUSPENDER H.V' }
     ]
+  },
+  {
+    id: 12,
+    categoryId: 2,
+    text: 'QUAL É A INGESTÃO HÍDRICA ESTIMADA?',
+    alertOptions: [
+      { id: 'aumentar', label: 'AUMENTAR INGESTÃO' },
+      { id: 'reduzir', label: 'REDUZIR INGESTÃO' },
+      { id: 'manter', label: 'MANTER INGESTÃO ATUAL' }
+    ]
+  },
+
+  // --- HEMODINÂMICO/INFECÇÃO ---
+  {
+    id: 13,
+    categoryId: 3,
+    text: 'PRESSÃO ARTERIAL CONTROLADA? (MPA 50-110)',
+    alertOptions: [
+      { id: 'vasoativo', label: 'INICIAR/AJUSTAR VASOATIVO', hasInput: true, inputPlaceholder: 'Qual droga?' },
+      { id: 'cristaloides', label: 'REPOR CRISTALOIDES' },
+      { id: 'reduzir_va', label: 'REDUZIR VASOATIVO' },
+      { id: 'monitorar', label: 'MONITORAR PA' }
+    ]
+  },
+  {
+    id: 14,
+    categoryId: 3,
+    text: 'AUSÊNCIA DE SINAIS DE INFECÇÃO?',
+    alertOptions: [
+      { id: 'antibiotico', label: 'INICIAR ANTIBIÓTICO', hasInput: true, inputPlaceholder: 'Qual antibiótico?' },
+      { id: 'coleta', label: 'COLETAR CULTURAS' },
+      { id: 'suspender', label: 'SUSPENDER ANTIBIÓTICO' },
+      { id: 'trocar', label: 'TROCAR ANTIBIÓTICO', hasInput: true, inputPlaceholder: 'Novo antibiótico?' }
+    ]
+  },
+  {
+    id: 15,
+    categoryId: 3,
+    text: 'FREQUÊNCIA CARDÍACA ADEQUADA? (60-160 bpm)',
+    alertOptions: [
+      { id: 'inotrópico', label: 'INICIAR INOTRÓPICO', hasInput: true, inputPlaceholder: 'Qual droga?' },
+      { id: 'bradicardia', label: 'REDUZIR FREQUÊNCIA' },
+      { id: 'monitorar_fc', label: 'MONITORAR FC' }
+    ]
+  },
+
+  // --- HEMATOLÓGICO ---
+  {
+    id: 16,
+    categoryId: 4,
+    text: 'HEMOGLOBINA ADEQUADA? (>7 g/dL)',
+    alertOptions: [
+      { id: 'transfusao', label: 'REALIZAR TRANSFUSÃO DE SANGUE' },
+      { id: 'ferro', label: 'INICIAR SUPLEMENTAÇÃO DE FERRO' },
+      { id: 'manter', label: 'MANTER MONITORAÇÃO' }
+    ]
+  },
+  {
+    id: 17,
+    categoryId: 4,
+    text: 'PLAQUETAS ADEQUADAS? (>50 mil)',
+    alertOptions: [
+      { id: 'transfusao_plaq', label: 'TRANSFUNDIR CONCENTRADO DE PLAQUETAS' },
+      { id: 'investigar', label: 'INVESTIGAR CAUSA DA TROMBOCITOPENIA' },
+      { id: 'manter', label: 'MANTER MONITORAÇÃO' }
+    ]
+  },
+
+  // --- HEPÁTICO ---
+  {
+    id: 18,
+    categoryId: 5,
+    text: 'FUNÇÃO HEPÁTICA PRESERVADA? (BILIRRUBINA <2)',
+    alertOptions: [
+      { id: 'investigar', label: 'INVESTIGAR CAUSA DA ICTERÍCIA' },
+      { id: 'ultrassom', label: 'SOLICITAR ULTRASSOM ABDOMINAL' },
+      { id: 'manter', label: 'MANTER MONITORAÇÃO' }
+    ]
+  },
+  {
+    id: 19,
+    categoryId: 5,
+    text: 'SINAIS DE ENCEFALOPATIA HEPÁTICA?',
+    alertOptions: [
+      { id: 'lactulose', label: 'INICIAR LACTULOSE' },
+      { id: 'neomicina', label: 'INICIAR NEOMICINA' },
+      { id: 'investigar_causa', label: 'INVESTIGAR CAUSA' },
+      { id: 'manter', label: 'MANTER MONITORAÇÃO' }
+    ]
+  },
+
+  // --- CIRÚRGICO ---
+  {
+    id: 20,
+    categoryId: 6,
+    text: 'FERIDA CIRÚRGICA APRESENTA SINAIS DE INFECÇÃO?',
+    alertOptions: [
+      { id: 'avaliar', label: 'AVALIAR FERIDA' },
+      { id: 'curativos', label: 'TROCAR CURATIVOS' },
+      { id: 'antibiotico_topico', label: 'INICIAR ANTIBIÓTICO TÓPICO' },
+      { id: 'debridamento', label: 'CONSIDERAR DEBRIDAMENTO' }
+    ]
+  },
+  {
+    id: 21,
+    categoryId: 6,
+    text: 'DRENAGEM CIRÚRGICA PRESENTE E FUNCIONANDO?',
+    alertOptions: [
+      { id: 'avaliar_dr', label: 'AVALIAR DRENAGEM' },
+      { id: 'irrigar', label: 'IRRIGAR DRENAGEM' },
+      { id: 'remover', label: 'REMOVER DRENAGEM' },
+      { id: 'manter', label: 'MANTER DRENAGEM' }
+    ]
+  },
+
+  // --- NEUROLÓGICO ---
+  {
+    id: 22,
+    categoryId: 7,
+    text: 'ESCALA DE GLASGOW ADEQUADA? (>8)',
+    alertOptions: [
+      { id: 'investigar', label: 'INVESTIGAR CAUSA DA ALTERAÇÃO' },
+      { id: 'tc', label: 'SOLICITAR TC CRÂNIO' },
+      { id: 'sedacao', label: 'AVALIAR SEDAÇÃO' },
+      { id: 'monitorar', label: 'MONITORAR NÍVEL DE CONSCIÊNCIA' }
+    ]
+  },
+  {
+    id: 23,
+    categoryId: 7,
+    text: 'PUPILAS REATIVAS E SIMÉTRICAS?',
+    alertOptions: [
+      { id: 'urgencia', label: 'SITUAÇÃO DE URGÊNCIA - AVISAR MÉDICO' },
+      { id: 'tc_urgente', label: 'TC CRÂNIO URGENTE' },
+      { id: 'manter', label: 'MANTER MONITORAÇÃO' }
+    ]
+  },
+
+  // --- RESPIRATÓRIO/FISIOTERAPIA ---
+  {
+    id: 24,
+    categoryId: 8,
+    text: 'SATURAÇÃO ADEQUADA? (>94%)',
+    alertOptions: [
+      { id: 'o2', label: 'AUMENTAR O2' },
+      { id: 'vm', label: 'CONSIDERAR VENTILAÇÃO MECÂNICA' },
+      { id: 'aspiracao', label: 'REALIZAR ASPIRAÇÃO DE VIAS AÉREAS' },
+      { id: 'manter', label: 'MANTER OXIGENAÇÃO ATUAL' }
+    ]
+  },
+  {
+    id: 25,
+    categoryId: 8,
+    text: 'FREQUÊNCIA RESPIRATÓRIA ADEQUADA? (12-20)',
+    alertOptions: [
+      { id: 'vm_parametros', label: 'AJUSTAR PARÂMETROS DE VM' },
+      { id: 'drogas', label: 'UTILIZAR DROGAS VASOATIVAS' },
+      { id: 'monitorar', label: 'MONITORAR FR' }
+    ]
+  },
+
+  // --- TERAPIA OCUPACIONAL ---
+  {
+    id: 26,
+    categoryId: 9,
+    text: 'AMPLITUDE DE MOVIMENTO PRESERVADA?',
+    alertOptions: [
+      { id: 'mobilizacao', label: 'INICIAR MOBILIZAÇÃO' },
+      { id: 'ejercicios', label: 'EXERCÍCIOS TERAPÊUTICOS' },
+      { id: 'fisioterapia', label: 'ENCAMINHAR PARA FISIOTERAPIA' },
+      { id: 'manter', label: 'MANTER CUIDADOS ATUAIS' }
+    ]
+  },
+  {
+    id: 27,
+    categoryId: 9,
+    text: 'CONTRATURA OU DEFORMIDADE PRESENTE?',
+    alertOptions: [
+      { id: 'prevencao', label: 'INICIAR PREVENÇÃO' },
+      { id: 'splintagem', label: 'CONSIDERAR SPLINTAGEM' },
+      { id: 'fisio', label: 'ENCAMINHAR PARA FISIOTERAPIA' }
+    ]
+  },
+
+  // --- GERENCIAMENTO DE RISCO ---
+  {
+    id: 28,
+    categoryId: 10,
+    text: 'AVALIAÇÃO DE RISCO DE LESÃO POR PRESSÃO (BRADEN)?',
+    alertOptions: [
+      { id: 'alto_risco', label: 'ALTO RISCO - IMPLEMENTAR MEDIDAS' },
+      { id: 'mudancas', label: 'REALIZAR MUDANÇAS DE POSIÇÃO' },
+      { id: 'superficies', label: 'UTILIZAR SUPERFÍCIES DE ALÍVIO' },
+      { id: 'manter', label: 'MANTER MONITORAÇÃO' }
+    ]
+  },
+  {
+    id: 29,
+    categoryId: 10,
+    text: 'RISCO DE QUEDA PRESENTE?',
+    alertOptions: [
+      { id: 'grade', label: 'ELEVAR GRADES DO LEITO' },
+      { id: 'acompanhamento', label: 'AUMENTAR ACOMPANHAMENTO' },
+      { id: 'sinalizacao', label: 'SINALIZAR RISCO' },
+      { id: 'manter', label: 'MANTER CUIDADOS ATUAIS' }
+    ]
+  },
+
+  // --- FARMÁCIA ---
+  {
+    id: 30,
+    categoryId: 11,
+    text: 'HÁ INTERAÇÃO MEDICAMENTOSA OU CONTRA-INDICAÇÃO?',
+    alertOptions: [
+      { id: 'suspender', label: 'SUSPENDER MEDICAMENTO' },
+      { id: 'substituir', label: 'SUBSTITUIR MEDICAMENTO', hasInput: true, inputPlaceholder: 'Qual medicamento?' },
+      { id: 'notificar', label: 'NOTIFICAR MÉDICO' },
+      { id: 'manter', label: 'MANTER MEDICAÇÃO ATUAL' }
+    ]
+  },
+  {
+    id: 31,
+    categoryId: 11,
+    text: 'MEDICAMENTO COM PRAZO DE VALIDADE VENCIDO?',
+    alertOptions: [
+      { id: 'desprezar', label: 'DESCARTAR MEDICAMENTO' },
+      { id: 'solicitar', label: 'SOLICITAR NOVO MEDICAMENTO' }
+    ]
+  },
+
+  // --- FAMÍLIA ---
+  {
+    id: 32,
+    categoryId: 12,
+    text: 'FAMÍLIA ORIENTADA SOBRE O PLANO DE CUIDADOS?',
+    alertOptions: [
+      { id: 'orientar', label: 'ORIENTAR FAMÍLIA' },
+      { id: 'material', label: 'FORNECER MATERIAL EDUCATIVO' },
+      { id: 'video', label: 'DISPONIBILIZAR VÍDEO EDUCATIVO' },
+      { id: 'manter', label: 'MANTER ORIENTAÇÃO' }
+    ]
+  },
+  {
+    id: 33,
+    categoryId: 12,
+    text: 'FAMÍLIA APRESENTA DÚVIDAS OU PREOCUPAÇÕES?',
+    alertOptions: [
+      { id: 'conversa', label: 'REALIZAR CONVERSA COM FAMÍLIA' },
+      { id: 'psicologia', label: 'ENCAMINHAR PARA PSICOLOGIA' },
+      { id: 'assistencia', label: 'ENCAMINHAR PARA ASSISTÊNCIA SOCIAL' },
+      { id: 'acompanhar', label: 'ACOMPANHAR EMOCIONALMENTE' }
+    ]
+  },
+
+  // --- AVALIAÇÃO DE ALTA ---
+  {
+    id: 34,
+    categoryId: 13,
+    text: 'CRITÉRIOS CLÍNICOS PARA ALTA PREENCHIDOS?',
+    alertOptions: [
+      { id: 'manter', label: 'MANTER INTERNAÇÃO' },
+      { id: 'uti_convencional', label: 'TRANSFERIR PARA UTI CONVENCIONAL' },
+      { id: 'enfermaria', label: 'TRANSFERIR PARA ENFERMARIA' },
+      { id: 'domiciliar', label: 'PREPARAR PARA ALTA DOMICILIAR' }
+    ]
+  },
+  {
+    id: 35,
+    categoryId: 13,
+    text: 'FORAM REALIZADAS ORIENTAÇÕES PRÉ-ALTA?',
+    alertOptions: [
+      { id: 'sim', label: 'SIM - ORIENTAÇÕES REALIZADAS' },
+      { id: 'nao', label: 'NÃO - AGENDAR ORIENTAÇÕES' },
+      { id: 'parcial', label: 'PARCIALMENTE - COMPLETAR ORIENTAÇÕES' }
+    ]
   }
 ];
 
