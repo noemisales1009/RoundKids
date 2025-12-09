@@ -56,7 +56,7 @@ const escalasConfig = {
             { 
                 id: 'c1', 
                 label: '1. Percepção Sensorial', 
-                desc: 'Capacidade de resposta e nível de dor/desconforto.', 
+                desc: 'Capacidade de resposta sensorial.', 
                 pontos: [1, 2, 3, 4], 
                 scoreDesc: ['Totalmente limitado', 'Muito limitado', 'Ligeiramente limitado', 'Sem limitação'] 
             },
@@ -121,7 +121,7 @@ const escalasConfig = {
                 label: '1. Mobilidade', 
                 desc: 'Grau e tipo de movimentos espontâneos.', 
                 pontos: [1, 2, 3, 4], 
-                scoreDesc: ['Não faz movimentos; imóvel', 'Movimentos muito limitados', 'Muda posição ocasionalmente', 'Muda posição frequentemente'] 
+                scoreDesc: ['Não faz movimentos; completamente imóvel', 'Movimentos muito limitados', 'Muda posição ocasionalmente', 'Muda posição frequentemente'] 
             },
             { 
                 id: 'c2', 
@@ -135,7 +135,7 @@ const escalasConfig = {
                 label: '3. Percepção Sensorial', 
                 desc: 'Capacidade de responder a estímulos.', 
                 pontos: [1, 2, 3, 4], 
-                scoreDesc: ['Não responde a estímulos', 'Responde apenas à dor', 'Responde à fala, orientado/confuso', 'Orientado e responde adequadamente'] 
+                scoreDesc: ['Não responde a estímulos', 'Responde apenas à dor', 'Responde à fala, mas confuso', 'Orientado e responde adequadamente'] 
             },
             { 
                 id: 'c4', 
@@ -191,28 +191,28 @@ const escalasConfig = {
                 label: '1. Mobilidade', 
                 desc: 'Grau e tipo de movimentos espontâneos (versão detalhada).', 
                 pontos: [1, 2, 3, 4], 
-                scoreDesc: ['Não faz movimentos; completamente imóvel', 'Movimentos muito limitados; raramente muda de posição', 'Muda de posição ocasionalmente; pouca amplitude', 'Muda de posição frequentemente e de forma completa'] 
+                scoreDesc: ['Não faz movimentos espontâneos; completamente imóvel', 'Movimentos muito limitados; raramente muda de posição', 'Muda de posição ocasionalmente; porém com pouca amplitude', 'Muda de posição frequentemente e de forma completa'] 
             },
             { 
                 id: 'c2', 
                 label: '2. Atividade', 
                 desc: 'Nível de atividade física.', 
-                pontos: [1, 2, 3], 
-                scoreDesc: ['Acamado; não realiza mobilidade ativa', 'Restrito à cadeira; não deambula', 'Move-se no leito, engatinha ou senta sozinho'] 
+                pontos: [1, 2, 3, 4], 
+                scoreDesc: ['Acamado; não realiza mobilidade ativa', 'Restrito à cadeira; não deambula', 'Move-se no leito/engatinha ou senta sozinho', 'Caminha regularmente'] 
             },
             { 
                 id: 'c3', 
                 label: '3. Percepção Sensorial', 
                 desc: 'Capacidade de responder a estímulos.', 
                 pontos: [1, 2, 3, 4], 
-                scoreDesc: ['Não responde a estímulos desconfortáveis ou dolorosos', 'Responde apenas à dor; resposta lenta ou inconsistente', 'Responde à fala, orientado porém confuso ou desorientado', 'Orientado e responde adequadamente a estímulos'] 
+                scoreDesc: ['Não responde a estímulos desconfortáveis ou dolorosos', 'Responde apenas à dor; resposta lenta ou inconsistente', 'Responde à fala, porém confuso ou desorientado', 'Orientado e responde adequadamente a estímulos'] 
             },
             { 
                 id: 'c4', 
                 label: '4. Umidade', 
                 desc: 'Grau de exposição da pele à umidade.', 
                 pontos: [1, 2, 3, 4], 
-                scoreDesc: ['Pele constantemente úmida; fraldas ou suor persistente', 'Muito úmida; necessita trocas', 'Ocasionalmente úmida; umidade intermitente', 'Raramente úmida; pele seca e íntegra'] 
+                scoreDesc: ['Pele constantemente úmida; fraldas ou suor persistente', 'Muito úmida; necessita trocas frequentes', 'Ocasionalmente úmida; umidade intermitente', 'Raramente úmida; pele seca e íntegra'] 
             },
             { 
                 id: 'c5', 
