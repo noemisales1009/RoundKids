@@ -19,13 +19,13 @@ const escalasConfig = {
     itens: [
       { id: 'choro', label: '1. Choro', maxScore: 3, ranges: ['Normal', 'Mais frequente', 'Difícil consolo', 'Agudo e persistente'] },
       { id: 'sono', label: '2. Sono pós-alimentação', maxScore: 3, ranges: ['> 3h', '2–3h', '1–2h', '< 1h'] },
-      { id: 'moro', label: '3. Reflexo de Moro', maxScore: 2, ranges: ['Normal', 'Levemente exaltado'] },
-      { id: 'tremores', label: '4. Tremores', maxScore: 4, ranges: ['Ausente', 'Finos após estímulo', 'Finos em repouso', 'Grosseiros'] },
-      { id: 'tonus', label: '5. Tônus muscular', maxScore: 2, ranges: ['Normal', 'Levemente aumentado'] },
-      { id: 'mioclonias', label: '6. Mioclonias', maxScore: 4, ranges: ['Ausente', 'Leve', 'Moderada', 'Frequente'] },
+      { id: 'moro', label: '3. Reflexo de Moro', maxScore: 2, ranges: ['Normal', 'Levemente exaltado', 'Moderado'] },
+      { id: 'tremores', label: '4. Tremores', maxScore: 4, ranges: ['Ausente', 'Finos após estímulo', 'Finos em repouso', 'Grosseiros com/sem estímulo'] },
+      { id: 'tonus', label: '5. Tônus muscular', maxScore: 2, ranges: ['Normal', 'Levemente aumentado', 'Moderadamente aumentado'] },
+      { id: 'mioclonias', label: '6. Mioclonias', maxScore: 3, ranges: ['Ausente', 'Leve', 'Moderada', 'Frequente'] },
       { id: 'convulsoes', label: '7. Convulsões', maxScore: 5, ranges: ['Ausente', '', '', '', '', 'Convulsão'] },
       { id: 'sudorese', label: '8. Sudorese', maxScore: 1, ranges: ['Ausente', 'Presente'] },
-      { id: 'febre', label: '9. Febre', maxScore: 2, ranges: ['Normal', 'Leve', 'Moderada'] },
+      { id: 'febre', label: '9. Febre', maxScore: 2, ranges: ['Normal', 'Leve (38-38,4°C)', 'Moderada (> 38,4°C)'] },
       { id: 'espirros', label: '10. Espirros/Bocejos', maxScore: 2, ranges: ['Normal', 'Leve aumento', 'Repetitivos'] },
       { id: 'respiracao', label: '11. Respiração', maxScore: 2, ranges: ['Normal', 'FR > 60 sem retração', 'FR > 60 com retração'] },
       { id: 'succao', label: '12. Sucção', maxScore: 2, ranges: ['Normal', 'Vigorosa', 'Desorganizada'] },
@@ -119,11 +119,15 @@ const QuestionCard: React.FC<{
         } focus:outline-none ${colors.text}`}
       >
         <option value="">Selecione...</option>
-        {item.ranges.map((desc: string, index: number) => (
-          <option key={index} value={index}>
-            {index} - {desc}
-          </option>
-        ))}
+        {item.ranges.map((desc: string, index: number) => {
+          // Skip empty descriptions (used for skipping values like in Convulsões)
+          if (desc === '') return null;
+          return (
+            <option key={index} value={index}>
+              {index} - {desc}
+            </option>
+          );
+        })}
       </select>
     </div>
   );
