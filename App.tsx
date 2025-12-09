@@ -3141,6 +3141,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             surgsRes,
             scalesRes,
             questionsRes,
+            opcoesRes,
             categoriesRes,
             answersRes,
             culturesRes
@@ -3151,7 +3152,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             supabase.from('medicacoes_pacientes').select('*'),
             supabase.from('procedimentos_pacientes').select('*'),
             supabase.from('scale_scores').select('*'),
-            supabase.from('perguntas').select('*, pergunta_opcoes(*)').order('ordem', { ascending: true }),
+            supabase.from('perguntas').select('*').order('ordem', { ascending: true }),
+            supabase.from('pergunta_opcoes').select('*').order('pergunta_id').order('ordem', { ascending: true }),
             supabase.from('categorias').select('*').order('ordem', { ascending: true }),
             supabase.from('checklist_answers').select('*').eq('date', today),
             supabase.from('culturas_pacientes').select('*')
@@ -3187,23 +3189,39 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         }
 
         // Process Questions and Options
-        console.log('📦 questionsRes.data:', questionsRes.data);
+        console.log('📦 questionsRes.data:', questionsRes.data?.length, 'registros');
+        console.log('📦 opcoesRes.data:', opcoesRes.data?.length, 'registros');
         console.log('📦 questionsRes.error:', questionsRes.error);
+        console.log('📦 opcoesRes.error:', opcoesRes.error);
         
         if (!questionsRes.error && questionsRes.data && questionsRes.data.length > 0) {
             console.log('✅ Perguntas carregadas do banco:', questionsRes.data.length);
+            
+            // Create a map of opções grouped by pergunta_id
+            const opcoesMap: Record<number, any[]> = {};
+            if (opcoesRes.data && opcoesRes.data.length > 0) {
+                opcoesRes.data.forEach((opcao: any) => {
+                    if (!opcoesMap[opcao.pergunta_id]) {
+                        opcoesMap[opcao.pergunta_id] = [];
+                    }
+                    opcoesMap[opcao.pergunta_id].push(opcao);
+                });
+                console.log('✅ Opções mapeadas para', Object.keys(opcoesMap).length, 'perguntas');
+            }
+            
             const mappedQuestions = questionsRes.data.map((q: any) => {
-                console.log('  - Pergunta:', q.id, q.texto, 'Opções:', q.pergunta_opcoes?.length);
+                const opcoes = opcoesMap[q.id] || [];
+                console.log('  - Pergunta ID:', q.id, 'Texto:', q.texto?.substring(0, 50) + '...', 'Opções:', opcoes.length);
                 return {
                     id: q.id,
                     text: q.texto,
                     categoryId: q.categoria_id,
-                    alertOptions: q.pergunta_opcoes ? q.pergunta_opcoes.map((opt: any) => ({
+                    alertOptions: opcoes.map((opt: any) => ({
                         id: opt.codigo,
                         label: opt.label,
                         hasInput: opt.has_input,
                         inputPlaceholder: opt.input_placeholder
-                    })).sort((a: any, b: any) => (a.ordem || 0) - (b.ordem || 0)) : []
+                    })).sort((a: any, b: any) => (a.ordem || 0) - (b.ordem || 0))
                 };
             });
             console.log('✅ Total de perguntas mapeadas:', mappedQuestions.length);
