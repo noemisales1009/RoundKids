@@ -261,7 +261,7 @@ const FLACCQuestionCard = ({
 // 🚀 COMPONENTE PRINCIPAL
 // ==========================================
 
-function FLACCScale() {
+function FLACCScale({ onSaveScore }: { onSaveScore?: (data: { scaleName: string; score: number; interpretation: string }) => void } = {}) {
   const themeContext = useContext(ThemeContext);
   const userContext = useContext(UserContext);
   const theme = themeContext?.theme ?? 'dark';
@@ -362,7 +362,7 @@ function FLACCScale() {
   };
 
   const saveAssessment = async () => {
-    if (!configAtual || !resultadoAvaliacao?.isCompleto || !userContext?.user) {
+    if (!configAtual || !resultadoAvaliacao?.isCompleto) {
       setSaveStatus('error');
       return;
     }
@@ -371,22 +371,42 @@ function FLACCScale() {
     setSaveStatus('idle');
 
     try {
-      const { error } = await supabase.from('scale_scores').insert({
-        patient_id: userContext.user.id,
-        scale_name: configAtual.titulo,
-        score: pontuacaoTotal,
-        interpretation: resultadoAvaliacao.texto,
-        date: new Date().toISOString(),
-      });
+      // Se tem callback, usa ele (salva no contexto do paciente)
+      if (onSaveScore) {
+        onSaveScore({
+          scaleName: configAtual.titulo,
+          score: pontuacaoTotal,
+          interpretation: resultadoAvaliacao.texto,
+        });
+        setSaveStatus('success');
+        setTimeout(() => {
+          setSaveStatus('idle');
+          setTela('intro');
+          setEscalaAtiva(null);
+          setRespostas({});
+        }, 2000);
+      } else {
+        // Fallback: tenta salvar direto no banco (para uso sem paciente específico)
+        if (!userContext?.user) {
+          throw new Error('Usuário não autenticado');
+        }
+        const { error } = await supabase.from('scale_scores').insert({
+          patient_id: userContext.user.id,
+          scale_name: configAtual.titulo,
+          score: pontuacaoTotal,
+          interpretation: resultadoAvaliacao.texto,
+          date: new Date().toISOString(),
+        });
 
-      if (error) throw error;
-      setSaveStatus('success');
-      setTimeout(() => {
-        setSaveStatus('idle');
-        setTela('intro');
-        setEscalaAtiva(null);
-        setRespostas({});
-      }, 2000);
+        if (error) throw error;
+        setSaveStatus('success');
+        setTimeout(() => {
+          setSaveStatus('idle');
+          setTela('intro');
+          setEscalaAtiva(null);
+          setRespostas({});
+        }, 2000);
+      }
     } catch (error) {
       console.error('Erro ao salvar avaliação:', error);
       setSaveStatus('error');
