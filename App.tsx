@@ -3151,8 +3151,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             supabase.from('medicacoes_pacientes').select('*'),
             supabase.from('procedimentos_pacientes').select('*'),
             supabase.from('scale_scores').select('*'),
-            supabase.from('perguntas').select('*, pergunta_opcoes(*)').order('ordem', { ascending: true }),
-            supabase.from('categorias').select('*').order('ordem', { ascending: true }),
+            supabase.from('perguntas').select('*, pergunta_opcoes(*)', { count: 'exact' }).order('ordem', { ascending: true }),
+            supabase.from('categorias').select('*', { count: 'exact' }).order('ordem', { ascending: true }),
             supabase.from('checklist_answers').select('*').eq('date', today),
             supabase.from('culturas_pacientes').select('*')
         ]);
@@ -3164,6 +3164,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 
         // Process Categories from DB
         if (categoriesRes.data && categoriesRes.data.length > 0) {
+            console.log('📂 Categorias carregadas do banco:', categoriesRes.data.length);
             const mappedCategories = categoriesRes.data.map((c: any) => ({
                 id: c.id,
                 name: c.nome,
@@ -3173,11 +3174,13 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             setCategories(mappedCategories);
         } else {
             // Fallback to static constants
+            console.log('⚠️ Usando categorias estáticas (banco vazio)');
             setCategories(STATIC_CATEGORIES);
         }
 
         // Process Questions and Options
         if (questionsRes.data && questionsRes.data.length > 0) {
+            console.log('📚 Perguntas carregadas do banco:', questionsRes.data.length);
             const mappedQuestions = questionsRes.data.map((q: any) => ({
                 id: q.id,
                 text: q.texto,
@@ -3192,6 +3195,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             setQuestions(mappedQuestions);
         } else {
             // Fallback to STATIC_QUESTIONS if database questions table is empty or fetch fails
+            console.log('⚠️ Usando perguntas estáticas (banco vazio)');
             setQuestions(STATIC_QUESTIONS);
         }
 
