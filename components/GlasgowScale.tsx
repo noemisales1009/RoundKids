@@ -11,21 +11,21 @@ interface ScaleProps {
 
 const escalasConfig = {
   adulto: {
-    titulo: 'ECG Adulto/Criança',
+    titulo: 'Escala de Glasgow — Adultos',
     idade: '≥ 5 anos',
     maxScore: 15,
     componentes: ['ocular', 'verbal_adulto', 'motora'],
     colorKey: 'yellow',
   },
   crianca: {
-    titulo: 'ECG Pediátrica',
+    titulo: 'Escala de Glasgow Pediátrica',
     idade: '≤ 4 anos',
     maxScore: 15,
     componentes: ['ocular', 'verbal_crianca', 'motora_crianca'],
     colorKey: 'green',
   },
   lactente: {
-    titulo: 'ECG Lactente',
+    titulo: 'Glasgow Pediátrico — Lactentes',
     idade: '< 1 ano',
     maxScore: 15,
     componentes: ['ocular', 'verbal_lactente', 'motora_lactente'],
@@ -228,12 +228,15 @@ export const GlasgowScale: React.FC<ScaleProps> = ({ onSaveScore }) => {
       return { texto: 'Incompleto', detalhe: 'Responda todas as perguntas', cor: 'text-yellow-500', isCompleto: false };
     }
     if (pontuacaoTotal >= 13) {
-      return { texto: 'Leve', detalhe: 'Consciência preservada', cor: 'text-green-500', isCompleto: true };
+      return { texto: 'Leve', detalhe: 'Traumatismo leve / Consciência preservada', cor: 'text-green-500', isCompleto: true };
     }
     if (pontuacaoTotal >= 9) {
-      return { texto: 'Moderado', detalhe: 'Rebaixamento moderado', cor: 'text-yellow-500', isCompleto: true };
+      return { texto: 'Moderado', detalhe: 'Traumatismo moderado / Rebaixamento moderado', cor: 'text-yellow-500', isCompleto: true };
     }
-    return { texto: 'Grave', detalhe: 'Via aérea definitiva', cor: 'text-red-500', isCompleto: true };
+    if (pontuacaoTotal > 5) {
+      return { texto: 'Grave', detalhe: 'Coma grave (≤ 8 pts) - Indicação de via aérea definitiva', cor: 'text-red-500', isCompleto: true };
+    }
+    return { texto: 'Extremamente Grave', detalhe: 'Pontuação ≤ 5 - Risco de dano neurológico extenso', cor: 'text-red-700', isCompleto: true };
   }, [pontuacaoTotal, itensRespondidos]);
 
   const iniciarAvaliacao = (escala: 'adulto' | 'crianca' | 'lactente') => {
@@ -340,6 +343,10 @@ export const GlasgowScale: React.FC<ScaleProps> = ({ onSaveScore }) => {
             <li className="flex justify-between text-red-500">
               <span>≤ 8 pts</span>
               <span>Grave</span>
+            </li>
+            <li className="flex justify-between text-red-700">
+              <span>≤ 5 pts</span>
+              <span>Extremamente Grave</span>
             </li>
           </ul>
         </div>
