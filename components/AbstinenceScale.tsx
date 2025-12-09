@@ -23,7 +23,7 @@ const escalasConfig = {
       { id: 'tremores', label: '4. Tremores', maxScore: 4, ranges: ['Ausente', 'Finos após estímulo', 'Finos em repouso', 'Grosseiros com/sem estímulo'] },
       { id: 'tonus', label: '5. Tônus muscular', maxScore: 2, ranges: ['Normal', 'Levemente aumentado', 'Moderadamente aumentado'] },
       { id: 'mioclonias', label: '6. Mioclonias', maxScore: 3, ranges: ['Ausente', 'Leve', 'Moderada', 'Frequente'] },
-      { id: 'convulsoes', label: '7. Convulsões', maxScore: 5, ranges: ['Ausente', '', '', '', '', 'Convulsão'] },
+      { id: 'convulsoes', label: '7. Convulsões', maxScore: 5, ranges: ['Ausente', 'Convulsão'], scoreMap: [0, 5] },
       { id: 'sudorese', label: '8. Sudorese', maxScore: 1, ranges: ['Ausente', 'Presente'] },
       { id: 'febre', label: '9. Febre', maxScore: 2, ranges: ['Normal', 'Leve (38-38,4°C)', 'Moderada (> 38,4°C)'] },
       { id: 'espirros', label: '10. Espirros/Bocejos', maxScore: 2, ranges: ['Normal', 'Leve aumento', 'Repetitivos'] },
@@ -120,11 +120,10 @@ const QuestionCard: React.FC<{
       >
         <option value="">Selecione...</option>
         {item.ranges.map((desc: string, index: number) => {
-          // Skip empty descriptions (used for skipping values like in Convulsões)
-          if (desc === '') return null;
+          const actualScore = item.scoreMap ? item.scoreMap[index] : index;
           return (
-            <option key={index} value={index}>
-              {index} - {desc}
+            <option key={index} value={actualScore}>
+              {actualScore} - {desc}
             </option>
           );
         })}
