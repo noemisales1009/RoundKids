@@ -10,7 +10,7 @@ const escalasConfig = {
   flacc: {
     titulo: 'FLACC Padrão',
     nomeCompleto: 'Face, Legs, Activity, Cry, Consolability',
-    idade: '0 a 7 anos (não verbal)',
+    idade: 'Lactentes e crianças de 0 a 7 anos',
     maxScore: 10,
     dominios: [
       {
@@ -68,7 +68,7 @@ const escalasConfig = {
   flaccr: {
     titulo: 'FLACC-R',
     nomeCompleto: 'FLACC Revisada (Não Verbais)',
-    idade: 'Deficiências Neurológicas / Intubados',
+    idade: 'Crianças com deficiências neurológicas, PC, atraso global e pacientes intubados',
     maxScore: 10,
     dominios: [
       {
@@ -298,25 +298,30 @@ function FLACCScale() {
       };
     }
 
-    let texto, cor;
+    let texto, cor, recomendacao;
 
     if (pontuacaoTotal === 0) {
       texto = 'Sem Dor';
       cor = 'text-green-500';
+      recomendacao = 'Criança sem dor';
     } else if (pontuacaoTotal >= 1 && pontuacaoTotal <= 3) {
       texto = 'Dor Leve';
       cor = 'text-yellow-500';
+      recomendacao = 'Analgesia simples / Conforto';
     } else if (pontuacaoTotal >= 4 && pontuacaoTotal <= 6) {
       texto = 'Dor Moderada';
       cor = 'text-orange-500';
+      recomendacao = 'Analgesia multimodal';
     } else {
       texto = 'Dor Intensa';
       cor = 'text-red-500';
+      recomendacao = 'Reavaliação imediata, opioide forte';
     }
 
     return {
       texto,
       detalhe: `Pontuação: ${pontuacaoTotal} de ${configAtual.maxScore}`,
+      recomendacao,
       cor,
       isCompleto: true,
     };
@@ -646,6 +651,13 @@ function FLACCScale() {
             <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
               {resultadoAvaliacao?.detalhe}
             </p>
+            {resultadoAvaliacao?.recomendacao && (
+              <p className={`text-sm font-semibold mt-3 ${
+                theme === 'dark' ? 'text-blue-300' : 'text-blue-700'
+              }`}>
+                💊 {resultadoAvaliacao.recomendacao}
+              </p>
+            )}
           </div>
 
           {/* Detalhes */}
@@ -661,24 +673,32 @@ function FLACCScale() {
                 theme === 'dark' ? 'border-slate-700' : 'border-gray-200'
               }`}
             >
-              Interpretação
+              Interpretação e Recomendações
             </h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-green-500">0 pts</span>
-                <span>Sem Dor</span>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="font-bold text-green-500">0 pts – Sem Dor</span>
+                  <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Criança sem dor</p>
+                </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-yellow-500">1-3 pts</span>
-                <span>Dor Leve</span>
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="font-bold text-yellow-500">1-3 pts – Dor Leve</span>
+                  <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Analgesia simples / Conforto</p>
+                </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-orange-500">4-6 pts</span>
-                <span>Dor Moderada</span>
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="font-bold text-orange-500">4-6 pts – Dor Moderada</span>
+                  <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Analgesia multimodal</p>
+                </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-red-500">7-10 pts</span>
-                <span>Dor Intensa</span>
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="font-bold text-red-500">7-10 pts – Dor Intensa</span>
+                  <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Reavaliação imediata, opioide forte</p>
+                </div>
               </div>
             </div>
           </div>

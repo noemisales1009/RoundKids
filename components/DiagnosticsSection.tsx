@@ -100,6 +100,8 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const handleSave = async () => {
     setSaving(true);
     try {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      
       // Separar diagnósticos resolvidos e não resolvidos
       const allDiagnostics = options
         .filter(option => checkedOptions[option.id])
@@ -108,7 +110,8 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           pergunta_id: option.pergunta_id,
           opcao_id: option.id,
           texto_digitado: inputValues[option.id] || null,
-          status: selectedStatus[option.id] || 'nao_resolvido' as const
+          status: selectedStatus[option.id] || 'nao_resolvido' as const,
+          data: today // Adicionar data de hoje
         }));
 
       // Apenas não resolvidos ficam na tabela ativa
@@ -117,15 +120,16 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       // Resolvidos vão para histórico
       const diagnosticsResolved = allDiagnostics.filter(d => d.status === 'resolvido');
 
-      // Buscar diagnósticos existentes para evitar duplicatas
+      // Buscar diagnósticos de HOJE para evitar duplicatas no mesmo dia
       const { data: existingDiagnostics } = await supabase
         .from('paciente_diagnosticos')
         .select('opcao_id')
-        .eq('patient_id', patientId);
+        .eq('patient_id', patientId)
+        .eq('data', today); // Buscar apenas de hoje
 
       const existingOpcaoIds = new Set((existingDiagnostics || []).map(d => d.opcao_id));
 
-      // Filtrar apenas diagnósticos NOVOS (que não existem ainda)
+      // Filtrar apenas diagnósticos NOVOS (que não foram salvos hoje)
       const newDiagnostics = diagnosticsToKeep.filter(d => !existingOpcaoIds.has(d.opcao_id));
 
       // Inserir apenas diagnósticos novos (evita duplicatas)
