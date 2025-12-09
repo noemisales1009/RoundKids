@@ -3172,7 +3172,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 
         // Process Categories from DB
         if (categoriesRes.data && categoriesRes.data.length > 0) {
-            console.log('📂 Categorias carregadas do banco:', categoriesRes.data.length);
+            console.log('✅ Categorias carregadas do banco:', categoriesRes.data.length);
             const mappedCategories = categoriesRes.data.map((c: any) => ({
                 id: c.id,
                 name: c.nome,
@@ -3182,28 +3182,36 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             setCategories(mappedCategories);
         } else {
             // Fallback to static constants
-            console.log('⚠️ Usando categorias estáticas (banco vazio ou erro)');
+            console.log('⚠️ Nenhuma categoria no banco, usando estáticas');
             setCategories(STATIC_CATEGORIES);
         }
 
         // Process Questions and Options
-        if (questionsRes.data && questionsRes.data.length > 0) {
-            console.log('📚 Perguntas carregadas do banco:', questionsRes.data.length);
-            const mappedQuestions = questionsRes.data.map((q: any) => ({
-                id: q.id,
-                text: q.texto,
-                categoryId: q.categoria_id,
-                alertOptions: q.pergunta_opcoes ? q.pergunta_opcoes.map((opt: any) => ({
-                    id: opt.codigo,
-                    label: opt.label,
-                    hasInput: opt.has_input,
-                    inputPlaceholder: opt.input_placeholder
-                })).sort((a: any, b: any) => a.ordem - b.ordem) : []
-            }));
+        console.log('📦 questionsRes.data:', questionsRes.data);
+        console.log('📦 questionsRes.error:', questionsRes.error);
+        
+        if (!questionsRes.error && questionsRes.data && questionsRes.data.length > 0) {
+            console.log('✅ Perguntas carregadas do banco:', questionsRes.data.length);
+            const mappedQuestions = questionsRes.data.map((q: any) => {
+                console.log('  - Pergunta:', q.id, q.texto, 'Opções:', q.pergunta_opcoes?.length);
+                return {
+                    id: q.id,
+                    text: q.texto,
+                    categoryId: q.categoria_id,
+                    alertOptions: q.pergunta_opcoes ? q.pergunta_opcoes.map((opt: any) => ({
+                        id: opt.codigo,
+                        label: opt.label,
+                        hasInput: opt.has_input,
+                        inputPlaceholder: opt.input_placeholder
+                    })).sort((a: any, b: any) => (a.ordem || 0) - (b.ordem || 0)) : []
+                };
+            });
+            console.log('✅ Total de perguntas mapeadas:', mappedQuestions.length);
             setQuestions(mappedQuestions);
         } else {
             // Fallback to STATIC_QUESTIONS if database questions table is empty or fetch fails
-            console.log('⚠️ Usando perguntas estáticas (banco vazio ou erro)');
+            console.log('⚠️ Nenhuma pergunta no banco, usando estáticas');
+            console.log('Usando', STATIC_QUESTIONS.length, 'perguntas estáticas');
             setQuestions(STATIC_QUESTIONS);
         }
 
