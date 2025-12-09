@@ -752,10 +752,12 @@ const PatientHistoryScreen: React.FC = () => {
         // Adicionar histórico de diagnósticos
         diagnosticHistory.forEach(diag => {
             const statusText = diag.status === 'resolvido' ? '✅ Resolvido' : '❌ Não Resolvido';
+            const label = diag.opcao_label || 'N/A';
+            const textoDigitado = diag.texto_digitado ? ` - "${diag.texto_digitado}"` : '';
             events.push({
                 timestamp: diag.created_at || new Date().toISOString(),
                 icon: FileTextIcon,
-                description: `Diagnóstico Registrado: ${diag.texto_digitado || 'N/A'} - Status: ${statusText}.`,
+                description: `Diagnóstico Registrado: ${label}${textoDigitado} - Status: ${statusText}.`,
                 hasTime: true,
             });
         });

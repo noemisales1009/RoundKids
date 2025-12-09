@@ -142,10 +142,15 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       // Salvar TUDO no histórico (resolvidos + não resolvidos)
       if (allDiagnostics.length > 0) {
         try {
-          const historyData = allDiagnostics.map(d => ({
-            ...d,
-            created_at: new Date().toISOString()
-          }));
+          const historyData = allDiagnostics.map(d => {
+            // Encontrar o label da opção
+            const opcao = options.find(o => o.id === d.opcao_id);
+            return {
+              ...d,
+              opcao_label: opcao?.label || 'N/A',
+              created_at: new Date().toISOString()
+            };
+          });
           
           await supabase
             .from('diagnosticos_historico')
