@@ -3901,11 +3901,12 @@ const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
 const ChecklistRedirector: React.FC = () => {
     const { patientId, categoryId } = useParams();
+    const navigate = useNavigate();
     useEffect(() => {
         if (patientId && categoryId) {
-            window.location.hash = `/patient/${patientId}/round/category/${categoryId}/question/0`;
+            navigate(`/patient/${patientId}/round/category/${categoryId}/question/0`);
         }
-    }, [patientId, categoryId]);
+    }, [patientId, categoryId, navigate]);
     return null;
 };
 
