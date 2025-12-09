@@ -3151,8 +3151,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             supabase.from('medicacoes_pacientes').select('*'),
             supabase.from('procedimentos_pacientes').select('*'),
             supabase.from('scale_scores').select('*'),
-            supabase.from('perguntas').select('*, pergunta_opcoes(*)', { count: 'exact' }).order('ordem', { ascending: true }),
-            supabase.from('categorias').select('*', { count: 'exact' }).order('ordem', { ascending: true }),
+            supabase.from('perguntas').select('*, pergunta_opcoes(*)').order('ordem', { ascending: true }),
+            supabase.from('categorias').select('*').order('ordem', { ascending: true }),
             supabase.from('checklist_answers').select('*').eq('date', today),
             supabase.from('culturas_pacientes').select('*')
         ]);
@@ -3160,6 +3160,14 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         if (patientsRes.error) {
             console.error('Error fetching patients:', patientsRes.error);
             return;
+        }
+
+        // Log errors if any
+        if (categoriesRes.error) {
+            console.error('❌ Erro ao carregar categorias:', categoriesRes.error);
+        }
+        if (questionsRes.error) {
+            console.error('❌ Erro ao carregar perguntas:', questionsRes.error);
         }
 
         // Process Categories from DB
@@ -3174,7 +3182,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             setCategories(mappedCategories);
         } else {
             // Fallback to static constants
-            console.log('⚠️ Usando categorias estáticas (banco vazio)');
+            console.log('⚠️ Usando categorias estáticas (banco vazio ou erro)');
             setCategories(STATIC_CATEGORIES);
         }
 
@@ -3195,7 +3203,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             setQuestions(mappedQuestions);
         } else {
             // Fallback to STATIC_QUESTIONS if database questions table is empty or fetch fails
-            console.log('⚠️ Usando perguntas estáticas (banco vazio)');
+            console.log('⚠️ Usando perguntas estáticas (banco vazio ou erro)');
             setQuestions(STATIC_QUESTIONS);
         }
 
