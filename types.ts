@@ -24,6 +24,7 @@ export interface Medication {
   name: string;
   dosage: string;
   startDate: string; // "YYYY-MM-DD"
+  endDate?: string; // "YYYY-MM-DD"
   isArchived?: boolean;
 }
 

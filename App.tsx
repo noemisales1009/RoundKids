@@ -1230,6 +1230,9 @@ const PatientDetailScreen: React.FC = () => {
     const [showPatientAlerts, setShowPatientAlerts] = useState(false);
     const [isCreateAlertModalOpen, setCreateAlertModalOpen] = useState(false);
     const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'cam-icu' | 'delirium-pediatrico' | 'delirium-master' | 'glasgow' | 'crs-r' | 'flacc' | 'braden-risco-lesao' | 'vni-cnaf' | 'vni-cnaf-pediatrico' | 'fss' | 'abstinencia' | 'consciencia'>('list');
+    
+    // Confirmation Modal State
+    const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; message: string; onConfirm: () => void } | null>(null);
 
     const { showNotification } = useContext(NotificationContext)!;
 
@@ -1252,38 +1255,63 @@ const PatientDetailScreen: React.FC = () => {
     };
 
     const handleDeleteDevice = (patientId: number | string, deviceId: number | string) => {
-        if (window.confirm("Tem certeza que deseja arquivar este dispositivo?")) {
-            deleteDeviceFromPatient(patientId, deviceId);
-            showNotification({ message: 'Dispositivo removido.', type: 'info' });
-        }
+        setConfirmDialog({
+            isOpen: true,
+            message: 'Tem certeza que deseja arquivar este dispositivo?',
+            onConfirm: () => {
+                deleteDeviceFromPatient(patientId, deviceId);
+                showNotification({ message: 'Dispositivo removido.', type: 'info' });
+                setConfirmDialog(null);
+            }
+        });
     };
 
     const handleDeleteExam = (patientId: number | string, examId: number | string) => {
-        if (window.confirm("Tem certeza que deseja arquivar este exame?")) {
-            deleteExamFromPatient(patientId, examId);
-            showNotification({ message: 'Exame arquivado.', type: 'info' });
-        }
+        setConfirmDialog({
+            isOpen: true,
+            message: 'Tem certeza que deseja arquivar este exame?',
+            onConfirm: () => {
+                deleteExamFromPatient(patientId, examId);
+                showNotification({ message: 'Exame arquivado.', type: 'info' });
+                setConfirmDialog(null);
+            }
+        });
     };
 
     const handleDeleteMedication = (patientId: number | string, medicationId: number | string) => {
-        if (window.confirm("Tem certeza que deseja arquivar esta medicação?")) {
-            deleteMedicationFromPatient(patientId, medicationId);
-            showNotification({ message: 'Medicação arquivada.', type: 'info' });
-        }
+        setConfirmDialog({
+            isOpen: true,
+            message: 'Tem certeza que deseja arquivar esta medicação?',
+            onConfirm: () => {
+                deleteMedicationFromPatient(patientId, medicationId);
+                showNotification({ message: 'Medicação arquivada.', type: 'info' });
+                setConfirmDialog(null);
+            }
+        });
     };
 
     const handleDeleteProcedure = (patientId: number | string, procedureId: number | string) => {
-        if (window.confirm("Tem certeza que deseja arquivar este procedimento cirúrgico?")) {
-            deleteSurgicalProcedureFromPatient(patientId, procedureId);
-            showNotification({ message: 'Procedimento cirúrgico arquivado.', type: 'info' });
-        }
+        setConfirmDialog({
+            isOpen: true,
+            message: 'Tem certeza que deseja arquivar este procedimento cirúrgico?',
+            onConfirm: () => {
+                deleteSurgicalProcedureFromPatient(patientId, procedureId);
+                showNotification({ message: 'Procedimento cirúrgico arquivado.', type: 'info' });
+                setConfirmDialog(null);
+            }
+        });
     };
 
     const handleDeleteCulture = (patientId: number | string, cultureId: number | string) => {
-        if (window.confirm("Tem certeza que deseja arquivar esta cultura?")) {
-            deleteCultureFromPatient(patientId, cultureId);
-            showNotification({ message: 'Cultura arquivada.', type: 'info' });
-        }
+        setConfirmDialog({
+            isOpen: true,
+            message: 'Tem certeza que deseja arquivar esta cultura?',
+            onConfirm: () => {
+                deleteCultureFromPatient(patientId, cultureId);
+                showNotification({ message: 'Cultura arquivada.', type: 'info' });
+                setConfirmDialog(null);
+            }
+        });
     };
 
     const formatAge = (dob: string) => {
@@ -1753,6 +1781,30 @@ const PatientDetailScreen: React.FC = () => {
             {isEndDateModalOpen && <AddEndDateModal medicationId={isEndDateModalOpen} patientId={patient.id} onClose={() => setEndDateModalOpen(null)} />}
             {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} currentMotherName={patient.motherName} currentDiagnosis={patient.ctd} onClose={() => setEditInfoModalOpen(false)} />}
             {isCreateAlertModalOpen && <CreateAlertModal patientId={patient.id} onClose={() => setCreateAlertModalOpen(false)} />}
+            {confirmDialog && confirmDialog.isOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+                        <div className="mb-6">
+                            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Confirmação</h2>
+                            <p className="text-slate-600 dark:text-slate-400 mt-2">{confirmDialog.message}</p>
+                        </div>
+                        <div className="flex gap-3 justify-end">
+                            <button 
+                                onClick={() => setConfirmDialog(null)}
+                                className="px-4 py-2 bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg font-semibold hover:bg-slate-400 dark:hover:bg-slate-600 transition"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                onClick={confirmDialog.onConfirm}
+                                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition"
+                            >
+                                Arquivar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -3269,6 +3321,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 date: e.data_exame,
                 result: e.resultado || 'Pendente',
                 observation: e.observacao,
+                isArchived: e.is_archived,
             });
             return acc;
         }, {});
@@ -3280,6 +3333,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 name: m.nome_medicacao,
                 dosage: `${m.dosagem_valor} ${m.unidade_medida}`,
                 startDate: m.data_inicio,
+                endDate: m.data_fim,
                 isArchived: m.is_archived
             });
             return acc;
