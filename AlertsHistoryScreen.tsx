@@ -56,7 +56,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                 }).filter(a => patientsMap.has(a.patient_id)), // Filtrar apenas alertas com pacientes válidos
                 ...(comorbidadesResult.data || []).map(c => {
                     const patientInfo = c.patient_id ? patientsMap.get(c.patient_id) : null;
-                    const comorbidadesList = c.comorbidades
+                    const comorbidadesList = c.comorbidade
                         .split('|')
                         .map((comorb: string) => comorb.trim())
                         .filter((comorb: string) => comorb);
@@ -334,7 +334,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                                                 <div>
                                                     <p>Comorbidades Adicionadas</p>
                                                     <div className="mt-2 space-y-1">
-                                                        {(alert.comorbidades || '')
+                                                        {(alert.comorbidade || '')
                                                             .split('|')
                                                             .map((comorb: string) => comorb.trim())
                                                             .filter((comorb: string) => comorb)

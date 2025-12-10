@@ -3930,11 +3930,17 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 .filter(c => c);
 
             if (comorbidadesList.length > 0) {
-                await supabase.from('comorbidade_historico').insert({
+                const { error: historyError } = await supabase.from('comorbidade_historico').insert({
                     patient_id: patientId,
-                    comorbidades: comorbidadesList.join('|'),
+                    comorbidade: comorbidadesList.join('|'),
                     created_at: new Date().toISOString()
                 });
+
+                if (historyError) {
+                    console.error('Erro ao salvar histórico de comorbidades:', historyError);
+                } else {
+                    console.log('Histórico de comorbidades salvo com sucesso');
+                }
             }
 
             fetchPatients();
