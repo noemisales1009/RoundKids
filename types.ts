@@ -60,6 +60,7 @@ export interface Patient {
   motherName: string;
   dob: string; // "YYYY-MM-DD"
   ctd: string; // Used for Diagnosis
+  status?: 'estavel' | 'instavel' | 'em_risco'; // Patient status
   devices: Device[];
   exams: Exam[];
   medications: Medication[];
@@ -165,6 +166,7 @@ export interface PatientsContextType {
   deleteSurgicalProcedureFromPatient: (patientId: number | string, procedureId: number | string) => void;
   addScaleScoreToPatient: (patientId: number | string, score: Omit<ScaleScore, 'id'>) => void;
   updatePatientDetails: (patientId: number | string, data: { motherName?: string; ctd?: string }) => void;
+  updatePatientStatus: (patientId: number | string, status: 'estavel' | 'instavel' | 'em_risco') => void;
   saveChecklistAnswer: (patientId: number | string, categoryId: number, questionId: number, answer: Answer) => Promise<void>;
   addCultureToPatient: (patientId: number | string, culture: Omit<Culture, 'id'>) => void;
   deleteCultureFromPatient: (patientId: number | string, cultureId: number | string) => void;

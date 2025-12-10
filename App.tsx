@@ -571,13 +571,29 @@ const PatientListScreen: React.FC = () => {
                 {filteredPatients.map(patient => {
                     const progress = calculateProgress(patient.id);
                     return (
-                        <Link to={`/patient/${patient.id}`} key={patient.id} className="block bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm hover:shadow-md transition">
+                        <Link to={`/patient/${patient.id}`} key={patient.id} className={`block bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm hover:shadow-md transition border-2 ${
+                            patient.status === 'estavel' ? 'border-green-300 dark:border-green-700' :
+                            patient.status === 'instavel' ? 'border-yellow-300 dark:border-yellow-700' :
+                            patient.status === 'em_risco' ? 'border-red-300 dark:border-red-700' :
+                            'border-slate-300 dark:border-slate-700'
+                        }`}>
                             <div className="flex items-center space-x-4">
                                 <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-blue-100 dark:bg-blue-900/80 text-blue-600 dark:text-blue-300 rounded-full font-bold text-lg">
                                     {patient.bedNumber}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-slate-800 dark:text-slate-200 break-words">{patient.name}</p>
+                                    <div className="flex items-center justify-between gap-2 mb-1">
+                                        <p className="font-bold text-slate-800 dark:text-slate-200 break-words">{patient.name}</p>
+                                        {patient.status && (
+                                            <span className={`text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${
+                                                patient.status === 'estavel' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' :
+                                                patient.status === 'instavel' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' :
+                                                'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                                            }`}>
+                                                {patient.status === 'estavel' ? 'Estável' : patient.status === 'instavel' ? 'Instável' : 'Em Risco'}
+                                            </span>
+                                        )}
+                                    </div>
                                     <p className="text-sm text-slate-500 dark:text-slate-400">Nasc: {new Date(patient.dob).toLocaleDateString('pt-BR')}</p>
                                     <div className="mt-2 flex items-center gap-2">
                                         <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
@@ -1292,7 +1308,7 @@ const EditCultureModal: React.FC<{ culture: Culture; patientId: number | string;
 
 const PatientDetailScreen: React.FC = () => {
     const { patientId } = useParams<{ patientId: string }>();
-    const { patients, addRemovalDateToDevice, deleteDeviceFromPatient, addEndDateToMedication, deleteMedicationFromPatient, deleteExamFromPatient, deleteSurgicalProcedureFromPatient, addScaleScoreToPatient, addCultureToPatient, deleteCultureFromPatient } = useContext(PatientsContext)!;
+    const { patients, addRemovalDateToDevice, deleteDeviceFromPatient, addEndDateToMedication, deleteMedicationFromPatient, deleteExamFromPatient, deleteSurgicalProcedureFromPatient, addScaleScoreToPatient, addCultureToPatient, deleteCultureFromPatient, updatePatientStatus } = useContext(PatientsContext)!;
     const { tasks, updateTaskStatus } = useContext(TasksContext)!;
     const { user } = useContext(UserContext)!;
     const patient = patients.find(p => p.id.toString() === patientId);
@@ -1473,6 +1489,30 @@ const PatientDetailScreen: React.FC = () => {
                     Ver Histórico Completo
                 </div>
             </Link>
+
+            {/* Status do Paciente */}
+            <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Status do Paciente</label>
+                <div className="flex gap-2">
+                    {[
+                        { value: 'estavel', label: 'Estável', color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700' },
+                        { value: 'instavel', label: 'Instável', color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700' },
+                        { value: 'em_risco', label: 'Em Risco', color: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-300 dark:border-red-700' }
+                    ].map(status => (
+                        <button
+                            key={status.value}
+                            onClick={() => updatePatientStatus(patient.id, status.value as 'estavel' | 'instavel' | 'em_risco')}
+                            className={`flex-1 px-3 py-2 rounded-lg font-semibold text-sm border-2 transition ${
+                                patient.status === status.value
+                                    ? status.color
+                                    : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                            }`}
+                        >
+                            {status.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
             {/* Diagnósticos Clínicos */}
             <DiagnosticsSection patientId={patient.id.toString()} />
@@ -3464,6 +3504,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             motherName: p.mother_name || '-',
             dob: p.dob,
             ctd: p.diagnosis || p.ctd || 'Estável',
+            status: p.status || 'estavel',
             devices: devicesMap[p.id] || [],
             exams: examsMap[p.id] || [],
             medications: medsMap[p.id] || [],
@@ -3711,6 +3752,14 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         if (!error) fetchPatients();
     };
 
+    const updatePatientStatus = async (patientId: number | string, status: 'estavel' | 'instavel' | 'em_risco') => {
+        const { error } = await supabase.from('patients')
+            .update({ status })
+            .eq('id', patientId);
+
+        if (!error) fetchPatients();
+    };
+
     const value = {
         patients,
         questions,
@@ -3732,6 +3781,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         deleteSurgicalProcedureFromPatient,
         addScaleScoreToPatient,
         updatePatientDetails,
+        updatePatientStatus,
         saveChecklistAnswer,
         addCultureToPatient,
         deleteCultureFromPatient,
