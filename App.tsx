@@ -2323,11 +2323,17 @@ const AddRemovalDateModal: React.FC<{ deviceId: number | string, patientId: numb
 };
 const AddEndDateModal: React.FC<{ medicationId: number | string, patientId: number | string, onClose: () => void }> = ({ medicationId, patientId, onClose }) => {
     const { addEndDateToMedication } = useContext(PatientsContext)!;
+    const { showNotification } = useContext(NotificationContext)!;
     const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (!endDate) {
+            showNotification({ message: 'Selecione uma data', type: 'warning' });
+            return;
+        }
         addEndDateToMedication(patientId, medicationId, endDate);
+        showNotification({ message: 'Data de fim registrada com sucesso!', type: 'success' });
         onClose();
     };
     return (
