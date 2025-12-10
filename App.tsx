@@ -1308,7 +1308,7 @@ const EditCultureModal: React.FC<{ culture: Culture; patientId: number | string;
 
 const PatientDetailScreen: React.FC = () => {
     const { patientId } = useParams<{ patientId: string }>();
-    const { patients, addRemovalDateToDevice, deleteDeviceFromPatient, addEndDateToMedication, deleteMedicationFromPatient, deleteExamFromPatient, deleteSurgicalProcedureFromPatient, addScaleScoreToPatient, addCultureToPatient, deleteCultureFromPatient, updatePatientStatus } = useContext(PatientsContext)!;
+    const { patients, addRemovalDateToDevice, deleteDeviceFromPatient, addEndDateToMedication, deleteMedicationFromPatient, deleteExamFromPatient, deleteSurgicalProcedureFromPatient, addScaleScoreToPatient, addCultureToPatient, deleteCultureFromPatient, updatePatientStatus, updatePatientComorbidade } = useContext(PatientsContext)!;
     const { tasks, updateTaskStatus } = useContext(TasksContext)!;
     const { user } = useContext(UserContext)!;
     const patient = patients.find(p => p.id.toString() === patientId);
@@ -1329,6 +1329,7 @@ const PatientDetailScreen: React.FC = () => {
     const [editingCulture, setEditingCulture] = useState<Culture | null>(null);
     const [isRemovalModalOpen, setRemovalModalOpen] = useState<number | string | null>(null);
     const [isEndDateModalOpen, setEndDateModalOpen] = useState<number | string | null>(null);
+    const [comorbidadeTempEdit, setComorbidadeTempEdit] = useState(patient?.comorbidade || '');
     const [isEditInfoModalOpen, setEditInfoModalOpen] = useState(false);
     const [showPatientAlerts, setShowPatientAlerts] = useState(false);
     const [isCreateAlertModalOpen, setCreateAlertModalOpen] = useState(false);
@@ -1344,6 +1345,12 @@ const PatientDetailScreen: React.FC = () => {
             setScaleView('list');
         }
     }, [mainTab]);
+
+    useEffect(() => {
+        if (patient?.comorbidade) {
+            setComorbidadeTempEdit(patient.comorbidade);
+        }
+    }, [patient?.comorbidade]);
 
     if (!patient) {
         return <p>Paciente não encontrado.</p>;
@@ -1516,6 +1523,69 @@ const PatientDetailScreen: React.FC = () => {
                             {status.label}
                         </button>
                     ))}
+                </div>
+
+                {/* Comorbidades */}
+                <div className={`mt-4 p-4 rounded-lg border-2 ${
+                    patient.status === 'estavel' ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/10' :
+                    patient.status === 'instavel' ? 'border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/10' :
+                    patient.status === 'em_risco' ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/10' :
+                    'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
+                }`}>
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Comorbidades</label>
+                    <div className="space-y-2 mb-3">
+                        {(() => {
+                            const comorbidades = patient.comorbidade ? patient.comorbidade.split('|').filter(c => c.trim()) : [];
+                            return (
+                                <>
+                                    {comorbidades.map((comorb, idx) => (
+                                        <div key={idx} className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={comorb}
+                                                onChange={(e) => {
+                                                    const comorbidades = patient.comorbidade ? patient.comorbidade.split('|').filter(c => c.trim()) : [];
+                                                    comorbidades[idx] = e.target.value;
+                                                    const filtered = comorbidades.filter(c => c.trim());
+                                                    setComorbidadeTempEdit(filtered.join('|'));
+                                                }}
+                                                className="flex-1 px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                placeholder="Digite a comorbidade..."
+                                            />
+                                            <button
+                                                onClick={() => {
+                                                    const comorbidades = patient.comorbidade ? patient.comorbidade.split('|').filter(c => c.trim()) : [];
+                                                    comorbidades.splice(idx, 1);
+                                                    setComorbidadeTempEdit(comorbidades.join('|'));
+                                                }}
+                                                className="px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded transition text-sm font-semibold"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {comorbidades.length < 5 && (
+                                        <button
+                                            onClick={() => {
+                                                const comorbidades = patient.comorbidade ? patient.comorbidade.split('|').filter(c => c.trim()) : [];
+                                                comorbidades.push('');
+                                                setComorbidadeTempEdit(comorbidades.join('|'));
+                                            }}
+                                            className="w-full px-3 py-2 text-sm text-blue-600 dark:text-blue-400 border border-blue-300 dark:border-blue-700 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition font-semibold"
+                                        >
+                                            + Adicionar Comorbidade
+                                        </button>
+                                    )}
+                                </>
+                            );
+                        })()}
+                    </div>
+                    <button
+                        onClick={() => updatePatientComorbidade(patient.id, comorbidadeTempEdit)}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-3 text-sm rounded-lg transition"
+                    >
+                        Salvar
+                    </button>
                 </div>
             </div>
 
@@ -3510,6 +3580,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             dob: p.dob,
             ctd: p.diagnosis || p.ctd || 'Estável',
             status: p.status || 'estavel',
+            comorbidade: p.comorbidade,
             devices: devicesMap[p.id] || [],
             exams: examsMap[p.id] || [],
             medications: medsMap[p.id] || [],
@@ -3765,6 +3836,14 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         if (!error) fetchPatients();
     };
 
+    const updatePatientComorbidade = async (patientId: number | string, comorbidade: string) => {
+        const { error } = await supabase.from('patients')
+            .update({ comorbidade: comorbidade || null })
+            .eq('id', patientId);
+
+        if (!error) fetchPatients();
+    };
+
     const value = {
         patients,
         questions,
@@ -3787,6 +3866,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         addScaleScoreToPatient,
         updatePatientDetails,
         updatePatientStatus,
+        updatePatientComorbidade,
         saveChecklistAnswer,
         addCultureToPatient,
         deleteCultureFromPatient,
