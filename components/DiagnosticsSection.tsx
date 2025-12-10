@@ -144,10 +144,15 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         }
       }
 
-      // Salvar TUDO no histórico (resolvidos + não resolvidos)
-      if (allDiagnostics.length > 0) {
+      // Salvar no histórico APENAS diagnósticos novos (não duplicar) + resolvidos
+      const diagnosticsForHistory = [
+        ...newDiagnostics,  // Diagnósticos novos que foram inseridos
+        ...diagnosticsResolved  // Diagnósticos marcados como resolvidos
+      ];
+
+      if (diagnosticsForHistory.length > 0) {
         try {
-          const historyData = allDiagnostics.map(d => {
+          const historyData = diagnosticsForHistory.map(d => {
             // Encontrar o label da opção
             const opcao = options.find(o => o.id === d.opcao_id);
             return {
