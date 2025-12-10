@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator, Save, Droplets, ArrowUpCircle, ArrowDownCircle, AlertCircle } from 'lucide-react';
+import { Save, Droplets, ArrowUpCircle, ArrowDownCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
 interface FluidOverloadCalcProps {
@@ -7,14 +7,11 @@ interface FluidOverloadCalcProps {
 }
 
 const FluidOverloadCalc: React.FC<FluidOverloadCalcProps> = ({ patientId }) => {
-  // Estados para armazenar os dados do formulário
   const [weight, setWeight] = useState('');
   const [volume, setVolume] = useState('');
-  const [isPositive, setIsPositive] = useState(true); // true = positivo, false = negativo
+  const [isPositive, setIsPositive] = useState(true);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  // Estado para o resultado calculado em tempo real
   const [calculatedResult, setCalculatedResult] = useState(0);
 
   // --- LÓGICA DO CÁLCULO (FRONT-END) ---
@@ -80,20 +77,20 @@ const FluidOverloadCalc: React.FC<FluidOverloadCalcProps> = ({ patientId }) => {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200 font-sans mb-6">
+    <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200 font-sans mb-6">
       
       {/* Cabeçalho */}
       <div className="bg-blue-600 p-4 flex items-center gap-3">
         <div className="bg-white/20 p-2 rounded-lg">
-          <Calculator className="text-white w-6 h-6" />
+          <Calculator className="text-white w-5 h-5 sm:w-6 sm:h-6" />
         </div>
         <div>
-          <h2 className="text-white font-bold text-lg">Sobrecarga Hídrica</h2>
+          <h2 className="text-white font-bold text-base sm:text-lg">Sobrecarga Hídrica</h2>
           <p className="text-blue-100 text-xs">Cálculo de % acumulada</p>
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         
         {/* Input de Peso */}
         <div>
