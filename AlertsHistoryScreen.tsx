@@ -35,6 +35,10 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                 patientsMap.set(p.id, { name: p.name, bed_number: p.bed_number });
             });
 
+            console.log('Comorbidades fetched:', comorbidadesResult.data);
+            console.log('Patients map:', patientsMap);
+            console.log('Comorbidades error:', comorbidadesResult.error);
+
             const allAlerts = [
                 ...(tasksResult.data || []).map(t => {
                     const patientInfo = t.patient_id ? patientsMap.get(t.patient_id) : null;
@@ -73,7 +77,14 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
             ];
 
             // Ordenar por data de criação (mais recentes primeiro)
-            allAlerts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+            allAlerts.sort((a, b) => {
+                const dateA = new Date(a.updated_at || a.created_at).getTime();
+                const dateB = new Date(b.updated_at || b.created_at).getTime();
+                return dateB - dateA;
+            });
+
+            console.log('All alerts combined:', allAlerts);
+            console.log('Filtered comorbidades count:', allAlerts.filter(a => a.source === 'comorbidades').length);
 
             setAlerts(allAlerts);
         } catch (error) {

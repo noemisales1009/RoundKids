@@ -642,32 +642,45 @@ const PatientHistoryScreen: React.FC = () => {
     const { tasks } = useContext(TasksContext)!;
     const patient = patients.find(p => p.id.toString() === patientId);
     const [diagnosticHistory, setDiagnosticHistory] = useState<any[]>([]);
+    const [comorbidadeHistory, setComorbidadeHistory] = useState<any[]>([]);
 
     useHeader(patient ? `Histórico: ${patient.name}` : 'Histórico do Paciente');
 
-    // Buscar histórico de diagnósticos do Supabase
+    // Buscar histórico de diagnósticos e comorbidades do Supabase
     useEffect(() => {
-        const loadDiagnosticHistory = async () => {
+        const loadHistory = async () => {
             if (!patientId) return;
             try {
-                const { data, error } = await supabase
-                    .from('diagnosticos_historico')
-                    .select('*')
-                    .eq('patient_id', patientId)
-                    .order('created_at', { ascending: false });
+                const [diagResult, comorbResult] = await Promise.all([
+                    supabase
+                        .from('diagnosticos_historico')
+                        .select('*')
+                        .eq('patient_id', patientId)
+                        .order('created_at', { ascending: false }),
+                    supabase
+                        .from('comorbidade_historico')
+                        .select('*')
+                        .eq('patient_id', patientId)
+                        .order('updated_at', { ascending: false })
+                ]);
 
-                if (error) {
-                    console.error('Erro ao buscar histórico de diagnósticos:', error);
-                    return;
+                if (diagResult.error) {
+                    console.error('Erro ao buscar histórico de diagnósticos:', diagResult.error);
+                } else {
+                    setDiagnosticHistory(diagResult.data || []);
                 }
 
-                setDiagnosticHistory(data || []);
+                if (comorbResult.error) {
+                    console.error('Erro ao buscar histórico de comorbidades:', comorbResult.error);
+                } else {
+                    setComorbidadeHistory(comorbResult.data || []);
+                }
             } catch (err) {
                 console.error('Erro:', err);
             }
         };
 
-        loadDiagnosticHistory();
+        loadHistory();
     }, [patientId]);
 
     type TimelineEvent = {
@@ -774,6 +787,22 @@ const PatientHistoryScreen: React.FC = () => {
                 timestamp: diag.created_at || new Date().toISOString(),
                 icon: FileTextIcon,
                 description: `Diagnóstico: ${fullDescription} | ${statusText}`,
+                hasTime: true,
+            });
+        });
+
+        // Adicionar histórico de comorbidades
+        comorbidadeHistory.forEach(comorb => {
+            const comorbidasList = (comorb.comorbidade || '')
+                .split('|')
+                .map((c: string) => c.trim())
+                .filter((c: string) => c)
+                .join(', ');
+            
+            events.push({
+                timestamp: comorb.updated_at || comorb.created_at || new Date().toISOString(),
+                icon: FileTextIcon,
+                description: `Comorbidades: ${comorbidasList}`,
                 hasTime: true,
             });
         });
