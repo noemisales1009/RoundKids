@@ -27,7 +27,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                 supabase.from('tasks_view_horario_br').select('*'),
                 supabase.from('alertas_paciente_view_completa').select('*'),
                 supabase.from('patients').select('id, name, bed_number'),
-                supabase.from('comorbidade_historico').select('*').order('created_at', { ascending: false })
+                supabase.from('comorbidade_historico').select('*').order('updated_at', { ascending: false })
             ]);
 
             const patientsMap = new Map();
@@ -366,7 +366,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                                             </>
                                         )}
                                         {alert.source === 'comorbidades' && (
-                                            <p>Data: {new Date(alert.created_at).toLocaleString('pt-BR')}</p>
+                                            <p>Data: {new Date(alert.updated_at).toLocaleString('pt-BR')}</p>
                                         )}
                                     </div>
 
