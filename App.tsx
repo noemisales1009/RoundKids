@@ -1330,6 +1330,7 @@ const PatientDetailScreen: React.FC = () => {
     const [isRemovalModalOpen, setRemovalModalOpen] = useState<number | string | null>(null);
     const [isEndDateModalOpen, setEndDateModalOpen] = useState<number | string | null>(null);
     const [comorbidadeTempEdit, setComorbidadeTempEdit] = useState(patient?.comorbidade || '');
+    const [isEditingComorbidades, setIsEditingComorbidades] = useState(false);
     const [isEditInfoModalOpen, setEditInfoModalOpen] = useState(false);
     const [showPatientAlerts, setShowPatientAlerts] = useState(false);
     const [isCreateAlertModalOpen, setCreateAlertModalOpen] = useState(false);
@@ -1532,75 +1533,138 @@ const PatientDetailScreen: React.FC = () => {
                     patient.status === 'em_risco' ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/10' :
                     'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
                 }`}>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Comorbidades</label>
-                    <div className="space-y-2 mb-3">
-                        {(() => {
-                            // Parse comorbidades from state
-                            let comorbidades: string[] = [];
-                            if (comorbidadeTempEdit && comorbidadeTempEdit.trim() !== '') {
-                                comorbidades = comorbidadeTempEdit.split('|').map(c => c.trim());
-                            }
-                            
-                            return (
-                                <>
-                                    {comorbidades.length === 0 ? (
-                                        <div className="text-slate-500 dark:text-slate-400 text-sm italic">Nenhuma comorbidade adicionada</div>
-                                    ) : (
-                                        comorbidades.map((comorb, idx) => (
-                                            <div key={idx} className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    value={comorb}
-                                                    onChange={(e) => {
-                                                        const temp = comorbidadeTempEdit ? comorbidadeTempEdit.split('|') : [];
-                                                        temp[idx] = e.target.value;
-                                                        setComorbidadeTempEdit(temp.join('|'));
-                                                    }}
-                                                    className="flex-1 px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    placeholder="Digite a comorbidade..."
-                                                />
-                                                <button
-                                                    onClick={() => {
-                                                        const temp = comorbidadeTempEdit ? comorbidadeTempEdit.split('|') : [];
-                                                        temp.splice(idx, 1);
-                                                        setComorbidadeTempEdit(temp.filter(c => c.trim()).join('|'));
-                                                    }}
-                                                    className="px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded transition text-sm font-semibold"
-                                                >
-                                                    ✕
-                                                </button>
-                                            </div>
-                                        ))
-                                    )}
-                                    {comorbidades.length < 5 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                if (comorbidadeTempEdit && comorbidadeTempEdit.trim()) {
-                                                    setComorbidadeTempEdit(comorbidadeTempEdit + '|');
-                                                } else {
-                                                    setComorbidadeTempEdit('');
-                                                }
-                                            }}
-                                            className="w-full px-3 py-2 text-sm text-blue-600 dark:text-blue-400 border border-blue-300 dark:border-blue-700 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition font-semibold"
-                                        >
-                                            + Adicionar Comorbidade
-                                        </button>
-                                    )}
-                                </>
-                            );
-                        })()}
+                    <div className="flex justify-between items-center mb-3">
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Comorbidades</label>
+                        {!isEditingComorbidades && (
+                            <button
+                                type="button"
+                                onClick={() => setIsEditingComorbidades(true)}
+                                className="px-3 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400 border border-blue-300 dark:border-blue-700 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
+                            >
+                                Editar
+                            </button>
+                        )}
                     </div>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            updatePatientComorbidade(patient.id, comorbidadeTempEdit);
-                            showNotification({ message: 'Comorbidades salvas!', type: 'success' });
-                        }}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-3 text-sm rounded-lg transition"
-                    >
-                        Salvar
-                    </button>
+
+                    {!isEditingComorbidades ? (
+                        // Modo Visualização
+                        <div className="space-y-2">
+                            {(() => {
+                                let comorbidades: string[] = [];
+                                if (patient.comorbidade && patient.comorbidade.trim()) {
+                                    comorbidades = patient.comorbidade.split('|').map(c => c.trim()).filter(c => c);
+                                }
+                                
+                                return (
+                                    <>
+                                        {comorbidades.length === 0 ? (
+                                            <div className="text-slate-500 dark:text-slate-400 text-sm italic">Nenhuma comorbidade adicionada</div>
+                                        ) : (
+                                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                                                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">
+                                                    📋 {comorbidades.length} comorbidade(s) adicionada(s)
+                                                </p>
+                                                <ul className="space-y-1">
+                                                    {comorbidades.map((comorb, idx) => (
+                                                        <li key={idx} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+                                                            <span className="text-blue-600 dark:text-blue-400 font-bold">✓</span>
+                                                            <span>{comorb}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </>
+                                );
+                            })()}
+                        </div>
+                    ) : (
+                        // Modo Edição
+                        <div className="space-y-2 mb-3">
+                            {(() => {
+                                let comorbidades: string[] = [];
+                                if (comorbidadeTempEdit && comorbidadeTempEdit.trim() !== '') {
+                                    comorbidades = comorbidadeTempEdit.split('|').map(c => c.trim());
+                                }
+                                
+                                return (
+                                    <>
+                                        {comorbidades.length === 0 ? (
+                                            <div className="text-slate-500 dark:text-slate-400 text-sm italic">Nenhuma comorbidade adicionada</div>
+                                        ) : (
+                                            comorbidades.map((comorb, idx) => (
+                                                <div key={idx} className="flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={comorb}
+                                                        onChange={(e) => {
+                                                            const temp = comorbidadeTempEdit ? comorbidadeTempEdit.split('|') : [];
+                                                            temp[idx] = e.target.value;
+                                                            setComorbidadeTempEdit(temp.join('|'));
+                                                        }}
+                                                        className="flex-1 px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                        placeholder="Digite a comorbidade..."
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const temp = comorbidadeTempEdit ? comorbidadeTempEdit.split('|') : [];
+                                                            temp.splice(idx, 1);
+                                                            setComorbidadeTempEdit(temp.filter(c => c.trim()).join('|'));
+                                                        }}
+                                                        className="px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded transition text-sm font-semibold"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            ))
+                                        )}
+                                        {comorbidades.length < 5 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (comorbidadeTempEdit.trim()) {
+                                                        setComorbidadeTempEdit(comorbidadeTempEdit + '|');
+                                                    } else {
+                                                        setComorbidadeTempEdit('|');
+                                                    }
+                                                }}
+                                                className="w-full px-3 py-2 text-sm text-blue-600 dark:text-blue-400 border border-blue-300 dark:border-blue-700 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition font-semibold"
+                                            >
+                                                + Adicionar Comorbidade
+                                            </button>
+                                        )}
+                                    </>
+                                );
+                            })()}
+                        </div>
+                    )}
+
+                    {isEditingComorbidades && (
+                        <div className="flex gap-2 mt-3">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    updatePatientComorbidade(patient.id, comorbidadeTempEdit);
+                                    setIsEditingComorbidades(false);
+                                    showNotification({ message: 'Comorbidades salvas!', type: 'success' });
+                                }}
+                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-3 text-sm rounded-lg transition"
+                            >
+                                Salvar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setComorbidadeTempEdit(patient?.comorbidade || '');
+                                    setIsEditingComorbidades(false);
+                                }}
+                                className="flex-1 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold py-2 px-3 text-sm rounded-lg transition"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
