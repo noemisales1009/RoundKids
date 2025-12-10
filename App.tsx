@@ -3923,6 +3923,20 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         if (error) {
             console.error('Erro ao salvar comorbidade:', error);
         } else {
+            // Salvar no histórico
+            const comorbidadesList = (comorbidade || '')
+                .split('|')
+                .map(c => c.trim())
+                .filter(c => c);
+
+            if (comorbidadesList.length > 0) {
+                await supabase.from('comorbidade_historico').insert({
+                    patient_id: patientId,
+                    comorbidades: comorbidadesList.join('|'),
+                    created_at: new Date().toISOString()
+                });
+            }
+
             fetchPatients();
         }
     };

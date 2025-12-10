@@ -23,10 +23,11 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
     const fetchAllAlerts = async () => {
         setLoading(true);
         try {
-            const [tasksResult, alertsResult, patientsResult] = await Promise.all([
+            const [tasksResult, alertsResult, patientsResult, comorbidadesResult] = await Promise.all([
                 supabase.from('tasks_view_horario_br').select('*'),
                 supabase.from('alertas_paciente_view_completa').select('*'),
-                supabase.from('patients').select('id, name, bed_number')
+                supabase.from('patients').select('id, name, bed_number'),
+                supabase.from('comorbidade_historico').select('*').order('created_at', { ascending: false })
             ]);
 
             const patientsMap = new Map();
@@ -52,7 +53,23 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                         patient_name: patientInfo?.name || a.patient_name || 'Desconhecido',
                         bed_number: patientInfo?.bed_number || a.bed_number || null
                     };
-                }).filter(a => patientsMap.has(a.patient_id)) // Filtrar apenas alertas com pacientes válidos
+                }).filter(a => patientsMap.has(a.patient_id)), // Filtrar apenas alertas com pacientes válidos
+                ...(comorbidadesResult.data || []).map(c => {
+                    const patientInfo = c.patient_id ? patientsMap.get(c.patient_id) : null;
+                    const comorbidadesList = c.comorbidades
+                        .split('|')
+                        .map((comorb: string) => comorb.trim())
+                        .filter((comorb: string) => comorb);
+                    
+                    return {
+                        ...c,
+                        id_alerta: c.id,
+                        source: 'comorbidades',
+                        patient_name: patientInfo?.name || 'Desconhecido',
+                        bed_number: patientInfo?.bed_number || null,
+                        live_status: 'alerta'
+                    };
+                }).filter(c => patientsMap.has(c.patient_id))
             ];
 
             // Ordenar por data de criação (mais recentes primeiro)
@@ -311,7 +328,26 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
 
                                     {/* Descrição do Alerta */}
                                     <div className="font-bold text-slate-800 dark:text-slate-200">
-                                        {alert.alertaclinico?.includes('?') 
+                                        {alert.source === 'comorbidades' ? (
+                                            <div className="flex items-start gap-2">
+                                                <span className="text-lg">🏥</span>
+                                                <div>
+                                                    <p>Comorbidades Adicionadas</p>
+                                                    <div className="mt-2 space-y-1">
+                                                        {(alert.comorbidades || '')
+                                                            .split('|')
+                                                            .map((comorb: string) => comorb.trim())
+                                                            .filter((comorb: string) => comorb)
+                                                            .map((comorb: string, idx: number) => (
+                                                                <div key={idx} className="text-sm text-slate-600 dark:text-slate-300">
+                                                                    • {comorb}
+                                                                </div>
+                                                            ))
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : alert.alertaclinico?.includes('?') 
                                             ? alert.alertaclinico.substring(alert.alertaclinico.indexOf('?') + 1).trim().split('\n').map((line, idx) => {
                                                 const trimmed = line.trim().replace(/^-\s*/, '');
                                                 return trimmed ? (
@@ -323,8 +359,15 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
 
                                     {/* Informações */}
                                     <div className="mt-2 text-sm text-slate-600 dark:text-slate-400 space-y-1">
-                                        <p>Responsável: {alert.responsavel}</p>
-                                        <p>Prazo: {alert.prazo_limite_formatado || 'N/A'}</p>
+                                        {alert.source !== 'comorbidades' && (
+                                            <>
+                                                <p>Responsável: {alert.responsavel}</p>
+                                                <p>Prazo: {alert.prazo_limite_formatado || 'N/A'}</p>
+                                            </>
+                                        )}
+                                        {alert.source === 'comorbidades' && (
+                                            <p>Data: {new Date(alert.created_at).toLocaleString('pt-BR')}</p>
+                                        )}
                                     </div>
 
                                     {/* Justificativa */}
