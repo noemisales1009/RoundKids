@@ -23,21 +23,16 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
     const fetchAllAlerts = async () => {
         setLoading(true);
         try {
-            const [tasksResult, alertsResult, patientsResult, comorbidadesResult] = await Promise.all([
+            const [tasksResult, alertsResult, patientsResult] = await Promise.all([
                 supabase.from('tasks_view_horario_br').select('*'),
                 supabase.from('alertas_paciente_view_completa').select('*'),
-                supabase.from('patients').select('id, name, bed_number'),
-                supabase.from('comorbidade_historico').select('*').order('updated_at', { ascending: false })
+                supabase.from('patients').select('id, name, bed_number')
             ]);
 
             const patientsMap = new Map();
             (patientsResult.data || []).forEach(p => {
                 patientsMap.set(p.id, { name: p.name, bed_number: p.bed_number });
             });
-
-            console.log('Comorbidades fetched:', comorbidadesResult.data);
-            console.log('Patients map:', patientsMap);
-            console.log('Comorbidades error:', comorbidadesResult.error);
 
             const allAlerts = [
                 ...(tasksResult.data || []).map(t => {
@@ -48,7 +43,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                         patient_name: patientInfo?.name || t.patient_name || 'Desconhecido',
                         bed_number: patientInfo?.bed_number || t.bed_number || null
                     };
-                }).filter(t => patientsMap.has(t.patient_id)), // Filtrar apenas alertas com pacientes válidos
+                }).filter(t => patientsMap.has(t.patient_id)),
                 ...(alertsResult.data || []).map(a => {
                     const patientInfo = a.patient_id ? patientsMap.get(a.patient_id) : null;
                     return {
@@ -57,34 +52,11 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                         patient_name: patientInfo?.name || a.patient_name || 'Desconhecido',
                         bed_number: patientInfo?.bed_number || a.bed_number || null
                     };
-                }).filter(a => patientsMap.has(a.patient_id)), // Filtrar apenas alertas com pacientes válidos
-                ...(comorbidadesResult.data || []).map(c => {
-                    const patientInfo = c.patient_id ? patientsMap.get(c.patient_id) : null;
-                    const comorbidadesList = c.comorbidade
-                        .split('|')
-                        .map((comorb: string) => comorb.trim())
-                        .filter((comorb: string) => comorb);
-                    
-                    return {
-                        ...c,
-                        id_alerta: c.id,
-                        source: 'comorbidades',
-                        patient_name: patientInfo?.name || 'Desconhecido',
-                        bed_number: patientInfo?.bed_number || null,
-                        live_status: 'alerta'
-                    };
-                }).filter(c => patientsMap.has(c.patient_id))
+                }).filter(a => patientsMap.has(a.patient_id))
             ];
 
             // Ordenar por data de criação (mais recentes primeiro)
-            allAlerts.sort((a, b) => {
-                const dateA = new Date(a.updated_at || a.created_at).getTime();
-                const dateB = new Date(b.updated_at || b.created_at).getTime();
-                return dateB - dateA;
-            });
-
-            console.log('All alerts combined:', allAlerts);
-            console.log('Filtered comorbidades count:', allAlerts.filter(a => a.source === 'comorbidades').length);
+            allAlerts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
             setAlerts(allAlerts);
         } catch (error) {
@@ -339,26 +311,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
 
                                     {/* Descrição do Alerta */}
                                     <div className="font-bold text-slate-800 dark:text-slate-200">
-                                        {alert.source === 'comorbidades' ? (
-                                            <div className="flex items-start gap-2">
-                                                <span className="text-lg">🏥</span>
-                                                <div>
-                                                    <p>Comorbidades Adicionadas</p>
-                                                    <div className="mt-2 space-y-1">
-                                                        {(alert.comorbidade || '')
-                                                            .split('|')
-                                                            .map((comorb: string) => comorb.trim())
-                                                            .filter((comorb: string) => comorb)
-                                                            .map((comorb: string, idx: number) => (
-                                                                <div key={idx} className="text-sm text-slate-600 dark:text-slate-300">
-                                                                    • {comorb}
-                                                                </div>
-                                                            ))
-                                                        }
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ) : alert.alertaclinico?.includes('?') 
+                                        {alert.alertaclinico?.includes('?') 
                                             ? alert.alertaclinico.substring(alert.alertaclinico.indexOf('?') + 1).trim().split('\n').map((line, idx) => {
                                                 const trimmed = line.trim().replace(/^-\s*/, '');
                                                 return trimmed ? (
@@ -370,15 +323,8 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
 
                                     {/* Informações */}
                                     <div className="mt-2 text-sm text-slate-600 dark:text-slate-400 space-y-1">
-                                        {alert.source !== 'comorbidades' && (
-                                            <>
-                                                <p>Responsável: {alert.responsavel}</p>
-                                                <p>Prazo: {alert.prazo_limite_formatado || 'N/A'}</p>
-                                            </>
-                                        )}
-                                        {alert.source === 'comorbidades' && (
-                                            <p>Data: {new Date(alert.updated_at).toLocaleString('pt-BR')}</p>
-                                        )}
+                                        <p>Responsável: {alert.responsavel}</p>
+                                        <p>Prazo: {alert.prazo_limite_formatado || 'N/A'}</p>
                                     </div>
 
                                     {/* Justificativa */}

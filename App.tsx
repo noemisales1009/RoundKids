@@ -20,7 +20,6 @@ import { DiagnosticsAdmin } from './components/DiagnosticsAdmin';
 import { PerguntasAdmin } from './components/PerguntasAdmin';
 import { SecondaryNavigation } from './components/SecondaryNavigation';
 import { supabase } from './supabaseClient';
-import { AlertsHistoryScreen } from './AlertsHistoryScreen';
 import {
     TasksContext,
     PatientsContext,
@@ -51,7 +50,6 @@ const Sidebar: React.FC = () => {
     const navItems = [
         { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
         { path: '/patients', label: 'Leitos', icon: BedIcon },
-        { path: '/history', label: 'Histórico Geral', icon: FileTextIcon },
         { path: '/settings', label: 'Ajustes', icon: SettingsIcon },
     ];
 
@@ -4373,7 +4371,6 @@ const App: React.FC = () => {
                                         <Route path="patient/:patientId/round/category/:categoryId/question/:questionIndex/create-alert" element={<CreateAlertScreen />} />
                                         <Route path="patient/:patientId/create-alert" element={<CreateAlertScreen />} />
                                         <Route path="status/:status" element={<TaskStatusScreen />} />
-                                        <Route path="history" element={<AlertsHistoryScreen useHeader={useHeader} />} />
                                         <Route path="settings" element={<SettingsScreen />} />
                                         <Route path="diagnostics-admin" element={<DiagnosticsAdmin />} />
                                         <Route path="perguntas-admin" element={<PerguntasAdmin />} />
