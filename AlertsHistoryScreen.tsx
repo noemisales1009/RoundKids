@@ -121,18 +121,24 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
             <head>
                 <title>Histórico de Alertas</title>
                 <style>
-                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    body { font-family: Arial, sans-serif; margin: 15px; }
                     h1 { color: #1e40af; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; }
                     .info { background: #eff6ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                    th { background-color: #3b82f6; color: white; font-weight: bold; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 11px; }
+                    th, td { border: 1px solid #ddd; padding: 10px 8px; text-align: left; word-wrap: break-word; overflow-wrap: break-word; }
+                    th { background-color: #3b82f6; color: white; font-weight: bold; min-width: 60px; }
                     tr:nth-child(even) { background-color: #f9fafb; }
-                    .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+                    .status-badge { padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; white-space: normal; display: inline-block; }
                     .status-no_prazo { background: #dbeafe; color: #1e40af; }
                     .status-fora_do_prazo { background: #fee2e2; color: #991b1b; }
                     .status-concluido { background: #d1fae5; color: #065f46; }
                     .status-alerta { background: #fef3c7; color: #92400e; }
+                    @media print {
+                        body { margin: 10px; }
+                        table { font-size: 10px; }
+                        th, td { padding: 8px 6px; }
+                        .status-badge { padding: 4px 8px; }
+                    }
                 </style>
             </head>
             <body>

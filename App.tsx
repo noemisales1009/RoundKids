@@ -19,6 +19,7 @@ import { DiagnosticsSection } from './components/DiagnosticsSection';
 import { DiagnosticsAdmin } from './components/DiagnosticsAdmin';
 import { PerguntasAdmin } from './components/PerguntasAdmin';
 import { SecondaryNavigation } from './components/SecondaryNavigation';
+import { AlertsHistoryScreen } from './AlertsHistoryScreen';
 import { supabase } from './supabaseClient';
 import {
     TasksContext,
@@ -50,6 +51,7 @@ const Sidebar: React.FC = () => {
     const navItems = [
         { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
         { path: '/patients', label: 'Leitos', icon: BedIcon },
+        { path: '/history', label: 'Histórico Geral', icon: FileTextIcon },
         { path: '/settings', label: 'Ajustes', icon: SettingsIcon },
     ];
 
@@ -563,7 +565,7 @@ const PatientListScreen: React.FC = () => {
                 placeholder="Buscar por nome ou leito..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200"
             />
             <div className="space-y-3">
                 {filteredPatients.map(patient => {
@@ -952,7 +954,7 @@ const PatientHistoryScreen: React.FC = () => {
             <div className="flex justify-end">
                 <button
                     onClick={handleGeneratePdf}
-                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition"
+                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition text-sm sm:text-base"
                 >
                     <FileTextIcon className="w-5 h-5" />
                     Gerar PDF
@@ -1021,8 +1023,8 @@ const EditPatientInfoModal: React.FC<{ patientId: number | string, currentMother
                         />
                     </div>
                     <div className="flex gap-2">
-                        <button type="button" onClick={onClose} className="w-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-lg">Cancelar</button>
-                        <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar</button>
+                        <button type="button" onClick={onClose} className="w-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 sm:py-3 px-3 sm:px-4 rounded-lg text-sm sm:text-base">Cancelar</button>
+                        <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 sm:py-3 px-3 sm:px-4 rounded-lg text-sm sm:text-base">Salvar</button>
                     </div>
                 </form>
             </div>
@@ -2077,8 +2079,8 @@ const PatientDetailScreen: React.FC = () => {
             {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} currentMotherName={patient.motherName} currentDiagnosis={patient.ctd} onClose={() => setEditInfoModalOpen(false)} />}
             {isCreateAlertModalOpen && <CreateAlertModal patientId={patient.id} onClose={() => setCreateAlertModalOpen(false)} />}
             {confirmDialog && confirmDialog.isOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                    <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-2 sm:p-4">
+                    <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
                         <div className="mb-6">
                             <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Confirmação</h2>
                             <p className="text-slate-600 dark:text-slate-400 mt-2">{confirmDialog.message}</p>
@@ -2124,8 +2126,8 @@ const AddDeviceModal: React.FC<{ patientId: number | string; onClose: () => void
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30 p-2 sm:p-4">
+            <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Cadastrar Dispositivo</h2>
                     <button onClick={onClose}><CloseIcon className="w-6 h-6 text-slate-500 dark:text-slate-400" /></button>
@@ -2173,8 +2175,8 @@ const EditDeviceModal: React.FC<{ device: Device; patientId: number | string; on
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30 p-2 sm:p-4">
+            <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Editar Dispositivo</h2>
                     <button onClick={onClose}><CloseIcon className="w-6 h-6 text-slate-500 dark:text-slate-400" /></button>
@@ -2221,8 +2223,8 @@ const AddExamModal: React.FC<{ patientId: number | string; onClose: () => void; 
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30 p-2 sm:p-4">
+            <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Cadastrar Exame</h2>
                     <button onClick={onClose}><CloseIcon className="w-6 h-6 text-slate-500 dark:text-slate-400" /></button>
@@ -2264,8 +2266,8 @@ const EditExamModal: React.FC<{ exam: Exam; patientId: number | string; onClose:
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30 p-2 sm:p-4">
+            <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Editar Exame</h2>
                     <button onClick={onClose}><CloseIcon className="w-6 h-6 text-slate-500 dark:text-slate-400" /></button>
@@ -2308,8 +2310,8 @@ const AddMedicationModal: React.FC<{ patientId: number | string; onClose: () => 
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30 p-2 sm:p-4">
+            <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Cadastrar Medicação</h2>
                     <button onClick={onClose}><CloseIcon className="w-6 h-6 text-slate-500 dark:text-slate-400" /></button>
@@ -2378,8 +2380,8 @@ const EditMedicationModal: React.FC<{ medication: Medication; patientId: number 
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30 p-2 sm:p-4">
+            <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Editar Medicação</h2>
                     <button onClick={onClose}><CloseIcon className="w-6 h-6 text-slate-500 dark:text-slate-400" /></button>
@@ -2437,8 +2439,8 @@ const AddSurgicalProcedureModal: React.FC<{ patientId: number | string; onClose:
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30 p-2 sm:p-4">
+            <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Cadastrar Cirurgia</h2>
                     <button onClick={onClose}><CloseIcon className="w-6 h-6 text-slate-500 dark:text-slate-400" /></button>
@@ -2484,8 +2486,8 @@ const EditSurgicalProcedureModal: React.FC<{ procedure: SurgicalProcedure; patie
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30 p-2 sm:p-4">
+            <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Editar Cirurgia</h2>
                     <button onClick={onClose}><CloseIcon className="w-6 h-6 text-slate-500 dark:text-slate-400" /></button>
@@ -2525,8 +2527,8 @@ const AddRemovalDateModal: React.FC<{ deviceId: number | string, patientId: numb
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30 p-2 sm:p-4">
+            <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
                 <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-slate-200">Registrar Data de Retirada</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
@@ -2534,8 +2536,8 @@ const AddRemovalDateModal: React.FC<{ deviceId: number | string, patientId: numb
                         <input type="date" value={removalDate} onChange={e => setRemovalDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
                     <div className="flex gap-2">
-                        <button type="button" onClick={onClose} className="w-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-lg">Cancelar</button>
-                        <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar</button>
+                        <button type="button" onClick={onClose} className="w-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 sm:py-3 px-3 sm:px-4 rounded-lg text-sm sm:text-base">Cancelar</button>
+                        <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 sm:py-3 px-3 sm:px-4 rounded-lg text-sm sm:text-base">Salvar</button>
                     </div>
                 </form>
             </div>
@@ -2558,8 +2560,8 @@ const AddEndDateModal: React.FC<{ medicationId: number | string, patientId: numb
         onClose();
     };
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30 p-2 sm:p-4">
+            <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
                 <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-slate-200">Registrar Data de Fim</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
@@ -2567,8 +2569,8 @@ const AddEndDateModal: React.FC<{ medicationId: number | string, patientId: numb
                         <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
                     <div className="flex gap-2">
-                        <button type="button" onClick={onClose} className="w-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-lg">Cancelar</button>
-                        <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar</button>
+                        <button type="button" onClick={onClose} className="w-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 sm:py-3 px-3 sm:px-4 rounded-lg text-sm sm:text-base">Cancelar</button>
+                        <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 sm:py-3 px-3 sm:px-4 rounded-lg text-sm sm:text-base">Salvar</button>
                     </div>
                 </form>
             </div>
@@ -4363,6 +4365,7 @@ const App: React.FC = () => {
                                     <Route path="/" element={<AppLayout />}>
                                         <Route path="dashboard" element={<DashboardScreen />} />
                                         <Route path="patients" element={<PatientListScreen />} />
+                                        <Route path="history" element={<AlertsHistoryScreen useHeader={useHeader} />} />
                                         <Route path="patient/:patientId" element={<PatientDetailScreen />} />
                                         <Route path="patient/:patientId/history" element={<PatientHistoryScreen />} />
                                         <Route path="patient/:patientId/round/categories" element={<RoundCategoryListScreen />} />
