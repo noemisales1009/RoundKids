@@ -1535,7 +1535,7 @@ const PatientDetailScreen: React.FC = () => {
                     <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Comorbidades</label>
                     <div className="space-y-2 mb-3">
                         {(() => {
-                            const comorbidades = patient.comorbidade ? patient.comorbidade.split('|').filter(c => c.trim()) : [];
+                            const comorbidades = comorbidadeTempEdit ? comorbidadeTempEdit.split('|').filter(c => c.trim()) : [];
                             return (
                                 <>
                                     {comorbidades.map((comorb, idx) => (
@@ -1544,7 +1544,7 @@ const PatientDetailScreen: React.FC = () => {
                                                 type="text"
                                                 value={comorb}
                                                 onChange={(e) => {
-                                                    const comorbidades = patient.comorbidade ? patient.comorbidade.split('|').filter(c => c.trim()) : [];
+                                                    const comorbidades = comorbidadeTempEdit ? comorbidadeTempEdit.split('|').filter(c => c.trim()) : [];
                                                     comorbidades[idx] = e.target.value;
                                                     const filtered = comorbidades.filter(c => c.trim());
                                                     setComorbidadeTempEdit(filtered.join('|'));
@@ -1554,7 +1554,7 @@ const PatientDetailScreen: React.FC = () => {
                                             />
                                             <button
                                                 onClick={() => {
-                                                    const comorbidades = patient.comorbidade ? patient.comorbidade.split('|').filter(c => c.trim()) : [];
+                                                    const comorbidades = comorbidadeTempEdit ? comorbidadeTempEdit.split('|').filter(c => c.trim()) : [];
                                                     comorbidades.splice(idx, 1);
                                                     setComorbidadeTempEdit(comorbidades.join('|'));
                                                 }}
@@ -1567,7 +1567,7 @@ const PatientDetailScreen: React.FC = () => {
                                     {comorbidades.length < 5 && (
                                         <button
                                             onClick={() => {
-                                                const comorbidades = patient.comorbidade ? patient.comorbidade.split('|').filter(c => c.trim()) : [];
+                                                const comorbidades = comorbidadeTempEdit ? comorbidadeTempEdit.split('|').filter(c => c.trim()) : [];
                                                 comorbidades.push('');
                                                 setComorbidadeTempEdit(comorbidades.join('|'));
                                             }}
@@ -3841,7 +3841,11 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             .update({ comorbidade: comorbidade || null })
             .eq('id', patientId);
 
-        if (!error) fetchPatients();
+        if (error) {
+            console.error('Erro ao salvar comorbidade:', error);
+        } else {
+            fetchPatients();
+        }
     };
 
     const value = {
