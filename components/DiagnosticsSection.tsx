@@ -110,8 +110,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           pergunta_id: option.pergunta_id,
           opcao_id: option.id,
           texto_digitado: inputValues[option.id] || null,
-          status: selectedStatus[option.id] || 'nao_resolvido' as const,
-          data: today // Adicionar data de hoje
+          status: selectedStatus[option.id] || 'nao_resolvido' as const
         }));
 
       // Apenas não resolvidos ficam na tabela ativa
@@ -125,7 +124,8 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         .from('paciente_diagnosticos')
         .select('opcao_id')
         .eq('patient_id', patientId)
-        .eq('data', today); // Buscar apenas de hoje
+        .gte('created_at', `${today}T00:00:00`)
+        .lte('created_at', `${today}T23:59:59`);
 
       const existingOpcaoIds = new Set((existingDiagnostics || []).map(d => d.opcao_id));
 
