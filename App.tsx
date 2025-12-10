@@ -1074,6 +1074,7 @@ const AddCultureModal: React.FC<{ patientId: number | string; onClose: () => voi
     const [site, setSite] = useState('');
     const [customSite, setCustomSite] = useState('');
     const [microorganism, setMicroorganism] = useState('');
+    const [customMicroorganism, setCustomMicroorganism] = useState('');
     const [collectionDate, setCollectionDate] = useState(getTodayDateString());
 
     const cultureLocations = [
@@ -1101,11 +1102,33 @@ const AddCultureModal: React.FC<{ patientId: number | string; onClose: () => voi
         'Secreção ótica',
     ];
 
+    const bacteria = [
+        'Klebsiella pneumoniae',
+        'Escherichia coli',
+        'Pseudomonas aeruginosa',
+        'Acinetobacter baumannii',
+        'Enterobacter cloacae complex',
+        'Serratia marcescens',
+        'Proteus mirabilis',
+        'Proteus vulgaris',
+        'Staphylococcus aureus',
+        'Staphylococcus epidermidis',
+        'Enterococcus faecalis',
+        'Enterococcus faecium',
+        'Streptococcus pneumoniae',
+        'Stenotrophomonas maltophilia',
+        'Burkholderia cepacia complex',
+        'Elizabethkingia meningoseptica',
+        'Myroides spp.',
+        'Ralstonia pickettii',
+    ];
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const finalSite = site === 'outro' ? customSite : site;
-        if (finalSite && microorganism && collectionDate) {
-            addCultureToPatient(patientId, { site: finalSite, microorganism, collectionDate });
+        const finalMicroorganism = microorganism === 'outro' ? customMicroorganism : microorganism;
+        if (finalSite && finalMicroorganism && collectionDate) {
+            addCultureToPatient(patientId, { site: finalSite, microorganism: finalMicroorganism, collectionDate });
             onClose();
         }
     };
@@ -1153,15 +1176,34 @@ const AddCultureModal: React.FC<{ patientId: number | string; onClose: () => voi
                         )}
                         <div>
                             <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Microorganismo</label>
-                            <input
-                                type="text"
+                            <select
                                 value={microorganism}
                                 onChange={(e) => setMicroorganism(e.target.value)}
                                 className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
-                                placeholder="Ex: Staphylococcus aureus"
                                 required
-                            />
+                            >
+                                <option value="">Selecione um microrganismo...</option>
+                                {bacteria.map((bact) => (
+                                    <option key={bact} value={bact}>
+                                        {bact}
+                                    </option>
+                                ))}
+                                <option value="outro">Outro (digitar)</option>
+                            </select>
                         </div>
+                        {microorganism === 'outro' && (
+                            <div>
+                                <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Digite o microrganismo</label>
+                                <input
+                                    type="text"
+                                    value={customMicroorganism}
+                                    onChange={(e) => setCustomMicroorganism(e.target.value)}
+                                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                    placeholder="Ex: Microrganismo customizado"
+                                    required
+                                />
+                            </div>
+                        )}
                         <div>
                             <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data</label>
                             <input
