@@ -1716,7 +1716,7 @@ const PatientDetailScreen: React.FC = () => {
                             {/* Cultures Tab Content */}
                             {dataTab === 'cultures' && (
                                 <>
-                                    {patient.cultures.filter(culture => !culture.isArchived).map(culture => (
+                                    {patient.cultures.map(culture => (
                                         <div key={culture.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
@@ -3445,8 +3445,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 id: c.id,
                 site: c.local,
                 microorganism: c.microorganismo,
-                collectionDate: c.data_coleta,
-                isArchived: c.is_archived
+                collectionDate: c.data_coleta
             });
             return acc;
         }, {});
@@ -3677,7 +3676,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 
     const deleteCultureFromPatient = async (patientId: number | string, cultureId: number | string) => {
         const { error } = await supabase.from('culturas_pacientes')
-            .update({ is_archived: true })
+            .delete()
             .eq('id', cultureId);
         if (!error) fetchPatients();
     };
