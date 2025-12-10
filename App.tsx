@@ -1072,13 +1072,40 @@ const CreateAlertModal: React.FC<{ patientId: number | string; onClose: () => vo
 const AddCultureModal: React.FC<{ patientId: number | string; onClose: () => void }> = ({ patientId, onClose }) => {
     const { addCultureToPatient } = useContext(PatientsContext)!;
     const [site, setSite] = useState('');
+    const [customSite, setCustomSite] = useState('');
     const [microorganism, setMicroorganism] = useState('');
     const [collectionDate, setCollectionDate] = useState(getTodayDateString());
 
+    const cultureLocations = [
+        'Swab nasal',
+        'Swab orofaríngeo',
+        'Swab retal',
+        'Secreção traqueal',
+        'Broncoaspirado',
+        'Lavado broncoalveolar (LBA)',
+        'Urocultura (jato médio)',
+        'Urocultura por sonda',
+        'Ponta de cateter',
+        'Cateter venoso central (CVC)',
+        'Cateter arterial',
+        'Punção de líquor (LCR)',
+        'Punção de abscesso',
+        'Secreção de ferida operatória',
+        'Secreção de dreno cirúrgico',
+        'Hemocultura periférica',
+        'Hemocultura de cateter',
+        'Escarro (quando aplicável)',
+        'Fezes para cultura',
+        'Material de pele/lesão cutânea',
+        'Secreção ocular',
+        'Secreção ótica',
+    ];
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (site && microorganism && collectionDate) {
-            addCultureToPatient(patientId, { site, microorganism, collectionDate });
+        const finalSite = site === 'outro' ? customSite : site;
+        if (finalSite && microorganism && collectionDate) {
+            addCultureToPatient(patientId, { site: finalSite, microorganism, collectionDate });
             onClose();
         }
     };
@@ -1096,15 +1123,34 @@ const AddCultureModal: React.FC<{ patientId: number | string; onClose: () => voi
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Local</label>
-                            <input
-                                type="text"
+                            <select
                                 value={site}
                                 onChange={(e) => setSite(e.target.value)}
                                 className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
-                                placeholder="Ex: Hemocultura"
                                 required
-                            />
+                            >
+                                <option value="">Selecione um local...</option>
+                                {cultureLocations.map((location) => (
+                                    <option key={location} value={location}>
+                                        {location}
+                                    </option>
+                                ))}
+                                <option value="outro">Outro (digitar)</option>
+                            </select>
                         </div>
+                        {site === 'outro' && (
+                            <div>
+                                <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Digite o local</label>
+                                <input
+                                    type="text"
+                                    value={customSite}
+                                    onChange={(e) => setCustomSite(e.target.value)}
+                                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                    placeholder="Ex: Cultura customizada"
+                                    required
+                                />
+                            </div>
+                        )}
                         <div>
                             <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Microorganismo</label>
                             <input
