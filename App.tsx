@@ -1663,7 +1663,7 @@ const PatientDetailScreen: React.FC = () => {
                                                         <p className="font-bold text-slate-800 dark:text-slate-200 break-words">{medication.name} - {medication.dosage}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(medication.startDate)}</p>
                                                         {medication.endDate ? (
-                                                            <p className="text-sm text-slate-500 dark:text-slate-400">Fim: {formatDateToBRL(medication.endDate)}</p>
+                                                            <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Fim: {formatDateToBRL(medication.endDate)}</p>
                                                         ) : (
                                                             <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(medication.startDate)}</p>
                                                         )}
