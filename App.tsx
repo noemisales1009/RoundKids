@@ -1491,7 +1491,12 @@ const PatientDetailScreen: React.FC = () => {
             </Link>
 
             {/* Status do Paciente */}
-            <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+            <div className={`bg-white dark:bg-slate-900 p-4 rounded-lg border-2 ${
+                patient.status === 'estavel' ? 'border-green-300 dark:border-green-700' :
+                patient.status === 'instavel' ? 'border-yellow-300 dark:border-yellow-700' :
+                patient.status === 'em_risco' ? 'border-red-300 dark:border-red-700' :
+                'border-slate-200 dark:border-slate-700'
+            }`}>
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Status do Paciente</label>
                 <div className="flex gap-2">
                     {[
