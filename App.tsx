@@ -1581,6 +1581,8 @@ const PatientDetailScreen: React.FC = () => {
     const [showPatientAlerts, setShowPatientAlerts] = useState(false);
     const [isCreateAlertModalOpen, setCreateAlertModalOpen] = useState(false);
     const [isDestinationDropdownOpen, setIsDestinationDropdownOpen] = useState(false);
+    const [isFluidBalanceOpen, setIsFluidBalanceOpen] = useState(false);
+    const [isDiuresisOpen, setIsDiuresisOpen] = useState(false);
     const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'cam-icu' | 'delirium-pediatrico' | 'delirium-master' | 'glasgow' | 'flacc' | 'braden-risco-lesao' | 'vni-cnaf' | 'vni-cnaf-pediatrico' | 'fss' | 'abstinencia' | 'consciencia'>('list');
     
     // Confirmation Modal State
@@ -2259,9 +2261,43 @@ const PatientDetailScreen: React.FC = () => {
                 )}
             </div>
 
-            <FluidBalanceCalc patientId={patient.id} />
+            {/* Balanço Hídrico - Accordion */}
+            <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
+                <button
+                    onClick={() => setIsFluidBalanceOpen(!isFluidBalanceOpen)}
+                    className="w-full px-4 py-3 flex items-center justify-between bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition"
+                >
+                    <div className="flex items-center gap-2">
+                        <span>📊</span>
+                        <span>Balanço Hídrico</span>
+                    </div>
+                    <span className={`text-lg transition-transform ${isFluidBalanceOpen ? 'rotate-180' : ''}`}>▼</span>
+                </button>
+                {isFluidBalanceOpen && (
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800">
+                        <FluidBalanceCalc patientId={patient.id} />
+                    </div>
+                )}
+            </div>
 
-            <DiuresisCalc patientId={patient.id} />
+            {/* Diurese - Accordion */}
+            <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 mt-3">
+                <button
+                    onClick={() => setIsDiuresisOpen(!isDiuresisOpen)}
+                    className="w-full px-4 py-3 flex items-center justify-between bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition"
+                >
+                    <div className="flex items-center gap-2">
+                        <span>💧</span>
+                        <span>Diurese</span>
+                    </div>
+                    <span className={`text-lg transition-transform ${isDiuresisOpen ? 'rotate-180' : ''}`}>▼</span>
+                </button>
+                {isDiuresisOpen && (
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800">
+                        <DiuresisCalc patientId={patient.id} />
+                    </div>
+                )}
+            </div>
 
             {user?.access_level === 'adm' ? (
                 <Link to={`/patient/${patient.id}/round/categories`} className="w-full block text-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg">
