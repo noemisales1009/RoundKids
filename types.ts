@@ -63,6 +63,7 @@ export interface Patient {
   ctd: string; // Used for Diagnosis
   status?: 'estavel' | 'instavel' | 'em_risco'; // Patient status
   comorbidade?: string; // Comorbidity
+  destino?: string | null; // Patient destination (Alta, Transferência, Óbito)
   devices: Device[];
   exams: Exam[];
   medications: Medication[];
@@ -169,6 +170,7 @@ export interface PatientsContextType {
   addScaleScoreToPatient: (patientId: number | string, score: Omit<ScaleScore, 'id'>) => void;
   updatePatientDetails: (patientId: number | string, data: { motherName?: string; ctd?: string }) => void;
   updatePatientStatus: (patientId: number | string, status: 'estavel' | 'instavel' | 'em_risco') => void;
+  updatePatientDestino: (patientId: number | string, destino: string) => void;
   updatePatientComorbidade: (patientId: number | string, comorbidade: string) => void;
   saveChecklistAnswer: (patientId: number | string, categoryId: number, questionId: number, answer: Answer) => Promise<void>;
   addCultureToPatient: (patientId: number | string, culture: Omit<Culture, 'id'>) => void;

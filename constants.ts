@@ -624,6 +624,13 @@ export const RESPONSIBLES: string[] = [
     'Médico / Fisioterapeuta'
 ];
 
+export const PATIENT_DESTINATIONS: string[] = [
+    'Alta',
+    'Transferência Interna',
+    'Transferência Externa',
+    'Óbito'
+];
+
 export const ALERT_DEADLINES: string[] = [
     '1 hora', 
     '2 horas', 

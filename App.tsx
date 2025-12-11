@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useContext, useEffect, createContext, useRef } from 'react';
 import { HashRouter, Routes, Route, useNavigate, Link, useParams, useLocation, Outlet, NavLink, Navigate } from 'react-router-dom';
 import { Patient, Category, Question, ChecklistAnswer, Answer, Device, Exam, Medication, Task, TaskStatus, PatientsContextType, TasksContextType, NotificationState, NotificationContextType, User, UserContextType, Theme, ThemeContextType, SurgicalProcedure, ScaleScore, Culture } from './types';
-import { PATIENTS as initialPatients, CATEGORIES as STATIC_CATEGORIES, QUESTIONS as STATIC_QUESTIONS, TASKS as initialTasks, DEVICE_TYPES, DEVICE_LOCATIONS, EXAM_STATUSES, RESPONSIBLES, ALERT_DEADLINES, INITIAL_USER, MEDICATION_DOSAGE_UNITS, ALERT_CATEGORIES, ICON_MAP, formatDateToBRL, formatDateTimeWithHour, calculateDaysSinceDate } from './constants';
+import { PATIENTS as initialPatients, CATEGORIES as STATIC_CATEGORIES, QUESTIONS as STATIC_QUESTIONS, TASKS as initialTasks, DEVICE_TYPES, DEVICE_LOCATIONS, EXAM_STATUSES, RESPONSIBLES, ALERT_DEADLINES, INITIAL_USER, MEDICATION_DOSAGE_UNITS, ALERT_CATEGORIES, ICON_MAP, PATIENT_DESTINATIONS, formatDateToBRL, formatDateTimeWithHour, calculateDaysSinceDate } from './constants';
 import { BackArrowIcon, PlusIcon, WarningIcon, ClockIcon, AlertIcon, CheckCircleIcon, BedIcon, UserIcon, PencilIcon, BellIcon, InfoIcon, EyeOffIcon, ClipboardIcon, FileTextIcon, LogOutIcon, ChevronRightIcon, MenuIcon, DashboardIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, HeartPulseIcon, BeakerIcon, LiverIcon, LungsIcon, DumbbellIcon, BrainIcon, ShieldIcon, UsersIcon, HomeIcon, CloseIcon, SettingsIcon, CameraIcon, ScalpelIcon, SaveIcon, CheckSquareIcon, SquareIcon, ChevronDownIcon, CheckIcon, ChevronLeftIcon } from './components/icons';
 import { ComfortBScale } from './components/ComfortBScale';
 import DeliriumPediatricoScale from './components/DeliriumPediatricoScale';
@@ -1023,7 +1023,10 @@ const PatientHistoryScreen: React.FC = () => {
                     <tr><th>Leito</th><td>${patient.bedNumber}</td></tr>
                     <tr><th>Nascimento</th><td>${formatDateToBRL(patient.dob)}</td></tr>
                     <tr><th>Nome da Mãe</th><td>${patient.motherName}</td></tr>
+                    <tr><th>Peso</th><td>${patient.peso ? patient.peso + ' kg' : '-'}</td></tr>
                     <tr><th>Diagnóstico</th><td>${patient.ctd}</td></tr>
+                    <tr><th>Status</th><td>${patient.status === 'estavel' ? 'Estável' : patient.status === 'instavel' ? 'Instável' : 'Em Risco'}</td></tr>
+                    ${patient.destino ? `<tr><th>Destino</th><td>${patient.destino}</td></tr>` : ''}
                 </table>
 
                 <h2>Filtros Aplicados</h2>
@@ -1551,7 +1554,7 @@ const EditCultureModal: React.FC<{ culture: Culture; patientId: number | string;
 
 const PatientDetailScreen: React.FC = () => {
     const { patientId } = useParams<{ patientId: string }>();
-    const { patients, addRemovalDateToDevice, deleteDeviceFromPatient, addEndDateToMedication, deleteMedicationFromPatient, deleteExamFromPatient, deleteSurgicalProcedureFromPatient, addScaleScoreToPatient, addCultureToPatient, deleteCultureFromPatient, updatePatientStatus, updatePatientComorbidade } = useContext(PatientsContext)!;
+    const { patients, addRemovalDateToDevice, deleteDeviceFromPatient, addEndDateToMedication, deleteMedicationFromPatient, deleteExamFromPatient, deleteSurgicalProcedureFromPatient, addScaleScoreToPatient, addCultureToPatient, deleteCultureFromPatient, updatePatientStatus, updatePatientDestino, updatePatientComorbidade } = useContext(PatientsContext)!;
     const { tasks, updateTaskStatus } = useContext(TasksContext)!;
     const { user } = useContext(UserContext)!;
     const patient = patients.find(p => p.id.toString() === patientId);
@@ -1910,6 +1913,33 @@ const PatientDetailScreen: React.FC = () => {
                         </div>
                     )}
                 </div>
+            </div>
+
+            {/* Destino do Paciente */}
+            <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border-2 border-slate-200 dark:border-slate-700">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Destino do Paciente</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {PATIENT_DESTINATIONS.map(dest => (
+                        <button
+                            key={dest}
+                            onClick={() => updatePatientDestino(patient.id, dest)}
+                            className={`px-4 py-3 rounded-lg font-semibold text-sm border-2 transition ${
+                                patient.destino === dest
+                                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-400 dark:border-blue-600'
+                                    : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                            }`}
+                        >
+                            {dest}
+                        </button>
+                    ))}
+                </div>
+                {patient.destino && (
+                    <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-700">
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                            <strong>Destino registrado:</strong> {patient.destino}
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* Diagnósticos Clínicos */}
@@ -3909,6 +3939,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             ctd: p.diagnosis || p.ctd || 'Estável',
             status: p.status || 'estavel',
             comorbidade: p.comorbidade,
+            destino: p.destino || null,
             devices: devicesMap[p.id] || [],
             exams: examsMap[p.id] || [],
             medications: medsMap[p.id] || [],
@@ -4165,6 +4196,14 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         if (!error) fetchPatients();
     };
 
+    const updatePatientDestino = async (patientId: number | string, destino: string) => {
+        const { error } = await supabase.from('patients')
+            .update({ destino })
+            .eq('id', patientId);
+
+        if (!error) fetchPatients();
+    };
+
     const updatePatientComorbidade = async (patientId: number | string, comorbidade: string) => {
         const { error } = await supabase.from('patients')
             .update({ comorbidade: comorbidade || null })
@@ -4219,6 +4258,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         addScaleScoreToPatient,
         updatePatientDetails,
         updatePatientStatus,
+        updatePatientDestino,
         updatePatientComorbidade,
         saveChecklistAnswer,
         addCultureToPatient,
