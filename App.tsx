@@ -1787,6 +1787,7 @@ const PatientDetailScreen: React.FC = () => {
                                                 : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-600'
                                         }`}
                                     >
+                                        {status.label}
                                     </button>
                                 ))}
                             </div>
@@ -1811,15 +1812,18 @@ const PatientDetailScreen: React.FC = () => {
                         })()
                     }`}
                 >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-1">
                         <span>📋</span>
                         <span>
                             {(() => {
-                                let count = 0;
+                                let comorbidades: string[] = [];
                                 if (patient.comorbidade && patient.comorbidade.trim()) {
-                                    count = patient.comorbidade.split('|').filter(c => c.trim()).length;
+                                    comorbidades = patient.comorbidade.split('|').map(c => c.trim()).filter(c => c);
                                 }
-                                return count > 0 ? `${count} comorbidade(s)` : 'Comorbidades';
+                                if (comorbidades.length === 0) {
+                                    return 'Comorbidades';
+                                }
+                                return comorbidades.join(', ');
                             })()}
                         </span>
                     </div>
