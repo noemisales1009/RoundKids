@@ -1006,6 +1006,11 @@ const PatientHistoryScreen: React.FC = () => {
                     <tr><th>Diagnóstico</th><td>${patient.ctd}</td></tr>
                 </table>
 
+                <h2>Filtros Aplicados</h2>
+                <p><strong>Data Inicial:</strong> ${filterStartDate ? formatDateToBRL(filterStartDate) : 'Não filtrado'}</p>
+                <p><strong>Data Final:</strong> ${filterEndDate ? formatDateToBRL(filterEndDate) : 'Não filtrado'}</p>
+                <p><strong>Tipos de Eventos:</strong> ${selectedEventTypes.size > 0 ? Array.from(selectedEventTypes).join(', ') : 'Nenhum selecionado'}</p>
+
                 <h2>Dispositivos</h2>
                 <ul>${generateDeviceList()}</ul>
                 
