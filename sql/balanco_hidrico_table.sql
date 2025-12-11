@@ -1,22 +1,26 @@
--- Create balanco_hidrico table
+-- Create balanco_hidrico table (com BIGINT como no schema fornecido)
 CREATE TABLE IF NOT EXISTS balanco_hidrico (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    patient_id UUID NOT NULL REFERENCES pacientes(id) ON DELETE CASCADE,
-    peso DECIMAL(10, 2) NOT NULL,
+    id BIGSERIAL PRIMARY KEY,
+    patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+    peso DECIMAL(10, 2) NOT NULL CHECK (peso > 0),
     volume DECIMAL(10, 2) NOT NULL,
-    resultado DECIMAL(10, 2) GENERATED ALWAYS AS (volume / (peso * 10.0)) STORED,
-    data_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    resultado DECIMAL(10, 4) GENERATED ALWAYS AS (
+        CASE
+            WHEN (peso > 0) THEN (volume / (peso * 10.0))
+            ELSE 0
+        END
+    ) STORED,
+    data_registro TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create balanco_hidrico_historico table for timeline
 CREATE TABLE IF NOT EXISTS balanco_hidrico_historico (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    patient_id UUID NOT NULL REFERENCES pacientes(id) ON DELETE CASCADE,
+    patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
     peso DECIMAL(10, 2) NOT NULL,
     volume DECIMAL(10, 2) NOT NULL,
-    resultado DECIMAL(10, 2) NOT NULL,
+    resultado DECIMAL(10, 4) NOT NULL,
     data_calculo TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

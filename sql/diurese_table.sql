@@ -1,7 +1,7 @@
 -- Create diurese table
 CREATE TABLE IF NOT EXISTS diurese (
     id BIGSERIAL PRIMARY KEY,
-    patient_id UUID NOT NULL REFERENCES pacientes(id) ON DELETE CASCADE,
+    patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
     volume DECIMAL(10, 2) NOT NULL,
     peso DECIMAL(10, 2) NOT NULL,
     horas INTEGER NOT NULL,
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS diurese (
 -- Create diurese_historico table for timeline
 CREATE TABLE IF NOT EXISTS diurese_historico (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    patient_id UUID NOT NULL REFERENCES pacientes(id) ON DELETE CASCADE,
+    patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
     volume DECIMAL(10, 2) NOT NULL,
     peso DECIMAL(10, 2) NOT NULL,
     horas INTEGER NOT NULL,
