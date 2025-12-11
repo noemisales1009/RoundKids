@@ -17,6 +17,7 @@ interface DiagnosticOption {
   has_input: boolean;
   input_placeholder?: string;
   ordem: number;
+  parent_id?: number | null;
 }
 
 interface PatientDiagnostic {
@@ -46,6 +47,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   // Estado da UI
   const [expandedGroup, setExpandedGroup] = useState<'principal' | 'secundario' | null>(null);
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
+  const [expandedParentOption, setExpandedParentOption] = useState<number | null>(null);
   const [inputValues, setInputValues] = useState<Record<number, string>>({});
   const [selectedStatus, setSelectedStatus] = useState<Record<number, 'resolvido' | 'nao_resolvido'>>({});
   const [checkedOptions, setCheckedOptions] = useState<Record<number, boolean>>({});
@@ -295,7 +297,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
             {expandedGroup === 'principal' && (
               <div className={`mt-2 p-3 sm:p-4 rounded-lg space-y-3 ${isDark ? 'bg-slate-800' : 'bg-white'} border ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
                 {mainQuestions.map(question => {
-                  const questionOptions = options.filter(opt => opt.pergunta_id === question.id);
+                  const questionOptions = options.filter(opt => opt.pergunta_id === question.id && !opt.parent_id);
                   const isQuestionExpanded = expandedQuestion === question.id;
 
                   return (
@@ -311,64 +313,146 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                       </button>
 
                       {isQuestionExpanded && (
-                        <div className={`mt-2 ml-2 sm:ml-3 space-y-2 p-2 sm:p-3 rounded-lg ${isDark ? 'bg-slate-900/50' : 'bg-slate-50'}`}>
+                        <div className={`mt-2 ml-2 sm:ml-3 space-y-3 p-2 sm:p-3 rounded-lg ${isDark ? 'bg-slate-900/50' : 'bg-slate-50'}`}>
                           {questionOptions.map(option => {
                             const isChecked = diagnostics.some(d => d.opcao_id === option.id);
                             const isCurrentlyChecked = checkedOptions[option.id] !== undefined ? checkedOptions[option.id] : isChecked;
+                            const childOptions = options.filter(opt => opt.parent_id === option.id);
+                            const hasChildren = childOptions.length > 0;
+                            const isParentExpanded = expandedParentOption === option.id;
 
                             return (
                               <div key={option.id} className="space-y-2">
-                                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                                  <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-[200px]">
-                                    <input
-                                      type="checkbox"
-                                      checked={isCurrentlyChecked}
-                                      onChange={(e) => {
-                                        setCheckedOptions(prev => ({
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                                    <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-[200px]">
+                                      <input
+                                        type="checkbox"
+                                        checked={isCurrentlyChecked}
+                                        onChange={(e) => {
+                                          setCheckedOptions(prev => ({
+                                            ...prev,
+                                            [option.id]: e.target.checked
+                                          }));
+                                        }}
+                                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+                                      />
+                                      <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                                        {option.label}
+                                      </span>
+                                    </label>
+                                    
+                                    {hasChildren && (
+                                      <button
+                                        onClick={() => setExpandedParentOption(isParentExpanded ? null : option.id)}
+                                        className={`px-2 py-1 rounded transition text-xs font-semibold ${isDark ? 'bg-slate-700 hover:bg-slate-600 text-slate-300' : 'bg-slate-200 hover:bg-slate-300 text-slate-700'}`}
+                                      >
+                                        {isParentExpanded ? '▼' : '▶'} {childOptions.length}
+                                      </button>
+                                    )}
+                                    
+                                    {isCurrentlyChecked && (
+                                      <select
+                                        value={selectedStatus[option.id] || 'nao_resolvido'}
+                                        onChange={(e) => setSelectedStatus(prev => ({
                                           ...prev,
-                                          [option.id]: e.target.checked
-                                        }));
-                                      }}
-                                      className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
-                                    />
-                                    <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                                      {option.label}
-                                    </span>
-                                  </label>
-                                  
-                                  {isCurrentlyChecked && (
-                                    <select
-                                      value={selectedStatus[option.id] || 'nao_resolvido'}
-                                      onChange={(e) => setSelectedStatus(prev => ({
-                                        ...prev,
-                                        [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
-                                      }))}
-                                      className={`px-2 py-1 text-xs sm:text-sm rounded border flex-shrink-0 ${isDark
-                                        ? 'bg-slate-700 border-slate-600 text-slate-200'
-                                        : 'bg-white border-slate-300 text-slate-800'
-                                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                    >
-                                      <option value="nao_resolvido">❌ Não Res.</option>
-                                      <option value="resolvido">✅ Resolvido</option>
-                                    </select>
+                                          [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
+                                        }))}
+                                        className={`px-2 py-1 text-xs sm:text-sm rounded border flex-shrink-0 ${isDark
+                                          ? 'bg-slate-700 border-slate-600 text-slate-200'
+                                          : 'bg-white border-slate-300 text-slate-800'
+                                        } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                      >
+                                        <option value="nao_resolvido">❌ Não Res.</option>
+                                        <option value="resolvido">✅ Resolvido</option>
+                                      </select>
+                                    )}
+                                  </div>
+
+                                  {isCurrentlyChecked && option.has_input && (
+                                    <div className="ml-6 sm:ml-7 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                                      <input
+                                        type="text"
+                                        placeholder={option.input_placeholder || 'Digite...'}
+                                        value={inputValues[option.id] || ''}
+                                        onChange={(e) => setInputValues(prev => ({
+                                          ...prev,
+                                          [option.id]: e.target.value
+                                        }))}
+                                        className={`w-full px-2 py-1.5 text-xs sm:text-sm rounded border ${isDark 
+                                          ? 'bg-slate-800 border-slate-600 text-slate-200' 
+                                          : 'bg-white border-slate-300 text-slate-800'
+                                        } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                      />
+                                    </div>
                                   )}
                                 </div>
 
-                                {isCurrentlyChecked && option.has_input && (
-                                  <div className="ml-6 sm:ml-7 space-y-2 animate-in slide-in-from-top-2 duration-200">
-                                    <input
-                                      type="text"
-                                      placeholder={option.input_placeholder || 'Digite...'}
-                                      value={inputValues[option.id] || ''}
-                                      onChange={(e) => setInputValues(prev => ({
-                                        ...prev,
-                                        [option.id]: e.target.value
-                                      }))}
-                                      className={`w-full px-2 py-1.5 text-xs sm:text-sm rounded border ${isDark 
-                                        ? 'bg-slate-800 border-slate-600 text-slate-200' 
-                                        : 'bg-white border-slate-300 text-slate-800'
-                                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                    />
+                                {/* Opções Filhas */}
+                                {isParentExpanded && hasChildren && (
+                                  <div className={`ml-6 sm:ml-8 space-y-2 p-2 sm:p-3 rounded-lg border-l-2 ${isDark ? 'border-slate-600 bg-slate-800/50' : 'border-slate-300 bg-slate-100'}`}>
+                                    {childOptions.map(childOption => {
+                                      const isChildChecked = diagnostics.some(d => d.opcao_id === childOption.id);
+                                      const isChildCurrentlyChecked = checkedOptions[childOption.id] !== undefined ? checkedOptions[childOption.id] : isChildChecked;
+
+                                      return (
+                                        <div key={childOption.id} className="space-y-2">
+                                          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                                            <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-[200px]">
+                                              <input
+                                                type="checkbox"
+                                                checked={isChildCurrentlyChecked}
+                                                onChange={(e) => {
+                                                  setCheckedOptions(prev => ({
+                                                    ...prev,
+                                                    [childOption.id]: e.target.checked
+                                                  }));
+                                                }}
+                                                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+                                              />
+                                              <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                                                {childOption.label}
+                                              </span>
+                                            </label>
+                                            
+                                            {isChildCurrentlyChecked && (
+                                              <select
+                                                value={selectedStatus[childOption.id] || 'nao_resolvido'}
+                                                onChange={(e) => setSelectedStatus(prev => ({
+                                                  ...prev,
+                                                  [childOption.id]: e.target.value as 'resolvido' | 'nao_resolvido'
+                                                }))}
+                                                className={`px-2 py-1 text-xs sm:text-sm rounded border flex-shrink-0 ${isDark
+                                                  ? 'bg-slate-700 border-slate-600 text-slate-200'
+                                                  : 'bg-white border-slate-300 text-slate-800'
+                                                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                              >
+                                                <option value="nao_resolvido">❌ Não Res.</option>
+                                                <option value="resolvido">✅ Resolvido</option>
+                                              </select>
+                                            )}
+                                          </div>
+
+                                          {isChildCurrentlyChecked && childOption.has_input && (
+                                            <div className="ml-6 sm:ml-7 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                                              <input
+                                                type="text"
+                                                placeholder={childOption.input_placeholder || 'Digite...'}
+                                                value={inputValues[childOption.id] || ''}
+                                                onChange={(e) => setInputValues(prev => ({
+                                                  ...prev,
+                                                  [childOption.id]: e.target.value
+                                                }))}
+                                                className={`w-full px-2 py-1.5 text-xs sm:text-sm rounded border ${isDark 
+                                                  ? 'bg-slate-800 border-slate-600 text-slate-200' 
+                                                  : 'bg-white border-slate-300 text-slate-800'
+                                                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                              />
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 )}
                               </div>
@@ -403,7 +487,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
             {expandedGroup === 'secundario' && (
               <div className={`mt-2 p-3 sm:p-4 rounded-lg space-y-3 ${isDark ? 'bg-slate-800' : 'bg-white'} border ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
                 {secondaryQuestions.map(question => {
-                  const questionOptions = options.filter(opt => opt.pergunta_id === question.id);
+                  const questionOptions = options.filter(opt => opt.pergunta_id === question.id && !opt.parent_id);
                   const isQuestionExpanded = expandedQuestion === question.id;
 
                   return (
@@ -419,61 +503,153 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                       </button>
 
                       {isQuestionExpanded && (
-                        <div className={`mt-2 ml-2 sm:ml-3 space-y-2 p-2 sm:p-3 rounded-lg ${isDark ? 'bg-slate-900/50' : 'bg-slate-50'}`}>
+                        <div className={`mt-2 ml-2 sm:ml-3 space-y-3 p-2 sm:p-3 rounded-lg ${isDark ? 'bg-slate-900/50' : 'bg-slate-50'}`}>
                           {questionOptions.map(option => {
                             const isChecked = diagnostics.some(d => d.opcao_id === option.id);
                             const isCurrentlyChecked = checkedOptions[option.id] !== undefined ? checkedOptions[option.id] : isChecked;
+                            const childOptions = options.filter(opt => opt.parent_id === option.id);
+                            const hasChildren = childOptions.length > 0;
+                            const isParentExpanded = expandedParentOption === option.id;
 
                             return (
                               <div key={option.id} className="space-y-2">
-                                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                                  <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-[200px]">
-                                    <input
-                                      type="checkbox"
-                                      checked={isCurrentlyChecked}
-                                      onChange={(e) => {
-                                        setCheckedOptions(prev => ({
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                                    <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-[200px]">
+                                      <input
+                                        type="checkbox"
+                                        checked={isCurrentlyChecked}
+                                        onChange={(e) => {
+                                          setCheckedOptions(prev => ({
+                                            ...prev,
+                                            [option.id]: e.target.checked
+                                          }));
+                                        }}
+                                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+                                      />
+                                      <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                                        {option.label}
+                                      </span>
+                                    </label>
+                                    
+                                    {hasChildren && (
+                                      <button
+                                        onClick={() => setExpandedParentOption(isParentExpanded ? null : option.id)}
+                                        className={`px-2 py-1 rounded transition text-xs font-semibold ${isDark ? 'bg-slate-700 hover:bg-slate-600 text-slate-300' : 'bg-slate-200 hover:bg-slate-300 text-slate-700'}`}
+                                      >
+                                        {isParentExpanded ? '▼' : '▶'} {childOptions.length}
+                                      </button>
+                                    )}
+                                    
+                                    {isCurrentlyChecked && (
+                                      <select
+                                        value={selectedStatus[option.id] || 'nao_resolvido'}
+                                        onChange={(e) => setSelectedStatus(prev => ({
                                           ...prev,
-                                          [option.id]: e.target.checked
-                                        }));
-                                      }}
-                                      className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
-                                    />
-                                    <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                                      {option.label}
-                                    </span>
-                                  </label>
-                                  
-                                  {isCurrentlyChecked && (
-                                    <select
-                                      value={selectedStatus[option.id] || 'nao_resolvido'}
-                                      onChange={(e) => setSelectedStatus(prev => ({
-                                        ...prev,
-                                        [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
-                                      }))}
-                                      className={`px-2 py-1 text-xs sm:text-sm rounded border flex-shrink-0 ${isDark
-                                        ? 'bg-slate-700 border-slate-600 text-slate-200'
-                                        : 'bg-white border-slate-300 text-slate-800'
-                                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                    >
-                                      <option value="nao_resolvido">❌ Não Res.</option>
-                                      <option value="resolvido">✅ Resolvido</option>
-                                    </select>
+                                          [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
+                                        }))}
+                                        className={`px-2 py-1 text-xs sm:text-sm rounded border flex-shrink-0 ${isDark
+                                          ? 'bg-slate-700 border-slate-600 text-slate-200'
+                                          : 'bg-white border-slate-300 text-slate-800'
+                                        } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                      >
+                                        <option value="nao_resolvido">❌ Não Res.</option>
+                                        <option value="resolvido">✅ Resolvido</option>
+                                      </select>
+                                    )}
+                                  </div>
+
+                                  {isCurrentlyChecked && option.has_input && (
+                                    <div className="ml-6 sm:ml-7 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                                      <input
+                                        type="text"
+                                        placeholder={option.input_placeholder || 'Digite...'}
+                                        value={inputValues[option.id] || ''}
+                                        onChange={(e) => setInputValues(prev => ({
+                                          ...prev,
+                                          [option.id]: e.target.value
+                                        }))}
+                                        className={`w-full px-2 py-1.5 text-xs sm:text-sm rounded border ${isDark 
+                                          ? 'bg-slate-800 border-slate-600 text-slate-200' 
+                                          : 'bg-white border-slate-300 text-slate-800'
+                                        } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                      />
+                                    </div>
                                   )}
                                 </div>
 
-                                {isCurrentlyChecked && option.has_input && (
-                                  <div className="ml-6 sm:ml-7 space-y-2 animate-in slide-in-from-top-2 duration-200">
-                                    <input
-                                      type="text"
-                                      placeholder={option.input_placeholder || 'Digite...'}
-                                      value={inputValues[option.id] || ''}
-                                      onChange={(e) => setInputValues(prev => ({
-                                        ...prev,
-                                        [option.id]: e.target.value
-                                      }))}
-                                      className={`w-full px-2 py-1.5 text-xs sm:text-sm rounded border ${isDark 
-                                        ? 'bg-slate-800 border-slate-600 text-slate-200' 
+                                {/* Opções Filhas */}
+                                {isParentExpanded && hasChildren && (
+                                  <div className={`ml-6 sm:ml-8 space-y-2 p-2 sm:p-3 rounded-lg border-l-2 ${isDark ? 'border-slate-600 bg-slate-800/50' : 'border-slate-300 bg-slate-100'}`}>
+                                    {childOptions.map(childOption => {
+                                      const isChildChecked = diagnostics.some(d => d.opcao_id === childOption.id);
+                                      const isChildCurrentlyChecked = checkedOptions[childOption.id] !== undefined ? checkedOptions[childOption.id] : isChildChecked;
+
+                                      return (
+                                        <div key={childOption.id} className="space-y-2">
+                                          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                                            <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-[200px]">
+                                              <input
+                                                type="checkbox"
+                                                checked={isChildCurrentlyChecked}
+                                                onChange={(e) => {
+                                                  setCheckedOptions(prev => ({
+                                                    ...prev,
+                                                    [childOption.id]: e.target.checked
+                                                  }));
+                                                }}
+                                                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+                                              />
+                                              <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                                                {childOption.label}
+                                              </span>
+                                            </label>
+                                            
+                                            {isChildCurrentlyChecked && (
+                                              <select
+                                                value={selectedStatus[childOption.id] || 'nao_resolvido'}
+                                                onChange={(e) => setSelectedStatus(prev => ({
+                                                  ...prev,
+                                                  [childOption.id]: e.target.value as 'resolvido' | 'nao_resolvido'
+                                                }))}
+                                                className={`px-2 py-1 text-xs sm:text-sm rounded border flex-shrink-0 ${isDark
+                                                  ? 'bg-slate-700 border-slate-600 text-slate-200'
+                                                  : 'bg-white border-slate-300 text-slate-800'
+                                                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                              >
+                                                <option value="nao_resolvido">❌ Não Res.</option>
+                                                <option value="resolvido">✅ Resolvido</option>
+                                              </select>
+                                            )}
+                                          </div>
+
+                                          {isChildCurrentlyChecked && childOption.has_input && (
+                                            <div className="ml-6 sm:ml-7 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                                              <input
+                                                type="text"
+                                                placeholder={childOption.input_placeholder || 'Digite...'}
+                                                value={inputValues[childOption.id] || ''}
+                                                onChange={(e) => setInputValues(prev => ({
+                                                  ...prev,
+                                                  [childOption.id]: e.target.value
+                                                }))}
+                                                className={`w-full px-2 py-1.5 text-xs sm:text-sm rounded border ${isDark 
+                                                  ? 'bg-slate-800 border-slate-600 text-slate-200' 
+                                                  : 'bg-white border-slate-300 text-slate-800'
+                                                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                              />
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                                         : 'bg-white border-slate-300 text-slate-800'
                                       } focus:outline-none focus:ring-2 focus:ring-blue-500`}
                                     />
