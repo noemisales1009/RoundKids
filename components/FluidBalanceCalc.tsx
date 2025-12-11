@@ -41,15 +41,30 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
     const weightNum = parseFloat(weight);
     const volumeAbsolute = parseFloat(volume);
     const finalVolume = isPositive ? volumeAbsolute : -volumeAbsolute;
+    const calculatedResult = finalVolume / (weightNum * 10);
 
     try {
-      const { error } = await supabase.from('balanco_hidrico').insert({
+      // Salvar no balanco_hidrico
+      const { error: insertError } = await supabase.from('balanco_hidrico').insert({
         patient_id: patientId,
         peso: weightNum,
         volume: finalVolume,
       });
 
-      if (error) throw error;
+      if (insertError) throw insertError;
+
+      // Salvar também no histórico
+      const { error: historyError } = await supabase.from('balanco_hidrico_historico').insert({
+        patient_id: patientId,
+        peso: weightNum,
+        volume: finalVolume,
+        resultado: calculatedResult,
+      });
+
+      if (historyError) {
+        console.error('Aviso: Erro ao salvar no histórico:', historyError);
+        // Não lançar erro, pois o dado principal foi salvo
+      }
 
       setMessage({ type: 'success', text: 'Cálculo salvo com sucesso!' });
       setVolume('');

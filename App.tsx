@@ -644,6 +644,7 @@ const PatientHistoryScreen: React.FC = () => {
     const patient = patients.find(p => p.id.toString() === patientId);
     const [diagnosticHistory, setDiagnosticHistory] = useState<any[]>([]);
     const [comorbidadeHistory, setComorbidadeHistory] = useState<any[]>([]);
+    const [balanceHistory, setBalanceHistory] = useState<any[]>([]);
 
     useHeader(patient ? `Histórico: ${patient.name}` : 'Histórico do Paciente');
 
@@ -652,7 +653,7 @@ const PatientHistoryScreen: React.FC = () => {
         const loadHistory = async () => {
             if (!patientId) return;
             try {
-                const [diagResult, comorbResult] = await Promise.all([
+                const [diagResult, comorbResult, balanceResult] = await Promise.all([
                     supabase
                         .from('diagnosticos_historico')
                         .select('*')
@@ -662,7 +663,12 @@ const PatientHistoryScreen: React.FC = () => {
                         .from('comorbidade_historico')
                         .select('*')
                         .eq('patient_id', patientId)
-                        .order('updated_at', { ascending: false })
+                        .order('updated_at', { ascending: false }),
+                    supabase
+                        .from('balanco_hidrico_historico')
+                        .select('*')
+                        .eq('patient_id', patientId)
+                        .order('data_calculo', { ascending: false })
                 ]);
 
                 if (diagResult.error) {
@@ -675,6 +681,12 @@ const PatientHistoryScreen: React.FC = () => {
                     console.error('Erro ao buscar histórico de comorbidades:', comorbResult.error);
                 } else {
                     setComorbidadeHistory(comorbResult.data || []);
+                }
+
+                if (balanceResult.error) {
+                    console.error('Erro ao buscar histórico de balanço hídrico:', balanceResult.error);
+                } else {
+                    setBalanceHistory(balanceResult.data || []);
                 }
             } catch (err) {
                 console.error('Erro:', err);
@@ -808,6 +820,17 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
+        // Adicionar histórico de balanço hídrico
+        balanceHistory.forEach(balance => {
+            const statusColor = Math.abs(balance.resultado) >= 10 ? '🔴' : '🟢';
+            events.push({
+                timestamp: balance.data_calculo || balance.created_at || new Date().toISOString(),
+                icon: DropletIcon,
+                description: `Balanço Hídrico: Peso ${balance.peso}kg | Volume ${balance.volume > 0 ? '+' : ''}${balance.volume}mL | Resultado ${balance.resultado.toFixed(2)}% ${statusColor}`,
+                hasTime: true,
+            });
+        });
+
         events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
         const groupedEvents = events.reduce((acc, event) => {
@@ -820,7 +843,7 @@ const PatientHistoryScreen: React.FC = () => {
         }, {} as Record<string, TimelineEvent[]>);
 
         return groupedEvents;
-    }, [patient, tasks, diagnosticHistory]);
+    }, [patient, tasks, diagnosticHistory, comorbidadeHistory, balanceHistory]);
 
     const handleGeneratePdf = () => {
         // ... (PDF generation logic remains the same)
