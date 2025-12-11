@@ -1915,33 +1915,6 @@ const PatientDetailScreen: React.FC = () => {
                 </div>
             </div>
 
-            {/* Destino do Paciente */}
-            <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border-2 border-slate-200 dark:border-slate-700">
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Destino do Paciente</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {PATIENT_DESTINATIONS.map(dest => (
-                        <button
-                            key={dest}
-                            onClick={() => updatePatientDestino(patient.id, dest)}
-                            className={`px-4 py-3 rounded-lg font-semibold text-sm border-2 transition ${
-                                patient.destino === dest
-                                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-400 dark:border-blue-600'
-                                    : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-                            }`}
-                        >
-                            {dest}
-                        </button>
-                    ))}
-                </div>
-                {patient.destino && (
-                    <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-700">
-                        <p className="text-sm text-blue-700 dark:text-blue-300">
-                            <strong>Destino registrado:</strong> {patient.destino}
-                        </p>
-                    </div>
-                )}
-            </div>
-
             {/* Diagnósticos Clínicos */}
             <DiagnosticsSection patientId={patient.id.toString()} />
 
@@ -2312,6 +2285,33 @@ const PatientDetailScreen: React.FC = () => {
                 <WarningIcon className="w-6 h-6" />
                 Criar Novo Alerta
             </button>
+
+            {/* Destino do Paciente */}
+            <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border-2 border-slate-200 dark:border-slate-700 mt-3">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Destino do Paciente</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {PATIENT_DESTINATIONS.map(dest => (
+                        <button
+                            key={dest}
+                            onClick={() => updatePatientDestino(patient.id, dest)}
+                            className={`px-4 py-3 rounded-lg font-semibold text-sm border-2 transition ${
+                                patient.destino === dest
+                                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-400 dark:border-blue-600'
+                                    : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                            }`}
+                        >
+                            {dest}
+                        </button>
+                    ))}
+                </div>
+                {patient.destino && (
+                    <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-700">
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                            <strong>Destino registrado:</strong> {patient.destino}
+                        </p>
+                    </div>
+                )}
+            </div>
 
             {isAddDeviceModalOpen && <AddDeviceModal patientId={patient.id} onClose={() => setAddDeviceModalOpen(false)} />}
             {editingDevice && <EditDeviceModal device={editingDevice} patientId={patient.id} onClose={() => setEditingDevice(null)} />}
