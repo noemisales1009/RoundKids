@@ -1580,6 +1580,7 @@ const PatientDetailScreen: React.FC = () => {
     const [isEditInfoModalOpen, setEditInfoModalOpen] = useState(false);
     const [showPatientAlerts, setShowPatientAlerts] = useState(false);
     const [isCreateAlertModalOpen, setCreateAlertModalOpen] = useState(false);
+    const [isDestinationDropdownOpen, setIsDestinationDropdownOpen] = useState(false);
     const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'cam-icu' | 'delirium-pediatrico' | 'delirium-master' | 'glasgow' | 'flacc' | 'braden-risco-lesao' | 'vni-cnaf' | 'vni-cnaf-pediatrico' | 'fss' | 'abstinencia' | 'consciencia'>('list');
     
     // Confirmation Modal State
@@ -2286,29 +2287,38 @@ const PatientDetailScreen: React.FC = () => {
                 Criar Novo Alerta
             </button>
 
-            {/* Destino do Paciente */}
-            <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border-2 border-slate-200 dark:border-slate-700 mt-3">
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Destino do Paciente</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {PATIENT_DESTINATIONS.map(dest => (
-                        <button
-                            key={dest}
-                            onClick={() => updatePatientDestino(patient.id, dest)}
-                            className={`px-4 py-3 rounded-lg font-semibold text-sm border-2 transition ${
-                                patient.destino === dest
-                                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-400 dark:border-blue-600'
-                                    : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-                            }`}
-                        >
-                            {dest}
-                        </button>
-                    ))}
-                </div>
-                {patient.destino && (
-                    <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-700">
-                        <p className="text-sm text-blue-700 dark:text-blue-300">
-                            <strong>Destino registrado:</strong> {patient.destino}
-                        </p>
+            {/* Destino do Paciente - Dropdown Compacto */}
+            <div className="relative mt-3">
+                <button
+                    onClick={() => setIsDestinationDropdownOpen(!isDestinationDropdownOpen)}
+                    className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-sm font-semibold flex items-center justify-between hover:border-slate-300 dark:hover:border-slate-600 transition"
+                >
+                    <span>
+                        {patient.destino ? `📍 Destino: ${patient.destino}` : '📍 Definir Destino'}
+                    </span>
+                    <span className={`text-xs transition-transform ${isDestinationDropdownOpen ? 'rotate-180' : ''}`}>▼</span>
+                </button>
+
+                {isDestinationDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-20">
+                        {PATIENT_DESTINATIONS.map((dest, idx) => (
+                            <button
+                                key={dest}
+                                onClick={() => {
+                                    updatePatientDestino(patient.id, dest);
+                                    setIsDestinationDropdownOpen(false);
+                                }}
+                                className={`w-full px-4 py-2 text-left text-sm font-semibold transition ${
+                                    idx < PATIENT_DESTINATIONS.length - 1 ? 'border-b border-slate-200 dark:border-slate-700' : ''
+                                } ${
+                                    patient.destino === dest
+                                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                }`}
+                            >
+                                {patient.destino === dest && '✓ '}{dest}
+                            </button>
+                        ))}
                     </div>
                 )}
             </div>
