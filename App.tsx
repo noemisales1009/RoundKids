@@ -801,10 +801,11 @@ const PatientHistoryScreen: React.FC = () => {
             }
             
             // Alerta criado
+            const alertDescription = `🔔 ${alert.description}\n👤 Responsável: ${alert.responsible}\n📅 Prazo: ${formatDateTimeWithHour(alert.deadline)}\n⏱️ Tempo: ${timeText}`;
             events.push({
                 timestamp: new Date().toISOString(),
                 icon: BellIcon,
-                description: `Alerta: ${alert.description} | Responsável: ${alert.responsible} | Prazo Limite: ${formatDateTimeWithHour(alert.deadline)} | Tempo restante: ${timeText}`,
+                description: alertDescription,
                 hasTime: true,
                 eventType: 'alertas',
             });
@@ -982,9 +983,9 @@ const PatientHistoryScreen: React.FC = () => {
                 <h3>${formatHistoryDate(date)}</h3>
                 <ul>
                     ${(eventsOnDate as TimelineEvent[]).map(event => `
-                        <li>
-                            ${event.hasTime ? `Horário: [${new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}] ` : ''}
-                            ${event.description}
+                        <li class="event-item">
+                            ${event.hasTime ? `<small>Horário: ${new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</small><br/>` : ''}
+                            <pre style="white-space: pre-wrap; word-wrap: break-word; margin: 5px 0;">${event.description.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
                         </li>
                     `).join('')}
                 </ul>
@@ -1006,8 +1007,11 @@ const PatientHistoryScreen: React.FC = () => {
                     th { background-color: #e0f2f1; }
                     ul { list-style-type: none; padding-left: 0; }
                     li { background-color: #f7f7f7; border: 1px solid #eee; padding: 10px; margin-bottom: 8px; border-radius: 4px; }
-                    .history-group ul { padding-left: 20px; }
-                    .history-group li { background-color: transparent; border: none; padding: 5px 0; margin-bottom: 0; border-bottom: 1px dotted #ccc; }
+                    li.event-item { background-color: #fafafa; border-left: 4px solid #00796b; }
+                    .history-group ul { padding-left: 0; }
+                    .history-group li { background-color: #fafafa; border: 1px solid #e0e0e0; padding: 10px; margin-bottom: 10px; border-radius: 4px; border-left: 4px solid #00796b; }
+                    .history-group small { color: #666; font-weight: bold; }
+                    .history-group pre { background-color: #f5f5f5; padding: 8px; border-radius: 3px; font-size: 12px; line-height: 1.4; }
                 </style>
             </head>
             <body>
@@ -1168,7 +1172,7 @@ const PatientHistoryScreen: React.FC = () => {
                                                 <event.icon className="w-5 h-5 text-blue-600 dark:text-blue-300" />
                                             </div>
                                             <div className="flex-1">
-                                                <p className="text-slate-800 dark:text-slate-200 text-sm">{event.description}</p>
+                                                <p className="text-slate-800 dark:text-slate-200 text-sm whitespace-pre-line">{event.description}</p>
                                                 {event.hasTime && (
                                                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                                         Horário: {new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
