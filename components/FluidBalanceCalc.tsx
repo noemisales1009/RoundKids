@@ -216,7 +216,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
           ) : (
             <>
               <Save size={16} className="sm:w-[18px] sm:h-[18px]" />
-              Salvar no Prontuário
+              Salvar
             </>
           )}
         </button>
