@@ -17,6 +17,7 @@ import { AbstinenceScale } from './components/AbstinenceScale';
 import { ConsciousnessScale } from './components/ConsciousnessScale';
 import { DiagnosticsSection } from './components/DiagnosticsSection';
 import { DiagnosticsAdmin } from './components/DiagnosticsAdmin';
+import FluidBalanceCalc from './components/FluidBalanceCalc';
 import { PerguntasAdmin } from './components/PerguntasAdmin';
 import { SecondaryNavigation } from './components/SecondaryNavigation';
 import { AlertsHistoryScreen } from './AlertsHistoryScreen';
@@ -2039,6 +2040,8 @@ const PatientDetailScreen: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            <FluidBalanceCalc patientId={patient.id} />
 
             {user?.access_level === 'adm' ? (
                 <Link to={`/patient/${patient.id}/round/categories`} className="w-full block text-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg">
