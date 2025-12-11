@@ -784,11 +784,27 @@ const PatientHistoryScreen: React.FC = () => {
 
         const patientAlerts = tasks.filter(task => task.patientId && patient.id && task.patientId.toString() === patient.id.toString());
         patientAlerts.forEach(alert => {
+            // Calcular tempo até o prazo limite
+            const deadlineDate = new Date(alert.deadline);
+            const now = new Date();
+            const timeDiff = deadlineDate.getTime() - now.getTime();
+            const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            const hoursLeft = Math.ceil(timeDiff / (1000 * 3600));
+            
+            let timeText = '';
+            if (daysLeft > 0) {
+                timeText = `${daysLeft} dia${daysLeft > 1 ? 's' : ''}`;
+            } else if (hoursLeft > 0) {
+                timeText = `${hoursLeft} hora${hoursLeft > 1 ? 's' : ''}`;
+            } else {
+                timeText = 'Prazo expirado';
+            }
+            
             // Alerta criado
             events.push({
-                timestamp: alert.deadline,
+                timestamp: new Date().toISOString(),
                 icon: BellIcon,
-                description: `Alerta Criado: ${alert.description}.`,
+                description: `Alerta: ${alert.description} | Responsável: ${alert.responsible} | Prazo Limite: ${formatDateTimeWithHour(alert.deadline)} | Tempo restante: ${timeText}`,
                 hasTime: true,
                 eventType: 'alertas',
             });
