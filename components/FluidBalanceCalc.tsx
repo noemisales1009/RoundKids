@@ -85,7 +85,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
           <Calculator className="text-white w-5 h-5 sm:w-6 sm:h-6" />
         </div>
         <div>
-          <h2 className="text-white font-bold text-base sm:text-lg">Sobrecarga Hídrica</h2>
+          <h2 className="text-white font-bold text-base sm:text-lg">Balanço Hídrico</h2>
           <p className="text-blue-100 text-xs">Cálculo de % acumulada</p>
         </div>
       </div>
@@ -191,7 +191,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
           {Math.abs(calculatedResult) >= 10 && (
             <div className="flex items-center gap-1.5 text-orange-600 dark:text-orange-300 bg-white dark:bg-slate-800 px-2 sm:px-3 py-1 rounded-full shadow-sm border border-orange-100 dark:border-orange-800 animate-pulse text-xs sm:text-sm font-bold">
               <AlertCircle size={14} className="sm:w-4 sm:h-4" />
-              <span>Sobrecarga Alta</span>
+              <span>Balanço Elevado</span>
             </div>
           )}
         </div>
