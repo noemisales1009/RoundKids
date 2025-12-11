@@ -650,16 +650,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                           })}
                         </div>
                       )}
-                                        : 'bg-white border-slate-300 text-slate-800'
-                                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
                     </div>
                   );
                 })}
