@@ -1581,6 +1581,7 @@ const PatientDetailScreen: React.FC = () => {
     const [showPatientAlerts, setShowPatientAlerts] = useState(false);
     const [isCreateAlertModalOpen, setCreateAlertModalOpen] = useState(false);
     const [isDestinationDropdownOpen, setIsDestinationDropdownOpen] = useState(false);
+    const [isStatusOpen, setIsStatusOpen] = useState(false);
     const [isFluidBalanceOpen, setIsFluidBalanceOpen] = useState(false);
     const [isDiuresisOpen, setIsDiuresisOpen] = useState(false);
     const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'cam-icu' | 'delirium-pediatrico' | 'delirium-master' | 'glasgow' | 'flacc' | 'braden-risco-lesao' | 'vni-cnaf' | 'vni-cnaf-pediatrico' | 'fss' | 'abstinencia' | 'consciencia'>('list');
@@ -1748,76 +1749,91 @@ const PatientDetailScreen: React.FC = () => {
                 </div>
             </Link>
 
-            {/* Status do Paciente */}
-            <div className={`bg-white dark:bg-slate-900 p-4 rounded-lg border-2 ${
-                patient.status === 'estavel' ? 'border-green-300 dark:border-green-700' :
-                patient.status === 'instavel' ? 'border-yellow-300 dark:border-yellow-700' :
-                patient.status === 'em_risco' ? 'border-red-300 dark:border-red-700' :
-                'border-slate-200 dark:border-slate-700'
-            }`}>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Status do Paciente</label>
-                <div className="flex gap-2">
-                    {[
-                        { value: 'estavel', label: 'Estável', color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700' },
-                        { value: 'instavel', label: 'Instável', color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700' },
-                        { value: 'em_risco', label: 'Em Risco', color: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-300 dark:border-red-700' }
-                    ].map(status => (
-                        <button
-                            key={status.value}
-                            onClick={() => updatePatientStatus(patient.id, status.value as 'estavel' | 'instavel' | 'em_risco')}
-                            className={`flex-1 px-3 py-2 rounded-lg font-semibold text-sm border-2 transition ${
-                                patient.status === status.value
-                                    ? status.color
-                                    : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
-                            }`}
-                        >
-                            {status.label}
-                        </button>
-                    ))}
-                </div>
-
-                {/* Comorbidades */}
-                <div className={`mt-4 p-4 rounded-lg border-2 ${
-                    patient.status === 'estavel' ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/10' :
-                    patient.status === 'instavel' ? 'border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/10' :
-                    patient.status === 'em_risco' ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/10' :
-                    'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
-                }`}>
-                    <div className="flex justify-between items-center mb-3">
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Comorbidades</label>
-                        {!isEditingComorbidades && (
-                            <button
-                                type="button"
-                                onClick={() => setIsEditingComorbidades(true)}
-                                className="px-3 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400 border border-blue-300 dark:border-blue-700 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
-                            >
-                                Editar
-                            </button>
-                        )}
+            {/* Status do Paciente - Accordion */}
+            <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
+                <button
+                    onClick={() => setIsStatusOpen(!isStatusOpen)}
+                    className={`w-full px-4 py-3 flex items-center justify-between font-semibold rounded-lg transition ${
+                        patient.status === 'estavel' 
+                            ? 'bg-green-600 hover:bg-green-700 text-white' :
+                        patient.status === 'instavel'
+                            ? 'bg-yellow-600 hover:bg-yellow-700 text-white' :
+                            'bg-red-600 hover:bg-red-700 text-white'
+                    }`}
+                >
+                    <div className="flex items-center gap-2">
+                        <span>🔹</span>
+                        <span>Status: {patient.status === 'estavel' ? 'Estável' : patient.status === 'instavel' ? 'Instável' : 'Em Risco'}</span>
                     </div>
+                    <span className={`text-lg transition-transform ${isStatusOpen ? 'rotate-180' : ''}`}>▼</span>
+                </button>
+                {isStatusOpen && (
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800 space-y-4">
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Status do Paciente</label>
+                            <div className="flex gap-2">
+                                {[
+                                    { value: 'estavel', label: 'Estável', color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700' },
+                                    { value: 'instavel', label: 'Instável', color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700' },
+                                    { value: 'em_risco', label: 'Em Risco', color: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-300 dark:border-red-700' }
+                                ].map(status => (
+                                    <button
+                                        key={status.value}
+                                        onClick={() => updatePatientStatus(patient.id, status.value as 'estavel' | 'instavel' | 'em_risco')}
+                                        className={`flex-1 px-3 py-2 rounded-lg font-semibold text-sm border-2 transition ${
+                                            patient.status === status.value
+                                                ? status.color
+                                                : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-600'
+                                        }`}
+                                    >
+                                        {status.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
 
-                    {!isEditingComorbidades ? (
-                        // Modo Visualização
-                        <div className="space-y-2">
-                            {(() => {
-                                let comorbidades: string[] = [];
-                                if (patient.comorbidade && patient.comorbidade.trim()) {
-                                    comorbidades = patient.comorbidade.split('|').map(c => c.trim()).filter(c => c);
-                                }
-                                
-                                return (
-                                    <>
-                                        {comorbidades.length === 0 ? (
-                                            <div className="text-slate-500 dark:text-slate-400 text-sm italic">Nenhuma comorbidade adicionada</div>
-                                        ) : (
-                                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                                                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">
-                                                    📋 {comorbidades.length} comorbidade(s) adicionada(s)
-                                                </p>
-                                                <ul className="space-y-1">
-                                                    {comorbidades.map((comorb, idx) => (
-                                                        <li key={idx} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
-                                                            <span className="text-blue-600 dark:text-blue-400 font-bold">✓</span>
+                        {/* Comorbidades */}
+                        <div className={`p-3 rounded-lg border-2 ${
+                            patient.status === 'estavel' ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/10' :
+                            patient.status === 'instavel' ? 'border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/10' :
+                            patient.status === 'em_risco' ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/10' :
+                            'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
+                        }`}>
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Comorbidades</label>
+                                {!isEditingComorbidades && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsEditingComorbidades(true)}
+                                        className="px-2 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400 border border-blue-300 dark:border-blue-700 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
+                                    >
+                                        Editar
+                                    </button>
+                                )}
+                            </div>
+
+                            {!isEditingComorbidades ? (
+                                // Modo Visualização
+                                <div className="space-y-2">
+                                    {(() => {
+                                        let comorbidades: string[] = [];
+                                        if (patient.comorbidade && patient.comorbidade.trim()) {
+                                            comorbidades = patient.comorbidade.split('|').map(c => c.trim()).filter(c => c);
+                                        }
+                                        
+                                        return (
+                                            <>
+                                                {comorbidades.length === 0 ? (
+                                                    <div className="text-slate-500 dark:text-slate-400 text-xs italic">Nenhuma comorbidade adicionada</div>
+                                                ) : (
+                                                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-2">
+                                                        <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                                                            📋 {comorbidades.length} comorbidade(s)
+                                                        </p>
+                                                        <ul className="space-y-0.5">
+                                                            {comorbidades.map((comorb, idx) => (
+                                                                <li key={idx} className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300">
+                                                                    <span className="text-blue-600 dark:text-blue-400 font-bold">✓</span>
                                                             <span>{comorb}</span>
                                                         </li>
                                                     ))}
@@ -1915,7 +1931,9 @@ const PatientDetailScreen: React.FC = () => {
                             </button>
                         </div>
                     )}
-                </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Diagnósticos Clínicos */}
