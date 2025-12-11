@@ -651,9 +651,7 @@ const PatientHistoryScreen: React.FC = () => {
     // Estados de filtro
     const [filterStartDate, setFilterStartDate] = useState('');
     const [filterEndDate, setFilterEndDate] = useState('');
-    const [selectedEventTypes, setSelectedEventTypes] = useState<Set<string>>(new Set([
-        'diagnosticos', 'comorbidades', 'escalas', 'medicacoes', 'culturas', 'exames', 'alertas', 'diurese', 'balanco'
-    ]));
+    const [selectedEventTypes, setSelectedEventTypes] = useState<Set<string>>(new Set());
 
     useHeader(patient ? `Histórico: ${patient.name}` : 'Histórico do Paciente');
 
@@ -1127,9 +1125,7 @@ const PatientHistoryScreen: React.FC = () => {
                     onClick={() => {
                         setFilterStartDate('');
                         setFilterEndDate('');
-                        setSelectedEventTypes(new Set([
-                            'diagnosticos', 'comorbidades', 'escalas', 'medicacoes', 'culturas', 'exames', 'alertas', 'diurese', 'balanco'
-                        ]));
+                        setSelectedEventTypes(new Set());
                     }}
                     className="px-4 py-2 bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-400 dark:hover:bg-slate-600 transition text-sm font-medium"
                 >
