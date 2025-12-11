@@ -18,6 +18,7 @@ import { ConsciousnessScale } from './components/ConsciousnessScale';
 import { DiagnosticsSection } from './components/DiagnosticsSection';
 import { DiagnosticsAdmin } from './components/DiagnosticsAdmin';
 import FluidBalanceCalc from './components/FluidBalanceCalc';
+import DiuresisCalc from './components/DiuresisCalc';
 import { PerguntasAdmin } from './components/PerguntasAdmin';
 import { SecondaryNavigation } from './components/SecondaryNavigation';
 import { AlertsHistoryScreen } from './AlertsHistoryScreen';
@@ -645,6 +646,7 @@ const PatientHistoryScreen: React.FC = () => {
     const [diagnosticHistory, setDiagnosticHistory] = useState<any[]>([]);
     const [comorbidadeHistory, setComorbidadeHistory] = useState<any[]>([]);
     const [balanceHistory, setBalanceHistory] = useState<any[]>([]);
+    const [diuresisHistory, setDiuresisHistory] = useState<any[]>([]);
 
     useHeader(patient ? `Histórico: ${patient.name}` : 'Histórico do Paciente');
 
@@ -653,7 +655,7 @@ const PatientHistoryScreen: React.FC = () => {
         const loadHistory = async () => {
             if (!patientId) return;
             try {
-                const [diagResult, comorbResult, balanceResult] = await Promise.all([
+                const [diagResult, comorbResult, balanceResult, diuresisResult] = await Promise.all([
                     supabase
                         .from('diagnosticos_historico')
                         .select('*')
@@ -666,6 +668,11 @@ const PatientHistoryScreen: React.FC = () => {
                         .order('updated_at', { ascending: false }),
                     supabase
                         .from('balanco_hidrico_historico')
+                        .select('*')
+                        .eq('patient_id', patientId)
+                        .order('data_calculo', { ascending: false }),
+                    supabase
+                        .from('diurese_historico')
                         .select('*')
                         .eq('patient_id', patientId)
                         .order('data_calculo', { ascending: false })
@@ -687,6 +694,12 @@ const PatientHistoryScreen: React.FC = () => {
                     console.error('Erro ao buscar histórico de balanço hídrico:', balanceResult.error);
                 } else {
                     setBalanceHistory(balanceResult.data || []);
+                }
+
+                if (diuresisResult.error) {
+                    console.error('Erro ao buscar histórico de diurese:', diuresisResult.error);
+                } else {
+                    setDiuresisHistory(diuresisResult.data || []);
                 }
             } catch (err) {
                 console.error('Erro:', err);
@@ -831,6 +844,24 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
+        // Adicionar histórico de diurese
+        diuresisHistory.forEach(diurese => {
+            let status = '';
+            if (diurese.resultado < 0.5) {
+                status = '🔴 Oligúria';
+            } else if (diurese.resultado < 1.0) {
+                status = '🟡 Atenção';
+            } else {
+                status = '🟢 Normal';
+            }
+            events.push({
+                timestamp: diurese.data_calculo || diurese.created_at || new Date().toISOString(),
+                icon: DropletIcon,
+                description: `Diurese: Peso ${diurese.peso}kg | Volume ${diurese.volume}mL em ${diurese.horas}h | ${diurese.resultado.toFixed(2)} mL/kg/h | ${status}`,
+                hasTime: true,
+            });
+        });
+
         events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
         const groupedEvents = events.reduce((acc, event) => {
@@ -843,7 +874,7 @@ const PatientHistoryScreen: React.FC = () => {
         }, {} as Record<string, TimelineEvent[]>);
 
         return groupedEvents;
-    }, [patient, tasks, diagnosticHistory, comorbidadeHistory, balanceHistory]);
+    }, [patient, tasks, diagnosticHistory, comorbidadeHistory, balanceHistory, diuresisHistory]);
 
     const handleGeneratePdf = () => {
         // ... (PDF generation logic remains the same)
@@ -2065,6 +2096,8 @@ const PatientDetailScreen: React.FC = () => {
             </div>
 
             <FluidBalanceCalc patientId={patient.id} />
+
+            <DiuresisCalc patientId={patient.id} />
 
             {user?.access_level === 'adm' ? (
                 <Link to={`/patient/${patient.id}/round/categories`} className="w-full block text-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg">
