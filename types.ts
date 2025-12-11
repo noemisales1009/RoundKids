@@ -58,6 +58,7 @@ export interface Patient {
   name: string;
   bedNumber: number;
   motherName: string;
+  peso?: number | null;
   dob: string; // "YYYY-MM-DD"
   ctd: string; // Used for Diagnosis
   status?: 'estavel' | 'instavel' | 'em_risco'; // Patient status
