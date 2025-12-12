@@ -3378,10 +3378,14 @@ const TaskStatusScreen: React.FC = () => {
         try {
             // Buscar de ambas as views e também os pacientes
             const [tasksResult, alertsResult, patientsResult] = await Promise.all([
-                supabase.from('tasks_view_horario_br').select('*'),
-                supabase.from('alertas_paciente_view_completa').select('*'),
+                supabase.from('tasks_view_horario_br').select('id_alerta, patient_id, category_id, description, responsible, deadline, status, justification, created_at, updated_at, created_by_name, prazo_minutos_efetivo, hora_criacao_br, prazo_limite_br, hora_conclusao_br, hora_criacao_hhmm, prazo_limite_hhmm, hora_conclusao_hhmm, prazo_limite_formatado, prazo_formatado, live_status, alertaclinico'),
+                supabase.from('alertas_paciente_view_completa').select('id_alerta, patient_id, patient_name, created_by_name, alertaclinico, responsavel, status, justificativa, created_at, updated_at, deadline, hora_criacao_br, prazo_limite_br, hora_conclusao_br, hora_criacao_hhmm, prazo_limite_hhmm, hora_conclusao_hhmm, prazo_limite_formatado, prazo_minutos_efetivo, prazo_formatado, live_status'),
                 supabase.from('patients').select('id, name, bed_number')
             ]);
+
+            // Debug: Log dos dados vindos das views
+            console.log('Tasks from view:', tasksResult.data?.[0]);
+            console.log('Alerts from view:', alertsResult.data?.[0]);
 
             // Criar mapa de pacientes para lookup rápido
             const patientsMap = new Map();
