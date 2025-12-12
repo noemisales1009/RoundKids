@@ -733,6 +733,7 @@ const PatientHistoryScreen: React.FC = () => {
                 icon: CpuIcon,
                 description: `Dispositivo Inserido: ${device.name} em ${device.location}.`,
                 hasTime: false,
+                eventType: 'dispositivos',
             });
             if (device.removalDate) {
                 events.push({
@@ -740,6 +741,7 @@ const PatientHistoryScreen: React.FC = () => {
                     icon: CpuIcon,
                     description: `Dispositivo Retirado: ${device.name}.`,
                     hasTime: false,
+                    eventType: 'dispositivos',
                 });
             }
         });
@@ -779,6 +781,7 @@ const PatientHistoryScreen: React.FC = () => {
                 icon: ScalpelIcon,
                 description: `Cirurgia Realizada: ${procedure.name} por Dr(a). ${procedure.surgeon}.${procedure.notes ? ` Notas: ${procedure.notes}` : ''}`,
                 hasTime: false,
+                eventType: 'cirurgias',
             });
         });
 
@@ -4526,6 +4529,8 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     };
 
     const addTask = async (taskData: Omit<Task, 'id' | 'status' | 'justification'>) => {
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id || null;
         const { error } = await supabase.from('tasks').insert([{
             patient_id: taskData.patientId,
             category_id: taskData.categoryId,
@@ -4536,18 +4541,22 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             patient_name: taskData.patientName,
             category: taskData.categoryName,
             time_label: taskData.timeLabel,
-            options: taskData.options
+            options: taskData.options,
+            created_by: userId
         }]);
         if (!error) fetchTasks();
     };
 
     const addPatientAlert = async (data: { patientId: string | number; description: string; responsible: string; timeLabel: string }) => {
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id || null;
         const { error } = await supabase.from('alertas_paciente').insert([{
             patient_id: data.patientId,
             alerta_descricao: data.description,
             responsavel: data.responsible,
             hora_selecionada: data.timeLabel,
-            status: 'Pendente'
+            status: 'Pendente',
+            created_by: userId
         }]);
 
         if (error) {
