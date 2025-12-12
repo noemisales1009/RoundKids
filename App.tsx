@@ -3378,8 +3378,8 @@ const TaskStatusScreen: React.FC = () => {
         try {
             // Buscar de ambas as views e também os pacientes
             const [tasksResult, alertsResult, patientsResult] = await Promise.all([
-                supabase.from('tasks_view_horario_br').select('id_alerta, patient_id, category_id, description, responsible, deadline, status, justification, created_at, updated_at, created_by_name, prazo_minutos_efetivo, hora_criacao_br, prazo_limite_br, hora_conclusao_br, hora_criacao_hhmm, prazo_limite_hhmm, hora_conclusao_hhmm, prazo_limite_formatado, prazo_formatado, live_status, alertaclinico'),
-                supabase.from('alertas_paciente_view_completa').select('id_alerta, patient_id, patient_name, created_by_name, alertaclinico, responsavel, status, justificativa, created_at, updated_at, deadline, hora_criacao_br, prazo_limite_br, hora_conclusao_br, hora_criacao_hhmm, prazo_limite_hhmm, hora_conclusao_hhmm, prazo_limite_formatado, prazo_minutos_efetivo, prazo_formatado, live_status'),
+                supabase.from('tasks_view_horario_br').select('*'),
+                supabase.from('alertas_paciente_view_completa').select('*'),
                 supabase.from('patients').select('id, name, bed_number')
             ]);
 
@@ -3399,6 +3399,7 @@ const TaskStatusScreen: React.FC = () => {
                     const patientInfo = t.patient_id ? patientsMap.get(t.patient_id) : null;
                     return {
                         ...t,
+                        id: t.id_alerta,
                         source: 'tasks',
                         patient_name: patientInfo?.name || t.patient_name,
                         bed_number: patientInfo?.bed_number || null
@@ -3408,6 +3409,10 @@ const TaskStatusScreen: React.FC = () => {
                     const patientInfo = a.patient_id ? patientsMap.get(a.patient_id) : null;
                     return {
                         ...a,
+                        id: a.id_alerta,
+                        // Normalizar nomes de campos para consistência
+                        description: a.alertaclinico,
+                        responsible: a.responsavel,
                         source: 'alertas',
                         patient_name: patientInfo?.name || a.patient_name,
                         bed_number: patientInfo?.bed_number || null
