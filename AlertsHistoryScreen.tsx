@@ -145,9 +145,14 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                 <h1>Histórico de Alertas</h1>
                 <div class="info">
                     <p><strong>Data de Geração:</strong> ${new Date().toLocaleString('pt-BR')}</p>
-                    <p><strong>Total de Alertas:</strong> ${filteredAlerts.length}</p>
-                    ${selectedDate ? `<p><strong>Filtrado por Data:</strong> ${new Date(selectedDate).toLocaleDateString('pt-BR')}</p>` : ''}
-                    ${selectedStatus !== 'todos' ? `<p><strong>Filtrado por Status:</strong> ${selectedStatus.replace('_', ' ')}</p>` : ''}
+                    <p><strong>Total de Alertas Exibidos:</strong> ${filteredAlerts.length}</p>
+                    <hr style="margin: 10px 0; border: none; border-top: 1px solid #ccc;">
+                    <p style="margin-top: 10px;"><strong>Filtros Aplicados:</strong></p>
+                    <ul style="margin: 5px 0 0 20px; font-size: 12px;">
+                        ${searchTerm ? `<li>Busca: "${searchTerm}"</li>` : '<li>Busca: Nenhuma</li>'}
+                        ${selectedDate ? `<li>Data: ${new Date(selectedDate).toLocaleDateString('pt-BR')}</li>` : '<li>Data: Todas</li>'}
+                        ${selectedStatus !== 'todos' ? `<li>Status: ${selectedStatus.replace('_', ' ').charAt(0).toUpperCase() + selectedStatus.replace('_', ' ').slice(1)}</li>` : '<li>Status: Todos</li>'}
+                    </ul>
                 </div>
                 <table>
                     <thead>
