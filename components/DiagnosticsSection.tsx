@@ -104,6 +104,10 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     try {
       const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
       
+      // Obter o ID do usuário logado
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id || null;
+      
       // Separar diagnósticos resolvidos e não resolvidos
       const allDiagnostics = options
         .filter(option => checkedOptions[option.id])
@@ -160,7 +164,8 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
             return {
               ...d,
               opcao_label: opcao?.label || 'N/A',
-              created_at: new Date().toISOString()
+              created_at: new Date().toISOString(),
+              created_by: userId  // Adicionar ID do usuário logado
             };
           });
           
