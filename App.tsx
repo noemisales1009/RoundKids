@@ -800,8 +800,11 @@ const PatientHistoryScreen: React.FC = () => {
                 timeText = 'Prazo expirado';
             }
             
+            // Obter nome do criador
+            const createdByName = alert.created_by_name || alert.responsible || 'Sistema';
+            
             // Alerta criado
-            const alertDescription = `🔔 ${alert.description}\n👤 Responsável: ${alert.responsible}\n📅 Prazo: ${formatDateTimeWithHour(alert.deadline)}\n⏱️ Tempo: ${timeText}`;
+            const alertDescription = `🔔 ${alert.description}\n👤 Responsável: ${alert.responsible}\n📅 Prazo: ${formatDateTimeWithHour(alert.deadline)}\n⏱️ Tempo: ${timeText}\n👤 Por: ${createdByName}`;
             events.push({
                 timestamp: new Date().toISOString(),
                 icon: BellIcon,
@@ -815,7 +818,7 @@ const PatientHistoryScreen: React.FC = () => {
                 events.push({
                     timestamp: alert.completedAt,
                     icon: CheckCircleIcon,
-                    description: `Alerta Concluído: ${alert.description}.`,
+                    description: `Alerta Concluído: ${alert.description}. Por: ${createdByName}`,
                     hasTime: true,
                     eventType: 'alertas',
                 });
