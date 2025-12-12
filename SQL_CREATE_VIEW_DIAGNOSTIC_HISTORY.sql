@@ -1,4 +1,4 @@
--- Criar view para histórico de diagnósticos com nome do usuário
+-- Criar ou substituir a view
 CREATE OR REPLACE VIEW diagnosticos_historico_com_usuario AS
 SELECT 
   dh.id,
@@ -10,13 +10,14 @@ SELECT
   dh.created_at,
   dh.opcao_label,
   dh.created_by,
-  COALESCE(au.raw_user_meta_data->>'full_name', au.email, 'Sistema') as created_by_name
+  -- Busca o nome na tabela public.users. Se for nulo, exibe 'Sistema'
+  COALESCE(u.name, 'Sistema') as created_by_name
 FROM diagnosticos_historico dh
-LEFT JOIN auth.users au ON dh.created_by = au.id
+LEFT JOIN public.users u ON dh.created_by = u.id
 ORDER BY dh.created_at DESC;
 
--- Dar permissão de leitura para usuários autenticados
-GRANT SELECT ON diagnosticos_historico_com_usuario TO authenticated;
-
--- Se você tiver RLS ativado, pode criar uma política
+-- Configurações de segurança (Opcional, mas recomendado se usar RLS)
 ALTER VIEW diagnosticos_historico_com_usuario SET (security_barrier = on);
+
+-- Permissões
+GRANT SELECT ON diagnosticos_historico_com_usuario TO authenticated;
