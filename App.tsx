@@ -662,7 +662,7 @@ const PatientHistoryScreen: React.FC = () => {
             try {
                 const [diagResult, comorbResult, balanceResult, diuresisResult] = await Promise.all([
                     supabase
-                        .from('diagnosticos_historico')
+                        .from('diagnosticos_historico_com_usuario')
                         .select('*')
                         .eq('patient_id', patientId)
                         .order('created_at', { ascending: false }),
@@ -848,12 +848,12 @@ const PatientHistoryScreen: React.FC = () => {
             const statusText = diag.status === 'resolvido' ? '✅ Resolvido' : '❌ Não Resolvido';
             const label = diag.opcao_label || 'Diagnóstico';
             const textoDigitado = diag.texto_digitado ? ` - "${diag.texto_digitado}"` : '';
-            const createdByInfo = diag.created_by ? ` | Por: ${diag.created_by}` : '';
+            const createdByName = diag.created_by_name || 'Sistema';
             const fullDescription = `${label}${textoDigitado}`;
             events.push({
                 timestamp: diag.created_at || new Date().toISOString(),
                 icon: FileTextIcon,
-                description: `Diagnóstico: ${fullDescription} | ${statusText}${createdByInfo}`,
+                description: `Diagnóstico: ${fullDescription} | ${statusText} | Por: ${createdByName}`,
                 hasTime: true,
                 eventType: 'diagnosticos',
             });
