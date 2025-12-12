@@ -1035,20 +1035,30 @@ const PatientHistoryScreen: React.FC = () => {
                 <p><strong>Data Final:</strong> ${filterEndDate ? formatDateToBRL(filterEndDate) : 'Não filtrado'}</p>
                 <p><strong>Tipos de Eventos:</strong> ${selectedEventTypes.size > 0 ? Array.from(selectedEventTypes).join(', ') : 'Nenhum selecionado'}</p>
 
+                ${patient.devices.length > 0 ? `
                 <h2>Dispositivos</h2>
                 <ul>${generateDeviceList()}</ul>
+                ` : ''}
                 
+                ${patient.medications.length > 0 ? `
                 <h2>Medicações</h2>
                 <ul>${generateMedicationList()}</ul>
+                ` : ''}
 
+                ${patient.exams.length > 0 ? `
                 <h2>Exames</h2>
                 <ul>${generateExamList()}</ul>
+                ` : ''}
                 
+                ${patient.surgicalProcedures.length > 0 ? `
                 <h2>Cirurgias</h2>
                 <ul>${generateSurgicalList()}</ul>
+                ` : ''}
 
+                ${patient.scaleScores && patient.scaleScores.length > 0 ? `
                 <h2>Avaliações de Escalas</h2>
                 <ul>${generateScaleScoresList()}</ul>
+                ` : ''}
 
                 <h2>Histórico de Eventos</h2>
                 ${generateHistoryList()}
