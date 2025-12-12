@@ -123,6 +123,8 @@ export interface Task {
   timeLabel?: string;
   options?: any; // JSONB
   source?: 'tasks' | 'alertas_paciente'; // Source table for updates
+  created_by?: string; // UUID of creator
+  created_by_name?: string; // Name of creator from view join
 }
 
 // --- USER & THEME ---
