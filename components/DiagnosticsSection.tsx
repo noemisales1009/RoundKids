@@ -245,8 +245,12 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                 <ul className="text-xs space-y-1 mt-1">
                   {selectedByGroup.principal.map(opt => (
                     <li key={opt.id} className={`flex items-start gap-2 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                      <span>✓</span>
-                      <span className="break-words">
+                      {selectedStatus[opt.id] === 'resolvido' ? (
+                        <span className={`font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>✓</span>
+                      ) : (
+                        <span>•</span>
+                      )}
+                      <span className={`break-words ${selectedStatus[opt.id] === 'resolvido' ? 'line-through opacity-60' : ''}`}>
                         {opt.label}
                         {inputValues[opt.id] && <span className={`block text-xs italic ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>"{inputValues[opt.id]}"</span>}
                       </span>
@@ -263,8 +267,12 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                 <ul className="text-xs space-y-1 mt-1">
                   {selectedByGroup.secundario.map(opt => (
                     <li key={opt.id} className={`flex items-start gap-2 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                      <span>✓</span>
-                      <span className="break-words">
+                      {selectedStatus[opt.id] === 'resolvido' ? (
+                        <span className={`font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>✓</span>
+                      ) : (
+                        <span>•</span>
+                      )}
+                      <span className={`break-words ${selectedStatus[opt.id] === 'resolvido' ? 'line-through opacity-60' : ''}`}>
                         {opt.label}
                         {inputValues[opt.id] && <span className={`block text-xs italic ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>"{inputValues[opt.id]}"</span>}
                       </span>
@@ -324,7 +332,10 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                             return (
                               <div key={option.id} className="space-y-2">
                                 <div className="space-y-2">
-                                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                                  <div className={`flex items-center gap-2 sm:gap-3 flex-wrap p-2 sm:p-2.5 rounded-lg ${selectedStatus[option.id] === 'resolvido' 
+                                    ? (isDark ? 'bg-green-900/30 border border-green-700' : 'bg-green-50 border border-green-300')
+                                    : (isDark ? 'bg-slate-700/50' : 'bg-slate-50')
+                                  }`}>
                                     <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-[200px]">
                                       <input
                                         type="checkbox"
@@ -337,7 +348,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                         }}
                                         className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
                                       />
-                                      <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                                      <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'} ${selectedStatus[option.id] === 'resolvido' ? 'line-through opacity-60' : ''}`}>
                                         {option.label}
                                       </span>
                                     </label>
@@ -352,20 +363,25 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                     )}
                                     
                                     {isCurrentlyChecked && (
-                                      <select
-                                        value={selectedStatus[option.id] || 'nao_resolvido'}
-                                        onChange={(e) => setSelectedStatus(prev => ({
-                                          ...prev,
-                                          [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
-                                        }))}
-                                        className={`px-2 py-1 text-xs sm:text-sm rounded border flex-shrink-0 ${isDark
-                                          ? 'bg-slate-700 border-slate-600 text-slate-200'
-                                          : 'bg-white border-slate-300 text-slate-800'
-                                        } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                      >
-                                        <option value="nao_resolvido">❌ Não Res.</option>
-                                        <option value="resolvido">✅ Resolvido</option>
-                                      </select>
+                                      <>
+                                        <select
+                                          value={selectedStatus[option.id] || 'nao_resolvido'}
+                                          onChange={(e) => setSelectedStatus(prev => ({
+                                            ...prev,
+                                            [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
+                                          }))}
+                                          className={`px-2 py-1 text-xs sm:text-sm rounded border flex-shrink-0 ${isDark
+                                            ? 'bg-slate-700 border-slate-600 text-slate-200'
+                                            : 'bg-white border-slate-300 text-slate-800'
+                                          } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                        >
+                                          <option value="nao_resolvido">❌ Não Res.</option>
+                                          <option value="resolvido">✅ Resolvido</option>
+                                        </select>
+                                        {selectedStatus[option.id] === 'resolvido' && (
+                                          <span className={`text-lg font-bold flex-shrink-0 ${isDark ? 'text-green-400' : 'text-green-600'}`}>✓</span>
+                                        )}
+                                      </>
                                     )}
                                   </div>
 
@@ -514,7 +530,10 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                             return (
                               <div key={option.id} className="space-y-2">
                                 <div className="space-y-2">
-                                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                                  <div className={`flex items-center gap-2 sm:gap-3 flex-wrap p-2 sm:p-2.5 rounded-lg ${selectedStatus[option.id] === 'resolvido' 
+                                    ? (isDark ? 'bg-green-900/30 border border-green-700' : 'bg-green-50 border border-green-300')
+                                    : (isDark ? 'bg-slate-700/50' : 'bg-slate-50')
+                                  }`}>
                                     <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-[200px]">
                                       <input
                                         type="checkbox"
@@ -527,7 +546,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                         }}
                                         className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
                                       />
-                                      <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                                      <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'} ${selectedStatus[option.id] === 'resolvido' ? 'line-through opacity-60' : ''}`}>
                                         {option.label}
                                       </span>
                                     </label>
@@ -542,20 +561,25 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                     )}
                                     
                                     {isCurrentlyChecked && (
-                                      <select
-                                        value={selectedStatus[option.id] || 'nao_resolvido'}
-                                        onChange={(e) => setSelectedStatus(prev => ({
-                                          ...prev,
-                                          [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
-                                        }))}
-                                        className={`px-2 py-1 text-xs sm:text-sm rounded border flex-shrink-0 ${isDark
-                                          ? 'bg-slate-700 border-slate-600 text-slate-200'
-                                          : 'bg-white border-slate-300 text-slate-800'
-                                        } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                      >
-                                        <option value="nao_resolvido">❌ Não Res.</option>
-                                        <option value="resolvido">✅ Resolvido</option>
-                                      </select>
+                                      <>
+                                        <select
+                                          value={selectedStatus[option.id] || 'nao_resolvido'}
+                                          onChange={(e) => setSelectedStatus(prev => ({
+                                            ...prev,
+                                            [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
+                                          }))}
+                                          className={`px-2 py-1 text-xs sm:text-sm rounded border flex-shrink-0 ${isDark
+                                            ? 'bg-slate-700 border-slate-600 text-slate-200'
+                                            : 'bg-white border-slate-300 text-slate-800'
+                                          } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                        >
+                                          <option value="nao_resolvido">❌ Não Res.</option>
+                                          <option value="resolvido">✅ Resolvido</option>
+                                        </select>
+                                        {selectedStatus[option.id] === 'resolvido' && (
+                                          <span className={`text-lg font-bold flex-shrink-0 ${isDark ? 'text-green-400' : 'text-green-600'}`}>✓</span>
+                                        )}
+                                      </>
                                     )}
                                   </div>
 
@@ -587,7 +611,10 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
                                       return (
                                         <div key={childOption.id} className="space-y-2">
-                                          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                                          <div className={`flex items-center gap-2 sm:gap-3 flex-wrap p-2 sm:p-2.5 rounded-lg ${selectedStatus[childOption.id] === 'resolvido' 
+                                            ? (isDark ? 'bg-green-900/30 border border-green-700' : 'bg-green-50 border border-green-300')
+                                            : (isDark ? 'bg-slate-700/50' : 'bg-slate-50')
+                                          }`}>
                                             <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-[200px]">
                                               <input
                                                 type="checkbox"
@@ -600,26 +627,31 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                                 }}
                                                 className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
                                               />
-                                              <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                                              <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'} ${selectedStatus[childOption.id] === 'resolvido' ? 'line-through opacity-60' : ''}`}>
                                                 {childOption.label}
                                               </span>
                                             </label>
                                             
                                             {isChildCurrentlyChecked && (
-                                              <select
-                                                value={selectedStatus[childOption.id] || 'nao_resolvido'}
-                                                onChange={(e) => setSelectedStatus(prev => ({
-                                                  ...prev,
-                                                  [childOption.id]: e.target.value as 'resolvido' | 'nao_resolvido'
-                                                }))}
-                                                className={`px-2 py-1 text-xs sm:text-sm rounded border flex-shrink-0 ${isDark
-                                                  ? 'bg-slate-700 border-slate-600 text-slate-200'
-                                                  : 'bg-white border-slate-300 text-slate-800'
-                                                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                              >
-                                                <option value="nao_resolvido">❌ Não Res.</option>
-                                                <option value="resolvido">✅ Resolvido</option>
-                                              </select>
+                                              <>
+                                                <select
+                                                  value={selectedStatus[childOption.id] || 'nao_resolvido'}
+                                                  onChange={(e) => setSelectedStatus(prev => ({
+                                                    ...prev,
+                                                    [childOption.id]: e.target.value as 'resolvido' | 'nao_resolvido'
+                                                  }))}
+                                                  className={`px-2 py-1 text-xs sm:text-sm rounded border flex-shrink-0 ${isDark
+                                                    ? 'bg-slate-700 border-slate-600 text-slate-200'
+                                                    : 'bg-white border-slate-300 text-slate-800'
+                                                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                                >
+                                                  <option value="nao_resolvido">❌ Não Res.</option>
+                                                  <option value="resolvido">✅ Resolvido</option>
+                                                </select>
+                                                {selectedStatus[childOption.id] === 'resolvido' && (
+                                                  <span className={`text-lg font-bold flex-shrink-0 ${isDark ? 'text-green-400' : 'text-green-600'}`}>✓</span>
+                                                )}
+                                              </>
                                             )}
                                           </div>
 
