@@ -806,8 +806,11 @@ const PatientHistoryScreen: React.FC = () => {
             // Obter nome do criador
             const createdByName = alert.created_by_name || alert.responsible || 'Sistema';
             
+            // Usar o campo correto de descrição baseado na fonte
+            const descriptionField = alert.source === 'alertas' ? alert.alertaclinico : alert.description;
+            
             // Alerta criado
-            const alertDescription = `🔔 ${alert.description}\n👤 Responsável: ${alert.responsible}\n📅 Prazo: ${formatDateTimeWithHour(alert.deadline)}\n⏱️ Tempo: ${timeText}\n👤 Por: ${createdByName}`;
+            const alertDescription = `🔔 ${descriptionField}\n👤 Responsável: ${alert.responsible}\n📅 Prazo: ${formatDateTimeWithHour(alert.deadline)}\n⏱️ Tempo: ${timeText}\n👤 Por: ${createdByName}`;
             events.push({
                 timestamp: new Date().toISOString(),
                 icon: BellIcon,
@@ -821,7 +824,7 @@ const PatientHistoryScreen: React.FC = () => {
                 events.push({
                     timestamp: alert.completedAt,
                     icon: CheckCircleIcon,
-                    description: `Alerta Concluído: ${alert.description}. Por: ${createdByName}`,
+                    description: `Alerta Concluído: ${descriptionField}. Por: ${createdByName}`,
                     hasTime: true,
                     eventType: 'alertas',
                 });
