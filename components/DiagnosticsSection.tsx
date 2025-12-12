@@ -115,10 +115,10 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           status: selectedStatus[option.id] || 'nao_resolvido' as const
         }));
 
-      // Apenas não resolvidos ficam na tabela ativa
-      const diagnosticsToKeep = allDiagnostics.filter(d => d.status === 'nao_resolvido');
+      // Todos os diagnósticos selecionados ficam na tabela ativa (resolvidos e não resolvidos)
+      const diagnosticsToKeep = allDiagnostics;
       
-      // Resolvidos vão para histórico
+      // Resolvidos também vão para histórico
       const diagnosticsResolved = allDiagnostics.filter(d => d.status === 'resolvido');
 
       // Buscar diagnósticos de HOJE para evitar duplicatas no mesmo dia
