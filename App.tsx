@@ -804,7 +804,7 @@ const PatientHistoryScreen: React.FC = () => {
             }
             
             // Obter nome do criador
-            const createdByName = alert.created_by_name || alert.responsible || 'Sistema';
+            const createdByName = alert.created_by_name || 'Sistema';
             
             // Usar o campo correto de descrição baseado na fonte
             const descriptionField = alert.source === 'alertas' ? alert.alertaclinico : alert.description;
