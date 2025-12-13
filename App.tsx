@@ -3400,7 +3400,7 @@ const TaskStatusScreen: React.FC = () => {
                         ...t,
                         id: t.id_alerta,
                         source: 'tasks',
-                        patient_name: patientInfo?.name || t.patient_name,
+                        patient_name: patientInfo?.name || 'Desconhecido',
                         bed_number: patientInfo?.bed_number || null,
                         created_by_name: t.created_by_name || 'Não informado'
                     };
@@ -3415,7 +3415,7 @@ const TaskStatusScreen: React.FC = () => {
                         description: a.alertaclinico,
                         responsible: a.responsavel,
                         source: 'alertas',
-                        patient_name: patientInfo?.name || a.patient_name,
+                        patient_name: patientInfo?.name || a.patient_name || 'Desconhecido',
                         bed_number: patientInfo?.bed_number || null,
                         created_by_name: a.created_by_name || 'Não informado'
                     };
