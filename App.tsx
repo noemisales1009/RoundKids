@@ -3359,6 +3359,7 @@ const CreateAlertScreen: React.FC = () => {
 const TaskStatusScreen: React.FC = () => {
     const { status } = useParams<{ status: TaskStatus }>();
     const { showNotification } = useContext(NotificationContext)!;
+    const { user } = useContext(UserContext)!;
 
     const [alerts, setAlerts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -3402,7 +3403,7 @@ const TaskStatusScreen: React.FC = () => {
                         source: 'tasks',
                         patient_name: patientInfo?.name || 'Desconhecido',
                         bed_number: patientInfo?.bed_number || null,
-                        created_by_name: t.created_by_name || 'Não informado'
+                        created_by_name: t.created_by_name && t.created_by_name !== '' ? t.created_by_name : user?.name || 'Não informado'
                     };
                 }),
                 ...(alertsResult.data || []).map(a => {
@@ -3417,7 +3418,7 @@ const TaskStatusScreen: React.FC = () => {
                         source: 'alertas',
                         patient_name: patientInfo?.name || a.patient_name || 'Desconhecido',
                         bed_number: patientInfo?.bed_number || null,
-                        created_by_name: a.created_by_name || 'Não informado'
+                        created_by_name: a.created_by_name && a.created_by_name !== '' ? a.created_by_name : user?.name || 'Não informado'
                     };
                 })
             ];
@@ -3577,6 +3578,13 @@ const TaskStatusScreen: React.FC = () => {
                                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                                         Responsável: {alert.responsavel}
                                     </p>
+
+                                    {/* Quem Criou */}
+                                    {alert.created_by_name && alert.created_by_name !== 'Não informado' && (
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                            Por: <strong>{alert.created_by_name}</strong>
+                                        </p>
+                                    )}
 
                                     {/* Prazo */}
                                     {prazoFormatado && (
