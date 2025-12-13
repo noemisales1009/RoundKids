@@ -3395,16 +3395,19 @@ const TaskStatusScreen: React.FC = () => {
             const allAlerts = [
                 ...(tasksResult.data || []).map(t => {
                     const patientInfo = t.patient_id ? patientsMap.get(t.patient_id) : null;
+                    console.log('Task data:', { id: t.id_alerta, created_by_name: t.created_by_name });
                     return {
                         ...t,
                         id: t.id_alerta,
                         source: 'tasks',
                         patient_name: patientInfo?.name || t.patient_name,
-                        bed_number: patientInfo?.bed_number || null
+                        bed_number: patientInfo?.bed_number || null,
+                        created_by_name: t.created_by_name || 'Não informado'
                     };
                 }),
                 ...(alertsResult.data || []).map(a => {
                     const patientInfo = a.patient_id ? patientsMap.get(a.patient_id) : null;
+                    console.log('Alert data:', { id: a.id_alerta, created_by_name: a.created_by_name });
                     return {
                         ...a,
                         id: a.id_alerta,
@@ -3413,7 +3416,8 @@ const TaskStatusScreen: React.FC = () => {
                         responsible: a.responsavel,
                         source: 'alertas',
                         patient_name: patientInfo?.name || a.patient_name,
-                        bed_number: patientInfo?.bed_number || null
+                        bed_number: patientInfo?.bed_number || null,
+                        created_by_name: a.created_by_name || 'Não informado'
                     };
                 })
             ];
