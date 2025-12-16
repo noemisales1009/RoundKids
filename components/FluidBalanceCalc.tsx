@@ -109,7 +109,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
     <div className="w-full bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden border border-slate-200 dark:border-slate-700 font-sans mb-4">
       
       {/* Cabeçalho */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-900 dark:to-blue-800 p-4 flex items-center gap-3">
+      <div className="bg-linear-to-r from-blue-600 to-blue-700 dark:from-blue-900 dark:to-blue-800 p-4 flex items-center gap-3">
         <div className="bg-white/20 p-2 rounded-lg">
           <Calculator className="text-white w-5 h-5 sm:w-6 sm:h-6" />
         </div>
@@ -255,7 +255,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
             'Salvando...'
           ) : (
             <>
-              <Save size={16} className="sm:w-[18px] sm:h-[18px]" />
+              <Save size={16} className="sm:w-4.5 sm:h-4.5" />
               Salvar
             </>
           )}
