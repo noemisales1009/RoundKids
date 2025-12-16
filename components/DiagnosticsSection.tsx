@@ -255,7 +255,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                       ) : (
                         <span>•</span>
                       )}
-                      <span className={`break-words ${selectedStatus[opt.id] === 'resolvido' ? 'line-through opacity-60' : ''}`}>
+                      <span className={`break-word ${selectedStatus[opt.id] === 'resolvido' ? 'line-through opacity-60' : ''}`}>
                         {opt.label}
                         {inputValues[opt.id] && <span className={`block text-xs italic ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>"{inputValues[opt.id]}"</span>}
                       </span>
@@ -277,7 +277,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                       ) : (
                         <span>•</span>
                       )}
-                      <span className={`break-words ${selectedStatus[opt.id] === 'resolvido' ? 'line-through opacity-60' : ''}`}>
+                      <span className={`break-word ${selectedStatus[opt.id] === 'resolvido' ? 'line-through opacity-60' : ''}`}>
                         {opt.label}
                         {inputValues[opt.id] && <span className={`block text-xs italic ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>"{inputValues[opt.id]}"</span>}
                       </span>
@@ -303,7 +303,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
               }`}
             >
               <span>🏥 Diagnósticos Principais</span>
-              <ChevronRightIcon className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform flex-shrink-0 ${expandedGroup === 'principal' ? 'rotate-90' : ''}`} />
+              <ChevronRightIcon className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform shrink-0 ${expandedGroup === 'principal' ? 'rotate-90' : ''}`} />
             </button>
 
             {/* Conteúdo Diagnósticos Principais */}
@@ -322,7 +322,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                         <span className={`font-medium ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                           {question.titulo}
                         </span>
-                        <ChevronRightIcon className={`w-4 h-4 transition-transform flex-shrink-0 ${isQuestionExpanded ? 'rotate-90' : ''}`} />
+                        <ChevronRightIcon className={`w-4 h-4 transition-transform shrink-0 ${isQuestionExpanded ? 'rotate-90' : ''}`} />
                       </button>
 
                       {isQuestionExpanded && (
@@ -341,7 +341,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                     ? (isDark ? 'bg-green-900/30 border border-green-700' : 'bg-green-50 border border-green-300')
                                     : (isDark ? 'bg-slate-700/50' : 'bg-slate-50')
                                   }`}>
-                                    <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-[200px]">
+                                    <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-50">
                                       <input
                                         type="checkbox"
                                         checked={isCurrentlyChecked}
@@ -351,7 +351,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                             [option.id]: e.target.checked
                                           }));
                                         }}
-                                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+                                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 shrink-0"
                                       />
                                       <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'} ${selectedStatus[option.id] === 'resolvido' ? 'line-through opacity-60' : ''}`}>
                                         {option.label}
@@ -375,7 +375,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                             ...prev,
                                             [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
                                           }))}
-                                          className={`px-2 py-1 text-xs sm:text-sm rounded border flex-shrink-0 ${isDark
+                                          className={`px-2 py-1 text-xs sm:text-sm rounded border shrink-0 ${isDark
                                             ? 'bg-slate-700 border-slate-600 text-slate-200'
                                             : 'bg-white border-slate-300 text-slate-800'
                                           } focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -384,7 +384,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                           <option value="resolvido">✅ Resolvido</option>
                                         </select>
                                         {selectedStatus[option.id] === 'resolvido' && (
-                                          <span className={`text-lg font-bold flex-shrink-0 ${isDark ? 'text-green-400' : 'text-green-600'}`}>✓</span>
+                                          <span className={`text-lg font-bold shrink-0 ${isDark ? 'text-green-400' : 'text-green-600'}`}>✓</span>
                                         )}
                                       </>
                                     )}
@@ -419,7 +419,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                       return (
                                         <div key={childOption.id} className="space-y-2">
                                           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                                            <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-[200px]">
+                                            <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-50">
                                               <input
                                                 type="checkbox"
                                                 checked={isChildCurrentlyChecked}
@@ -429,7 +429,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                                     [childOption.id]: e.target.checked
                                                   }));
                                                 }}
-                                                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+                                                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 shrink-0"
                                               />
                                               <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                                                 {childOption.label}
@@ -443,7 +443,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                                   ...prev,
                                                   [childOption.id]: e.target.value as 'resolvido' | 'nao_resolvido'
                                                 }))}
-                                                className={`px-2 py-1 text-xs sm:text-sm rounded border flex-shrink-0 ${isDark
+                                                className={`px-2 py-1 text-xs sm:text-sm rounded border shrink-0 ${isDark
                                                   ? 'bg-slate-700 border-slate-600 text-slate-200'
                                                   : 'bg-white border-slate-300 text-slate-800'
                                                 } focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -501,7 +501,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
               }`}
             >
               <span>📋 Diagnósticos Secundários</span>
-              <ChevronRightIcon className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform flex-shrink-0 ${expandedGroup === 'secundario' ? 'rotate-90' : ''}`} />
+              <ChevronRightIcon className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform shrink-0 ${expandedGroup === 'secundario' ? 'rotate-90' : ''}`} />
             </button>
 
             {/* Conteúdo Diagnósticos Secundários */}
@@ -520,7 +520,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                         <span className={`font-medium ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                           {question.titulo}
                         </span>
-                        <ChevronRightIcon className={`w-4 h-4 transition-transform flex-shrink-0 ${isQuestionExpanded ? 'rotate-90' : ''}`} />
+                        <ChevronRightIcon className={`w-4 h-4 transition-transform shrink-0 ${isQuestionExpanded ? 'rotate-90' : ''}`} />
                       </button>
 
                       {isQuestionExpanded && (
@@ -539,7 +539,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                     ? (isDark ? 'bg-green-900/30 border border-green-700' : 'bg-green-50 border border-green-300')
                                     : (isDark ? 'bg-slate-700/50' : 'bg-slate-50')
                                   }`}>
-                                    <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-[200px]">
+                                    <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-50">
                                       <input
                                         type="checkbox"
                                         checked={isCurrentlyChecked}
@@ -549,7 +549,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                             [option.id]: e.target.checked
                                           }));
                                         }}
-                                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+                                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 shrink-0"
                                       />
                                       <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'} ${selectedStatus[option.id] === 'resolvido' ? 'line-through opacity-60' : ''}`}>
                                         {option.label}
@@ -573,7 +573,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                             ...prev,
                                             [option.id]: e.target.value as 'resolvido' | 'nao_resolvido'
                                           }))}
-                                          className={`px-2 py-1 text-xs sm:text-sm rounded border flex-shrink-0 ${isDark
+                                          className={`px-2 py-1 text-xs sm:text-sm rounded border shrink-0 ${isDark
                                             ? 'bg-slate-700 border-slate-600 text-slate-200'
                                             : 'bg-white border-slate-300 text-slate-800'
                                           } focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -582,7 +582,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                           <option value="resolvido">✅ Resolvido</option>
                                         </select>
                                         {selectedStatus[option.id] === 'resolvido' && (
-                                          <span className={`text-lg font-bold flex-shrink-0 ${isDark ? 'text-green-400' : 'text-green-600'}`}>✓</span>
+                                          <span className={`text-lg font-bold shrink-0 ${isDark ? 'text-green-400' : 'text-green-600'}`}>✓</span>
                                         )}
                                       </>
                                     )}
@@ -620,7 +620,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                             ? (isDark ? 'bg-green-900/30 border border-green-700' : 'bg-green-50 border border-green-300')
                                             : (isDark ? 'bg-slate-700/50' : 'bg-slate-50')
                                           }`}>
-                                            <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-[200px]">
+                                            <label className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-50">
                                               <input
                                                 type="checkbox"
                                                 checked={isChildCurrentlyChecked}
@@ -630,7 +630,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                                     [childOption.id]: e.target.checked
                                                   }));
                                                 }}
-                                                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+                                                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 shrink-0"
                                               />
                                               <span className={`text-xs sm:text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'} ${selectedStatus[childOption.id] === 'resolvido' ? 'line-through opacity-60' : ''}`}>
                                                 {childOption.label}
@@ -645,7 +645,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                                     ...prev,
                                                     [childOption.id]: e.target.value as 'resolvido' | 'nao_resolvido'
                                                   }))}
-                                                  className={`px-2 py-1 text-xs sm:text-sm rounded border flex-shrink-0 ${isDark
+                                                  className={`px-2 py-1 text-xs sm:text-sm rounded border shrink-0 ${isDark
                                                     ? 'bg-slate-700 border-slate-600 text-slate-200'
                                                     : 'bg-white border-slate-300 text-slate-800'
                                                   } focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -654,7 +654,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                                                   <option value="resolvido">✅ Resolvido</option>
                                                 </select>
                                                 {selectedStatus[childOption.id] === 'resolvido' && (
-                                                  <span className={`text-lg font-bold flex-shrink-0 ${isDark ? 'text-green-400' : 'text-green-600'}`}>✓</span>
+                                                  <span className={`text-lg font-bold shrink-0 ${isDark ? 'text-green-400' : 'text-green-600'}`}>✓</span>
                                                 )}
                                               </>
                                             )}

@@ -132,7 +132,7 @@ const QuestionCard = ({ item, valor, onChange, theme }) => {
           <label className={`block text-base font-bold ${textColor}`}>{item.label}</label>
           <p className={`text-sm ${descColor} mt-1`}>{item.desc}</p>
         </div>
-        {isSelected && <CheckIcon className="w-6 h-6 text-green-400 flex-shrink-0" />}
+        {isSelected && <CheckIcon className="w-6 h-6 text-green-400 shrink-0" />}
       </div>
       
       <div className="relative">

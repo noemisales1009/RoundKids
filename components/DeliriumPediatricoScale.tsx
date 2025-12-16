@@ -152,7 +152,7 @@ const BackIcon = () => (
 );
 
 const CheckIcon = () => (
-  <svg className="w-6 h-6 text-green-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <svg className="w-6 h-6 text-green-400 shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
   </svg>
 );
@@ -544,7 +544,7 @@ export default function DeliriumPediatricoScale({ onSaveScore }: DeliriumScalePr
           ))}
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent">
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-linear-to-t from-slate-950 via-slate-950 to-transparent">
           <div className="max-w-md mx-auto">
             <button
               onClick={finalizarAvaliacao}

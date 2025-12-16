@@ -91,6 +91,10 @@ calc AS (
       ELSE NULL::text
     END AS hora_conclusao_hhmm,
     to_char(
+      (b.created_at AT TIME ZONE 'America/Sao_Paulo'::text),
+      'DD/MM/YYYY HH24:MI'::text
+    ) AS hora_criacao_formatado,
+    to_char(
       (b.deadline AT TIME ZONE 'America/Sao_Paulo'::text),
       'DD/MM/YYYY HH24:MI'::text
     ) AS prazo_limite_formatado,
@@ -149,6 +153,7 @@ SELECT
   updated_at,
   deadline,
   hora_criacao_br,
+  hora_criacao_formatado,
   prazo_limite_br,
   hora_conclusao_br,
   hora_criacao_hhmm,

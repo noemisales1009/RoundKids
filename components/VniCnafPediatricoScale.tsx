@@ -92,7 +92,7 @@ const VNIQuestionCard: React.FC<VNIQuestionCardProps> = ({ item, valor, onChange
           </label>
           <p className={`text-xs sm:text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{item.desc}</p>
         </div>
-        {isSelected && <CheckCircleIcon className={`w-5 h-5 ${isDark ? 'text-green-400' : 'text-green-600'} flex-shrink-0`} />}
+        {isSelected && <CheckCircleIcon className={`w-5 h-5 ${isDark ? 'text-green-400' : 'text-green-600'} shrink-0`} />}
       </div>
 
       <div className="relative">
@@ -434,7 +434,7 @@ export const VniCnafPediatricoScale: React.FC<{ onSaveScore?: (score: any) => vo
           <button
             onClick={saveAssessment}
             disabled={isSaving || saveStatus === 'success'}
-            className={`w-full py-4 rounded-xl font-bold text-lg shadow-xl transition-all flex items-center justify-center text-sm sm:text-base ${
+            className={`w-full py-4 rounded-xl font-bold shadow-xl transition-all flex items-center justify-center text-sm sm:text-base ${
               isSaving
                 ? isDark
                   ? 'bg-slate-600 text-slate-400 cursor-not-allowed'

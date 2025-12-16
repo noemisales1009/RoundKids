@@ -297,7 +297,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                             return (
                                 <div key={dateKey} className="space-y-3">
                                     {/* Cabeçalho de Data */}
-                                    <div className="px-4 py-3 bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-700 dark:to-slate-800 rounded-lg border-l-4 border-blue-500">
+                                    <div className="px-4 py-3 bg-linear-to-r from-slate-800 to-slate-900 dark:from-slate-700 dark:to-slate-800 rounded-lg border-l-4 border-blue-500">
                                         <h3 className="text-white font-bold text-lg">
                                             {isToday ? '📅 Hoje' : ''}, {dateKey}
                                         </h3>

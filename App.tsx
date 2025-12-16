@@ -95,7 +95,7 @@ const Sidebar: React.FC = () => {
             </nav>
             <div className="p-4 border-t border-slate-200 dark:border-slate-800">
                 <div className="flex items-center space-x-3 mb-4">
-                    <img src={user.avatarUrl} alt="User avatar" className="w-12 h-12 rounded-full object-cover bg-slate-200" />
+                    <img src={user.avatarUrl || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23cbd5e1%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2210%22/%3E%3C/svg%3E'} alt="User avatar" className="w-12 h-12 rounded-full object-cover bg-slate-200" />
                     <div className="overflow-hidden">
                         <p className="font-bold text-slate-800 dark:text-slate-200 truncate">{user.name}</p>
                         <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{user.title}</p>
@@ -253,9 +253,9 @@ const Notification: React.FC<{ message: string; type: 'success' | 'error' | 'inf
     }[type];
 
     const icon = {
-        success: <CheckCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0" />,
-        error: <WarningIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0" />,
-        info: <InfoIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0" />,
+        success: <CheckCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white shrink-0" />,
+        error: <WarningIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white shrink-0" />,
+        info: <InfoIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white shrink-0" />,
     }[type];
 
     return (
@@ -341,8 +341,9 @@ const LoginScreen: React.FC = () => {
                 </div>
                 <form onSubmit={handleLogin} className="space-y-6">
                     <div>
-                        <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+                        <label htmlFor="loginEmail" className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
                         <input
+                            id="loginEmail"
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -352,8 +353,9 @@ const LoginScreen: React.FC = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Senha</label>
+                        <label htmlFor="loginPassword" className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Senha</label>
                         <input
+                            id="loginPassword"
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -563,6 +565,7 @@ const PatientListScreen: React.FC = () => {
     return (
         <div className="space-y-4">
             <input
+                id="patientSearch"
                 type="text"
                 placeholder="Buscar por nome ou leito..."
                 value={searchTerm}
@@ -580,14 +583,14 @@ const PatientListScreen: React.FC = () => {
                             'border-slate-300 dark:border-slate-700'
                         }`}>
                             <div className="flex items-center space-x-4">
-                                <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-blue-100 dark:bg-blue-900/80 text-blue-600 dark:text-blue-300 rounded-full font-bold text-lg">
+                                <div className="shrink-0 w-12 h-12 flex items-center justify-center bg-blue-100 dark:bg-blue-900/80 text-blue-600 dark:text-blue-300 rounded-full font-bold text-lg">
                                     {patient.bedNumber}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between gap-2 mb-1">
-                                        <p className="font-bold text-slate-800 dark:text-slate-200 break-words">{patient.name}</p>
+                                        <p className="font-bold text-slate-800 dark:text-slate-200 break-word">{patient.name}</p>
                                         {patient.status && (
-                                            <span className={`text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${
+                                            <span className={`text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap shrink-0 ${
                                                 patient.status === 'estavel' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' :
                                                 patient.status === 'instavel' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' :
                                                 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
@@ -647,6 +650,7 @@ const PatientHistoryScreen: React.FC = () => {
     const [comorbidadeHistory, setComorbidadeHistory] = useState<any[]>([]);
     const [balanceHistory, setBalanceHistory] = useState<any[]>([]);
     const [diuresisHistory, setDiuresisHistory] = useState<any[]>([]);
+    const [alertCompletions, setAlertCompletions] = useState<any[]>([]);
     
     // Estados de filtro
     const [filterStartDate, setFilterStartDate] = useState('');
@@ -660,7 +664,7 @@ const PatientHistoryScreen: React.FC = () => {
         const loadHistory = async () => {
             if (!patientId) return;
             try {
-                const [diagResult, comorbResult, balanceResult, diuresisResult] = await Promise.all([
+                const [diagResult, comorbResult, balanceResult, diuresisResult, completionsResult] = await Promise.all([
                     supabase
                         .from('diagnosticos_historico_com_usuario')
                         .select('*')
@@ -680,7 +684,11 @@ const PatientHistoryScreen: React.FC = () => {
                         .from('diurese_historico')
                         .select('*')
                         .eq('patient_id', patientId)
-                        .order('data_calculo', { ascending: false })
+                        .order('data_calculo', { ascending: false }),
+                    supabase
+                        .from('alert_completions_with_user')
+                        .select('*')
+                        .order('created_at', { ascending: false })
                 ]);
 
                 if (diagResult.error) {
@@ -705,6 +713,12 @@ const PatientHistoryScreen: React.FC = () => {
                     console.error('Erro ao buscar histórico de diurese:', diuresisResult.error);
                 } else {
                     setDiuresisHistory(diuresisResult.data || []);
+                }
+
+                if (completionsResult.error) {
+                    console.error('Erro ao buscar completions de alertas:', completionsResult.error);
+                } else {
+                    setAlertCompletions(completionsResult.data || []);
                 }
             } catch (err) {
                 console.error('Erro:', err);
@@ -804,27 +818,33 @@ const PatientHistoryScreen: React.FC = () => {
             }
             
             // Obter nome do criador
-            const createdByName = alert.created_by_name || 'Não informado';
+            const createdByName = alert.created_by_name;
             
             // Usar o campo correto de descrição baseado na fonte
             const descriptionField = alert.source === 'alertas' ? alert.alertaclinico : alert.description;
             
-            // Alerta criado
-            const alertDescription = `🔔 ${descriptionField}\n👤 Responsável: ${alert.responsible}\n📅 Prazo: ${formatDateTimeWithHour(alert.deadline)}\n⏱️ Tempo: ${timeText}\n👤 Por: ${createdByName}`;
+            // Alerta criado - só inclui "Por:" se tiver nome informado
+            const byText = createdByName && createdByName !== '' && createdByName !== 'Não informado' ? `\n👤 Por: ${createdByName}` : '';
+            const alertDescription = `🔔 ${descriptionField}\n👤 Responsável: ${alert.responsible}\n📅 Prazo: ${formatDateTimeWithHour(alert.deadline)}\n⏱️ Tempo: ${timeText}${byText}`;
             events.push({
-                timestamp: new Date().toISOString(),
+                timestamp: alert.hora_criacao_formatado || alert.hora_criacao_br || alert.created_at || new Date().toISOString(),
                 icon: BellIcon,
                 description: alertDescription,
                 hasTime: true,
                 eventType: 'alertas',
             });
             
+            // Buscar completion deste alerta específico
+            const completion = alertCompletions.find(comp => comp.alert_id === alert.id_alerta && comp.source === alert.source);
+            
             // Alerta concluído (se houver)
-            if (alert.status === 'concluido' && alert.completedAt) {
+            if (completion && completion.completed_at) {
+                const completedByName = completion.completed_by_name || 'Sistema';
+                const byCompletedCreator = completedByName !== 'Sistema' ? `\n👤 Por: ${completedByName}` : '';
                 events.push({
-                    timestamp: alert.completedAt,
+                    timestamp: completion.completed_at,
                     icon: CheckCircleIcon,
-                    description: `Alerta Concluído: ${descriptionField}. Por: ${createdByName}`,
+                    description: `✅ Alerta Concluído: ${descriptionField}${byCompletedCreator}`,
                     hasTime: true,
                     eventType: 'alertas',
                 });
@@ -859,10 +879,11 @@ const PatientHistoryScreen: React.FC = () => {
             const textoDigitado = diag.texto_digitado ? ` - "${diag.texto_digitado}"` : '';
             const createdByName = diag.created_by_name || 'Sistema';
             const fullDescription = `${label}${textoDigitado}`;
+            const byDiagCreator = createdByName !== 'Sistema' ? ` | Por: ${createdByName}` : '';
             events.push({
                 timestamp: diag.created_at || new Date().toISOString(),
                 icon: FileTextIcon,
-                description: `Diagnóstico: ${fullDescription} | ${statusText} | Por: ${createdByName}`,
+                description: `Diagnóstico: ${fullDescription} | ${statusText}${byDiagCreator}`,
                 hasTime: true,
                 eventType: 'diagnosticos',
             });
@@ -943,7 +964,7 @@ const PatientHistoryScreen: React.FC = () => {
         }, {} as Record<string, TimelineEvent[]>);
 
         return groupedEvents;
-    }, [patient, tasks, diagnosticHistory, comorbidadeHistory, balanceHistory, diuresisHistory, filterStartDate, filterEndDate, selectedEventTypes]);
+    }, [patient, tasks, diagnosticHistory, comorbidadeHistory, balanceHistory, diuresisHistory, alertCompletions, filterStartDate, filterEndDate, selectedEventTypes]);
 
     const handleGeneratePdf = () => {
         // ... (PDF generation logic remains the same)
@@ -994,7 +1015,7 @@ const PatientHistoryScreen: React.FC = () => {
                 <ul>
                     ${(eventsOnDate as TimelineEvent[]).map(event => `
                         <li class="event-item">
-                            ${event.hasTime ? `<small>Horário: ${new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</small><br/>` : ''}
+                            ${event.hasTime ? `<small>Horário: ${/^\d{2}\/\d{2}\/\d{4}/.test(event.timestamp) ? event.timestamp : formatDateTimeWithHour(event.timestamp)}</small><br/>` : ''}
                             <pre style="white-space: pre-wrap; word-wrap: break-word; margin: 5px 0;">${event.description.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
                         </li>
                     `).join('')}
@@ -1113,8 +1134,9 @@ const PatientHistoryScreen: React.FC = () => {
             <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data Inicial</label>
+                        <label htmlFor="filterStartDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data Inicial</label>
                         <input
+                            id="filterStartDate"
                             type="date"
                             value={filterStartDate}
                             onChange={(e) => setFilterStartDate(e.target.value)}
@@ -1122,8 +1144,9 @@ const PatientHistoryScreen: React.FC = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data Final</label>
+                        <label htmlFor="filterEndDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data Final</label>
                         <input
+                            id="filterEndDate"
                             type="date"
                             value={filterEndDate}
                             onChange={(e) => setFilterEndDate(e.target.value)}
@@ -1133,8 +1156,8 @@ const PatientHistoryScreen: React.FC = () => {
                 </div>
 
                 {/* Filtro de Tipo de Evento */}
-                <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Tipos de Eventos</label>
+                <fieldset>
+                    <legend className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Tipos de Eventos</legend>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {[
                             { value: 'diagnosticos', label: 'Diagnósticos' },
@@ -1149,8 +1172,9 @@ const PatientHistoryScreen: React.FC = () => {
                             { value: 'diurese', label: 'Diurese' },
                             { value: 'balanco', label: 'Balanço Hídrico' },
                         ].map(eventType => (
-                            <label key={eventType.value} className="flex items-center gap-2 cursor-pointer">
+                            <label key={eventType.value} htmlFor={`eventType-${eventType.value}`} className="flex items-center gap-2 cursor-pointer">
                                 <input
+                                    id={`eventType-${eventType.value}`}
                                     type="checkbox"
                                     checked={selectedEventTypes.has(eventType.value)}
                                     onChange={(e) => {
@@ -1168,7 +1192,7 @@ const PatientHistoryScreen: React.FC = () => {
                             </label>
                         ))}
                     </div>
-                </div>
+                </fieldset>
 
                 {/* Botão para Limpar Filtros */}
                 <button
@@ -1193,14 +1217,14 @@ const PatientHistoryScreen: React.FC = () => {
                                 <div className="space-y-3">
                                     {(eventsOnDate as TimelineEvent[]).map((event, index) => (
                                         <div key={index} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                                            <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-blue-100 dark:bg-blue-900/80 rounded-full mt-1">
+                                            <div className="shrink-0 w-8 h-8 flex items-center justify-center bg-blue-100 dark:bg-blue-900/80 rounded-full mt-1">
                                                 <event.icon className="w-5 h-5 text-blue-600 dark:text-blue-300" />
                                             </div>
                                             <div className="flex-1">
                                                 <p className="text-slate-800 dark:text-slate-200 text-sm whitespace-pre-line">{event.description}</p>
                                                 {event.hasTime && (
                                                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                                        Horário: {new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                        Horário: {/^\d{2}\/\d{2}\/\d{4}/.test(event.timestamp) ? event.timestamp : formatDateTimeWithHour(event.timestamp)}
                                                     </p>
                                                 )}
                                             </div>
@@ -1242,8 +1266,9 @@ const EditPatientInfoModal: React.FC<{ patientId: number | string, currentMother
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Nome da Mãe</label>
+                        <label htmlFor="editMotherName" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Nome da Mãe</label>
                         <input
+                            id="editMotherName"
                             type="text"
                             value={motherName}
                             onChange={e => setMotherName(e.target.value)}
@@ -1251,8 +1276,9 @@ const EditPatientInfoModal: React.FC<{ patientId: number | string, currentMother
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Peso (kg)</label>
+                        <label htmlFor="editPeso" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Peso (kg)</label>
                         <input
+                            id="editPeso"
                             type="number"
                             step="0.1"
                             value={peso}
@@ -1309,8 +1335,9 @@ const CreateAlertModal: React.FC<{ patientId: number | string; onClose: () => vo
                 <div className="p-4 sm:p-6">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Alerta</label>
+                            <label htmlFor="alertDescription" className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Alerta</label>
                             <input
+                                id="alertDescription"
                                 type="text"
                                 value={description}
                                 onChange={e => setDescription(e.target.value)}
@@ -1320,9 +1347,9 @@ const CreateAlertModal: React.FC<{ patientId: number | string; onClose: () => vo
                             />
                         </div>
                         <div>
-                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Responsável</label>
+                            <label htmlFor="alertResponsible" className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Responsável</label>
                             <div className="relative">
-                                <select value={responsible} onChange={e => setResponsible(e.target.value)} required className="w-full px-3 sm:px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200 appearance-none">
+                                <select id="alertResponsible" value={responsible} onChange={e => setResponsible(e.target.value)} required className="w-full px-3 sm:px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200 appearance-none">
                                     <option value="" disabled>Selecione...</option>
                                     {RESPONSIBLES.map(r => <option key={r} value={r}>{r}</option>)}
                                 </select>
@@ -1330,9 +1357,9 @@ const CreateAlertModal: React.FC<{ patientId: number | string; onClose: () => vo
                             </div>
                         </div>
                         <div>
-                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Selecione a hora</label>
+                            <label htmlFor="alertDeadline" className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Selecione a hora</label>
                             <div className="relative">
-                                <select value={deadline} onChange={e => setDeadline(e.target.value)} required className="w-full px-3 sm:px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200 appearance-none">
+                                <select id="alertDeadline" value={deadline} onChange={e => setDeadline(e.target.value)} required className="w-full px-3 sm:px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200 appearance-none">
                                     <option value="" disabled>Selecione...</option>
                                     {ALERT_DEADLINES.map(d => <option key={d} value={d}>{d}</option>)}
                                 </select>
@@ -1429,8 +1456,9 @@ const AddCultureModal: React.FC<{ patientId: number | string; onClose: () => voi
                 <div className="p-4 sm:p-5">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Local</label>
+                            <label htmlFor="cultureSite" className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Local</label>
                             <select
+                                id="cultureSite"
                                 value={site}
                                 onChange={(e) => setSite(e.target.value)}
                                 className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
@@ -1447,8 +1475,9 @@ const AddCultureModal: React.FC<{ patientId: number | string; onClose: () => voi
                         </div>
                         {site === 'outro' && (
                             <div>
-                                <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Digite o local</label>
+                                <label htmlFor="customSite" className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Digite o local</label>
                                 <input
+                                    id="customSite"
                                     type="text"
                                     value={customSite}
                                     onChange={(e) => setCustomSite(e.target.value)}
@@ -1459,8 +1488,9 @@ const AddCultureModal: React.FC<{ patientId: number | string; onClose: () => voi
                             </div>
                         )}
                         <div>
-                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Microorganismo</label>
+                            <label htmlFor="microorganism" className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Microorganismo</label>
                             <select
+                                id="microorganism"
                                 value={microorganism}
                                 onChange={(e) => setMicroorganism(e.target.value)}
                                 className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
@@ -1477,8 +1507,9 @@ const AddCultureModal: React.FC<{ patientId: number | string; onClose: () => voi
                         </div>
                         {microorganism === 'outro' && (
                             <div>
-                                <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Digite o microrganismo</label>
+                                <label htmlFor="customMicroorganism" className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Digite o microrganismo</label>
                                 <input
+                                    id="customMicroorganism"
                                     type="text"
                                     value={customMicroorganism}
                                     onChange={(e) => setCustomMicroorganism(e.target.value)}
@@ -1489,8 +1520,9 @@ const AddCultureModal: React.FC<{ patientId: number | string; onClose: () => voi
                             </div>
                         )}
                         <div>
-                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data</label>
+                            <label htmlFor="collectionDate" className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data</label>
                             <input
+                                id="collectionDate"
                                 type="date"
                                 value={collectionDate}
                                 onChange={(e) => setCollectionDate(e.target.value)}
@@ -1536,8 +1568,9 @@ const EditCultureModal: React.FC<{ culture: Culture; patientId: number | string;
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Local</label>
+                        <label htmlFor="editCultureSite" className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Local</label>
                         <input
+                            id="editCultureSite"
                             type="text"
                             placeholder="Ex: Hemocultura"
                             value={site}
@@ -1547,8 +1580,9 @@ const EditCultureModal: React.FC<{ culture: Culture; patientId: number | string;
                         />
                     </div>
                     <div>
-                        <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Microorganismo</label>
+                        <label htmlFor="editCultureMicroorganism" className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Microorganismo</label>
                         <input
+                            id="editCultureMicroorganism"
                             type="text"
                             placeholder="Ex: Staphylococcus aureus"
                             value={microorganism}
@@ -1558,8 +1592,9 @@ const EditCultureModal: React.FC<{ culture: Culture; patientId: number | string;
                         />
                     </div>
                     <div>
-                        <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
+                        <label htmlFor="editCultureDate" className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
                         <input
+                            id="editCultureDate"
                             type="date"
                             value={collectionDate}
                             onChange={e => setCollectionDate(e.target.value)}
@@ -1902,6 +1937,7 @@ const PatientDetailScreen: React.FC = () => {
                                                 {comorbidadesEdit.map((comorb, idx) => (
                                                     <div key={idx} className="flex gap-2">
                                                         <input
+                                                            id={`comorbidade-${idx}`}
                                                             type="text"
                                                             value={comorb}
                                                             onChange={(e) => {
@@ -2093,7 +2129,7 @@ const PatientDetailScreen: React.FC = () => {
                                         <div key={device.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
-                                                    <CpuIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
+                                                    <CpuIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
                                                     <div>
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{device.name} - {device.location}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(device.startDate)}</p>
@@ -2104,7 +2140,7 @@ const PatientDetailScreen: React.FC = () => {
                                                         )}
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                                <div className="flex items-center gap-2 shrink-0 ml-2">
                                                     {!device.removalDate ? (
                                                         <button onClick={() => setRemovalModalOpen(device.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Retirada</button>
                                                     ) : (
@@ -2129,14 +2165,14 @@ const PatientDetailScreen: React.FC = () => {
                                         <div key={exam.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
-                                                    <FileTextIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
+                                                    <FileTextIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
                                                     <div>
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{exam.name}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(exam.date)}</p>
                                                         {exam.observation && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 italic">Obs: {exam.observation}</p>}
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                                                <div className="flex items-center gap-1 shrink-0 ml-2">
                                                     <button onClick={() => setEditingExam(exam)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar exame">
                                                         <PencilIcon className="w-4 h-4" />
                                                     </button>
@@ -2157,9 +2193,9 @@ const PatientDetailScreen: React.FC = () => {
                                         <div key={medication.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
-                                                    <PillIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
+                                                    <PillIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
                                                     <div>
-                                                        <p className="font-bold text-slate-800 dark:text-slate-200 break-words">{medication.name} - {medication.dosage}</p>
+                                                        <p className="font-bold text-slate-800 dark:text-slate-200 break-word">{medication.name} - {medication.dosage}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(medication.startDate)}</p>
                                                         {medication.endDate ? (
                                                             <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Fim: {formatDateToBRL(medication.endDate)}</p>
@@ -2168,7 +2204,7 @@ const PatientDetailScreen: React.FC = () => {
                                                         )}
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                                <div className="flex items-center gap-2 shrink-0 ml-2">
                                                     {!medication.endDate && <button onClick={() => setEndDateModalOpen(medication.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Fim</button>}
                                                     <button onClick={() => setEditingMedication(medication)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar medicação">
                                                         <PencilIcon className="w-4 h-4" />
@@ -2190,7 +2226,7 @@ const PatientDetailScreen: React.FC = () => {
                                         <div key={procedure.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
-                                                    <ScalpelIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
+                                                    <ScalpelIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
                                                     <div>
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{procedure.name}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(procedure.date)} - Dr(a): {procedure.surgeon}</p>
@@ -2198,7 +2234,7 @@ const PatientDetailScreen: React.FC = () => {
                                                         {procedure.notes && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 italic">Obs: {procedure.notes}</p>}
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                                                <div className="flex items-center gap-1 shrink-0 ml-2">
                                                     <button onClick={() => setEditingSurgicalProcedure(procedure)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar cirurgia">
                                                         <PencilIcon className="w-4 h-4" />
                                                     </button>
@@ -2219,14 +2255,14 @@ const PatientDetailScreen: React.FC = () => {
                                         <div key={culture.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
-                                                    <BeakerIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
+                                                    <BeakerIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
                                                     <div>
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{culture.site}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Microorganismo: {culture.microorganism}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(culture.collectionDate)}</p>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                                                <div className="flex items-center gap-1 shrink-0 ml-2">
                                                     <button onClick={() => setEditingCulture(culture)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar cultura">
                                                         <PencilIcon className="w-4 h-4" />
                                                     </button>
@@ -2249,7 +2285,7 @@ const PatientDetailScreen: React.FC = () => {
                         {scaleView === 'list' && (
                             <div className="space-y-4">
                                 {patient.scaleScores && patient.scaleScores.length > 0 && (
-                                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 border-l-4 border-blue-500 p-4 rounded-lg">
+                                    <div className="bg-linear-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 border-l-4 border-blue-500 p-4 rounded-lg">
                                         <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
                                             <span className="text-lg">📊</span> Histórico de Avaliações ({patient.scaleScores.length})
                                         </h3>
@@ -2372,7 +2408,7 @@ const PatientDetailScreen: React.FC = () => {
 
             <button
                 onClick={() => setCreateAlertModalOpen(true)}
-                className="w-full mt-3 block text-center bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg flex items-center justify-center gap-2"
+                className="w-full mt-3 text-center bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg flex items-center justify-center gap-2"
             >
                 <WarningIcon className="w-6 h-6" />
                 Criar Novo Alerta
@@ -2484,22 +2520,22 @@ const AddDeviceModal: React.FC<{ patientId: number | string; onClose: () => void
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Tipo</label>
-                        <select value={type} onChange={e => setType(e.target.value)} className="mt-1 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200">
+                        <label htmlFor="deviceType" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Tipo</label>
+                        <select id="deviceType" value={type} onChange={e => setType(e.target.value)} className="mt-1 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200">
                             <option value="" disabled>Select...</option>
                             {DEVICE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Local</label>
-                        <select value={location} onChange={e => setLocation(e.target.value)} className="mt-1 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200">
+                        <label htmlFor="deviceLocation" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Local</label>
+                        <select id="deviceLocation" value={location} onChange={e => setLocation(e.target.value)} className="mt-1 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200">
                             <option value="" disabled>Select...</option>
                             {DEVICE_LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Dia da inserção</label>
-                        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                        <label htmlFor="deviceStartDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Dia da inserção</label>
+                        <input id="deviceStartDate" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Cadastrar</button>
                 </form>
@@ -2533,22 +2569,22 @@ const EditDeviceModal: React.FC<{ device: Device; patientId: number | string; on
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Tipo</label>
-                        <select value={type} onChange={e => setType(e.target.value)} className="mt-1 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200">
+                        <label htmlFor="editDeviceType" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Tipo</label>
+                        <select id="editDeviceType" value={type} onChange={e => setType(e.target.value)} className="mt-1 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200">
                             <option value="" disabled>Select...</option>
                             {DEVICE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Local</label>
-                        <select value={location} onChange={e => setLocation(e.target.value)} className="mt-1 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200">
+                        <label htmlFor="editDeviceLocation" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Local</label>
+                        <select id="editDeviceLocation" value={location} onChange={e => setLocation(e.target.value)} className="mt-1 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200">
                             <option value="" disabled>Select...</option>
                             {DEVICE_LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Dia da inserção</label>
-                        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                        <label htmlFor="editDeviceStartDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Dia da inserção</label>
+                        <input id="editDeviceStartDate" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar Alterações</button>
                 </form>
@@ -2581,16 +2617,16 @@ const AddExamModal: React.FC<{ patientId: number | string; onClose: () => void; 
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Exame</label>
-                        <input type="text" placeholder="Ex: Hemograma" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
+                        <label htmlFor="examName" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Exame</label>
+                        <input id="examName" type="text" placeholder="Ex: Hemograma" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
-                        <input type="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                        <label htmlFor="examDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
+                        <input id="examDate" type="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Observação (Opcional)</label>
-                        <textarea value={observation} onChange={e => setObservation(e.target.value)} placeholder="Digite aqui..." className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" rows={3}></textarea>
+                        <label htmlFor="examObservation" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Observação (Opcional)</label>
+                        <textarea id="examObservation" value={observation} onChange={e => setObservation(e.target.value)} placeholder="Digite aqui..." className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" rows={3}></textarea>
                     </div>
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Cadastrar</button>
                 </form>
@@ -2624,16 +2660,16 @@ const EditExamModal: React.FC<{ exam: Exam; patientId: number | string; onClose:
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Exame</label>
-                        <input type="text" placeholder="Ex: Hemograma" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
+                        <label htmlFor="editExamName" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Exame</label>
+                        <input id="editExamName" type="text" placeholder="Ex: Hemograma" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
-                        <input type="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                        <label htmlFor="editExamDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
+                        <input id="editExamDate" type="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Observação (Opcional)</label>
-                        <textarea value={observation} onChange={e => setObservation(e.target.value)} placeholder="Digite aqui..." className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" rows={3}></textarea>
+                        <label htmlFor="editExamObservation" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Observação (Opcional)</label>
+                        <textarea id="editExamObservation" value={observation} onChange={e => setObservation(e.target.value)} placeholder="Digite aqui..." className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" rows={3}></textarea>
                     </div>
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar Alterações</button>
                 </form>
@@ -2668,13 +2704,14 @@ const AddMedicationModal: React.FC<{ patientId: number | string; onClose: () => 
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Medicamento</label>
-                        <input type="text" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
+                        <label htmlFor="medicationName" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Medicamento</label>
+                        <input id="medicationName" type="text" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Dosagem</label>
+                        <label htmlFor="medicationDosageValue" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Dosagem</label>
                         <div className="flex items-center mt-1 gap-2">
                             <input
+                                id="medicationDosageValue"
                                 type="text"
                                 value={dosageValue}
                                 onChange={e => setDosageValue(e.target.value)}
@@ -2682,6 +2719,7 @@ const AddMedicationModal: React.FC<{ patientId: number | string; onClose: () => 
                                 className="block w-1/2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
                             />
                             <select
+                                id="medicationDosageUnit"
                                 value={dosageUnit}
                                 onChange={e => setDosageUnit(e.target.value)}
                                 className="block w-1/2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
@@ -2691,8 +2729,8 @@ const AddMedicationModal: React.FC<{ patientId: number | string; onClose: () => 
                         </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Início</label>
-                        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                        <label htmlFor="medicationStartDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Início</label>
+                        <input id="medicationStartDate" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Cadastrar</button>
                 </form>
@@ -2738,13 +2776,14 @@ const EditMedicationModal: React.FC<{ medication: Medication; patientId: number 
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Medicamento</label>
-                        <input type="text" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
+                        <label htmlFor="editMedicationName" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Medicamento</label>
+                        <input id="editMedicationName" type="text" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Dosagem</label>
+                        <label htmlFor="editMedicationDosageValue" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Dosagem</label>
                         <div className="flex items-center mt-1 gap-2">
                             <input
+                                id="editMedicationDosageValue"
                                 type="text"
                                 value={dosageValue}
                                 onChange={e => setDosageValue(e.target.value)}
@@ -2752,6 +2791,7 @@ const EditMedicationModal: React.FC<{ medication: Medication; patientId: number 
                                 className="block w-1/2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
                             />
                             <select
+                                id="editMedicationDosageUnit"
                                 value={dosageUnit}
                                 onChange={e => setDosageUnit(e.target.value)}
                                 className="block w-1/2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
@@ -2762,8 +2802,8 @@ const EditMedicationModal: React.FC<{ medication: Medication; patientId: number 
                         </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Início</label>
-                        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                        <label htmlFor="editMedicationStartDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Início</label>
+                        <input id="editMedicationStartDate" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar Alterações</button>
                 </form>
@@ -2797,20 +2837,20 @@ const AddSurgicalProcedureModal: React.FC<{ patientId: number | string; onClose:
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Procedimento</label>
-                        <input type="text" placeholder="Ex: Apendicectomia" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
+                        <label htmlFor="surgeryName" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Procedimento</label>
+                        <input id="surgeryName" type="text" placeholder="Ex: Apendicectomia" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
-                        <input type="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                        <label htmlFor="surgeryDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
+                        <input id="surgeryDate" type="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Cirurgião</label>
-                        <input type="text" placeholder="Dr(a). Sobrenome" value={surgeon} onChange={e => setSurgeon(e.target.value)} className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
+                        <label htmlFor="surgeonName" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Cirurgião</label>
+                        <input id="surgeonName" type="text" placeholder="Dr(a). Sobrenome" value={surgeon} onChange={e => setSurgeon(e.target.value)} className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Observação (Opcional)</label>
-                        <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Digite aqui..." className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" rows={3}></textarea>
+                        <label htmlFor="surgeryNotes" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Observação (Opcional)</label>
+                        <textarea id="surgeryNotes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Digite aqui..." className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" rows={3}></textarea>
                     </div>
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Cadastrar</button>
                 </form>
@@ -2844,20 +2884,20 @@ const EditSurgicalProcedureModal: React.FC<{ procedure: SurgicalProcedure; patie
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Procedimento</label>
-                        <input type="text" placeholder="Ex: Apendicectomia" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
+                        <label htmlFor="editSurgeryName" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Procedimento</label>
+                        <input id="editSurgeryName" type="text" placeholder="Ex: Apendicectomia" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
-                        <input type="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                        <label htmlFor="editSurgeryDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
+                        <input id="editSurgeryDate" type="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Cirurgião</label>
-                        <input type="text" placeholder="Dr(a). Sobrenome" value={surgeon} onChange={e => setSurgeon(e.target.value)} className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
+                        <label htmlFor="editSurgeonName" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Cirurgião</label>
+                        <input id="editSurgeonName" type="text" placeholder="Dr(a). Sobrenome" value={surgeon} onChange={e => setSurgeon(e.target.value)} className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Observação (Opcional)</label>
-                        <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Digite aqui..." className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" rows={3}></textarea>
+                        <label htmlFor="editSurgeryNotes" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Observação (Opcional)</label>
+                        <textarea id="editSurgeryNotes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Digite aqui..." className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" rows={3}></textarea>
                     </div>
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar Alterações</button>
                 </form>
@@ -2882,8 +2922,8 @@ const AddRemovalDateModal: React.FC<{ deviceId: number | string, patientId: numb
                 <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-slate-200">Registrar Data de Retirada</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data da Retirada</label>
-                        <input type="date" value={removalDate} onChange={e => setRemovalDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                        <label htmlFor="removalDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data da Retirada</label>
+                        <input id="removalDate" type="date" value={removalDate} onChange={e => setRemovalDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
                     <div className="flex gap-2">
                         <button type="button" onClick={onClose} className="w-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 sm:py-3 px-3 sm:px-4 rounded-lg text-sm sm:text-base">Cancelar</button>
@@ -2915,8 +2955,8 @@ const AddEndDateModal: React.FC<{ medicationId: number | string, patientId: numb
                 <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-slate-200">Registrar Data de Fim</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Fim</label>
-                        <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                        <label htmlFor="endDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Fim</label>
+                        <input id="endDate" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
                     <div className="flex gap-2">
                         <button type="button" onClick={onClose} className="w-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 sm:py-3 px-3 sm:px-4 rounded-lg text-sm sm:text-base">Cancelar</button>
@@ -3103,9 +3143,9 @@ const AlertModal: React.FC<{ question: Question, onClose: () => void, patientId:
                     <div className="pt-4 border-t border-gray-700 space-y-4 bg-slate-800 dark:bg-slate-900">
                         {/* Responsável */}
                         <div>
-                            <label className="text-white font-semibold text-sm mb-1 block">Responsável</label>
+                            <label htmlFor="taskResponsible" className="text-white font-semibold text-sm mb-1 block">Responsável</label>
                             <div className="relative">
-                                <select value={responsible} onChange={(e) => setResponsible(e.target.value)} className="w-full bg-slate-700 border border-gray-600 text-white text-sm rounded-lg p-3 appearance-none focus:outline-none">
+                                <select id="taskResponsible" value={responsible} onChange={(e) => setResponsible(e.target.value)} className="w-full bg-slate-700 border border-gray-600 text-white text-sm rounded-lg p-3 appearance-none focus:outline-none">
                                     <option value="">Selecione...</option>
                                     {RESPONSIBLES.map(r => <option key={r} value={r}>{r}</option>)}
                                 </select>
@@ -3114,9 +3154,9 @@ const AlertModal: React.FC<{ question: Question, onClose: () => void, patientId:
                         </div>
                         {/* Hora */}
                         <div>
-                            <label className="text-white font-semibold text-sm mb-1 block">Selecione a hora</label>
+                            <label htmlFor="taskTime" className="text-white font-semibold text-sm mb-1 block">Selecione a hora</label>
                             <div className="relative">
-                                <select value={time} onChange={(e) => setTime(e.target.value)} className="w-full bg-slate-700 border border-gray-600 text-white text-sm rounded-lg p-3 appearance-none focus:outline-none">
+                                <select id="taskTime" value={time} onChange={(e) => setTime(e.target.value)} className="w-full bg-slate-700 border border-gray-600 text-white text-sm rounded-lg p-3 appearance-none focus:outline-none">
                                     <option value="">Selecione...</option>
                                     {ALERT_DEADLINES.map(t => <option key={t} value={t}>{t}</option>)}
                                 </select>
@@ -3199,7 +3239,7 @@ const ChecklistScreen: React.FC = () => {
     return (
         <div className="relative pb-24">
             {/* Main Card */}
-            <div className="w-full max-w-lg mx-auto bg-blue-600 dark:bg-blue-700 rounded-xl shadow-2xl overflow-hidden flex flex-col min-h-[550px] animate-in slide-in-from-right-4 duration-300">
+            <div className="w-full max-w-lg mx-auto bg-blue-600 dark:bg-blue-700 rounded-xl shadow-2xl overflow-hidden flex flex-col min-h-137.5 animate-in slide-in-from-right-4 duration-300">
 
                 {/* Content */}
                 <div className="p-8 flex-1 flex flex-col items-center text-center space-y-6">
@@ -3207,7 +3247,7 @@ const ChecklistScreen: React.FC = () => {
                         {category.name} • {currentQuestionIndex + 1}/{categoryQuestions.length}
                     </span>
 
-                    <h1 className="text-white text-xl md:text-2xl font-extrabold leading-tight min-h-[80px] flex items-center justify-center">
+                    <h1 className="text-white text-xl md:text-2xl font-extrabold leading-tight min-h-20 flex items-center justify-center">
                         {currentQuestion.text}
                     </h1>
 
@@ -3319,8 +3359,9 @@ const CreateAlertScreen: React.FC = () => {
             <div className="p-6 bg-white dark:bg-slate-800">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Alerta</label>
+                        <label htmlFor="editAlertDescription" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Alerta</label>
                         <input
+                            id="editAlertDescription"
                             type="text"
                             value={description}
                             onChange={e => setDescription(e.target.value)}
@@ -3330,15 +3371,15 @@ const CreateAlertScreen: React.FC = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Responsável</label>
-                        <select value={responsible} onChange={e => setResponsible(e.target.value)} required className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200">
+                        <label htmlFor="editAlertResponsible" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Responsável</label>
+                        <select id="editAlertResponsible" value={responsible} onChange={e => setResponsible(e.target.value)} required className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200">
                             <option value="" disabled>Selecione...</option>
                             {RESPONSIBLES.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Selecione a hora</label>
-                        <select value={deadline} onChange={e => setDeadline(e.target.value)} required className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200">
+                        <label htmlFor="editAlertDeadline" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Selecione a hora</label>
+                        <select id="editAlertDeadline" value={deadline} onChange={e => setDeadline(e.target.value)} required className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200">
                             <option value="" disabled>Selecione...</option>
                             {ALERT_DEADLINES.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
@@ -3381,8 +3422,8 @@ const TaskStatusScreen: React.FC = () => {
         try {
             // Buscar de ambas as views e também os pacientes
             const [tasksResult, alertsResult, patientsResult] = await Promise.all([
-                supabase.from('tasks_view_horario_br').select('id_alerta, patient_id, category_id, ordem_prioridade, alertaclinico, responsavel, status, justificativa, created_at, updated_at, deadline, hora_criacao_br, prazo_limite_br, hora_conclusao_br, hora_criacao_hhmm, prazo_limite_hhmm, hora_conclusao_hhmm, prazo_limite_formatado, prazo_minutos_efetivo, prazo_formatado, live_status, created_by_name'),
-                supabase.from('alertas_paciente_view_completa').select('id_alerta, patient_id, patient_name, created_by_name, alertaclinico, responsavel, status, justificativa, created_at, updated_at, deadline, hora_criacao_br, prazo_limite_br, hora_conclusao_br, hora_criacao_hhmm, prazo_limite_hhmm, hora_conclusao_hhmm, prazo_limite_formatado, prazo_minutos_efetivo, prazo_formatado, live_status'),
+                supabase.from('tasks_view_horario_br').select('id_alerta, patient_id, category_id, ordem_prioridade, alertaclinico, responsavel, status, justificativa, created_at, updated_at, deadline, hora_criacao_br, hora_criacao_formatado, prazo_limite_br, hora_conclusao_br, hora_criacao_hhmm, prazo_limite_hhmm, hora_conclusao_hhmm, prazo_limite_formatado, prazo_minutos_efetivo, prazo_formatado, live_status, created_by_name'),
+                supabase.from('alertas_paciente_view_completa').select('id_alerta, patient_id, patient_name, created_by_name, alertaclinico, responsavel, status, justificativa, created_at, updated_at, deadline, hora_criacao_br, hora_criacao_formatado, prazo_limite_br, hora_conclusao_br, hora_criacao_hhmm, prazo_limite_hhmm, hora_conclusao_hhmm, prazo_limite_formatado, prazo_minutos_efetivo, prazo_formatado, live_status'),
                 supabase.from('patients').select('id, name, bed_number')
             ]);
 
@@ -3555,8 +3596,17 @@ const TaskStatusScreen: React.FC = () => {
                     const formattedDeadline = alert.prazo_limite_formatado || 'Sem prazo';
                     const prazoFormatado = alert.prazo_formatado || '';
 
+                    // Mapa de cores para Tailwind (evita classes dinâmicas)
+                    const colorMap: Record<string, { border: string; text: string }> = {
+                        yellow: { border: 'border-yellow-500', text: 'text-yellow-600 dark:text-yellow-400' },
+                        blue: { border: 'border-blue-500', text: 'text-blue-600 dark:text-blue-400' },
+                        red: { border: 'border-red-500', text: 'text-red-600 dark:text-red-400' },
+                        green: { border: 'border-green-500', text: 'text-green-600 dark:text-green-400' },
+                    };
+                    const colors = colorMap[config.color] || colorMap.blue;
+
                     return (
-                        <div key={`${alert.source}-${alert.id_alerta}`} className={`bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border-l-4 border-${config.color}-500`}>
+                        <div key={`${alert.source}-${alert.id_alerta}`} className={`bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border-l-4 ${colors.border}`}>
                             <div className="flex justify-between items-start">
                                 <div className="flex-1">
                                     {/* Nome do Paciente e Leito */}
@@ -3600,9 +3650,9 @@ const TaskStatusScreen: React.FC = () => {
                                         </p>
                                     )}
                                 </div>
-                                <div className="text-right flex-shrink-0 ml-4">
+                                <div className="text-right shrink-0 ml-4">
                                     <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Prazo Limite:</p>
-                                    <p className={`text-sm font-bold text-${config.color}-600 dark:text-${config.color}-400`}>
+                                    <p className={`text-sm font-bold ${colors.text}`}>
                                         {formattedDeadline}
                                     </p>
                                 </div>
@@ -3677,7 +3727,7 @@ const JustificationModal: React.FC<{ alert: any, onClose: () => void, onSave: (a
                     value={justification}
                     onChange={e => setJustification(e.target.value)}
                     placeholder="Digite a justificativa para o atraso..."
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200 min-h-[100px]"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200 min-h-25"
                 />
                 <div className="flex gap-2 mt-4">
                     <button onClick={onClose} className="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-2 px-3 sm:px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition text-sm sm:text-base">Cancelar</button>
@@ -3774,7 +3824,7 @@ const SettingsScreen: React.FC = () => {
                 <div className="space-y-6">
                     <div className="flex justify-center">
                         <div className="relative group">
-                            <img src={avatarPreview} alt="User avatar" className="w-24 h-24 rounded-full object-cover bg-slate-200" />
+                            <img src={avatarPreview || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23cbd5e1%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2210%22/%3E%3C/svg%3E'} alt="User avatar" className="w-24 h-24 rounded-full object-cover bg-slate-200" />
                             <button
                                 onClick={handleAvatarClick}
                                 className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100"
@@ -3792,8 +3842,9 @@ const SettingsScreen: React.FC = () => {
                         </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Nome</label>
+                        <label htmlFor="profileName" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Nome</label>
                         <input
+                            id="profileName"
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
@@ -3801,8 +3852,9 @@ const SettingsScreen: React.FC = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Setor</label>
+                        <label htmlFor="profileSector" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Setor</label>
                         <input
+                            id="profileSector"
                             type="text"
                             value={sector}
                             onChange={(e) => setSector(e.target.value)}
@@ -3810,8 +3862,9 @@ const SettingsScreen: React.FC = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Cargo</label>
+                        <label htmlFor="profileTitle" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Cargo</label>
                         <input
+                            id="profileTitle"
                             type="text"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}

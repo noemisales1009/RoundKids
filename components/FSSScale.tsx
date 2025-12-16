@@ -131,7 +131,7 @@ const FSSQuestionCard: React.FC<FSSQuestionCardProps> = ({ item, valor, onChange
               Pontuação: 1 a 5
             </p>
           </div>
-          {isSelected && <CheckCircleIcon className={`w-5 h-5 ${isDark ? 'text-green-400' : 'text-green-600'} flex-shrink-0`} />}
+          {isSelected && <CheckCircleIcon className={`w-5 h-5 ${isDark ? 'text-green-400' : 'text-green-600'} shrink-0`} />}
         </div>
 
         <button
@@ -154,7 +154,7 @@ const FSSQuestionCard: React.FC<FSSQuestionCardProps> = ({ item, valor, onChange
               'Toque para selecionar...'
             )}
           </span>
-          <svg className={`w-5 h-5 flex-shrink-0 ml-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className={`w-5 h-5 shrink-0 ml-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
@@ -544,7 +544,7 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
           <button
             onClick={saveAssessment}
             disabled={isSaving || saveStatus === 'success'}
-            className={`w-full py-4 rounded-xl font-bold text-lg shadow-xl transition-all flex items-center justify-center text-sm sm:text-base ${
+            className={`w-full py-4 rounded-xl font-bold shadow-xl transition-all flex items-center justify-center text-sm sm:text-base ${
               isSaving
                 ? isDark
                   ? 'bg-slate-600 text-slate-400 cursor-not-allowed'

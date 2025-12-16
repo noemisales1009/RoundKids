@@ -147,7 +147,7 @@ const BackIcon = ({ theme }: { theme: 'light' | 'dark' }) => (
 
 const CheckIcon = () => (
   <svg
-    className="w-6 h-6 text-green-400 flex-shrink-0 ml-2"
+    className="w-6 h-6 text-green-400 shrink-0 ml-2"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"

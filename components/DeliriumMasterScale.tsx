@@ -177,7 +177,7 @@ const DeliriumQuestionCard: React.FC<DeliriumQuestionCardProps> = ({ item, valor
           <label className={`block text-sm sm:text-base font-bold ${labelColor}`}>{item.label}</label>
           <p className={`text-xs sm:text-sm mt-2 ${textColor}`}>{item.desc}</p>
         </div>
-        {isSelected && <CheckCircleIcon className="w-5 h-5 flex-shrink-0" />}
+        {isSelected && <CheckCircleIcon className="w-5 h-5 shrink-0" />}
       </div>
 
       <div className="relative">

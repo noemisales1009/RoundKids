@@ -81,6 +81,9 @@ export const DEVICE_TYPES: string[] = [
 export const DEVICE_LOCATIONS: string[] = [
     'ABDOME',
     'CABEÇA',
+    'FACE',
+   'PERÍNEO',
+   'ORAL',
     'VJID',
     'VJIE',
     'VSD',
@@ -92,6 +95,7 @@ export const DEVICE_LOCATIONS: string[] = [
     'MSE',
     'MID',
     'MIE',
+    'REGIÃO LOMBAR',
     'TRONCO',
     'TRÁQUÉIA',
 ];
@@ -105,7 +109,13 @@ export const MEDICATION_DOSAGE_UNITS: string[] = [
     'UI/kg/min',
     'mg/h',
     'mg/dia',
-    'mg/kg/dia'
+    'mg/kg/dia',
+    'ug/ml',
+    'ug/dia',
+    'ug/kg/dia',
+    'UI/kg/dia',
+    'UI/dia',
+    'UI/h',
 ];
 
 // Alert Categories for Dashboard
