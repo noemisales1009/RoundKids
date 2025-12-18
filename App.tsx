@@ -621,6 +621,22 @@ const PatientHistoryScreen: React.FC = () => {
     const [balanceData, setBalanceData] = React.useState<any[]>([]);
     const [alertsData, setAlertsData] = React.useState<any[]>([]);
     const [resolvedDiagnostics, setResolvedDiagnostics] = React.useState<any[]>([]);
+    const [dataInicio, setDataInicio] = React.useState<string>('');
+    const [dataFinal, setDataFinal] = React.useState<string>('');
+    const [selectedCategories, setSelectedCategories] = React.useState<Set<string>>(new Set());
+
+    const eventCategories = {
+        'Dispositivos': 'Dispositivo',
+        'Medicações': 'Medicação',
+        'Exames': 'Exame',
+        'Cirúrgico': 'Cirurgia',
+        'Escalas': 'Avaliação de Escala',
+        'Diagnósticos': 'Diagnóstico',
+        'Diurese': 'Diurese',
+        'Balanço Hídrico': 'Balanço Hídrico',
+        'Alertas': 'Alerta',
+        'Comorbidades': 'Comorbidade'
+    };
 
     useHeader(patient ? `Histórico: ${patient.name}` : 'Histórico do Paciente');
 
@@ -781,14 +797,14 @@ const PatientHistoryScreen: React.FC = () => {
             events.push({
                 timestamp: new Date(device.startDate).toISOString(),
                 icon: CpuIcon,
-                description: `Dispositivo Inserido: ${device.name} em ${device.location}.`,
+                description: `[DISPOSITIVO] Dispositivo Inserido: ${device.name} em ${device.location}.`,
                 hasTime: false,
             });
             if (device.removalDate) {
                 events.push({
                     timestamp: new Date(device.removalDate).toISOString(),
                     icon: CpuIcon,
-                    description: `Dispositivo Retirado: ${device.name}.`,
+                    description: `[DISPOSITIVO] Dispositivo Retirado: ${device.name}.`,
                     hasTime: false,
                 });
             }
@@ -798,14 +814,14 @@ const PatientHistoryScreen: React.FC = () => {
             events.push({
                 timestamp: new Date(med.startDate).toISOString(),
                 icon: PillIcon,
-                description: `Início Medicação: ${med.name} (${med.dosage}).`,
+                description: `[MEDICACAO] Início Medicação: ${med.name} (${med.dosage}).`,
                 hasTime: false,
             });
             if (med.endDate) {
                 events.push({
                     timestamp: new Date(med.endDate).toISOString(),
                     icon: PillIcon,
-                    description: `Fim Medicação: ${med.name}.`,
+                    description: `[MEDICACAO] Fim Medicação: ${med.name}.`,
                     hasTime: false,
                 });
             }
@@ -815,7 +831,7 @@ const PatientHistoryScreen: React.FC = () => {
             events.push({
                 timestamp: new Date(exam.date).toISOString(),
                 icon: FileTextIcon,
-                description: `Exame Realizado: ${exam.name}.`,
+                description: `[EXAME] Exame Realizado: ${exam.name}.`,
                 hasTime: false,
             });
         });
@@ -824,7 +840,7 @@ const PatientHistoryScreen: React.FC = () => {
             events.push({
                 timestamp: new Date(procedure.date).toISOString(),
                 icon: ScalpelIcon,
-                description: `Cirurgia Realizada: ${procedure.name} por Dr(a). ${procedure.surgeon}.${procedure.notes ? ` Notas: ${procedure.notes}` : ''}`,
+                description: `[CIRURGICO] Cirurgia Realizada: ${procedure.name} por Dr(a). ${procedure.surgeon}.${procedure.notes ? ` Notas: ${procedure.notes}` : ''}`,
                 hasTime: false,
             });
         });
@@ -836,7 +852,7 @@ const PatientHistoryScreen: React.FC = () => {
             events.push({
                 timestamp: score.date,
                 icon: BarChartIcon,
-                description: `Avaliação de Escala: ${score.scaleName} - Pontuação: ${score.score} (${score.interpretation}).`,
+                description: `[ESCALA] Avaliação de Escala: ${score.scaleName} - Pontuação: ${score.score} (${score.interpretation}).`,
                 hasTime: true,
             });
         });
@@ -846,7 +862,7 @@ const PatientHistoryScreen: React.FC = () => {
             events.push({
                 timestamp: diagnostic.created_at || new Date().toISOString(),
                 icon: ClipboardIcon,
-                description: `Diagnóstico: ${diagnostic.opcao_id ? `Opção ${diagnostic.opcao_id}` : 'Registrado'}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''} (Status: ${diagnostic.status}).`,
+                description: `[DIAGNOSTICO] Diagnóstico: ${diagnostic.opcao_id ? `Opção ${diagnostic.opcao_id}` : 'Registrado'}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''} (Status: ${diagnostic.status}).`,
                 hasTime: true,
             });
         });
@@ -856,7 +872,7 @@ const PatientHistoryScreen: React.FC = () => {
             events.push({
                 timestamp: diagnostic.created_at || new Date().toISOString(),
                 icon: CheckCircleIcon,
-                description: `✓ Diagnóstico Resolvido: ${diagnostic.opcao_label || `Opção ${diagnostic.opcao_id}`}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''}\n👤 Resolvido por: ${diagnostic.created_by_name || 'Não informado'}`,
+                description: `[DIAGNOSTICO] ✓ Diagnóstico Resolvido: ${diagnostic.opcao_label || `Opção ${diagnostic.opcao_id}`}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''}\n👤 Resolvido por: ${diagnostic.created_by_name || 'Não informado'}`,
                 hasTime: true,
             });
         });
@@ -867,7 +883,7 @@ const PatientHistoryScreen: React.FC = () => {
             events.push({
                 timestamp: diuresis.created_at || new Date().toISOString(),
                 icon: DropletIcon,
-                description: `Diurese: ${result} mL/kg/h (Peso: ${diuresis.peso}kg | Volume: ${diuresis.volume}mL | Período: ${diuresis.horas}h).`,
+                description: `[DIURESE] Diurese: ${result} mL/kg/h (Peso: ${diuresis.peso}kg | Volume: ${diuresis.volume}mL | Período: ${diuresis.horas}h).`,
                 hasTime: true,
             });
         });
@@ -878,7 +894,7 @@ const PatientHistoryScreen: React.FC = () => {
             events.push({
                 timestamp: balance.created_at || new Date().toISOString(),
                 icon: DropletIcon,
-                description: `Balanço Hídrico: ${balance.volume > 0 ? '+' : ''}${result}% (Peso: ${balance.peso}kg | Volume: ${balance.volume > 0 ? '+' : ''}${balance.volume}mL).`,
+                description: `[BALANÇO] Balanço Hídrico: ${balance.volume > 0 ? '+' : ''}${result}% (Peso: ${balance.peso}kg | Volume: ${balance.volume > 0 ? '+' : ''}${balance.volume}mL).`,
                 hasTime: true,
             });
         });
@@ -892,12 +908,17 @@ const PatientHistoryScreen: React.FC = () => {
             const tempo = alert.prazo_formatado || alert.prazo_formatado || 'N/A';
             const dataHora = alert.hora_criacao_formatado || alert.hora_criacao_formatado || 'N/A';
             const criadoPor = alert.created_by_name || 'Não informado';
-            const status = alert.status || 'alerta';
+            
+            // Usar live_status para mostrar se está no prazo ou fora do prazo
+            const liveStatus = alert.live_status || 'Não definido';
+            
+            // Usar SEMPRE a data de criação (created_at), não a data de vencimento
+            const creationDate = alert.created_at || alert.hora_criacao || new Date().toISOString();
             
             events.push({
-                timestamp: alert.created_at || new Date().toISOString(),
+                timestamp: creationDate,
                 icon: BellIcon,
-                description: `🔔 ${desc}\n👤 Responsável: ${resp}\n📅 Prazo: ${prazoLimite}\n⏱️ Tempo: ${tempo}\n🕐 Data/Hora: ${dataHora}\n👨‍⚕️ Criado por: ${criadoPor}\n✓ Status: ${status}`,
+                description: `[ALERTA] 🔔 ${desc}\n👤 Responsável: ${resp}\n📅 Prazo: ${prazoLimite}\n⏱️ Tempo: ${tempo}\n🕐 Data/Hora: ${dataHora}\n👨‍⚕️ Criado por: ${criadoPor}\n📊 Status: ${liveStatus}`,
                 hasTime: true,
             });
         });
@@ -959,7 +980,7 @@ const PatientHistoryScreen: React.FC = () => {
             </li>
         `).join('') || '<li>Nenhuma avaliação registrada.</li>';
 
-        const generateHistoryList = () => Object.entries(patientHistory).map(([date, eventsOnDate]) => `
+        const generateHistoryList = () => Object.entries(displayedHistory).map(([date, eventsOnDate]) => `
             <div class="history-group">
                 <h3>${formatHistoryDate(date)}</h3>
                 <ul>
@@ -1044,21 +1065,153 @@ const PatientHistoryScreen: React.FC = () => {
         return <p>Paciente não encontrado.</p>;
     }
 
+    const getUniqueEventTypes = () => {
+        const types = new Set<string>();
+        Object.values(patientHistory).forEach((events: any) => {
+            (events as TimelineEvent[]).forEach(event => {
+                types.add(event.description.split('\n')[0].substring(0, 50)); // Pega tipo do evento
+            });
+        });
+        return Array.from(types).sort();
+    };
+
+    const getEventCategory = (description: string): string | null => {
+        // Usar os marcadores [TIPO] que foram adicionados às descrições
+        const categoryMap: Record<string, string> = {
+            '[DISPOSITIVO]': 'Dispositivos',
+            '[MEDICACAO]': 'Medicações',
+            '[EXAME]': 'Exames',
+            '[CIRURGICO]': 'Cirúrgico',
+            '[ESCALA]': 'Escalas',
+            '[DIAGNOSTICO]': 'Diagnósticos',
+            '[DIURESE]': 'Diurese',
+            '[BALANÇO]': 'Balanço Hídrico',
+            '[ALERTA]': 'Alertas',
+            '[COMORBIDADE]': 'Comorbidades'
+        };
+        
+        for (const [marker, category] of Object.entries(categoryMap)) {
+            if (description.includes(marker)) {
+                return category;
+            }
+        }
+        return null;
+    };
+
+    const filteredHistory = () => {
+        const filtered: Record<string, TimelineEvent[]> = {};
+        
+        Object.entries(patientHistory).forEach(([date, eventsOnDate]) => {
+            const eventDate = new Date(date).getTime();
+            const startDate = dataInicio ? new Date(dataInicio).getTime() : 0;
+            const endDate = dataFinal ? new Date(dataFinal).getTime() + 86400000 : Infinity;
+            
+            if (eventDate >= startDate && eventDate <= endDate) {
+                let filteredEvents = eventsOnDate as TimelineEvent[];
+                
+                if (selectedCategories.size > 0) {
+                    filteredEvents = filteredEvents.filter(event => {
+                        const category = getEventCategory(event.description);
+                        return category && selectedCategories.has(category);
+                    });
+                }
+                
+                if (filteredEvents.length > 0) {
+                    filtered[date] = filteredEvents;
+                }
+            }
+        });
+        
+        return filtered;
+    };
+
+    const toggleCategory = (category: string) => {
+        const newSet = new Set(selectedCategories);
+        if (newSet.has(category)) {
+            newSet.delete(category);
+        } else {
+            newSet.add(category);
+        }
+        setSelectedCategories(newSet);
+    };
+
+    const clearFilters = () => {
+        setDataInicio('');
+        setDataFinal('');
+        setSelectedCategories(new Set());
+    };
+
+    const displayedHistory = filteredHistory();
+
     return (
         <div className="space-y-4">
-            <div className="flex justify-end">
-                <button
-                    onClick={handleGeneratePdf}
-                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition"
-                >
-                    <FileTextIcon className="w-5 h-5" />
-                    Gerar PDF
-                </button>
+            {/* Filtros */}
+            <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm space-y-4">
+                <h3 className="font-semibold text-slate-800 dark:text-slate-200">Filtros</h3>
+                
+                {/* Data Início e Final */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data Inicial</label>
+                        <input
+                            type="date"
+                            value={dataInicio}
+                            onChange={(e) => setDataInicio(e.target.value)}
+                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data Final</label>
+                        <input
+                            type="date"
+                            value={dataFinal}
+                            onChange={(e) => setDataFinal(e.target.value)}
+                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                        />
+                    </div>
+                </div>
+                
+                {/* Filtro por Categoria */}
+                <div>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Categorias</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        {Object.keys(eventCategories).map(category => (
+                            <label key={category} className="flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-300 text-xs sm:text-sm">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedCategories.has(category)}
+                                    onChange={() => toggleCategory(category)}
+                                    className="rounded focus:ring-blue-500"
+                                />
+                                <span className="truncate">{category}</span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+                
+                {/* Botões de Ação */}
+                <div className="flex gap-2 justify-between flex-wrap">
+                    <button
+                        onClick={clearFilters}
+                        className="px-4 py-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold rounded-lg transition text-sm"
+                    >
+                        Limpar Filtros
+                    </button>
+                    <button
+                        onClick={handleGeneratePdf}
+                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
+                    >
+                        <FileTextIcon className="w-5 h-5" />
+                        Gerar PDF
+                    </button>
+                </div>
             </div>
+
+            {/* Histórico Filtrado */}
             <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm">
-                {Object.keys(patientHistory).length > 0 ? (
+                {Object.keys(displayedHistory).length > 0 ? (
                     <div className="space-y-6">
-                        {Object.entries(patientHistory).map(([date, eventsOnDate]) => (
+                        {Object.entries(displayedHistory).map(([date, eventsOnDate]) => (
                             <div key={date}>
                                 <h3 className="font-semibold text-slate-600 dark:text-slate-400 mb-2">{formatHistoryDate(date)}</h3>
                                 <div className="space-y-3">
@@ -1082,7 +1235,11 @@ const PatientHistoryScreen: React.FC = () => {
                         ))}
                     </div>
                 ) : (
-                    <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhum histórico de eventos para este paciente.</p>
+                    <p className="text-center text-slate-500 dark:text-slate-400 py-4">
+                        {Object.keys(patientHistory).length === 0 
+                            ? 'Nenhum histórico de eventos para este paciente.' 
+                            : 'Nenhum evento encontrado com os filtros selecionados.'}
+                    </p>
                 )}
             </div>
         </div>
