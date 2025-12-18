@@ -13,36 +13,6 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [calculatedResult, setCalculatedResult] = useState(0);
-  const [lastCalculation, setLastCalculation] = useState<{ peso: number; volume: number; horas: number; resultado: number; data: string } | null>(null);
-
-  // Buscar último cálculo
-  useEffect(() => {
-    const fetchLastCalculation = async () => {
-      try {
-        const { data } = await supabase
-          .from('diurese_historico')
-          .select('peso, volume, horas, resultado, data_calculo')
-          .eq('patient_id', patientId)
-          .order('data_calculo', { ascending: false })
-          .limit(1);
-        
-        if (data && data.length > 0) {
-          const last = data[0];
-          setLastCalculation({
-            peso: last.peso,
-            volume: last.volume,
-            horas: last.horas,
-            resultado: last.resultado,
-            data: new Date(last.data_calculo).toLocaleString('pt-BR')
-          });
-        }
-      } catch (error) {
-        console.error('Erro ao buscar último cálculo:', error);
-      }
-    };
-    
-    fetchLastCalculation();
-  }, [patientId]);
 
   // Calcular resultado em tempo real
   useEffect(() => {
@@ -96,19 +66,6 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
       });
 
       if (insertError) throw insertError;
-
-      // Salvar também no histórico
-      const { error: historyError } = await supabase.from('diurese_historico').insert({
-        patient_id: patientId,
-        peso: weightNum,
-        volume: volumeNum,
-        horas: hoursNum,
-        resultado: calculatedResult,
-      });
-
-      if (historyError) {
-        console.error('Aviso: Erro ao salvar no histórico:', historyError);
-      }
 
       setMessage({ type: 'success', text: 'Diurese registrada com sucesso!' });
       setVolume('');
@@ -225,16 +182,7 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
           </div>
         )}
 
-        {/* Último Cálculo */}
-        {lastCalculation && (
-          <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-2.5 sm:p-3">
-            <p className="text-xs font-semibold text-purple-700 dark:text-purple-400 mb-1">Último Cálculo:</p>
-            <p className="text-xs sm:text-sm text-purple-600 dark:text-purple-300">
-              Peso: {lastCalculation.peso}kg | Volume: {lastCalculation.volume}mL | Horas: {lastCalculation.horas}h | Resultado: {lastCalculation.resultado.toFixed(2)} mL/kg/h
-            </p>
-            <p className="text-xs text-purple-500 dark:text-purple-400 mt-1">{lastCalculation.data}</p>
-          </div>
-        )}
+
 
         {/* Botão Salvar */}
         <button

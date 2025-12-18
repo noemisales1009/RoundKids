@@ -13,35 +13,6 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [calculatedResult, setCalculatedResult] = useState(0);
-  const [lastCalculation, setLastCalculation] = useState<{ peso: number; volume: number; resultado: number; data: string } | null>(null);
-
-  // Buscar último cálculo
-  useEffect(() => {
-    const fetchLastCalculation = async () => {
-      try {
-        const { data } = await supabase
-          .from('balanco_hidrico_historico')
-          .select('peso, volume, resultado, data_calculo')
-          .eq('patient_id', patientId)
-          .order('data_calculo', { ascending: false })
-          .limit(1);
-        
-        if (data && data.length > 0) {
-          const last = data[0];
-          setLastCalculation({
-            peso: last.peso,
-            volume: last.volume,
-            resultado: last.resultado,
-            data: new Date(last.data_calculo).toLocaleString('pt-BR')
-          });
-        }
-      } catch (error) {
-        console.error('Erro ao buscar último cálculo:', error);
-      }
-    };
-    
-    fetchLastCalculation();
-  }, [patientId]);
 
   // Calcular resultado em tempo real
   useEffect(() => {
@@ -82,20 +53,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
 
       if (insertError) throw insertError;
 
-      // Salvar também no histórico
-      const { error: historyError } = await supabase.from('balanco_hidrico_historico').insert({
-        patient_id: patientId,
-        peso: weightNum,
-        volume: finalVolume,
-        resultado: result,
-      });
-
-      if (historyError) {
-        console.error('Aviso: Erro ao salvar no histórico:', historyError);
-        // Não lançar erro, pois o dado principal foi salvo
-      }
-
-      setMessage({ type: 'success', text: 'Cálculo salvo com sucesso!' });
+      setMessage({ type: 'success', text: 'Balánço hídrico registrado com sucesso!' });
       setVolume('');
     } catch (error) {
       console.error('Erro ao salvar:', error);
@@ -229,16 +187,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
           </div>
         )}
 
-        {/* Último Cálculo */}
-        {lastCalculation && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2.5 sm:p-3">
-            <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 mb-1">Último Cálculo:</p>
-            <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-300">
-              Peso: {lastCalculation.peso}kg | Volume: {lastCalculation.volume}mL | Resultado: {lastCalculation.resultado.toFixed(2)}%
-            </p>
-            <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">{lastCalculation.data}</p>
-          </div>
-        )}
+
 
         {/* Botão de Salvar */}
         <button
