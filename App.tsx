@@ -18,6 +18,7 @@ import { DiagnosticsSection } from './components/DiagnosticsSection';
 import DiuresisCalc from './components/DiuresisCalc';
 import DiuresisHistory from './components/DiuresisHistory';
 import FluidBalanceCalc from './components/FluidBalanceCalc';
+import FluidBalanceHistory from './components/FluidBalanceHistory';
 import StatusComponent from './components/StatusComponent';
 import ComorbidadeComponent from './components/ComorbidadeComponent';
 import DestinoComponent from './components/DestinoComponent';
@@ -998,6 +999,7 @@ const PatientHistoryScreen: React.FC = () => {
                 </button>
             </div>
             <DiuresisHistory patientId={patientId!} />
+            <FluidBalanceHistory patientId={patientId!} />
             <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm">
                 {Object.keys(patientHistory).length > 0 ? (
                     <div className="space-y-6">
