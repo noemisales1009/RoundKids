@@ -50,6 +50,7 @@ export interface Culture {
   site: string; // local
   microorganism: string; // microorganismo
   collectionDate: string; // data_coleta
+  observation?: string; // observação (opcional)
   isArchived?: boolean;
 }
 
