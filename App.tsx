@@ -21,6 +21,7 @@ import StatusComponent from './components/StatusComponent';
 import ComorbidadeComponent from './components/ComorbidadeComponent';
 import DistintvoComponent from './components/DistintvoComponent';
 import DestinoComponent from './components/DestinoComponent';
+import HistorySection from './components/HistorySection';
 import { supabase } from './supabaseClient';
 import { AlertsHistoryScreen } from './AlertsHistoryScreen';
 import {
@@ -1278,9 +1279,6 @@ const PatientDetailScreen: React.FC = () => {
         { id: 'medications', label: 'Medicações', icon: PillIcon },
         { id: 'surgical', label: 'Cirúrgico', icon: ScalpelIcon },
         { id: 'cultures', label: 'Culturas', icon: BeakerIcon },
-        { id: 'diagnostics', label: 'Diagnóstico', icon: ClipboardIcon },
-        { id: 'diuresis', label: 'Diurese', icon: DropletIcon },
-        { id: 'fluidBalance', label: 'Balanço Hídrico', icon: BeakerIcon },
     ];
 
     return (
