@@ -43,14 +43,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
         volume: signed,
       };
 
-      // Salvar na tabela principal
       await supabase.from('balanco_hidrico').insert(balanceRecord);
-
-      // Salvar no histórico
-      await supabase.from('balanco_hidrico_historico').insert({
-        ...balanceRecord,
-        created_at: new Date().toISOString(),
-      });
 
       showNotification({ message: 'Balanço hídrico salvo com sucesso!', type: 'success' });
     } catch (error) {

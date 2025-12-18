@@ -25,7 +25,7 @@ const FluidBalanceHistory: React.FC<FluidBalanceHistoryProps> = ({ patientId }) 
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('balanco_hidrico_historico')
+        .from('balanco_hidrico')
         .select('*')
         .eq('patient_id', patientId)
         .order('created_at', { ascending: false })
