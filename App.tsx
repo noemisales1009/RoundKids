@@ -3416,6 +3416,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             motherName: p.mother_name || '-',
             dob: p.dob,
             ctd: p.diagnosis || p.ctd || 'Estável',
+            peso: p.peso,
             devices: devicesMap[p.id] || [],
             exams: examsMap[p.id] || [],
             medications: medsMap[p.id] || [],

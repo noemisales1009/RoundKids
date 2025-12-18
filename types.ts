@@ -61,6 +61,7 @@ export interface Patient {
   motherName: string;
   dob: string; // "YYYY-MM-DD"
   ctd: string; // Used for Diagnosis
+  peso?: number;
   devices: Device[];
   exams: Exam[];
   medications: Medication[];
