@@ -15,6 +15,8 @@ import { VniCnafScale } from './components/VniCnafScale';
 import { FSSScale } from './components/FSSScale';
 import { SecondaryNavigation } from './components/SecondaryNavigation';
 import { DiagnosticsSection } from './components/DiagnosticsSection';
+import DiuresisCalc from './components/DiuresisCalc';
+import FluidBalanceCalc from './components/FluidBalanceCalc';
 import { supabase } from './supabaseClient';
 import { AlertsHistoryScreen } from './AlertsHistoryScreen';
 import {
@@ -1272,6 +1274,9 @@ const PatientDetailScreen: React.FC = () => {
         { id: 'medications', label: 'Medicações', icon: PillIcon },
         { id: 'surgical', label: 'Cirúrgico', icon: ScalpelIcon },
         { id: 'cultures', label: 'Culturas', icon: BeakerIcon },
+        { id: 'diagnostics', label: 'Diagnóstico', icon: ClipboardIcon },
+        { id: 'diuresis', label: 'Diurese', icon: DropletIcon },
+        { id: 'fluidBalance', label: 'Balanço Hídrico', icon: BeakerIcon },
     ];
 
     return (
@@ -1541,6 +1546,10 @@ const PatientDetailScreen: React.FC = () => {
             </div>
 
             <DiagnosticsSection patientId={patient.id.toString()} />
+
+            <DiuresisCalc patientId={patient.id.toString()} />
+
+            <FluidBalanceCalc patientId={patient.id.toString()} />
 
             {user?.access_level === 'adm' ? (
                 <Link to={`/patient/${patient.id}/round/categories`} className="w-full block text-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg">

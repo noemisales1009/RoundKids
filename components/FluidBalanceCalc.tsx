@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator, Save, Droplets, ArrowUpCircle, ArrowDownCircle, AlertCircle } from 'lucide-react';
+import { CalculatorIcon, SaveIcon, DropletIcon } from './icons';
 import { supabase } from '../supabaseClient';
 
 interface FluidBalanceCalcProps {
@@ -111,7 +111,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
       {/* Cabeçalho */}
       <div className="bg-linear-to-r from-blue-600 to-blue-700 dark:from-blue-900 dark:to-blue-800 p-4 flex items-center gap-3">
         <div className="bg-white/20 p-2 rounded-lg">
-          <Calculator className="text-white w-5 h-5 sm:w-6 sm:h-6" />
+          <CalculatorIcon className="text-white w-5 h-5 sm:w-6 sm:h-6" />
         </div>
         <div>
           <h2 className="text-white font-bold text-base sm:text-lg">Balanço Hídrico</h2>
@@ -150,9 +150,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
                   : 'bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-600'
               }`}
             >
-              <ArrowUpCircle size={16} className="hidden sm:block" />
-              <ArrowUpCircle size={14} className="sm:hidden" />
-              <span>Positivo (+)</span>
+              <span>↑ Positivo (+)</span>
             </button>
             <button
               onClick={() => setIsPositive(false)}
@@ -162,9 +160,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
                   : 'bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-600'
               }`}
             >
-              <ArrowDownCircle size={16} className="hidden sm:block" />
-              <ArrowDownCircle size={14} className="sm:hidden" />
-              <span>Negativo (-)</span>
+              <span>↓ Negativo (-)</span>
             </button>
           </div>
         </div>
@@ -186,7 +182,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
                   : 'border-slate-300 dark:border-slate-600 focus:border-red-500 dark:focus:border-red-400 focus:ring-red-500 dark:focus:ring-red-400'
               }`}
             />
-            <Droplets 
+            <DropletIcon 
               className={`absolute left-2.5 sm:left-3 top-2.5 sm:top-3 w-4 h-4 sm:w-5 sm:h-5 ${isPositive ? 'text-blue-400 dark:text-blue-300' : 'text-red-400 dark:text-red-300'}`} 
             />
           </div>
@@ -219,8 +215,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
           {/* Alerta Visual */}
           {Math.abs(calculatedResult) >= 10 && (
             <div className="flex items-center gap-1.5 text-orange-600 dark:text-orange-300 bg-white dark:bg-slate-800 px-2 sm:px-3 py-1 rounded-full shadow-sm border border-orange-100 dark:border-orange-800 animate-pulse text-xs sm:text-sm font-bold">
-              <AlertCircle size={14} className="sm:w-4 sm:h-4" />
-              <span>Balanço Elevado</span>
+              <span>⚠ Balanço Elevado</span>
             </div>
           )}
         </div>
@@ -255,7 +250,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
             'Salvando...'
           ) : (
             <>
-              <Save size={16} className="sm:w-4.5 sm:h-4.5" />
+              <SaveIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
               Salvar
             </>
           )}

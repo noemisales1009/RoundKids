@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Save, Droplets, Clock, Scale, AlertCircle } from 'lucide-react';
+import { SaveIcon, DropletIcon, PillIcon } from './icons';
 import { supabase } from '../supabaseClient';
 
 interface DiuresisCalcProps {
@@ -126,7 +126,7 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
       {/* Cabeçalho */}
       <div className="bg-linear-to-r from-teal-600 to-teal-700 dark:from-teal-900 dark:to-teal-800 p-4 flex items-center gap-3">
         <div className="bg-white/20 p-2 rounded-lg">
-          <Activity className="text-white w-5 h-5 sm:w-6 sm:h-6" />
+          <PillIcon className="text-white w-5 h-5 sm:w-6 sm:h-6" />
         </div>
         <div>
           <h2 className="text-white font-bold text-base sm:text-lg">Cálculo de Diurese</h2>
@@ -139,7 +139,6 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
         {/* Input de Peso */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            <Scale size={16} className="text-slate-400 dark:text-slate-500" />
             Peso do Paciente (kg)
           </label>
           <input
@@ -155,7 +154,6 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
         {/* Seleção de Horas */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            <Clock size={16} className="text-slate-400 dark:text-slate-500" />
             Período de Coleta (Horas)
           </label>
           <select
@@ -174,7 +172,7 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
         {/* Input de Volume */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            <Droplets size={16} className="text-slate-400 dark:text-slate-500" />
+            <DropletIcon className="text-slate-400 dark:text-slate-500" />
             Volume Urinário Total (mL)
           </label>
           <input
@@ -203,8 +201,7 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
           {/* Alerta Visual */}
           {calculatedResult > 0 && calculatedResult < 0.5 && (
             <div className="flex items-center gap-1.5 text-red-600 dark:text-red-300 bg-white dark:bg-slate-800 px-2 sm:px-3 py-1 rounded-full shadow-sm border border-red-100 dark:border-red-800 animate-pulse text-xs sm:text-sm font-bold">
-              <AlertCircle size={14} className="sm:w-4 sm:h-4" />
-              <span>Oligúria</span>
+              <span>🔴 Oligúria</span>
             </div>
           )}
           {calculatedResult >= 0.5 && calculatedResult < 1.0 && (
@@ -249,7 +246,7 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
             'Salvando...'
           ) : (
             <>
-              <Save size={16} className="sm:w-4.5 sm:h-4.5" />
+              <SaveIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
               Salvar
             </>
           )}
