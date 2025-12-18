@@ -219,9 +219,9 @@ const Notification: React.FC<{ message: string; type: 'success' | 'error' | 'inf
     }[type];
 
     const icon = {
-        success: <CheckCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0" />,
-        error: <WarningIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0" />,
-        info: <InfoIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0" />,
+        success: <CheckCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white shrink-0" />,
+        error: <WarningIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white shrink-0" />,
+        info: <InfoIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white shrink-0" />,
     }[type];
 
     return (
@@ -525,11 +525,11 @@ const PatientListScreen: React.FC = () => {
                     return (
                         <Link to={`/patient/${patient.id}`} key={patient.id} className="block bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm hover:shadow-md transition">
                             <div className="flex items-center space-x-4">
-                                <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-blue-100 dark:bg-blue-900/80 text-blue-600 dark:text-blue-300 rounded-full font-bold text-lg">
+                                <div className="shrink-0 w-12 h-12 flex items-center justify-center bg-blue-100 dark:bg-blue-900/80 text-blue-600 dark:text-blue-300 rounded-full font-bold text-lg">
                                     {patient.bedNumber}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-slate-800 dark:text-slate-200 break-words">{patient.name}</p>
+                                    <p className="font-bold text-slate-800 dark:text-slate-200 wrap-break-word">{patient.name}</p>
                                     <p className="text-sm text-slate-500 dark:text-slate-400">Nasc: {new Date(patient.dob).toLocaleDateString('pt-BR')}</p>
                                     <div className="mt-2 flex items-center gap-2">
                                         <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
@@ -825,7 +825,7 @@ const PatientHistoryScreen: React.FC = () => {
                                 <div className="space-y-3">
                                     {(eventsOnDate as TimelineEvent[]).map((event, index) => (
                                         <div key={index} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                                            <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-blue-100 dark:bg-blue-900/80 rounded-full mt-1">
+                                            <div className="shrink-0 w-8 h-8 flex items-center justify-center bg-blue-100 dark:bg-blue-900/80 rounded-full mt-1">
                                                 <event.icon className="w-5 h-5 text-blue-600 dark:text-blue-300" />
                                             </div>
                                             <div className="flex-1">
@@ -1311,7 +1311,7 @@ const PatientDetailScreen: React.FC = () => {
                                         <div key={device.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
-                                                    <CpuIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
+                                                    <CpuIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
                                                     <div>
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{device.name} - {device.location}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(device.startDate)}</p>
@@ -1322,7 +1322,7 @@ const PatientDetailScreen: React.FC = () => {
                                                         )}
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                                <div className="flex items-center gap-2 shrink-0 ml-2">
                                                     {!device.removalDate ? (
                                                         <button onClick={() => setRemovalModalOpen(device.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Retirada</button>
                                                     ) : (
@@ -1347,14 +1347,14 @@ const PatientDetailScreen: React.FC = () => {
                                         <div key={exam.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
-                                                    <FileTextIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
+                                                    <FileTextIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
                                                     <div>
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{exam.name}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(exam.date)}</p>
                                                         {exam.observation && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 italic">Obs: {exam.observation}</p>}
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                                                <div className="flex items-center gap-1 shrink-0 ml-2">
                                                     <button onClick={() => setEditingExam(exam)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar exame">
                                                         <PencilIcon className="w-4 h-4" />
                                                     </button>
@@ -1375,9 +1375,9 @@ const PatientDetailScreen: React.FC = () => {
                                         <div key={medication.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
-                                                    <PillIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
+                                                    <PillIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
                                                     <div>
-                                                        <p className="font-bold text-slate-800 dark:text-slate-200 break-words">{medication.name} - {medication.dosage}</p>
+                                                        <p className="font-bold text-slate-800 dark:text-slate-200 wrap-break-word">{medication.name} - {medication.dosage}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(medication.startDate)}</p>
                                                         {medication.endDate ? (
                                                             <p className="text-sm text-slate-500 dark:text-slate-400">Fim: {formatDateToBRL(medication.endDate)}</p>
@@ -1386,7 +1386,7 @@ const PatientDetailScreen: React.FC = () => {
                                                         )}
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                                <div className="flex items-center gap-2 shrink-0 ml-2">
                                                     {!medication.endDate && <button onClick={() => setEndDateModalOpen(medication.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Fim</button>}
                                                     <button onClick={() => setEditingMedication(medication)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar medicação">
                                                         <PencilIcon className="w-4 h-4" />
@@ -1408,7 +1408,7 @@ const PatientDetailScreen: React.FC = () => {
                                         <div key={procedure.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
-                                                    <ScalpelIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
+                                                    <ScalpelIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
                                                     <div>
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{procedure.name}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(procedure.date)} - Dr(a): {procedure.surgeon}</p>
@@ -1416,7 +1416,7 @@ const PatientDetailScreen: React.FC = () => {
                                                         {procedure.notes && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 italic">Obs: {procedure.notes}</p>}
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                                                <div className="flex items-center gap-1 shrink-0 ml-2">
                                                     <button onClick={() => setEditingSurgicalProcedure(procedure)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar cirurgia">
                                                         <PencilIcon className="w-4 h-4" />
                                                     </button>
@@ -1437,14 +1437,14 @@ const PatientDetailScreen: React.FC = () => {
                                         <div key={culture.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
-                                                    <BeakerIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
+                                                    <BeakerIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
                                                     <div>
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{culture.site}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Microorganismo: {culture.microorganism}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(culture.collectionDate)}</p>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                                                <div className="flex items-center gap-1 shrink-0 ml-2">
                                                     <button onClick={() => setEditingCulture(culture)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar cultura">
                                                         <PencilIcon className="w-4 h-4" />
                                                     </button>
@@ -1527,7 +1527,7 @@ const PatientDetailScreen: React.FC = () => {
 
             <button
                 onClick={() => setCreateAlertModalOpen(true)}
-                className="w-full mt-3 block text-center bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg flex items-center justify-center gap-2"
+                className="w-full mt-3 text-center bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg flex items-center justify-center gap-2"
             >
                 <WarningIcon className="w-6 h-6" />
                 Criar Novo Alerta
@@ -2294,7 +2294,7 @@ const ChecklistScreen: React.FC = () => {
                         {category.name} • {currentQuestionIndex + 1}/{categoryQuestions.length}
                     </span>
 
-                    <h1 className="text-white text-xl md:text-2xl font-extrabold leading-tight min-h-[80px] flex items-center justify-center">
+                    <h1 className="text-white text-xl md:text-2xl font-extrabold leading-tight min-h-20 flex items-center justify-center">
                         {currentQuestion.text}
                     </h1>
 
@@ -2670,7 +2670,7 @@ const TaskStatusScreen: React.FC = () => {
                                         </p>
                                     )}
                                 </div>
-                                <div className="text-right flex-shrink-0 ml-4">
+                                <div className="text-right shrink-0 ml-4">
                                     <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Prazo Limite:</p>
                                     <p className={`text-sm font-bold text-${config.color}-600 dark:text-${config.color}-400`}>
                                         {formattedDeadline}

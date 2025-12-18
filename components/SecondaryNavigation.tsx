@@ -107,12 +107,12 @@ export const SecondaryNavigation: React.FC<SecondaryNavigationProps> = ({
         <div className="relative bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
             {/* Left Fade Indicator */}
             {showLeftFade && (
-                <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-slate-50 to-transparent dark:from-slate-950 pointer-events-none z-10" />
+                <div className="absolute left-0 top-0 bottom-0 w-8 bg-linear-to-r from-slate-50 to-transparent dark:from-slate-950 pointer-events-none z-10" />
             )}
 
             {/* Right Fade Indicator */}
             {showRightFade && (
-                <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-50 to-transparent dark:from-slate-950 pointer-events-none z-10" />
+                <div className="absolute right-0 top-0 bottom-0 w-8 bg-linear-to-l from-slate-50 to-transparent dark:from-slate-950 pointer-events-none z-10" />
             )}
 
             {/* Scrollable Navigation Container */}
@@ -135,13 +135,13 @@ export const SecondaryNavigation: React.FC<SecondaryNavigationProps> = ({
                             key={tab.id}
                             data-tab-id={tab.id}
                             onClick={() => onTabChange(tab.id)}
-                            className={`flex-shrink-0 py-3 px-4 text-center font-semibold flex items-center justify-center gap-2 transition-colors duration-200 text-sm whitespace-nowrap border-b-2 ${
+                            className={`shrink-0 py-3 px-4 text-center font-semibold flex items-center justify-center gap-2 transition-colors duration-200 text-sm whitespace-nowrap border-b-2 ${
                                 isActive
                                     ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-900'
                                     : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                             }`}
                         >
-                            <Icon className="w-5 h-5 flex-shrink-0" />
+                            <Icon className="w-5 h-5 shrink-0" />
                             <span>{tab.label}</span>
                         </button>
                     );
