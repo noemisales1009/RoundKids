@@ -115,7 +115,7 @@ const DistintvoComponent: React.FC<DistintvoComponentProps> = ({ patientId }) =>
       >
         <div className="flex items-center gap-2">
           <span className="text-lg">⚠️</span>
-          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Distintivos</h3>
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Destino</h3>
         </div>
         <ChevronRightIcon className={`w-5 h-5 text-slate-400 transition transform ${isExpanded ? 'rotate-90' : ''}`} />
       </button>
@@ -151,7 +151,7 @@ const DistintvoComponent: React.FC<DistintvoComponentProps> = ({ patientId }) =>
           {/* Campo de Entrada */}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Adicionar Distintivo
+              Adicionar Destino
             </label>
             <div className="flex gap-2">
               <input
@@ -159,7 +159,7 @@ const DistintvoComponent: React.FC<DistintvoComponentProps> = ({ patientId }) =>
                 value={newDistintivo}
                 onChange={(e) => setNewDistintivo(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && addDistintivo()}
-                placeholder="Digite um distintivo..."
+                placeholder="Digite um destino..."
                 className="flex-1 p-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100"
               />
               <button
@@ -174,7 +174,7 @@ const DistintvoComponent: React.FC<DistintvoComponentProps> = ({ patientId }) =>
           {/* Lista de Sugestões Comuns */}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Distintivos Comuns
+              Destinos Comuns
             </label>
             <div className="grid grid-cols-1 gap-2">
               {commonDistintivos.map((distintivo) => (

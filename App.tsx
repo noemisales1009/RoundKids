@@ -20,7 +20,7 @@ import FluidBalanceCalc from './components/FluidBalanceCalc';
 import StatusComponent from './components/StatusComponent';
 import ComorbidadeComponent from './components/ComorbidadeComponent';
 import DistintvoComponent from './components/DistintvoComponent';
-import HistorySection from './components/HistorySection';
+import DestinoComponent from './components/DestinoComponent';
 import { supabase } from './supabaseClient';
 import { AlertsHistoryScreen } from './AlertsHistoryScreen';
 import {
@@ -1565,8 +1565,6 @@ const PatientDetailScreen: React.FC = () => {
 
             <FluidBalanceCalc patientId={patient.id.toString()} />
 
-            <DistintvoComponent patientId={patient.id.toString()} />
-
             <HistorySection patientId={patient.id.toString()} />
 
             {user?.access_level === 'adm' ? (
@@ -1592,6 +1590,10 @@ const PatientDetailScreen: React.FC = () => {
                 <WarningIcon className="w-6 h-6" />
                 Criar Novo Alerta
             </button>
+
+            <DestinoComponent patientId={patient.id.toString()} />
+
+            <DistintvoComponent patientId={patient.id.toString()} />
 
             {isAddDeviceModalOpen && <AddDeviceModal patientId={patient.id} onClose={() => setAddDeviceModalOpen(false)} />}
             {editingDevice && <EditDeviceModal device={editingDevice} patientId={patient.id} onClose={() => setEditingDevice(null)} />}
