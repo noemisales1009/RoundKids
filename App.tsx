@@ -1147,10 +1147,12 @@ const PatientDetailScreen: React.FC = () => {
     const [dataTab, setDataTab] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures'>('devices');
     const [isAddDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
     const [editingDevice, setEditingDevice] = useState<Device | null>(null);
+    const [editingDeviceRemovalDate, setEditingDeviceRemovalDate] = useState<Device | null>(null);
     const [isAddExamModalOpen, setAddExamModalOpen] = useState(false);
     const [editingExam, setEditingExam] = useState<Exam | null>(null);
     const [isAddMedicationModalOpen, setAddMedicationModalOpen] = useState(false);
     const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
+    const [editingMedicationEndDate, setEditingMedicationEndDate] = useState<Medication | null>(null);
     const [isAddSurgicalModalOpen, setAddSurgicalModalOpen] = useState(false);
     const [editingSurgicalProcedure, setEditingSurgicalProcedure] = useState<SurgicalProcedure | null>(null);
     const [isAddCultureModalOpen, setAddCultureModalOpen] = useState(false);
@@ -1352,7 +1354,7 @@ const PatientDetailScreen: React.FC = () => {
                                                             <CloseIcon className="w-4 h-4" />
                                                         </button>
                                                     )}
-                                                    <button onClick={() => setEditingDevice(device)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar dispositivo">
+                                                    <button onClick={() => device.removalDate ? setEditingDeviceRemovalDate(device) : setEditingDevice(device)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar dispositivo">
                                                         <PencilIcon className="w-4 h-4" />
                                                     </button>
                                                 </div>
@@ -1410,7 +1412,7 @@ const PatientDetailScreen: React.FC = () => {
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0 ml-2">
                                                     {!medication.endDate && <button onClick={() => setEndDateModalOpen(medication.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Fim</button>}
-                                                    <button onClick={() => setEditingMedication(medication)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar medicação">
+                                                    <button onClick={() => medication.endDate ? setEditingMedicationEndDate(medication) : setEditingMedication(medication)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar medicação">
                                                         <PencilIcon className="w-4 h-4" />
                                                     </button>
                                                     <button onClick={() => handleDeleteMedication(patient.id, medication.id)} className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded-full transition" aria-label="Excluir medicação">
@@ -1557,10 +1559,12 @@ const PatientDetailScreen: React.FC = () => {
 
             {isAddDeviceModalOpen && <AddDeviceModal patientId={patient.id} onClose={() => setAddDeviceModalOpen(false)} />}
             {editingDevice && <EditDeviceModal device={editingDevice} patientId={patient.id} onClose={() => setEditingDevice(null)} />}
+            {editingDeviceRemovalDate && <EditDeviceRemovalDateModal device={editingDeviceRemovalDate} patientId={patient.id} onClose={() => setEditingDeviceRemovalDate(null)} />}
             {isAddExamModalOpen && <AddExamModal patientId={patient.id} onClose={() => setAddExamModalOpen(false)} />}
             {editingExam && <EditExamModal exam={editingExam} patientId={patient.id} onClose={() => setEditingExam(null)} />}
             {isAddMedicationModalOpen && <AddMedicationModal patientId={patient.id} onClose={() => setAddMedicationModalOpen(false)} />}
             {editingMedication && <EditMedicationModal medication={editingMedication} patientId={patient.id} onClose={() => setEditingMedication(null)} />}
+            {editingMedicationEndDate && <EditMedicationEndDateModal medication={editingMedicationEndDate} patientId={patient.id} onClose={() => setEditingMedicationEndDate(null)} />}
             {isAddSurgicalModalOpen && <AddSurgicalProcedureModal patientId={patient.id} onClose={() => setAddSurgicalModalOpen(false)} />}
             {editingSurgicalProcedure && <EditSurgicalProcedureModal procedure={editingSurgicalProcedure} patientId={patient.id} onClose={() => setEditingSurgicalProcedure(null)} />}
             {isAddCultureModalOpen && <AddCultureModal patientId={patient.id} onClose={() => setAddCultureModalOpen(false)} />}
@@ -2031,6 +2035,76 @@ const AddEndDateModal: React.FC<{ medicationId: number | string, patientId: numb
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Fim</label>
                         <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                    </div>
+                    <div className="flex gap-2">
+                        <button type="button" onClick={onClose} className="w-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                        <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+const EditDeviceRemovalDateModal: React.FC<{ device: Device; patientId: number | string; onClose: () => void; }> = ({ device, patientId, onClose }) => {
+    const { updateDeviceInPatient } = useContext(PatientsContext)!;
+    const { showNotification } = useContext(NotificationContext)!;
+    const [removalDate, setRemovalDate] = useState(device.removalDate || '');
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!removalDate) return;
+        updateDeviceInPatient(patientId, { ...device, removalDate });
+        showNotification({ message: 'Data de retirada atualizada com sucesso!', type: 'success' });
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Editar Data de Retirada</h2>
+                    <button onClick={onClose}><CloseIcon className="w-6 h-6 text-slate-500 dark:text-slate-400" /></button>
+                </div>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Retirada</label>
+                        <input type="date" value={removalDate} onChange={e => setRemovalDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" required />
+                    </div>
+                    <div className="flex gap-2">
+                        <button type="button" onClick={onClose} className="w-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                        <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+const EditMedicationEndDateModal: React.FC<{ medication: Medication; patientId: number | string; onClose: () => void; }> = ({ medication, patientId, onClose }) => {
+    const { updateMedicationInPatient } = useContext(PatientsContext)!;
+    const { showNotification } = useContext(NotificationContext)!;
+    const [endDate, setEndDate] = useState(medication.endDate || '');
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!endDate) return;
+        updateMedicationInPatient(patientId, { ...medication, endDate });
+        showNotification({ message: 'Data de fim atualizada com sucesso!', type: 'success' });
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Editar Data de Fim</h2>
+                    <button onClick={onClose}><CloseIcon className="w-6 h-6 text-slate-500 dark:text-slate-400" /></button>
+                </div>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Fim</label>
+                        <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" required />
                     </div>
                     <div className="flex gap-2">
                         <button type="button" onClick={onClose} className="w-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-lg">Cancelar</button>
