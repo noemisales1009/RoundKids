@@ -1035,14 +1035,15 @@ const PatientHistoryScreen: React.FC = () => {
 };
 
 // ... (EditPatientInfoModal, PatientDetailScreen remain mostly the same, ensure they render correctly)
-const EditPatientInfoModal: React.FC<{ patientId: number | string, currentMotherName: string, currentDiagnosis: string, onClose: () => void }> = ({ patientId, currentMotherName, currentDiagnosis, onClose }) => {
+const EditPatientInfoModal: React.FC<{ patientId: number | string, currentMotherName: string, currentDiagnosis: string, currentWeight?: number, onClose: () => void }> = ({ patientId, currentMotherName, currentDiagnosis, currentWeight, onClose }) => {
     const { updatePatientDetails } = useContext(PatientsContext)!;
     const [motherName, setMotherName] = useState(currentMotherName);
     const [diagnosis, setDiagnosis] = useState(currentDiagnosis);
+    const [weight, setWeight] = useState(currentWeight?.toString() || '');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        updatePatientDetails(patientId, { motherName, ctd: diagnosis });
+        updatePatientDetails(patientId, { motherName, ctd: diagnosis, peso: weight ? parseFloat(weight) : undefined });
         onClose();
     };
 
@@ -1070,6 +1071,16 @@ const EditPatientInfoModal: React.FC<{ patientId: number | string, currentMother
                             onChange={(e) => setDiagnosis(e.target.value)}
                             className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
                             rows={3}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Peso (kg)</label>
+                        <input
+                            type="number"
+                            step="0.1"
+                            value={weight}
+                            onChange={e => setWeight(e.target.value)}
+                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
                         />
                     </div>
                     <div className="flex gap-2">
@@ -1466,6 +1477,7 @@ const PatientDetailScreen: React.FC = () => {
                     <span className="font-medium">Idade: <span className="font-normal">{formatAge(patient.dob)}</span></span>
                     <span className="font-medium">Mãe: <span className="font-normal">{patient.motherName}</span></span>
                     <span className="font-medium">Diagnóstico: <span className="font-normal">{patient.ctd}</span></span>
+                    {patient.peso && <span className="font-medium">Peso: <span className="font-normal">{patient.peso} kg</span></span>}
                 </div>
             </div>
 
@@ -1773,7 +1785,7 @@ const PatientDetailScreen: React.FC = () => {
             {editingCulture && <EditCultureModal culture={editingCulture} patientId={patient.id} onClose={() => setEditingCulture(null)} />}
             {isRemovalModalOpen && <AddRemovalDateModal deviceId={isRemovalModalOpen} patientId={patient.id} onClose={() => setRemovalModalOpen(null)} />}
             {isEndDateModalOpen && <AddEndDateModal medicationId={isEndDateModalOpen} patientId={patient.id} onClose={() => setEndDateModalOpen(null)} />}
-            {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} currentMotherName={patient.motherName} currentDiagnosis={patient.ctd} onClose={() => setEditInfoModalOpen(false)} />}
+            {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} currentMotherName={patient.motherName} currentDiagnosis={patient.ctd} currentWeight={patient.peso} onClose={() => setEditInfoModalOpen(false)} />}
             {isCreateAlertModalOpen && <CreateAlertModal patientId={patient.id} onClose={() => setCreateAlertModalOpen(false)} />}
         </div>
     );
@@ -3630,10 +3642,11 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         if (!error) fetchPatients();
     };
 
-    const updateCultureInPatient = async (patientId: number | string, cultureData: Culture) => {
-        const { error } = await supabase.from('culturas_pacientes')
-            .update({
-                local: cultureData.site,
+    const updateCultureInPatient = async (patientId: number | string, cultureData: Culture) => {; peso?: number }) => {
+        const updateData: any = {};
+        if (data.motherName !== undefined) updateData.mother_name = data.motherName;
+        if (data.ctd !== undefined) updateData.diagnosis = data.ctd;
+        if (data.peso !== undefined) updateData.peso = data.peso
                 microorganismo: cultureData.microorganism,
                 data_coleta: cultureData.collectionDate
             })
@@ -3641,10 +3654,11 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         if (!error) fetchPatients();
     };
 
-    const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string }) => {
+    const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number }) => {
         const updateData: any = {};
         if (data.motherName !== undefined) updateData.mother_name = data.motherName;
         if (data.ctd !== undefined) updateData.diagnosis = data.ctd;
+        if (data.peso !== undefined) updateData.peso = data.peso;
 
         const { error } = await supabase.from('patients')
             .update(updateData)
