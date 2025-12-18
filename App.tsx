@@ -19,6 +19,7 @@ import DiuresisCalc from './components/DiuresisCalc';
 import DiuresisHistory from './components/DiuresisHistory';
 import FluidBalanceCalc from './components/FluidBalanceCalc';
 import FluidBalanceHistory from './components/FluidBalanceHistory';
+import DiagnosticsHistory from './components/DiagnosticsHistory';
 import StatusComponent from './components/StatusComponent';
 import ComorbidadeComponent from './components/ComorbidadeComponent';
 import DestinoComponent from './components/DestinoComponent';
@@ -596,6 +597,7 @@ const PatientHistoryScreen: React.FC = () => {
     const [diuresisData, setDiuresisData] = React.useState<any[]>([]);
     const [balanceData, setBalanceData] = React.useState<any[]>([]);
     const [alertsData, setAlertsData] = React.useState<any[]>([]);
+    const [resolvedDiagnostics, setResolvedDiagnostics] = React.useState<any[]>([]);
 
     useHeader(patient ? `Histórico: ${patient.name}` : 'Histórico do Paciente');
 
@@ -618,6 +620,28 @@ const PatientHistoryScreen: React.FC = () => {
         };
 
         fetchDiagnostics();
+    }, [patientId]);
+
+    // Buscar diagnósticos resolvidos da view
+    React.useEffect(() => {
+        const fetchResolvedDiagnostics = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('diagnosticos_historico_com_usuario')
+                    .select('*')
+                    .eq('patient_id', patientId)
+                    .eq('status', 'resolvido');
+                
+                if (!error && data) {
+                    setResolvedDiagnostics(data);
+                }
+            } catch (err) {
+                console.error('Erro ao buscar diagnósticos resolvidos:', err);
+            }
+        };
+
+        fetchResolvedDiagnostics();
     }, [patientId]);
 
     // Buscar diurese do Supabase
@@ -804,6 +828,16 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
+        // Adicionar diagnósticos resolvidos com nome de quem resolveu
+        resolvedDiagnostics.forEach(diagnostic => {
+            events.push({
+                timestamp: diagnostic.created_at || new Date().toISOString(),
+                icon: CheckCircleIcon,
+                description: `✓ Diagnóstico Resolvido: ${diagnostic.opcao_label || `Opção ${diagnostic.opcao_id}`}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''}\n👤 Resolvido por: ${diagnostic.created_by_name || 'Não informado'}`,
+                hasTime: true,
+            });
+        });
+
         // Adicionar diurese
         diuresisData.forEach(diuresis => {
             const result = ((diuresis.volume / diuresis.horas) / diuresis.peso).toFixed(2);
@@ -857,7 +891,7 @@ const PatientHistoryScreen: React.FC = () => {
         }, {} as Record<string, TimelineEvent[]>);
 
         return groupedEvents;
-    }, [patient, tasks, diagnostics, diuresisData, balanceData, alertsData]);
+    }, [patient, tasks, diagnostics, diuresisData, balanceData, alertsData, resolvedDiagnostics]);
 
     const handleGeneratePdf = () => {
         // ... (PDF generation logic remains the same)
@@ -1000,6 +1034,7 @@ const PatientHistoryScreen: React.FC = () => {
             </div>
             <DiuresisHistory patientId={patientId!} />
             <FluidBalanceHistory patientId={patientId!} />
+            <DiagnosticsHistory patientId={patientId!} />
             <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm">
                 {Object.keys(patientHistory).length > 0 ? (
                     <div className="space-y-6">
