@@ -1591,7 +1591,7 @@ const AddDeviceModal: React.FC<{ patientId: number | string; onClose: () => void
     const { showNotification } = useContext(NotificationContext)!;
     const [type, setType] = useState('');
     const [location, setLocation] = useState('');
-    const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+    const [startDate, setStartDate] = useState(getTodayDateString());
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -1686,7 +1686,7 @@ const AddExamModal: React.FC<{ patientId: number | string; onClose: () => void; 
     const { addExamToPatient } = useContext(PatientsContext)!;
     const { showNotification } = useContext(NotificationContext)!;
     const [name, setName] = useState('');
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [date, setDate] = useState(getTodayDateString());
     const [observation, setObservation] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -1773,7 +1773,7 @@ const AddMedicationModal: React.FC<{ patientId: number | string; onClose: () => 
     const [name, setName] = useState('');
     const [dosageValue, setDosageValue] = useState('');
     const [dosageUnit, setDosageUnit] = useState(MEDICATION_DOSAGE_UNITS[0]);
-    const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+    const [startDate, setStartDate] = useState(getTodayDateString());
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -1906,7 +1906,7 @@ const AddSurgicalProcedureModal: React.FC<{ patientId: number | string; onClose:
     const { addSurgicalProcedureToPatient } = useContext(PatientsContext)!;
     const { showNotification } = useContext(NotificationContext)!;
     const [name, setName] = useState('');
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [date, setDate] = useState(getTodayDateString());
     const [surgeon, setSurgeon] = useState('');
     const [notes, setNotes] = useState('');
 
@@ -1998,7 +1998,7 @@ const EditSurgicalProcedureModal: React.FC<{ procedure: SurgicalProcedure; patie
 
 const AddRemovalDateModal: React.FC<{ deviceId: number | string, patientId: number | string, onClose: () => void }> = ({ deviceId, patientId, onClose }) => {
     const { addRemovalDateToDevice } = useContext(PatientsContext)!;
-    const [removalDate, setRemovalDate] = useState(new Date().toISOString().split('T')[0]);
+    const [removalDate, setRemovalDate] = useState(getTodayDateString());
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -2026,7 +2026,7 @@ const AddRemovalDateModal: React.FC<{ deviceId: number | string, patientId: numb
 };
 const AddEndDateModal: React.FC<{ medicationId: number | string, patientId: number | string, onClose: () => void }> = ({ medicationId, patientId, onClose }) => {
     const { addEndDateToMedication } = useContext(PatientsContext)!;
-    const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+    const [endDate, setEndDate] = useState(getTodayDateString());
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
