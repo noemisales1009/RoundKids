@@ -75,22 +75,52 @@ const IconeSireneVermelha = () => (
 const getInterpretacaoFSS = (total: number) => {
   if (total <= 7) {
     // 6 a 7
-    return { texto: 'Adequada Funcionalidade (6-7)', cor: 'text-green-400', icone: <IconeCheckVerde /> };
+    return { 
+      texto: 'Adequada Funcionalidade (6-7)', 
+      cor: 'text-green-400',
+      bgCor: 'bg-green-900/30',
+      borderCor: 'border-green-500/50',
+      icone: <IconeCheckVerde /> 
+    };
   }
   if (total <= 9) {
     // 8 a 9
-    return { texto: 'Disfunção Leve (8-9)', cor: 'text-teal-400', icone: <IconeAlertaVerde /> };
+    return { 
+      texto: 'Disfunção Leve (8-9)', 
+      cor: 'text-cyan-400',
+      bgCor: 'bg-cyan-900/30',
+      borderCor: 'border-cyan-500/50',
+      icone: <IconeAlertaVerde /> 
+    };
   }
   if (total <= 15) {
     // 10 a 15
-    return { texto: 'Disfunção Moderada (10-15)', cor: 'text-yellow-400', icone: <IconeAlertaAmarelo /> };
+    return { 
+      texto: 'Disfunção Moderada (10-15)', 
+      cor: 'text-amber-400',
+      bgCor: 'bg-amber-900/30',
+      borderCor: 'border-amber-500/50',
+      icone: <IconeAlertaAmarelo /> 
+    };
   }
   if (total <= 21) {
     // 16 a 21
-    return { texto: 'Disfunção Severa (16-21)', cor: 'text-red-400', icone: <IconeSireneVermelha /> };
+    return { 
+      texto: 'Disfunção Severa (16-21)', 
+      cor: 'text-orange-400',
+      bgCor: 'bg-orange-900/30',
+      borderCor: 'border-orange-500/50',
+      icone: <IconeSireneVermelha /> 
+    };
   }
   // > 21
-  return { texto: 'Disfunção Muito Severa (≥22)', cor: 'text-red-700', icone: <IconeSireneVermelha /> };
+  return { 
+    texto: 'Disfunção Muito Severa (≥22)', 
+    cor: 'text-red-500',
+    bgCor: 'bg-red-900/30',
+    borderCor: 'border-red-500/50',
+    icone: <IconeSireneVermelha /> 
+  };
 };
 
 // --- Ícone de Check (Formulário) ---
@@ -139,11 +169,11 @@ interface DropdownFSSProps {
 
 // --- Componente de Dropdown Reutilizável ---
 const DropdownFSS = forwardRef<HTMLDivElement, DropdownFSSProps>(({ label, id, valor, onOpcaoChange, opcoes }, ref) => (
-  <div ref={ref} className="bg-slate-800 p-4 rounded-lg shadow-lg transition-all duration-300">
-    <div className="flex justify-between items-center mb-2">
+  <div ref={ref} className="bg-linear-to-br from-slate-800 to-slate-700 p-4 rounded-xl shadow-lg transition-all duration-300 border border-slate-600 hover:border-blue-500/50">
+    <div className="flex justify-between items-center mb-3">
       <label
         htmlFor={id}
-        className="block text-sm font-medium text-gray-300"
+        className="block text-sm font-semibold text-gray-200"
       >
         {label}
       </label>
@@ -153,11 +183,11 @@ const DropdownFSS = forwardRef<HTMLDivElement, DropdownFSSProps>(({ label, id, v
       id={id}
       value={valor === null ? '' : valor}
       onChange={(e) => onOpcaoChange(e.target.value === '' ? null : Number(e.target.value))}
-      className="w-full bg-slate-700 border border-slate-600 text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      className="w-full bg-slate-900 border border-slate-500 text-gray-100 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-colors hover:border-slate-400"
     >
-      <option value="">Selecione...</option>
+      <option value="" className="text-gray-400">Selecione uma opção...</option>
       {opcoes.map((opt) => (
-        <option key={opt.texto} value={opt.valor}>
+        <option key={opt.texto} value={opt.valor} className="bg-slate-800 text-gray-100">
           {opt.texto}
         </option>
       ))}
@@ -272,27 +302,26 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
 
   // --- Renderização ---
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 bg-slate-900 text-gray-300 rounded-lg min-h-[600px]">
+    <div className="w-full max-w-2xl mx-auto p-4 bg-slate-900 text-gray-300 rounded-lg min-h-screen">
       
       {/* --- TELA 1: LISTA (Principal) --- */}
       {telaAtiva === 'lista' && (
         <div className="flex flex-col space-y-4">
-          <div className="bg-slate-800 p-6 rounded-lg shadow-lg text-center">
-            <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4">
-              ÚLTIMA AVALIAÇÃO FSS
+          <div className="bg-linear-to-br from-slate-800 to-slate-700 p-6 rounded-xl shadow-lg text-center border border-slate-600">
+            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4 letter-spacing-1">
+              Última Avaliação FSS
             </h2>
-            <div className="flex items-baseline justify-center space-x-1">
+            <div className="flex items-baseline justify-center space-x-1 mb-6">
               <span className="text-6xl font-bold text-white">
                 {ultimaPontuacao.total}
               </span>
+              <span className="text-gray-400 text-xl">/30</span>
             </div>
             
-            <div className="mt-6 grid grid-cols-1 gap-3">
-              <div className={`bg-slate-700 p-4 rounded-lg ${ultimaInterpretacao.cor} font-medium`}>
-                <div className="flex items-center justify-center">
-                  {ultimaInterpretacao.icone}
-                  <span>{ultimaInterpretacao.texto}</span>
-                </div>
+            <div className={`p-4 rounded-lg border ${ultimaInterpretacao.borderCor} ${ultimaInterpretacao.bgCor}`}>
+              <div className={`flex items-center justify-center ${ultimaInterpretacao.cor} font-semibold text-lg`}>
+                {ultimaInterpretacao.icone}
+                <span>{ultimaInterpretacao.texto}</span>
               </div>
             </div>
           </div>
@@ -302,9 +331,9 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
               resetForm();
               setTelaAtiva('form');
             }}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200"
+            className="w-full bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 active:scale-95"
           >
-            Registrar Nova Avaliação FSS
+            + Registrar Nova Avaliação FSS
           </button>
         </div>
       )}
@@ -313,14 +342,14 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
       {telaAtiva === 'form' && (
         <div className="flex flex-col space-y-4">
           {/* Cabeçalho do Formulário */}
-          <div className="flex items-center space-x-4 mb-2">
+          <div className="flex items-center space-x-4 mb-2 pb-4 border-b border-slate-600">
             <button
               onClick={() => setTelaAtiva('lista')}
-              className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-slate-700"
+              className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-slate-700 transition-colors"
             >
               <IconeVoltar />
             </button>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-2xl font-semibold text-white">
               Nova Avaliação FSS
             </h2>
           </div>
@@ -377,14 +406,30 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
           
           {/* Mensagem de Erro */}
           {erroForm && (
-            <div className="text-red-400 text-sm p-3 bg-slate-700 rounded-lg text-center">
-              {erroForm}
+            <div className="text-red-300 text-sm p-4 bg-red-900/30 border border-red-500/50 rounded-lg text-center">
+              ⚠️ {erroForm}
             </div>
           )}
+
+          {/* Barra de Progresso */}
+          <div className="bg-slate-800 p-3 rounded-lg border border-slate-600 mt-2">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs text-gray-400 font-medium">Progresso</span>
+              <span className="text-sm text-gray-300 font-semibold">
+                {[pontuacaoMental, pontuacaoSensorial, pontuacaoComunicacao, pontuacaoMotor, pontuacaoAlimentacao, pontuacaoRespiratorio].filter(v => v !== null).length}/6
+              </span>
+            </div>
+            <div className="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+              <div 
+                className="bg-linear-to-r from-blue-500 to-blue-600 h-full transition-all duration-300"
+                style={{ width: `${([pontuacaoMental, pontuacaoSensorial, pontuacaoComunicacao, pontuacaoMotor, pontuacaoAlimentacao, pontuacaoRespiratorio].filter(v => v !== null).length / 6) * 100}%` }}
+              />
+            </div>
+          </div>
           
           <button
             onClick={handleCalcular}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200 mt-4"
+            className="w-full bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 active:scale-95 mt-4"
           >
             Calcular Pontuação
           </button>
@@ -395,42 +440,86 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
       {telaAtiva === 'resultado' && (
         <div className="flex flex-col space-y-6">
           {/* Cabeçalho do Resultado */}
-          <div className="flex items-center space-x-4 mb-2">
+          <div className="flex items-center space-x-4 mb-2 pb-4 border-b border-slate-600">
             <button
               onClick={() => setTelaAtiva('form')} // Volta para o formulário
-              className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-slate-700"
+              className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-slate-700 transition-colors"
             >
               <IconeVoltar />
             </button>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-2xl font-semibold text-white">
               Resultado da Avaliação
             </h2>
           </div>
           
-          {/* Pontuação Total */}
-          <div className="text-center my-8">
+          {/* Pontuação Total em Destaque */}
+          <div className="text-center my-6">
+            <p className="text-gray-400 text-sm mb-2">Pontuação Total</p>
             <div className="flex items-baseline justify-center space-x-2">
-              <span className="text-8xl font-bold text-white">
+              <span className="text-8xl font-black text-white">
                 {pontuacaoTotalCalculada}
               </span>
+              <span className="text-3xl text-gray-500">/30</span>
             </div>
           </div>
 
-          {/* Card de Interpretação de Risco */}
-          <div className="grid grid-cols-1 gap-4">
-            <div className={`bg-slate-800 p-5 rounded-lg shadow-lg text-lg ${interpretacaoAtual.cor} font-semibold text-center`}>
-              <div className="flex items-center justify-center">
-                {interpretacaoAtual.icone}
-                <span>{interpretacaoAtual.texto}</span>
-              </div>
+          {/* Card de Interpretação de Risco com cores dinâmicas */}
+          <div className={`p-6 rounded-xl shadow-lg border ${interpretacaoAtual.borderCor} ${interpretacaoAtual.bgCor}`}>
+            <div className={`flex items-center justify-center ${interpretacaoAtual.cor} font-bold text-center space-x-3`}>
+              {interpretacaoAtual.icone}
+              <span className="text-lg">{interpretacaoAtual.texto}</span>
             </div>
+          </div>
+
+          {/* Detalhes da Interpretação */}
+          <div className="bg-slate-800 p-4 rounded-lg border border-slate-600 space-y-2">
+            <h3 className="text-sm font-semibold text-gray-300 uppercase">Recomendações:</h3>
+            <ul className="text-sm text-gray-400 space-y-1">
+              {pontuacaoTotalCalculada <= 7 && (
+                <>
+                  <li>✓ Funcionalidade preservada</li>
+                  <li>✓ Continue com acompanhamento regular</li>
+                </>
+              )}
+              {pontuacaoTotalCalculada > 7 && pontuacaoTotalCalculada <= 9 && (
+                <>
+                  <li>⚠ Disfunção leve detectada</li>
+                  <li>⚠ Recomenda-se reabilitação leve</li>
+                </>
+              )}
+              {pontuacaoTotalCalculada > 9 && pontuacaoTotalCalculada <= 15 && (
+                <>
+                  <li>⚠ Disfunção moderada detectada</li>
+                  <li>⚠ Intervenções de reabilitação necessárias</li>
+                </>
+              )}
+              {pontuacaoTotalCalculada > 15 && pontuacaoTotalCalculada <= 21 && (
+                <>
+                  <li>🚨 Disfunção severa detectada</li>
+                  <li>🚨 Alto nível de suporte necessário</li>
+                </>
+              )}
+              {pontuacaoTotalCalculada > 21 && (
+                <>
+                  <li>🚨 Disfunção muito severa</li>
+                  <li>🚨 Cuidados críticos/paliativos recomendados</li>
+                </>
+              )}
+            </ul>
           </div>
           
           <button
             onClick={handleSalvar}
-            className="w-full bg-blue-600 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200 mt-6"
+            className="w-full bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 active:scale-95 mt-6"
           >
-            Salvar e Fechar
+            ✓ Salvar e Fechar
+          </button>
+
+          <button
+            onClick={() => setTelaAtiva('form')}
+            className="w-full bg-slate-700 hover:bg-slate-600 text-gray-200 font-semibold py-3 rounded-lg transition-colors border border-slate-600"
+          >
+            ← Voltar ao Formulário
           </button>
         </div>
       )}
