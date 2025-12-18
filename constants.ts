@@ -406,7 +406,13 @@ export const formatDateToBRL = (dateString: string | undefined | null): string =
     if (!dateString) return '';
     
     try {
-        // Trata strings que podem vir sem horário ou com horário
+        // Se for apenas data (YYYY-MM-DD), parse diretamente
+        if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const [year, month, day] = dateString.split('-');
+            return `${day}/${month}/${year}`;
+        }
+        
+        // Se tiver horário, cria a data de forma segura
         const normalizedDate = dateString.includes('T') ? dateString : `${dateString}T00:00:00`;
         const date = new Date(normalizedDate);
         
