@@ -2286,7 +2286,7 @@ const ChecklistScreen: React.FC = () => {
     return (
         <div className="relative pb-24">
             {/* Main Card */}
-            <div className="w-full max-w-lg mx-auto bg-blue-600 dark:bg-blue-700 rounded-xl shadow-2xl overflow-hidden flex flex-col min-h-[550px] animate-in slide-in-from-right-4 duration-300">
+            <div className="w-full max-w-lg mx-auto bg-blue-600 dark:bg-blue-700 rounded-xl shadow-2xl overflow-hidden flex flex-col min-h-screen animate-in slide-in-from-right-4 duration-300">
 
                 {/* Content */}
                 <div className="p-8 flex-1 flex flex-col items-center text-center space-y-6">
@@ -2747,7 +2747,7 @@ const JustificationModal: React.FC<{ alert: any, onClose: () => void, onSave: (a
                     value={justification}
                     onChange={e => setJustification(e.target.value)}
                     placeholder="Digite a justificativa para o atraso..."
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200 min-h-[100px]"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200 min-h-24"
                 />
                 <div className="flex gap-2 mt-4">
                     <button onClick={onClose} className="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-2 px-3 sm:px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition text-sm sm:text-base">Cancelar</button>
