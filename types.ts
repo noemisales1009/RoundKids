@@ -62,6 +62,7 @@ export interface Patient {
   dob: string; // "YYYY-MM-DD"
   ctd: string; // Used for Diagnosis
   peso?: number;
+  status?: string; // "estavel", "instavel", "em_risco"
   devices: Device[];
   exams: Exam[];
   medications: Medication[];

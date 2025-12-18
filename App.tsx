@@ -19,7 +19,6 @@ import DiuresisCalc from './components/DiuresisCalc';
 import DiuresisHistory from './components/DiuresisHistory';
 import FluidBalanceCalc from './components/FluidBalanceCalc';
 import FluidBalanceHistory from './components/FluidBalanceHistory';
-import DiagnosticsHistory from './components/DiagnosticsHistory';
 import StatusComponent from './components/StatusComponent';
 import ComorbidadeComponent from './components/ComorbidadeComponent';
 import DestinoComponent from './components/DestinoComponent';
@@ -538,14 +537,29 @@ const PatientListScreen: React.FC = () => {
             <div className="space-y-3">
                 {filteredPatients.map(patient => {
                     const progress = calculateProgress(patient.id);
+                    const statusColors = {
+                        'estavel': { border: 'border-green-500', bg: 'bg-green-50 dark:bg-green-900/20', text: 'text-green-700 dark:text-green-400' },
+                        'instavel': { border: 'border-yellow-500', bg: 'bg-yellow-50 dark:bg-yellow-900/20', text: 'text-yellow-700 dark:text-yellow-400' },
+                        'em_risco': { border: 'border-red-500', bg: 'bg-red-50 dark:bg-red-900/20', text: 'text-red-700 dark:text-red-400' }
+                    };
+                    const colors = statusColors[patient.status as keyof typeof statusColors] || { border: 'border-slate-300', bg: 'bg-white dark:bg-slate-900', text: 'text-slate-700 dark:text-slate-300' };
+                    const statusLabel = patient.status === 'estavel' ? 'Estável' : patient.status === 'instavel' ? 'Instável' : patient.status === 'em_risco' ? 'Em Risco' : 'Sem Status';
+                    
                     return (
-                        <Link to={`/patient/${patient.id}`} key={patient.id} className="block bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm hover:shadow-md transition">
+                        <Link to={`/patient/${patient.id}`} key={patient.id} className={`block bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm hover:shadow-md transition border-2 ${colors.border} ${colors.bg}`}>
                             <div className="flex items-center space-x-4">
                                 <div className="shrink-0 w-12 h-12 flex items-center justify-center bg-blue-100 dark:bg-blue-900/80 text-blue-600 dark:text-blue-300 rounded-full font-bold text-lg">
                                     {patient.bedNumber}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-slate-800 dark:text-slate-200 wrap-break-word">{patient.name}</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="font-bold text-slate-800 dark:text-slate-200 wrap-break-word">{patient.name}</p>
+                                        {patient.status && (
+                                            <span className={`text-xs font-bold px-2 py-1 rounded-full ${colors.text} ${colors.bg}`}>
+                                                {statusLabel}
+                                            </span>
+                                        )}
+                                    </div>
                                     <p className="text-sm text-slate-500 dark:text-slate-400">Nasc: {new Date(patient.dob).toLocaleDateString('pt-BR')}</p>
                                     <div className="mt-2 flex items-center gap-2">
                                         <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
@@ -1032,9 +1046,6 @@ const PatientHistoryScreen: React.FC = () => {
                     Gerar PDF
                 </button>
             </div>
-            <DiuresisHistory patientId={patientId!} />
-            <FluidBalanceHistory patientId={patientId!} />
-            <DiagnosticsHistory patientId={patientId!} />
             <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm">
                 {Object.keys(patientHistory).length > 0 ? (
                     <div className="space-y-6">
@@ -3452,6 +3463,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             dob: p.dob,
             ctd: p.diagnosis || p.ctd || 'Estável',
             peso: p.peso,
+            status: p.status || 'estavel',
             devices: devicesMap[p.id] || [],
             exams: examsMap[p.id] || [],
             medications: medsMap[p.id] || [],
