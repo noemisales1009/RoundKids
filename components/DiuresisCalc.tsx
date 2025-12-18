@@ -44,14 +44,7 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
         horas: h,
       };
 
-      // Salvar na tabela principal
       await supabase.from('diurese').insert(diuresisRecord);
-
-      // Salvar no histórico
-      await supabase.from('diurese_historico').insert({
-        ...diuresisRecord,
-        created_at: new Date().toISOString(),
-      });
 
       showNotification({ message: 'Diurese salva com sucesso!', type: 'success' });
     } catch (error) {

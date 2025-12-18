@@ -3642,11 +3642,10 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         if (!error) fetchPatients();
     };
 
-    const updateCultureInPatient = async (patientId: number | string, cultureData: Culture) => {; peso?: number }) => {
-        const updateData: any = {};
-        if (data.motherName !== undefined) updateData.mother_name = data.motherName;
-        if (data.ctd !== undefined) updateData.diagnosis = data.ctd;
-        if (data.peso !== undefined) updateData.peso = data.peso
+    const updateCultureInPatient = async (patientId: number | string, cultureData: Culture) => {
+        const { error } = await supabase.from('culturas_pacientes')
+            .update({
+                local: cultureData.site,
                 microorganismo: cultureData.microorganism,
                 data_coleta: cultureData.collectionDate
             })

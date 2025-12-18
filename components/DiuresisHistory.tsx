@@ -25,10 +25,10 @@ const DiuresisHistory: React.FC<DiuresisHistoryProps> = ({ patientId }) => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('diurese_historico')
+        .from('diurese')
         .select('*')
         .eq('patient_id', patientId)
-        .order('created_at', { ascending: false })
+        .order('data_registro', { ascending: false })
         .limit(10);
 
       if (error) throw error;
