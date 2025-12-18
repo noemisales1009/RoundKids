@@ -3275,8 +3275,10 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 })).sort((a: any, b: any) => a.ordem - b.ordem) : []
             }));
             setQuestions(mappedQuestions);
+            console.log('✅ Perguntas carregadas do Supabase:', mappedQuestions.length);
         } else {
             // Fallback to STATIC_QUESTIONS if database questions table is empty or fetch fails
+            console.warn('⚠️ Usando perguntas estáticas - erro ou tabela vazia:', questionsRes.error);
             setQuestions(STATIC_QUESTIONS);
         }
 
