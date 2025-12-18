@@ -20,6 +20,7 @@ import GlasgowCalculator from './components/GlasgowCalculator';
 import AbstinenciaCalculator from './components/AbstinenciaCalculator';
 import CAMICUCalculator from './components/CAMICUCalculator';
 import SOSPDCalculator from './components/SOSPDCalculator';
+import ConsciousnessCalculator from './components/ConsciousnessCalculator';
 import { SecondaryNavigation } from './components/SecondaryNavigation';
 import { DiagnosticsSection } from './components/DiagnosticsSection';
 import DiuresisCalc from './components/DiuresisCalc';
@@ -1409,7 +1410,7 @@ const PatientDetailScreen: React.FC = () => {
     const [isEndDateModalOpen, setEndDateModalOpen] = useState<number | string | null>(null);
     const [isEditInfoModalOpen, setEditInfoModalOpen] = useState(false);
     const [isCreateAlertModalOpen, setCreateAlertModalOpen] = useState(false);
-    const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'vni-cnaf' | 'fss' | 'abstinencia' | 'sos-pd'>('list');
+    const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'vni-cnaf' | 'fss' | 'abstinencia' | 'sos-pd' | 'consciousness'>('list');
 
     const { showNotification } = useContext(NotificationContext)!;
 
@@ -1786,6 +1787,9 @@ const PatientDetailScreen: React.FC = () => {
                                 <div onClick={() => setScaleView('sos-pd')} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition">
                                     <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala SOS-PD (Delirium/Abstinência)</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </div>
+                                <div onClick={() => setScaleView('consciousness')} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                                    <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Avaliação Consciência (CRS-R/FOUR/JFK)</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                </div>
                             </div>
                         )}
                         {scaleView === 'comfort-b' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><ComfortBCalculator patientId={patient.id.toString()} /></div></div>)}
@@ -1799,6 +1803,7 @@ const PatientDetailScreen: React.FC = () => {
                         {scaleView === 'fss' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><FSSScale onSaveScore={handleSaveScaleScore} /></div></div>)}
                         {scaleView === 'abstinencia' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><AbstinenciaCalculator patientId={patient.id.toString()} /></div></div>)}
                         {scaleView === 'sos-pd' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><SOSPDCalculator patientId={patient.id.toString()} /></div></div>)}
+                        {scaleView === 'consciousness' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><ConsciousnessCalculator patientId={patient.id.toString()} /></div></div>)}
                     </div>
                 )}
             </div>
