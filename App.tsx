@@ -3226,6 +3226,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             surgsRes,
             scalesRes,
             questionsRes,
+            optionsRes,
             categoriesRes,
             answersRes,
             culturesRes
@@ -3236,7 +3237,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             supabase.from('medicacoes_pacientes').select('*'),
             supabase.from('procedimentos_pacientes').select('*'),
             supabase.from('scale_scores').select('*'),
-            supabase.from('perguntas').select('*, pergunta_opcoes(*)').order('ordem', { ascending: true }),
+            supabase.from('perguntas').select('*').order('ordem', { ascending: true }),
+            supabase.from('pergunta_opcoes').select('*').order('ordem', { ascending: true }),
             supabase.from('categorias').select('*').order('ordem', { ascending: true }),
             supabase.from('checklist_answers').select('*').eq('date', today),
             supabase.from('culturas_pacientes').select('*')
@@ -3245,6 +3247,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         console.log('📊 Resultado das queries:');
         console.log('  - questionsRes.error:', questionsRes.error);
         console.log('  - questionsRes.data length:', questionsRes.data?.length);
+        console.log('  - optionsRes.error:', optionsRes.error);
+        console.log('  - optionsRes.data length:', optionsRes.data?.length);
         console.log('  - categoriesRes.error:', categoriesRes.error);
         console.log('  - categoriesRes.data length:', categoriesRes.data?.length);
         if (questionsRes.data && questionsRes.data.length > 0) {
@@ -3271,17 +3275,27 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         }
 
         // Process Questions and Options
-        if (questionsRes.data && questionsRes.data.length > 0) {
+        if (questionsRes.data && questionsRes.data.length > 0 && optionsRes.data) {
+            // Criar mapa de opções por pergunta_id
+            const optionsMap: Record<number, any[]> = {};
+            (optionsRes.data || []).forEach((opt: any) => {
+                if (!optionsMap[opt.pergunta_id]) {
+                    optionsMap[opt.pergunta_id] = [];
+                }
+                optionsMap[opt.pergunta_id].push({
+                    id: opt.codigo,
+                    label: opt.label,
+                    hasInput: opt.has_input,
+                    inputPlaceholder: opt.input_placeholder,
+                    ordem: opt.ordem
+                });
+            });
+
             const mappedQuestions = questionsRes.data.map((q: any) => ({
                 id: q.id,
                 text: q.texto,
                 categoryId: q.categoria_id,
-                alertOptions: q.pergunta_opcoes ? q.pergunta_opcoes.map((opt: any) => ({
-                    id: opt.codigo,
-                    label: opt.label,
-                    hasInput: opt.has_input,
-                    inputPlaceholder: opt.input_placeholder
-                })).sort((a: any, b: any) => a.ordem - b.ordem) : []
+                alertOptions: (optionsMap[q.id] || []).sort((a: any, b: any) => a.ordem - b.ordem)
             }));
             setQuestions(mappedQuestions);
             console.log('✅ Perguntas carregadas do Supabase:', mappedQuestions.length);
