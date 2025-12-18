@@ -3329,7 +3329,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             .update({
                 tipo_dispositivo: deviceData.name,
                 localizacao: deviceData.location,
-                data_insercao: deviceData.startDate
+                data_insercao: deviceData.startDate,
+                data_remocao: deviceData.removalDate || null
             })
             .eq('id', deviceData.id);
         if (!error) fetchPatients();
@@ -3345,7 +3346,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 nome_medicacao: medicationData.name,
                 dosagem_valor: valor,
                 unidade_medida: unidade,
-                data_inicio: medicationData.startDate
+                data_inicio: medicationData.startDate,
+                data_fim: medicationData.endDate || null
             })
             .eq('id', medicationData.id);
         if (!error) fetchPatients();
