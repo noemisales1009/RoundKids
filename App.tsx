@@ -593,6 +593,7 @@ const PatientHistoryScreen: React.FC = () => {
     const [diagnostics, setDiagnostics] = React.useState<any[]>([]);
     const [diuresisData, setDiuresisData] = React.useState<any[]>([]);
     const [balanceData, setBalanceData] = React.useState<any[]>([]);
+    const [alertsData, setAlertsData] = React.useState<any[]>([]);
 
     useHeader(patient ? `Histórico: ${patient.name}` : 'Histórico do Paciente');
 
@@ -657,6 +658,27 @@ const PatientHistoryScreen: React.FC = () => {
         };
 
         fetchBalance();
+    }, [patientId]);
+
+    // Buscar alertas do Supabase
+    React.useEffect(() => {
+        const fetchAlerts = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('alertas_paciente_view_completa')
+                    .select('*')
+                    .eq('patient_id', patientId);
+                
+                if (!error && data) {
+                    setAlertsData(data);
+                }
+            } catch (err) {
+                console.error('Erro ao buscar alertas:', err);
+            }
+        };
+
+        fetchAlerts();
     }, [patientId]);
 
     type TimelineEvent = {
@@ -774,6 +796,16 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
+        // Adicionar alertas
+        alertsData.forEach(alert => {
+            events.push({
+                timestamp: alert.created_at || new Date().toISOString(),
+                icon: BellIcon,
+                description: `🔔 ${alert.alertaclinico}\n👤 Responsável: ${alert.responsavel}\n📅 Prazo: ${alert.prazo_limite_formatado}\n⏱️ Tempo: ${alert.prazo_formatado}\n🕐 Data/Hora: ${alert.hora_criacao_formatado}\n👨‍⚕️ Criado por: ${alert.created_by_name || 'Não informado'}\n✓ Status: ${alert.status}`,
+                hasTime: true,
+            });
+        });
+
         events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
         const groupedEvents = events.reduce((acc, event) => {
@@ -786,7 +818,7 @@ const PatientHistoryScreen: React.FC = () => {
         }, {} as Record<string, TimelineEvent[]>);
 
         return groupedEvents;
-    }, [patient, tasks, diagnostics, diuresisData, balanceData]);
+    }, [patient, tasks, diagnostics, diuresisData, balanceData, alertsData]);
 
     const handleGeneratePdf = () => {
         // ... (PDF generation logic remains the same)
@@ -940,7 +972,7 @@ const PatientHistoryScreen: React.FC = () => {
                                                 <event.icon className="w-5 h-5 text-blue-600 dark:text-blue-300" />
                                             </div>
                                             <div className="flex-1">
-                                                <p className="text-slate-800 dark:text-slate-200 text-sm">{event.description}</p>
+                                                <p className="text-slate-800 dark:text-slate-200 text-sm whitespace-pre-wrap">{event.description}</p>
                                                 {event.hasTime && (
                                                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                                         Horário: {new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -3721,12 +3753,17 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     };
 
     const addPatientAlert = async (data: { patientId: string | number; description: string; responsible: string; timeLabel: string }) => {
+        const user = await supabase.auth.getUser();
+        const userId = user.data?.user?.id;
+        
         const { error } = await supabase.from('alertas_paciente').insert([{
             patient_id: data.patientId,
             alerta_descricao: data.description,
             responsavel: data.responsible,
             hora_selecionada: data.timeLabel,
-            status: 'Pendente'
+            status: 'Pendente',
+            created_at: new Date().toISOString(),
+            created_by: userId
         }]);
 
         if (error) {
