@@ -801,7 +801,7 @@ const PatientHistoryScreen: React.FC = () => {
             events.push({
                 timestamp: alert.created_at || new Date().toISOString(),
                 icon: BellIcon,
-                description: `🔔 ${alert.alertaclinico}\n👤 Responsável: ${alert.responsavel}\n📅 Prazo: ${alert.prazo_limite_formatado}\n⏱️ Tempo: ${alert.prazo_formatado}\n🕐 Data/Hora: ${alert.hora_criacao_formatado}\n👨‍⚕️ Criado por: ${alert.created_by_name || 'Não informado'}\n✓ Status: ${alert.status}`,
+                description: `🔔 ${alert.alertaclinico}\n👤 Responsável: ${alert.responsavel}\n📅 Prazo: ${alert.prazo_limite_formatado}\n⏱️ Tempo: ${alert.prazo_formatado}\n🕐 Data/Hora: ${alert.hora_criacao_formatado}\n👨‍⚕️ Criado por: ${alert.created_by_name}\n✓ Status: ${alert.status}`,
                 hasTime: true,
             });
         });
