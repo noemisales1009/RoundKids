@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Patient, Category, Question, Device, Exam, Medication, Alert, Task, User, SurgicalProcedure } from './types';
 import { 
     AppleIcon, 
@@ -55,72 +56,120 @@ const surgicalProcedures1: SurgicalProcedure[] = [
 ];
 
 export const DEVICE_TYPES: string[] = [
-    'CVC 1',
-    'CVC 2',
-    'PICC1',
-    'PICC2',
     'AVP1',
     'AVP2',
-    'TOT',
-    'SVD',
+    'CNAF',
+    'CURATIVO À VÁCUO',
+    'CVC 1',
+    'CVC 2',
+    'DRENO TORÁXICO D',
+    'DRENO TORÁXICO E',
     'DVE',
+    'GTT',
+    'OUTROS DRENOS',
+    'PICC1',
+    'PICC2',
     'SNE',
     'SNG',
-    'Dreno toráxico D',
-    'Dreno toráxico E',
-    'OUTROS DRENOS',
-    'Curativo à vácuo'
+    'SVD',
+    'TOT',
+    'VENTURY',
+    'VNI',
+    'VPM',
 ];
 export const DEVICE_LOCATIONS: string[] = [
+    'ABDOME',
+    'CABEÇA',
+    'FACE',
+    'HTD',
+    'HTE',
+    'LOCAIS',
+    'MÃO D',
+    'MÃO E',
+    'MID',
+    'MIE',
+    'MSD',
+    'MSE',
+    'NASAL',
+    'ORAL',
+    'PÉ D',
+    'PÉ E',
+    'PERÍNEO',
+    'REGIÃO LOMBAR',
+    'TRAQUÉIA',
+    'TRONCO',
+    'VFD',
+    'VFE',
     'VJID',
     'VJIE',
     'VSD',
     'VSE',
-    'VFD',
-    'VFE',
-    'Nasal',
-    'MSD',
-    'MSE',
-    'MID',
-    'MIE'
 ];
 export const EXAM_STATUSES: Array<'Pendente' | 'Normal' | 'Alterado'> = ['Pendente', 'Normal', 'Alterado'];
 
 export const MEDICATION_DOSAGE_UNITS: string[] = [
-    'mg/kg/h',
-    'μg/kg/min',
-    'UI/kg/h',
-    'μg/kg/h',
-    'UI/kg/min',
-    'mg/h',
     'mg/dia',
-    'mg/kg/dia'
+    'mg/h',
+    'mg/kg/dia',
+    'mg/kg/h',
+    'mg/kg/min',
+    'mg/ml',
+    'UI/dia',
+    'UI/h',
+    'UI/kg/dia',
+    'UI/kg/h',
+    'UI/kg/min',
+    'UI/ml',
+    'ug/dia',
+    'ug/h',
+    'ug/kg/dia',
+    'ug/kg/h',
+    'ug/kg/min',
+    'ug/ml'
+];
+
+// Alert Categories for Dashboard
+export const ALERT_CATEGORIES: string[] = [
+    'Sistema Nutricional',
+    'Hídrico',
+    'Hemodinâmico/Infecção',
+    'Hematológico',
+    'Hepático',
+    'Cirúrgico',
+    'Neurológico',
+    'Respiratório/Fisioterapia',
+    'Terapia Ocupacional',
+    'Gerenciamento de Risco',
+    'Farmácia',
+    'Família',
+    'Avaliação de Alta',
+    'Geral'
 ];
 
 // Updated Patient List based on the provided screenshot
 export const PATIENTS: Patient[] = [
-  { id: 1, name: 'LEANDRO SOUSA SOARES', bedNumber: 115, motherName: '-', dob: '2025-05-11', ctd: 'Estável', devices: devices1, exams: exams1, medications: medications1, surgicalProcedures: surgicalProcedures1, scaleScores: [] },
-  { id: 2, name: 'MARIA MAITE DA SILVA DE SOUSA', bedNumber: 110, motherName: '-', dob: '2025-10-03', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 3, name: 'SOPHIA SOUSA ALVES', bedNumber: 104, motherName: '-', dob: '2014-01-31', ctd: 'Observação', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 4, name: 'ARTHUR CARVALHO MOURA', bedNumber: 112, motherName: '-', dob: '2017-04-16', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 5, name: 'AVILA MANUELLE NASCIMENTO BRASIL', bedNumber: 4, motherName: '-', dob: '2025-09-18', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 6, name: 'AYLA VALENTINA ALMEIDA BRITO', bedNumber: 98, motherName: '-', dob: '2017-01-26', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 7, name: 'GABRIEL RAVICK LIMEIRA GOMES', bedNumber: 108, motherName: '-', dob: '2016-02-11', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 8, name: 'DAVI EVANGELISTA DA CRUZ', bedNumber: 102, motherName: 'Orcilene Barros', dob: '2019-03-12', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 9, name: 'ELIAS DOS SANTOS SILVA LIMA', bedNumber: 101, motherName: '-', dob: '2024-10-03', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 10, name: 'CARLOS DANIEL COSTA FERREIRA', bedNumber: 45, motherName: '-', dob: '2018-05-06', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 11, name: 'JOSE ALEF SOUSA VILANTE FIALHO', bedNumber: 105, motherName: '-', dob: '2023-10-20', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 12, name: 'NICOLAS EMANUEL BRITO BEZERRA', bedNumber: 113, motherName: '-', dob: '2017-01-31', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 13, name: 'VITORIA DOS MILAGRES SOUSA', bedNumber: 100, motherName: '-', dob: '2020-10-12', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 14, name: 'PABLO GAEL SILVA SANTOS', bedNumber: 106, motherName: '-', dob: '2025-07-18', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 15, name: 'ANNALICY DE MIRANDA OLIVEIRA DA', bedNumber: 107, motherName: '-', dob: '2015-10-06', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 16, name: 'NATANAEL RIKELMY DE AGUIAR LIMA', bedNumber: 99, motherName: 'Francisca da Costa', dob: '2012-06-20', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 17, name: 'MAYLLA LAVINIA SILVA CANTANHEDE', bedNumber: 103, motherName: 'Maria Clara', dob: '2025-08-15', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 18, name: 'DAVILLA HELOYSA CHAVES PEREIRA', bedNumber: 109, motherName: '-', dob: '2020-12-01', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 19, name: 'CAIO EDUARDO DOS SANTOS CAMPOS', bedNumber: 3, motherName: 'Ana paula', dob: '2024-03-09', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 20, name: 'DAVI LUIZ SILVA BRITO', bedNumber: 111, motherName: '-', dob: '2025-04-05', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 21, name: 'ABIMAEL MENDES DA CONCEICAO', bedNumber: 46, motherName: 'MARIA FLORISMAR', dob: '2017-01-09', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
-  { id: 22, name: 'MARIA HELOISA SOUSA SILVA', bedNumber: 114, motherName: '-', dob: '2022-05-16', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [] },
+  { id: 1, name: 'LEANDRO SOUSA SOARES', bedNumber: 115, motherName: '-', dob: '2025-05-11', ctd: 'Estável', devices: devices1, exams: exams1, medications: medications1, surgicalProcedures: surgicalProcedures1, scaleScores: [], cultures: [] },
+  { id: 2, name: 'MARIA MAITE DA SILVA DE SOUSA', bedNumber: 110, motherName: '-', dob: '2025-10-03', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 3, name: 'SOPHIA SOUSA ALVES', bedNumber: 104, motherName: '-', dob: '2014-01-31', ctd: 'Observação', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 4, name: 'ARTHUR CARVALHO MOURA', bedNumber: 112, motherName: '-', dob: '2017-04-16', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 5, name: 'AVILA MANUELLE NASCIMENTO BRASIL', bedNumber: 4, motherName: '-', dob: '2025-09-18', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 6, name: 'AYLA VALENTINA ALMEIDA BRITO', bedNumber: 98, motherName: '-', dob: '2017-01-26', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 7, name: 'GABRIEL RAVICK LIMEIRA GOMES', bedNumber: 108, motherName: '-', dob: '2016-02-11', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 8, name: 'DAVI EVANGELISTA DA CRUZ', bedNumber: 102, motherName: 'Orcilene Barros', dob: '2019-03-12', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 9, name: 'ELIAS DOS SANTOS SILVA LIMA', bedNumber: 101, motherName: '-', dob: '2024-10-03', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 10, name: 'CARLOS DANIEL COSTA FERREIRA', bedNumber: 45, motherName: '-', dob: '2018-05-06', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 11, name: 'JOSE ALEF SOUSA VILANTE FIALHO', bedNumber: 105, motherName: '-', dob: '2023-10-20', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 12, name: 'NICOLAS EMANUEL BRITO BEZERRA', bedNumber: 113, motherName: '-', dob: '2017-01-31', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 13, name: 'VITORIA DOS MILAGRES SOUSA', bedNumber: 100, motherName: '-', dob: '2020-10-12', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 14, name: 'PABLO GAEL SILVA SANTOS', bedNumber: 106, motherName: '-', dob: '2025-07-18', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 15, name: 'ANNALICY DE MIRANDA OLIVEIRA DA', bedNumber: 107, motherName: '-', dob: '2015-10-06', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 16, name: 'NATANAEL RIKELMY DE AGUIAR LIMA', bedNumber: 99, motherName: 'Francisca da Costa', dob: '2012-06-20', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 17, name: 'MAYLLA LAVINIA SILVA CANTANHEDE', bedNumber: 103, motherName: 'Maria Clara', dob: '2025-08-15', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 18, name: 'DAVILLA HELOYSA CHAVES PEREIRA', bedNumber: 109, motherName: '-', dob: '2020-12-01', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 19, name: 'CAIO EDUARDO DOS SANTOS CAMPOS', bedNumber: 3, motherName: 'Ana paula', dob: '2024-03-09', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 20, name: 'DAVI LUIZ SILVA BRITO', bedNumber: 111, motherName: '-', dob: '2025-04-05', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 21, name: 'ABIMAEL MENDES DA CONCEICAO', bedNumber: 46, motherName: 'MARIA FLORISMAR', dob: '2017-01-09', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
+  { id: 22, name: 'MARIA HELOISA SOUSA SILVA', bedNumber: 114, motherName: '-', dob: '2022-05-16', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [] },
 ];
 
 export const CATEGORIES: Category[] = [
@@ -345,4 +394,115 @@ export const INITIAL_USER: User = {
     name: 'Noemi',
     title: 'Médica',
     avatarUrl: 'https://i.pravatar.cc/150?u=noemi',
+};
+
+// ========== DATE FORMATTING UTILITIES ==========
+/**
+ * Formata uma data string no formato DD/MM/AAAA
+ * @param dateString - Data em formato "YYYY-MM-DD" ou ISO String
+ * @returns Data formatada em DD/MM/AAAA ou string vazia se inválida
+ */
+export const formatDateToBRL = (dateString: string | undefined | null): string => {
+    if (!dateString) return '';
+    
+    try {
+        // Trata strings que podem vir sem horário ou com horário
+        const normalizedDate = dateString.includes('T') ? dateString : `${dateString}T00:00:00`;
+        const date = new Date(normalizedDate);
+        
+        // Verifica se a data é válida
+        if (isNaN(date.getTime())) return '';
+        
+        // Formata em DD/MM/AAAA
+        return date.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    } catch {
+        return '';
+    }
+};
+
+/**
+ * Formata uma data com dia, mês por extenso e ano
+ * Exemplo: "10 de dezembro de 2025"
+ * @param dateString - Data em formato "YYYY-MM-DD" ou ISO String
+ * @returns Data formatada ou string vazia se inválida
+ */
+export const formatDateToLongBRL = (dateString: string | undefined | null): string => {
+    if (!dateString) return '';
+    
+    try {
+        const normalizedDate = dateString.includes('T') ? dateString : `${dateString}T00:00:00`;
+        const date = new Date(normalizedDate);
+        
+        if (isNaN(date.getTime())) return '';
+        
+        return date.toLocaleDateString('pt-BR', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+    } catch {
+        return '';
+    }
+};
+
+/**
+ * Formata data com hora no formato DD/MM/AAAA HH:mm
+ * @param dateString - Data em formato ISO String
+ * @returns Data e hora formatadas
+ */
+export const formatDateTimeWithHour = (dateString: string | undefined | null): string => {
+    if (!dateString) return '';
+    
+    try {
+        const date = new Date(dateString);
+        
+        if (isNaN(date.getTime())) return '';
+        
+        const datePart = date.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+        
+        const timePart = date.toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        return `${datePart} ${timePart}`;
+    } catch {
+        return '';
+    }
+};
+
+/**
+ * Calcula o número de dias entre uma data inicial e hoje
+ * @param startDateString - Data de início em formato "YYYY-MM-DD"
+ * @returns Número de dias ou -1 se inválido
+ */
+export const calculateDaysSinceDate = (startDateString: string | undefined | null): number => {
+    if (!startDateString) return -1;
+    
+    try {
+        const normalizedDate = startDateString.includes('T') ? startDateString : `${startDateString}T00:00:00`;
+        const startDate = new Date(normalizedDate);
+        const today = new Date();
+        
+        if (isNaN(startDate.getTime())) return -1;
+        
+        // Zera as horas para comparação apenas de data
+        today.setHours(0, 0, 0, 0);
+        startDate.setHours(0, 0, 0, 0);
+        
+        const diffTime = today.getTime() - startDate.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        return Math.max(0, diffDays);
+    } catch {
+        return -1;
+    }
 };

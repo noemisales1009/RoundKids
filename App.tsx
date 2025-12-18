@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useContext, useEffect, createContext, useRef } from 'react';
 import { HashRouter, Routes, Route, useNavigate, Link, useParams, useLocation, Outlet, NavLink, Navigate } from 'react-router-dom';
 import { Patient, Category, Question, ChecklistAnswer, Answer, Device, Exam, Medication, Task, TaskStatus, PatientsContextType, TasksContextType, NotificationState, NotificationContextType, User, UserContextType, Theme, ThemeContextType, SurgicalProcedure, ScaleScore, Culture } from './types';
-import { PATIENTS as initialPatients, CATEGORIES as STATIC_CATEGORIES, QUESTIONS as STATIC_QUESTIONS, TASKS as initialTasks, DEVICE_TYPES, DEVICE_LOCATIONS, EXAM_STATUSES, RESPONSIBLES, ALERT_DEADLINES, INITIAL_USER, MEDICATION_DOSAGE_UNITS, ICON_MAP } from './constants';
+import { PATIENTS as initialPatients, CATEGORIES as STATIC_CATEGORIES, QUESTIONS as STATIC_QUESTIONS, TASKS as initialTasks, DEVICE_TYPES, DEVICE_LOCATIONS, EXAM_STATUSES, RESPONSIBLES, ALERT_DEADLINES, INITIAL_USER, MEDICATION_DOSAGE_UNITS, ALERT_CATEGORIES, ICON_MAP, formatDateToBRL, formatDateTimeWithHour, calculateDaysSinceDate } from './constants';
 import { BackArrowIcon, PlusIcon, WarningIcon, ClockIcon, AlertIcon, CheckCircleIcon, BedIcon, UserIcon, PencilIcon, BellIcon, InfoIcon, EyeOffIcon, ClipboardIcon, FileTextIcon, LogOutIcon, ChevronRightIcon, MenuIcon, DashboardIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, HeartPulseIcon, BeakerIcon, LiverIcon, LungsIcon, DumbbellIcon, BrainIcon, ShieldIcon, UsersIcon, HomeIcon, CloseIcon, SettingsIcon, CameraIcon, ScalpelIcon, SaveIcon, CheckSquareIcon, SquareIcon, ChevronDownIcon, CheckIcon, ChevronLeftIcon } from './components/icons';
 import { ComfortBScale } from './components/ComfortBScale';
 import { DeliriumScale } from './components/DeliriumScale';
@@ -13,6 +13,7 @@ import { BradenScale } from './components/BradenScale';
 import { BradenQDScale } from './components/BradenQDScale';
 import { VniCnafScale } from './components/VniCnafScale';
 import { FSSScale } from './components/FSSScale';
+import { SecondaryNavigation } from './components/SecondaryNavigation';
 import { supabase } from './supabaseClient';
 import { AlertsHistoryScreen } from './AlertsHistoryScreen';
 import {
@@ -141,21 +142,21 @@ const Header: React.FC<{ title: string; onMenuClick: () => void }> = ({ title, o
     const showBackButton = backPath !== -1 && location.pathname !== '/dashboard';
 
     return (
-        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4 sticky top-0 z-10 flex items-center shrink-0">
+        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-3 sm:p-4 sticky top-0 z-10 flex items-center shrink-0">
             <button
                 onClick={showBackButton ? () => (typeof backPath === 'string' ? navigate(backPath) : navigate(-1)) : onMenuClick}
                 className="p-2 -ml-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition mr-2 lg:hidden"
             >
-                {showBackButton ? <BackArrowIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
+                {showBackButton ? <BackArrowIcon className="w-5 h-5 sm:w-6 sm:h-6" /> : <MenuIcon className="w-5 h-5 sm:w-6 sm:h-6" />}
             </button>
             <div className="hidden lg:block mr-4">
                 {showBackButton && (
                     <button onClick={() => typeof backPath === 'string' ? navigate(backPath) : navigate(-1)} className="p-2 -ml-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition">
-                        <BackArrowIcon className="w-6 h-6" />
+                        <BackArrowIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                     </button>
                 )}
             </div>
-            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 truncate">{title}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200 truncate">{title}</h1>
         </header>
     );
 };
@@ -218,15 +219,15 @@ const Notification: React.FC<{ message: string; type: 'success' | 'error' | 'inf
     }[type];
 
     const icon = {
-        success: <CheckCircleIcon className="w-6 h-6 text-white" />,
-        error: <WarningIcon className="w-6 h-6 text-white" />,
-        info: <InfoIcon className="w-6 h-6 text-white" />,
+        success: <CheckCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0" />,
+        error: <WarningIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0" />,
+        info: <InfoIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0" />,
     }[type];
 
     return (
-        <div className={`fixed top-5 right-5 z-50 flex items-center p-4 rounded-lg shadow-lg text-white ${bgColor} animate-notification-in`}>
+        <div className={`fixed top-2 right-2 sm:top-5 sm:right-5 z-50 flex items-center p-3 sm:p-4 rounded-lg shadow-lg text-white max-w-xs sm:max-w-sm ${bgColor} animate-notification-in`}>
             {icon}
-            <span className="ml-3 font-semibold">{message}</span>
+            <span className="ml-2 sm:ml-3 font-semibold text-sm sm:text-base">{message}</span>
         </div>
     );
 };
@@ -239,59 +240,98 @@ const LoginScreen: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [loginAttempts, setLoginAttempts] = useState(0);
+    const [isLockedOut, setIsLockedOut] = useState(false);
+
+    // ✅ SEGURANÇA: Validação de entrada
+    const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const validatePassword = (password: string) => password.length >= 6;
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
+        // ✅ SEGURANÇA: Rate limiting simples
+        if (isLockedOut) {
+            alert('Muitas tentativas de login. Tente novamente em alguns minutos.');
+            setLoading(false);
+            return;
+        }
+
+        // ✅ SEGURANÇA: Validar entrada
+        if (!validateEmail(email)) {
+            alert('Por favor, insira um email válido');
+            setLoading(false);
+            return;
+        }
+
+        if (!validatePassword(password)) {
+            alert('A senha deve ter pelo menos 6 caracteres');
+            setLoading(false);
+            return;
+        }
+
         const { data, error } = await supabase.auth.signInWithPassword({
-            email: email,
+            email: email.trim(), // Remover espaços
             password: password,
         });
 
         if (error) {
-            alert('Erro ao fazer login: ' + error.message);
+            // ✅ SEGURANÇA: Não expor mensagens de erro específicas
+            const newAttempts = loginAttempts + 1;
+            setLoginAttempts(newAttempts);
+
+            if (newAttempts >= 5) {
+                setIsLockedOut(true);
+                setTimeout(() => {
+                    setIsLockedOut(false);
+                    setLoginAttempts(0);
+                }, 15 * 60 * 1000); // 15 minutos
+            }
+
+            alert('Email ou senha incorretos');
             setLoading(false);
         } else {
+            setLoginAttempts(0); // Resetar tentativas
             navigate('/dashboard');
         }
     };
 
     return (
         <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-950">
-            <div className="p-8 bg-white dark:bg-slate-900 rounded-xl shadow-lg max-w-sm w-full m-4">
+            <div className="p-6 sm:p-8 bg-white dark:bg-slate-900 rounded-xl shadow-lg max-w-sm w-full m-4">
                 <div className="text-center mb-8">
-                    <ClipboardIcon className="w-16 h-16 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-                    <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-200">Bem-vindo de volta!</h1>
-                    <p className="text-slate-500 dark:text-slate-400">Faça login para continuar.</p>
+                    <ClipboardIcon className="w-12 h-12 sm:w-16 sm:h-16 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
+                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-200">Bem-vindo de volta!</h1>
+                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Faça login para continuar.</p>
                 </div>
                 <form onSubmit={handleLogin} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+                        <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
                         <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="seu@email.com"
-                            className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200"
+                            className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Senha</label>
+                        <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Senha</label>
                         <input
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="********"
-                            className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200"
+                            className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             required
                         />
                     </div>
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition text-lg flex items-center justify-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        className={`w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 sm:py-3 px-4 rounded-lg transition text-base sm:text-lg flex items-center justify-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                     >
                         {loading ? 'Entrando...' : 'Entrar'}
                     </button>
@@ -356,26 +396,31 @@ const DashboardScreen: React.FC = () => {
     }, [dashboardData]);
 
     const alertChartData = useMemo(() => {
-        const counts = tasks.filter(t => t.status === 'alerta').reduce((acc, task) => {
-            // Use categoryName for charts if available (for new table alerts), otherwise fallback to categoryId
-            const key = task.categoryName || (task.categoryId ? categories.find(c => c.id === task.categoryId)?.name : 'Geral');
-            if (key) {
-                acc[key] = (acc[key] || 0) + 1;
-            }
-            return acc;
-        }, {} as Record<string, number>);
+        // Count alerts by categoryName (from tasks with 'alerta' status)
+        const counts: Record<string, number> = {};
+        
+        tasks
+            .filter(t => t.status === 'alerta')
+            .forEach(task => {
+                const categoryName = task.categoryName || 'Geral';
+                counts[categoryName] = (counts[categoryName] || 0) + 1;
+            });
 
-        const sorted = (Object.entries(counts) as [string, number][]).sort(([, countA], [, countB]) => countB - countA);
+        // Debug log
+        console.log('Alert Chart Data - Tasks with alerta status:', tasks.filter(t => t.status === 'alerta').length);
+        console.log('Alert Chart Data - Counts by category:', counts);
+
+        // Convert to sorted array, filtering out zero counts
+        const entries = Object.entries(counts).filter(([, count]) => count > 0);
+        const sorted = (entries as [string, number][]).sort(([, countA], [, countB]) => countB - countA);
         const maxCount = Math.max(...sorted.map(([, count]) => count), 0);
 
-        return sorted.map(([name, count]) => {
-            return {
-                name: name,
-                count,
-                percentage: maxCount > 0 ? (count / maxCount) * 100 : 0,
-            };
-        });
-    }, [tasks, categories]);
+        return sorted.map(([name, count]) => ({
+            name,
+            count,
+            percentage: maxCount > 0 ? (count / maxCount) * 100 : 0,
+        }));
+    }, [tasks]);
 
     return (
         <div className="space-y-8">
@@ -397,7 +442,7 @@ const DashboardScreen: React.FC = () => {
                                         <item.icon className={`w-8 h-8 ${item.color}`} />
                                     </div>
                                     <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{item.title}</p>
-                                    <p className="text-3xl font-bold text-slate-800 dark:text-slate-200">{item.count}</p>
+                                    <p className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-200">{item.count}</p>
                                 </div>
                             ))}
                         </div>
@@ -636,31 +681,26 @@ const PatientHistoryScreen: React.FC = () => {
         // ... (PDF generation logic remains the same)
         if (!patient) return;
 
-        const formatDate = (dateString: string) => {
-            if (!dateString) return '';
-            return new Date(dateString + (dateString.includes('T') ? '' : 'T00:00:00')).toLocaleDateString('pt-BR');
-        };
-
         const generateDeviceList = () => patient.devices.map(d => `
             <li>
                 <strong>${d.name} (${d.location})</strong><br>
-                Início: ${formatDate(d.startDate)}
-                ${d.removalDate ? `<br>Retirada: ${formatDate(d.removalDate)}` : ''}
+                Início: ${formatDateToBRL(d.startDate)}
+                ${d.removalDate ? `<br>Retirada: ${formatDateToBRL(d.removalDate)}` : ''}
             </li>
         `).join('');
 
         const generateMedicationList = () => patient.medications.map(m => `
             <li>
                 <strong>${m.name} (${m.dosage})</strong><br>
-                Início: ${formatDate(m.startDate)}
-                ${m.endDate ? `<br>Fim: ${formatDate(m.endDate)}` : ''}
+                Início: ${formatDateToBRL(m.startDate)}
+                ${m.endDate ? `<br>Fim: ${formatDateToBRL(m.endDate)}` : ''}
             </li>
         `).join('');
 
         const generateExamList = () => patient.exams.map(e => `
             <li>
                 <strong>${e.name}</strong><br>
-                Data: ${formatDate(e.date)}
+                Data: ${formatDateToBRL(e.date)}
                 ${e.observation ? `<br><em>Obs: ${e.observation}</em>` : ''}
             </li>
         `).join('');
@@ -668,7 +708,7 @@ const PatientHistoryScreen: React.FC = () => {
         const generateSurgicalList = () => patient.surgicalProcedures.map(p => `
             <li>
                 <strong>${p.name}</strong> - Dr(a): ${p.surgeon}<br>
-                Data: ${formatDate(p.date)}
+                Data: ${formatDateToBRL(p.date)}
                 ${p.notes ? `<br><em>Obs: ${p.notes}</em>` : ''}
             </li>
         `).join('');
@@ -676,7 +716,7 @@ const PatientHistoryScreen: React.FC = () => {
         const generateScaleScoresList = () => patient.scaleScores?.map(s => `
             <li>
                 <strong>${s.scaleName}</strong> - Pontuação: ${s.score} (${s.interpretation})<br>
-                Data e Hora: ${new Date(s.date).toLocaleDateString('pt-BR')} às ${new Date(s.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                Data e Hora: ${formatDateTimeWithHour(s.date)}
             </li>
         `).join('') || '<li>Nenhuma avaliação registrada.</li>';
 
@@ -720,7 +760,7 @@ const PatientHistoryScreen: React.FC = () => {
                 <table>
                     <tr><th>Nome</th><td>${patient.name}</td></tr>
                     <tr><th>Leito</th><td>${patient.bedNumber}</td></tr>
-                    <tr><th>Nascimento</th><td>${formatDate(patient.dob)}</td></tr>
+                    <tr><th>Nascimento</th><td>${formatDateToBRL(patient.dob)}</td></tr>
                     <tr><th>Nome da Mãe</th><td>${patient.motherName}</td></tr>
                     <tr><th>Diagnóstico</th><td>${patient.ctd}</td></tr>
                 </table>
@@ -823,11 +863,11 @@ const EditPatientInfoModal: React.FC<{ patientId: number | string, currentMother
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30 p-2 sm:p-4">
+            <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Editar Informações</h2>
-                    <button onClick={onClose}><CloseIcon className="w-6 h-6 text-slate-500 dark:text-slate-400" /></button>
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-200">Editar Informações</h2>
+                    <button onClick={onClose}><CloseIcon className="w-5 h-5 sm:w-6 sm:h-6 text-slate-500 dark:text-slate-400" /></button>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
@@ -882,34 +922,34 @@ const CreateAlertModal: React.FC<{ patientId: number | string; onClose: () => vo
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-sm m-4 overflow-hidden">
-                <div className="bg-red-600 p-4 flex justify-between items-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-2 sm:p-4">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
+                <div className="bg-red-600 p-3 sm:p-4 flex justify-between items-center sticky top-0">
                     <div className="flex items-center gap-2 text-white">
-                        <AlertIcon className="w-6 h-6" />
-                        <h2 className="text-lg font-bold">Criar Alerta</h2>
+                        <AlertIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                        <h2 className="text-base sm:text-lg font-bold">Criar Alerta</h2>
                     </div>
                     <button onClick={onClose} className="text-white/80 hover:text-white bg-red-700/50 p-1 rounded-full">
-                        <CloseIcon className="w-5 h-5" />
+                        <CloseIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                 </div>
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Alerta</label>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Alerta</label>
                             <input
                                 type="text"
                                 value={description}
                                 onChange={e => setDescription(e.target.value)}
                                 placeholder="Digite o alerta identificado..."
                                 required
-                                className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition text-slate-800 dark:text-slate-200"
+                                className="w-full px-3 sm:px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Responsável</label>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Responsável</label>
                             <div className="relative">
-                                <select value={responsible} onChange={e => setResponsible(e.target.value)} required className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition text-slate-800 dark:text-slate-200 appearance-none">
+                                <select value={responsible} onChange={e => setResponsible(e.target.value)} required className="w-full px-3 sm:px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200 appearance-none">
                                     <option value="" disabled>Selecione...</option>
                                     {RESPONSIBLES.map(r => <option key={r} value={r}>{r}</option>)}
                                 </select>
@@ -917,9 +957,9 @@ const CreateAlertModal: React.FC<{ patientId: number | string; onClose: () => vo
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Selecione a hora</label>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Selecione a hora</label>
                             <div className="relative">
-                                <select value={deadline} onChange={e => setDeadline(e.target.value)} required className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition text-slate-800 dark:text-slate-200 appearance-none">
+                                <select value={deadline} onChange={e => setDeadline(e.target.value)} required className="w-full px-3 sm:px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200 appearance-none">
                                     <option value="" disabled>Selecione...</option>
                                     {ALERT_DEADLINES.map(d => <option key={d} value={d}>{d}</option>)}
                                 </select>
@@ -928,9 +968,9 @@ const CreateAlertModal: React.FC<{ patientId: number | string; onClose: () => vo
                         </div>
                         <button
                             type="submit"
-                            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition text-lg flex items-center justify-center gap-2 mt-2"
+                            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 sm:py-3 px-4 rounded-lg transition text-base sm:text-lg flex items-center justify-center gap-2 mt-2"
                         >
-                            <SaveIcon className="w-5 h-5" />
+                            <SaveIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                             Salvar Alerta
                         </button>
                     </form>
@@ -955,51 +995,51 @@ const AddCultureModal: React.FC<{ patientId: number | string; onClose: () => voi
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-                <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                    <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200">Cadastrar Cultura</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
+                <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white dark:bg-slate-900">
+                    <h3 className="font-bold text-base sm:text-lg text-slate-800 dark:text-slate-200">Cadastrar Cultura</h3>
                     <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-                        <CloseIcon className="w-5 h-5" />
+                        <CloseIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                 </div>
-                <div className="p-4">
+                <div className="p-4 sm:p-5">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Local</label>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Local</label>
                             <input
                                 type="text"
                                 value={site}
                                 onChange={(e) => setSite(e.target.value)}
-                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-200"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                                 placeholder="Ex: Hemocultura"
                                 required
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Microorganismo</label>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Microorganismo</label>
                             <input
                                 type="text"
                                 value={microorganism}
                                 onChange={(e) => setMicroorganism(e.target.value)}
-                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-200"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                                 placeholder="Ex: Staphylococcus aureus"
                                 required
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data</label>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data</label>
                             <input
                                 type="date"
                                 value={collectionDate}
                                 onChange={(e) => setCollectionDate(e.target.value)}
-                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-200"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                                 required
                             />
                         </div>
                         <button
                             type="submit"
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition mt-2"
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 sm:py-3 rounded-lg transition mt-2 text-sm sm:text-base"
                         >
                             Cadastrar
                         </button>
@@ -1010,9 +1050,73 @@ const AddCultureModal: React.FC<{ patientId: number | string; onClose: () => voi
     );
 };
 
+const EditCultureModal: React.FC<{ culture: Culture; patientId: number | string; onClose: () => void; }> = ({ culture, patientId, onClose }) => {
+    const { updateCultureInPatient } = useContext(PatientsContext)!;
+    const { showNotification } = useContext(NotificationContext)!;
+
+    const [site, setSite] = useState(culture.site);
+    const [microorganism, setMicroorganism] = useState(culture.microorganism);
+    const [collectionDate, setCollectionDate] = useState(culture.collectionDate);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!site || !microorganism || !collectionDate) return;
+        updateCultureInPatient(patientId, { ...culture, site, microorganism, collectionDate });
+        showNotification({ message: 'Cultura atualizada com sucesso!', type: 'success' });
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30 p-2 sm:p-4">
+            <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-200">Editar Cultura</h2>
+                    <button onClick={onClose}><CloseIcon className="w-5 h-5 sm:w-6 sm:h-6 text-slate-500 dark:text-slate-400" /></button>
+                </div>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Local</label>
+                        <input
+                            type="text"
+                            placeholder="Ex: Hemocultura"
+                            value={site}
+                            onChange={e => setSite(e.target.value)}
+                            className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Microorganismo</label>
+                        <input
+                            type="text"
+                            placeholder="Ex: Staphylococcus aureus"
+                            value={microorganism}
+                            onChange={e => setMicroorganism(e.target.value)}
+                            className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
+                        <input
+                            type="date"
+                            value={collectionDate}
+                            onChange={e => setCollectionDate(e.target.value)}
+                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            required
+                        />
+                    </div>
+                    <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 sm:py-3 px-4 rounded-lg text-sm sm:text-base">Salvar Alterações</button>
+                </form>
+            </div>
+        </div>
+    );
+};
+
 const PatientDetailScreen: React.FC = () => {
     const { patientId } = useParams<{ patientId: string }>();
     const { patients, addRemovalDateToDevice, deleteDeviceFromPatient, addEndDateToMedication, deleteMedicationFromPatient, deleteExamFromPatient, deleteSurgicalProcedureFromPatient, addScaleScoreToPatient, addCultureToPatient, deleteCultureFromPatient } = useContext(PatientsContext)!;
+    const { user } = useContext(UserContext)!;
     const patient = patients.find(p => p.id.toString() === patientId);
 
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
@@ -1028,6 +1132,7 @@ const PatientDetailScreen: React.FC = () => {
     const [isAddSurgicalModalOpen, setAddSurgicalModalOpen] = useState(false);
     const [editingSurgicalProcedure, setEditingSurgicalProcedure] = useState<SurgicalProcedure | null>(null);
     const [isAddCultureModalOpen, setAddCultureModalOpen] = useState(false);
+    const [editingCulture, setEditingCulture] = useState<Culture | null>(null);
     const [isRemovalModalOpen, setRemovalModalOpen] = useState<number | string | null>(null);
     const [isEndDateModalOpen, setEndDateModalOpen] = useState<number | string | null>(null);
     const [isEditInfoModalOpen, setEditInfoModalOpen] = useState(false);
@@ -1062,30 +1167,30 @@ const PatientDetailScreen: React.FC = () => {
     };
 
     const handleDeleteExam = (patientId: number | string, examId: number | string) => {
-        if (window.confirm("Tem certeza que deseja apagar este exame?")) {
+        if (window.confirm("Tem certeza que deseja arquivar este exame?")) {
             deleteExamFromPatient(patientId, examId);
-            showNotification({ message: 'Exame removido.', type: 'info' });
+            showNotification({ message: 'Exame arquivado.', type: 'info' });
         }
     };
 
     const handleDeleteMedication = (patientId: number | string, medicationId: number | string) => {
-        if (window.confirm("Tem certeza que deseja apagar esta medicação?")) {
+        if (window.confirm("Tem certeza que deseja arquivar esta medicação?")) {
             deleteMedicationFromPatient(patientId, medicationId);
-            showNotification({ message: 'Medicação removida.', type: 'info' });
+            showNotification({ message: 'Medicação arquivada.', type: 'info' });
         }
     };
 
     const handleDeleteProcedure = (patientId: number | string, procedureId: number | string) => {
-        if (window.confirm("Tem certeza que deseja apagar este procedimento?")) {
+        if (window.confirm("Tem certeza que deseja arquivar este procedimento cirúrgico?")) {
             deleteSurgicalProcedureFromPatient(patientId, procedureId);
-            showNotification({ message: 'Procedimento removido.', type: 'info' });
+            showNotification({ message: 'Procedimento cirúrgico arquivado.', type: 'info' });
         }
     };
 
     const handleDeleteCulture = (patientId: number | string, cultureId: number | string) => {
-        if (window.confirm("Tem certeza que deseja apagar esta cultura?")) {
+        if (window.confirm("Tem certeza que deseja arquivar esta cultura?")) {
             deleteCultureFromPatient(patientId, cultureId);
-            showNotification({ message: 'Cultura removida.', type: 'info' });
+            showNotification({ message: 'Cultura arquivada.', type: 'info' });
         }
     };
 
@@ -1148,7 +1253,7 @@ const PatientDetailScreen: React.FC = () => {
                 >
                     <PencilIcon className="w-5 h-5" />
                 </button>
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 pr-10">{patient.name}</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200 pr-10">{patient.name}</h2>
                 <div className="flex flex-col gap-1 text-slate-500 dark:text-slate-400 mt-3">
                     <span className="font-medium">Idade: <span className="font-normal">{formatAge(patient.dob)}</span></span>
                     <span className="font-medium">Mãe: <span className="font-normal">{patient.motherName}</span></span>
@@ -1193,23 +1298,11 @@ const PatientDetailScreen: React.FC = () => {
 
                 {mainTab === 'data' && (
                     <>
-                        <div className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
-                            <nav className="-mb-px flex justify-around">
-                                {dataTabs.map(tab => (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => setDataTab(tab.id as any)}
-                                        className={`flex-1 py-3 px-1 text-center font-semibold flex items-center justify-center gap-2 transition-colors duration-200 text-sm ${dataTab === tab.id
-                                            ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-900'
-                                            : 'border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                                            }`}
-                                    >
-                                        <tab.icon className="w-5 h-5" />
-                                        {tab.label}
-                                    </button>
-                                ))}
-                            </nav>
-                        </div>
+                        <SecondaryNavigation
+                            tabs={dataTabs}
+                            activeTabId={dataTab}
+                            onTabChange={(tabId) => setDataTab(tabId as any)}
+                        />
                         <div className="p-4 space-y-3">
                             {/* Devices Tab Content */}
                             {dataTab === 'devices' && (
@@ -1221,9 +1314,9 @@ const PatientDetailScreen: React.FC = () => {
                                                     <CpuIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
                                                     <div>
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{device.name} - {device.location}</p>
-                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Início: {new Date(device.startDate).toLocaleDateString('pt-BR')}</p>
+                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(device.startDate)}</p>
                                                         {device.removalDate ? (
-                                                            <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Retirada: {new Date(device.removalDate).toLocaleDateString('pt-BR')}</p>
+                                                            <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Retirada: {formatDateToBRL(device.removalDate)}</p>
                                                         ) : (
                                                             <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(device.startDate)}</p>
                                                         )}
@@ -1257,7 +1350,7 @@ const PatientDetailScreen: React.FC = () => {
                                                     <FileTextIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
                                                     <div>
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{exam.name}</p>
-                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Data: {new Date(exam.date).toLocaleDateString('pt-BR')}</p>
+                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(exam.date)}</p>
                                                         {exam.observation && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 italic">Obs: {exam.observation}</p>}
                                                     </div>
                                                 </div>
@@ -1278,16 +1371,16 @@ const PatientDetailScreen: React.FC = () => {
                             {/* Medications Tab Content */}
                             {dataTab === 'medications' && (
                                 <>
-                                    {patient.medications.map(medication => (
+                                    {patient.medications.filter(medication => !medication.isArchived).map(medication => (
                                         <div key={medication.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
                                                     <PillIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
                                                     <div>
                                                         <p className="font-bold text-slate-800 dark:text-slate-200 break-words">{medication.name} - {medication.dosage}</p>
-                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Início: {new Date(medication.startDate).toLocaleDateString('pt-BR')}</p>
+                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(medication.startDate)}</p>
                                                         {medication.endDate ? (
-                                                            <p className="text-sm text-slate-500 dark:text-slate-400">Fim: {new Date(medication.endDate).toLocaleDateString('pt-BR')}</p>
+                                                            <p className="text-sm text-slate-500 dark:text-slate-400">Fim: {formatDateToBRL(medication.endDate)}</p>
                                                         ) : (
                                                             <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(medication.startDate)}</p>
                                                         )}
@@ -1311,14 +1404,15 @@ const PatientDetailScreen: React.FC = () => {
                             {/* Surgical Tab Content */}
                             {dataTab === 'surgical' && (
                                 <>
-                                    {patient.surgicalProcedures.map(procedure => (
+                                    {patient.surgicalProcedures.filter(procedure => !procedure.isArchived).map(procedure => (
                                         <div key={procedure.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
                                                     <ScalpelIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
                                                     <div>
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{procedure.name}</p>
-                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Data: {new Date(procedure.date).toLocaleDateString('pt-BR')} - Dr(a): {procedure.surgeon}</p>
+                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(procedure.date)} - Dr(a): {procedure.surgeon}</p>
+                                                        <p className="text-sm text-blue-600 dark:text-blue-400 font-semibold mt-1">Dia Pós-Operatório: +{calculateDays(procedure.date)} dias</p>
                                                         {procedure.notes && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 italic">Obs: {procedure.notes}</p>}
                                                     </div>
                                                 </div>
@@ -1326,7 +1420,7 @@ const PatientDetailScreen: React.FC = () => {
                                                     <button onClick={() => setEditingSurgicalProcedure(procedure)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar cirurgia">
                                                         <PencilIcon className="w-4 h-4" />
                                                     </button>
-                                                    <button onClick={() => handleDeleteProcedure(patient.id, procedure.id)} className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded-full transition" aria-label="Excluir cirurgia">
+                                                    <button onClick={() => handleDeleteProcedure(patient.id, procedure.id)} className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded-full transition" aria-label="Arquivar cirurgia">
                                                         <CloseIcon className="w-4 h-4" />
                                                     </button>
                                                 </div>
@@ -1339,7 +1433,7 @@ const PatientDetailScreen: React.FC = () => {
                             {/* Cultures Tab Content */}
                             {dataTab === 'cultures' && (
                                 <>
-                                    {patient.cultures.map(culture => (
+                                    {patient.cultures.filter(culture => !culture.isArchived).map(culture => (
                                         <div key={culture.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
@@ -1347,11 +1441,14 @@ const PatientDetailScreen: React.FC = () => {
                                                     <div>
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{culture.site}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Microorganismo: {culture.microorganism}</p>
-                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Data: {new Date(culture.collectionDate).toLocaleDateString('pt-BR')}</p>
+                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(culture.collectionDate)}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                                                    <button onClick={() => handleDeleteCulture(patient.id, culture.id)} className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded-full transition" aria-label="Excluir cultura">
+                                                    <button onClick={() => setEditingCulture(culture)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar cultura">
+                                                        <PencilIcon className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={() => handleDeleteCulture(patient.id, culture.id)} className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded-full transition" aria-label="Arquivar cultura">
                                                         <CloseIcon className="w-4 h-4" />
                                                     </button>
                                                 </div>
@@ -1412,12 +1509,21 @@ const PatientDetailScreen: React.FC = () => {
                 )}
             </div>
 
-            <Link to={`/patient/${patient.id}/round/categories`} className="w-full block text-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg">
-                <div className="flex items-center justify-center gap-2">
-                    <ClipboardIcon className="w-6 h-6" />
-                    Iniciar/Ver Round
+            {user?.access_level === 'adm' ? (
+                <Link to={`/patient/${patient.id}/round/categories`} className="w-full block text-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg">
+                    <div className="flex items-center justify-center gap-2">
+                        <ClipboardIcon className="w-6 h-6" />
+                        Iniciar/Ver Round
+                    </div>
+                </Link>
+            ) : (
+                <div title="Você não tem acesso a essa função." className="w-full block text-center bg-slate-400 dark:bg-slate-600 text-white font-bold py-4 px-4 rounded-lg cursor-not-allowed opacity-60 text-lg">
+                    <div className="flex items-center justify-center gap-2">
+                        <ClipboardIcon className="w-6 h-6" />
+                        Iniciar/Ver Round
+                    </div>
                 </div>
-            </Link>
+            )}
 
             <button
                 onClick={() => setCreateAlertModalOpen(true)}
@@ -1436,6 +1542,7 @@ const PatientDetailScreen: React.FC = () => {
             {isAddSurgicalModalOpen && <AddSurgicalProcedureModal patientId={patient.id} onClose={() => setAddSurgicalModalOpen(false)} />}
             {editingSurgicalProcedure && <EditSurgicalProcedureModal procedure={editingSurgicalProcedure} patientId={patient.id} onClose={() => setEditingSurgicalProcedure(null)} />}
             {isAddCultureModalOpen && <AddCultureModal patientId={patient.id} onClose={() => setAddCultureModalOpen(false)} />}
+            {editingCulture && <EditCultureModal culture={editingCulture} patientId={patient.id} onClose={() => setEditingCulture(null)} />}
             {isRemovalModalOpen && <AddRemovalDateModal deviceId={isRemovalModalOpen} patientId={patient.id} onClose={() => setRemovalModalOpen(null)} />}
             {isEndDateModalOpen && <AddEndDateModal medicationId={isEndDateModalOpen} patientId={patient.id} onClose={() => setEndDateModalOpen(null)} />}
             {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} currentMotherName={patient.motherName} currentDiagnosis={patient.ctd} onClose={() => setEditInfoModalOpen(false)} />}
@@ -2532,10 +2639,10 @@ const TaskStatusScreen: React.FC = () => {
                                     {/* Nome do Paciente e Leito */}
                                     {alert.patient_name && (
                                         <div className="mb-2">
-                                            <Link to={`/patient/${alert.patient_id}`} className="text-lg font-bold text-blue-600 dark:text-blue-400 hover:underline">
+                                            <Link to={`/patient/${alert.patient_id}`} className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 hover:underline">
                                                 {alert.patient_name}
                                             </Link>
-                                            <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">
+                                            <span className="ml-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                                                 Leito: <strong>{alert.bed_number || 'N/A'}</strong>
                                             </span>
                                         </div>
@@ -2627,24 +2734,24 @@ const JustificationModal: React.FC<{ alert: any, onClose: () => void, onSave: (a
     const [justification, setJustification] = useState(alert.justificativa || '');
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-md m-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30 p-2 sm:p-4">
+            <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Justificar Atraso</h2>
-                    <button onClick={onClose}><CloseIcon className="w-6 h-6 text-slate-500 dark:text-slate-400" /></button>
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-200">Justificar Atraso</h2>
+                    <button onClick={onClose}><CloseIcon className="w-5 h-5 sm:w-6 sm:h-6 text-slate-500 dark:text-slate-400" /></button>
                 </div>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mb-4">
                     Alerta: <strong>{alert.alertaclinico}</strong>
                 </p>
                 <textarea
                     value={justification}
                     onChange={e => setJustification(e.target.value)}
                     placeholder="Digite a justificativa para o atraso..."
-                    className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200 min-h-[100px]"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200 min-h-[100px]"
                 />
                 <div className="flex gap-2 mt-4">
-                    <button onClick={onClose} className="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition">Cancelar</button>
-                    <button onClick={() => onSave(alert, justification)} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition">Salvar</button>
+                    <button onClick={onClose} className="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-2 px-3 sm:px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition text-sm sm:text-base">Cancelar</button>
+                    <button onClick={() => onSave(alert, justification)} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 sm:px-4 rounded-lg transition text-sm sm:text-base">Salvar</button>
                 </div>
             </div>
         </div>
@@ -2659,11 +2766,12 @@ const SettingsScreen: React.FC = () => {
 
     const [name, setName] = useState(user.name);
     const [title, setTitle] = useState(user.title);
+    const [sector, setSector] = useState(user.sector || '');
     const [avatarPreview, setAvatarPreview] = useState(user.avatarUrl);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleSave = () => {
-        updateUser({ name, title, avatarUrl: avatarPreview });
+        updateUser({ name, title, avatarUrl: avatarPreview, sector });
         showNotification({ message: 'Perfil salvo com sucesso!', type: 'success' });
     };
 
@@ -2745,6 +2853,15 @@ const SettingsScreen: React.FC = () => {
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
+                            className="mt-1 w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Setor</label>
+                        <input
+                            type="text"
+                            value={sector}
+                            onChange={(e) => setSector(e.target.value)}
                             className="mt-1 w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200"
                         />
                     </div>
@@ -2904,6 +3021,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 dosage: `${m.dosagem_valor} ${m.unidade_medida}`,
                 startDate: m.data_inicio,
                 endDate: m.data_fim,
+                isArchived: m.is_archived
             });
             return acc;
         }, {});
@@ -2915,7 +3033,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 name: s.nome_procedimento,
                 date: s.data_procedimento,
                 surgeon: s.nome_cirurgiao,
-                notes: s.notas
+                notes: s.notas,
+                isArchived: s.is_archived
             });
             return acc;
         }, {});
@@ -2940,6 +3059,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 site: c.local,
                 microorganism: c.microorganismo,
                 collectionDate: c.data_coleta,
+                isArchived: c.is_archived
             });
             return acc;
         }, {});
@@ -3074,7 +3194,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 
     const deleteMedicationFromPatient = async (patientId: number | string, medicationId: number | string) => {
         const { error } = await supabase.from('medicacoes_pacientes')
-            .delete()
+            .update({ is_archived: true })
             .eq('id', medicationId);
         if (!error) fetchPatients();
     };
@@ -3092,7 +3212,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 
     const deleteExamFromPatient = async (patientId: number | string, examId: number | string) => {
         const { error } = await supabase.from('exames_pacientes')
-            .delete()
+            .update({ is_archived: true })
             .eq('id', examId);
         if (!error) fetchPatients();
     };
@@ -3138,7 +3258,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 
     const deleteSurgicalProcedureFromPatient = async (patientId: number | string, procedureId: number | string) => {
         const { error } = await supabase.from('procedimentos_pacientes')
-            .delete()
+            .update({ is_archived: true })
             .eq('id', procedureId);
         if (!error) fetchPatients();
     };
@@ -3170,8 +3290,19 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 
     const deleteCultureFromPatient = async (patientId: number | string, cultureId: number | string) => {
         const { error } = await supabase.from('culturas_pacientes')
-            .delete()
+            .update({ is_archived: true })
             .eq('id', cultureId);
+        if (!error) fetchPatients();
+    };
+
+    const updateCultureInPatient = async (patientId: number | string, cultureData: Culture) => {
+        const { error } = await supabase.from('culturas_pacientes')
+            .update({
+                local: cultureData.site,
+                microorganismo: cultureData.microorganism,
+                data_coleta: cultureData.collectionDate
+            })
+            .eq('id', cultureData.id);
         if (!error) fetchPatients();
     };
 
@@ -3211,6 +3342,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         saveChecklistAnswer,
         addCultureToPatient,
         deleteCultureFromPatient,
+        updateCultureInPatient,
     };
 
     return <PatientsContext.Provider value={value as PatientsContextType}>{children}</PatientsContext.Provider>;
@@ -3223,16 +3355,26 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
     const fetchTasks = async () => {
         if (supabase) {
-            // Fetch from both 'tasks' and 'alertas_paciente' tables
-            const [tasksRes, alertsRes] = await Promise.all([
-                supabase.from('tasks').select('*'),
-                supabase.from('alertas_paciente').select('*')
+            // Fetch from 'tasks', 'alertas_paciente', 'alerts', and 'categorias' tables
+            const [tasksRes, alertsRes, alertsTableRes, categoriasRes] = await Promise.all([
+                supabase.from('tasks').select('*').then(res => ({ ...res, error: res.error }), err => ({ data: null, error: err })),
+                supabase.from('alertas_paciente').select('*').then(res => ({ ...res, error: res.error }), err => ({ data: null, error: err })),
+                supabase.from('alerts').select('*').eq('status', 'ativo').then(res => ({ ...res, error: res.error }), err => ({ data: null, error: err })), // Only active alerts
+                supabase.from('categorias').select('id, nome').then(res => ({ ...res, error: res.error }), err => ({ data: null, error: err }))
             ]);
+
+            // Create a map of categoria_id -> category name for quick lookup
+            const categoriasMap = new Map<number, string>();
+            if (categoriasRes.data && !categoriasRes.error) {
+                categoriasRes.data.forEach((cat: any) => {
+                    categoriasMap.set(cat.id, cat.nome);
+                });
+            }
 
             let mappedTasks: Task[] = [];
 
             // Map standard checklist tasks
-            if (tasksRes.data) {
+            if (tasksRes.data && !tasksRes.error) {
                 mappedTasks = tasksRes.data.map((t: any) => ({
                     id: t.id,
                     patientId: t.patient_id,
@@ -3250,7 +3392,7 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             }
 
             // Map new 'alertas_paciente' tasks
-            if (alertsRes.data) {
+            if (alertsRes.data && !alertsRes.error) {
                 const mappedAlerts: Task[] = alertsRes.data.map((a: any) => {
                     // Calculate deadline from hora_selecionada string (e.g. "1 hora")
                     const hours = parseInt(a.hora_selecionada?.split(' ')[0] || '0');
@@ -3271,6 +3413,27 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     };
                 });
                 mappedTasks = [...mappedTasks, ...mappedAlerts];
+            }
+
+            // Map 'alerts' table with categoria_id foreign key
+            if (alertsTableRes.data && !alertsTableRes.error) {
+                const mappedNewAlerts: Task[] = alertsTableRes.data.map((a: any) => {
+                    const categoryName = categoriasMap.get(a.categoria_id) || 'Geral';
+                    return {
+                        id: a.id, // UUID
+                        patientId: a.user_id || 0, // Store user_id as patientId for now
+                        categoryId: a.categoria_id,
+                        description: a.description || '',
+                        responsible: a.user_id || 'Sistema',
+                        deadline: a.created_at,
+                        status: 'alerta',
+                        categoryName: categoryName, // Use name from categorias table
+                    };
+                });
+                mappedTasks = [...mappedTasks, ...mappedNewAlerts];
+            } else if (alertsTableRes.error) {
+                // Log but don't fail if alerts table doesn't exist yet
+                console.debug('Alerts table not available or error:', alertsTableRes.error);
             }
 
             setTasks(mappedTasks.sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()));
@@ -3375,13 +3538,7 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
     useEffect(() => {
         const loadUser = async () => {
-            // 1. Try local storage first for fast load / persistence across reloads
-            const savedUser = localStorage.getItem('round_juju_user');
-            if (savedUser) {
-                setUser(JSON.parse(savedUser));
-            }
-
-            // 2. Check for Supabase Auth Session
+            // 1. Check for Supabase Auth Session
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
                 const { data, error } = await supabase
@@ -3393,14 +3550,24 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 if (data) {
                     // Update state from DB
                     const dbUser = {
+                        id: data.id, // Store user ID
                         name: data.name || '',
                         title: data.role || '', // Mapping DB 'role' to App 'title'
                         avatarUrl: data.foto || '', // Mapping DB 'foto' to App 'avatarUrl'
+                        sector: data.sector || '', // Mapping DB 'sector'
+                        access_level: (data.access_level || 'geral') as 'adm' | 'geral', // Mapping DB 'access_level'
                     };
                     setUser(dbUser);
-                    // Update local storage to keep in sync
-                    localStorage.setItem('round_juju_user', JSON.stringify(dbUser));
+                    // ✅ SEGURANÇA: Não armazenar dados sensíveis em localStorage
+                    // Supabase gerencia a sessão em cookies HttpOnly automaticamente
+                } else if (error) {
+                    console.error('Erro ao carregar usuário');
+                    // Clear localStorage on error to prevent stale data
+                    localStorage.removeItem('round_juju_user');
                 }
+            } else {
+                // No session available - user is logged out
+                // Don't load stale user data from localStorage
             }
         };
         loadUser();
@@ -3410,8 +3577,8 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         const newUser = { ...user, ...userData };
         setUser(newUser);
 
-        // Persist locally so it survives refresh even without auth
-        localStorage.setItem('round_juju_user', JSON.stringify(newUser));
+        // ✅ SEGURANÇA: Não armazenar dados sensíveis em localStorage
+        // Apenas atualizar no estado React e no Supabase
 
         // Persist to Supabase if logged in
         const { data: { session } } = await supabase.auth.getSession();
@@ -3421,6 +3588,7 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 name: newUser.name,
                 role: newUser.title, // Mapping title to role
                 foto: newUser.avatarUrl, // Mapping avatarUrl to foto
+                sector: newUser.sector, // Mapping sector
                 email: session.user.email,
                 updated_at: new Date().toISOString()
             });

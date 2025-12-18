@@ -244,7 +244,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                                 {/* Nome do Paciente e Leito */}
                                 {alert.patient_name && (
                                     <div className="mb-2">
-                                        <Link to={`/patient/${alert.patient_id}`} className="text-lg font-bold text-blue-600 dark:text-blue-400 hover:underline">
+                                        <Link to={`/patient/${alert.patient_id}`} className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 hover:underline">
                                             {alert.patient_name}
                                         </Link>
                                         <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">

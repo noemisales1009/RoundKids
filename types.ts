@@ -25,6 +25,7 @@ export interface Medication {
   dosage: string;
   startDate: string; // "YYYY-MM-DD"
   endDate?: string; // "YYYY-MM-DD"
+  isArchived?: boolean;
 }
 
 export interface SurgicalProcedure {
@@ -33,6 +34,7 @@ export interface SurgicalProcedure {
   date: string; // "YYYY-MM-DD"
   surgeon: string;
   notes?: string;
+  isArchived?: boolean;
 }
 
 export interface ScaleScore {
@@ -48,6 +50,7 @@ export interface Culture {
   site: string; // local
   microorganism: string; // microorganismo
   collectionDate: string; // data_coleta
+  isArchived?: boolean;
 }
 
 export interface Patient {
@@ -118,9 +121,12 @@ export interface Task {
 
 // --- USER & THEME ---
 export interface User {
+  id?: string; // UUID from auth.users
   name: string;
-  title: string;
-  avatarUrl: string;
+  title: string; // role field from public.users
+  avatarUrl: string; // foto field from public.users
+  sector?: string; // Setor/Unidade from public.users
+  access_level?: 'adm' | 'geral'; // 'adm' for administrator, 'geral' for general user
 }
 
 export type Theme = 'light' | 'dark';
@@ -160,6 +166,7 @@ export interface PatientsContextType {
   saveChecklistAnswer: (patientId: number | string, categoryId: number, questionId: number, answer: Answer) => Promise<void>;
   addCultureToPatient: (patientId: number | string, culture: Omit<Culture, 'id'>) => void;
   deleteCultureFromPatient: (patientId: number | string, cultureId: number | string) => void;
+  updateCultureInPatient: (patientId: number | string, cultureData: Culture) => void;
 }
 
 // --- NOTIFICATION TYPES ---
