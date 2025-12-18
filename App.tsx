@@ -1394,15 +1394,15 @@ const PatientDetailScreen: React.FC = () => {
                             {dataTab === 'medications' && (
                                 <>
                                     {patient.medications.filter(medication => !medication.isArchived).map(medication => (
-                                        <div key={medication.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                                        <div key={medication.id} className={`p-3 rounded-lg ${medication.endDate ? 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700' : 'bg-slate-50 dark:bg-slate-800'}`}>
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
-                                                    <PillIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
+                                                    <PillIcon className={`w-5 h-5 mt-1 shrink-0 ${medication.endDate ? 'text-yellow-600 dark:text-yellow-400' : 'text-blue-600 dark:text-blue-400'}`} />
                                                     <div>
-                                                        <p className="font-bold text-slate-800 dark:text-slate-200 wrap-break-word">{medication.name} - {medication.dosage}</p>
-                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(medication.startDate)}</p>
+                                                        <p className={`font-bold wrap-break-word ${medication.endDate ? 'text-yellow-900 dark:text-yellow-200' : 'text-slate-800 dark:text-slate-200'}`}>{medication.name} - {medication.dosage}</p>
+                                                        <p className={`text-sm ${medication.endDate ? 'text-yellow-700 dark:text-yellow-300' : 'text-slate-500 dark:text-slate-400'}`}>Início: {formatDateToBRL(medication.startDate)}</p>
                                                         {medication.endDate ? (
-                                                            <p className="text-sm text-slate-500 dark:text-slate-400">Fim: {formatDateToBRL(medication.endDate)}</p>
+                                                            <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Fim: {formatDateToBRL(medication.endDate)}</p>
                                                         ) : (
                                                             <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(medication.startDate)}</p>
                                                         )}
