@@ -665,13 +665,26 @@ const PatientHistoryScreen: React.FC = () => {
         const fetchAlerts = async () => {
             if (!patientId) return;
             try {
-                const { data, error } = await supabase
-                    .from('alertas_paciente_view_completa')
-                    .select('*')
-                    .eq('patient_id', patientId);
+                // Buscar de ambas as views
+                const [alertasResult, tasksResult] = await Promise.all([
+                    supabase
+                        .from('alertas_paciente_view_completa')
+                        .select('*')
+                        .eq('patient_id', patientId),
+                    supabase
+                        .from('tasks_view_horario_br')
+                        .select('*')
+                        .eq('patient_id', patientId)
+                ]);
                 
-                if (!error && data) {
-                    setAlertsData(data);
+                // Combinar dados de ambas as views
+                const allAlerts = [
+                    ...(alertasResult.data || []).map(a => ({ ...a, source: 'alertas_paciente' })),
+                    ...(tasksResult.data || []).map(t => ({ ...t, source: 'tasks' }))
+                ];
+                
+                if (!alertasResult.error && !tasksResult.error) {
+                    setAlertsData(allAlerts);
                 }
             } catch (err) {
                 console.error('Erro ao buscar alertas:', err);
@@ -746,14 +759,7 @@ const PatientHistoryScreen: React.FC = () => {
         });
 
         const patientAlerts = tasks.filter(task => task.patientId && patient.id && task.patientId.toString() === patient.id.toString() && task.status === 'alerta');
-        patientAlerts.forEach(alert => {
-            events.push({
-                timestamp: alert.deadline,
-                icon: BellIcon,
-                description: `🔔 ${alert.description}\n👤 Responsável: ${alert.responsible || 'Não informado'}\n📅 Prazo: ${alert.prazo_limite_formatado || 'N/A'}\n⏱️ Tempo: ${alert.prazo_formatado || 'N/A'}\n🕐 Data/Hora: ${alert.hora_criacao_formatado || 'N/A'}\n👨‍⚕️ Criado por: ${alert.created_by_name || 'Não informado'}\n✓ Status: ${alert.status}`,
-                hasTime: true,
-            });
-        });
+        // Removido: alertas de tasks duplicadas - usar apenas alertsData que vem da view com todos os dados formatados
 
         patient.scaleScores?.forEach(score => {
             events.push({
@@ -796,12 +802,21 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
-        // Adicionar alertas
+        // Adicionar alertas de ambas as tabelas
         alertsData.forEach(alert => {
+            // Normalizar nomes de campos entre as duas views
+            const desc = alert.alertaclinico || alert.descricao_limpa || alert.description || 'Sem descrição';
+            const resp = alert.responsavel || alert.responsible || 'Não informado';
+            const prazoLimite = alert.prazo_limite_formatado || alert.prazo_limite_formatado || 'N/A';
+            const tempo = alert.prazo_formatado || alert.prazo_formatado || 'N/A';
+            const dataHora = alert.hora_criacao_formatado || alert.hora_criacao_formatado || 'N/A';
+            const criadoPor = alert.created_by_name || 'Não informado';
+            const status = alert.status || 'alerta';
+            
             events.push({
                 timestamp: alert.created_at || new Date().toISOString(),
                 icon: BellIcon,
-                description: `🔔 ${alert.alertaclinico}\n👤 Responsável: ${alert.responsavel}\n📅 Prazo: ${alert.prazo_limite_formatado}\n⏱️ Tempo: ${alert.prazo_formatado}\n🕐 Data/Hora: ${alert.hora_criacao_formatado}\n👨‍⚕️ Criado por: ${alert.created_by_name}\n✓ Status: ${alert.status}`,
+                description: `🔔 ${desc}\n👤 Responsável: ${resp}\n📅 Prazo: ${prazoLimite}\n⏱️ Tempo: ${tempo}\n🕐 Data/Hora: ${dataHora}\n👨‍⚕️ Criado por: ${criadoPor}\n✓ Status: ${status}`,
                 hasTime: true,
             });
         });
