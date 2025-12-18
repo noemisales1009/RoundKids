@@ -1394,13 +1394,13 @@ const PatientDetailScreen: React.FC = () => {
                             {dataTab === 'medications' && (
                                 <>
                                     {patient.medications.filter(medication => !medication.isArchived).map(medication => (
-                                        <div key={medication.id} className={`p-3 rounded-lg ${medication.endDate ? 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                                        <div key={medication.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
-                                                    <PillIcon className={`w-5 h-5 mt-1 shrink-0 ${medication.endDate ? 'text-yellow-600 dark:text-yellow-400' : 'text-blue-600 dark:text-blue-400'}`} />
+                                                    <PillIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
                                                     <div>
-                                                        <p className={`font-bold wrap-break-word ${medication.endDate ? 'text-yellow-900 dark:text-yellow-200' : 'text-slate-800 dark:text-slate-200'}`}>{medication.name} - {medication.dosage}</p>
-                                                        <p className={`text-sm ${medication.endDate ? 'text-yellow-700 dark:text-yellow-300' : 'text-slate-500 dark:text-slate-400'}`}>Início: {formatDateToBRL(medication.startDate)}</p>
+                                                        <p className="font-bold text-slate-800 dark:text-slate-200 wrap-break-word">{medication.name} - {medication.dosage}</p>
+                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(medication.startDate)}</p>
                                                         {medication.endDate ? (
                                                             <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Fim: {formatDateToBRL(medication.endDate)}</p>
                                                         ) : (
@@ -1821,6 +1821,7 @@ const EditMedicationModal: React.FC<{ medication: Medication; patientId: number 
     const { showNotification } = useContext(NotificationContext)!;
     const [name, setName] = useState(medication.name);
     const [startDate, setStartDate] = useState(medication.startDate);
+    const [endDate, setEndDate] = useState(medication.endDate || '');
 
     const [initialValue, initialUnit] = useMemo(() => {
         const dosageString = medication.dosage || '';
@@ -1839,7 +1840,7 @@ const EditMedicationModal: React.FC<{ medication: Medication; patientId: number 
         e.preventDefault();
         if (!name || !dosageValue || !dosageUnit || !startDate) return;
         const dosage = `${dosageValue} ${dosageUnit}`;
-        updateMedicationInPatient(patientId, { ...medication, name, dosage, startDate });
+        updateMedicationInPatient(patientId, { ...medication, name, dosage, startDate, endDate: endDate || undefined });
         showNotification({ message: 'Medicação atualizada com sucesso!', type: 'success' });
         onClose();
     };
@@ -1879,6 +1880,10 @@ const EditMedicationModal: React.FC<{ medication: Medication; patientId: number 
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Início</label>
                         <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Fim <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
+                        <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar Alterações</button>
                 </form>
