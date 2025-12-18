@@ -19,7 +19,6 @@ import DiuresisCalc from './components/DiuresisCalc';
 import FluidBalanceCalc from './components/FluidBalanceCalc';
 import StatusComponent from './components/StatusComponent';
 import ComorbidadeComponent from './components/ComorbidadeComponent';
-import DistintvoComponent from './components/DistintvoComponent';
 import DestinoComponent from './components/DestinoComponent';
 import HistorySection from './components/HistorySection';
 import { supabase } from './supabaseClient';
@@ -591,8 +590,74 @@ const PatientHistoryScreen: React.FC = () => {
     const { patients } = useContext(PatientsContext)!;
     const { tasks } = useContext(TasksContext)!;
     const patient = patients.find(p => p.id.toString() === patientId);
+    const [diagnostics, setDiagnostics] = React.useState<any[]>([]);
+    const [diuresisData, setDiuresisData] = React.useState<any[]>([]);
+    const [balanceData, setBalanceData] = React.useState<any[]>([]);
 
     useHeader(patient ? `Histórico: ${patient.name}` : 'Histórico do Paciente');
+
+    // Buscar diagnósticos do Supabase
+    React.useEffect(() => {
+        const fetchDiagnostics = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('patient_diagnostics')
+                    .select('*')
+                    .eq('patient_id', patientId);
+                
+                if (!error && data) {
+                    setDiagnostics(data);
+                }
+            } catch (err) {
+                console.error('Erro ao buscar diagnósticos:', err);
+            }
+        };
+
+        fetchDiagnostics();
+    }, [patientId]);
+
+    // Buscar diurese do Supabase
+    React.useEffect(() => {
+        const fetchDiuresis = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('diurese_historico')
+                    .select('*')
+                    .eq('patient_id', patientId);
+                
+                if (!error && data) {
+                    setDiuresisData(data);
+                }
+            } catch (err) {
+                console.error('Erro ao buscar diurese:', err);
+            }
+        };
+
+        fetchDiuresis();
+    }, [patientId]);
+
+    // Buscar balanço hídrico do Supabase
+    React.useEffect(() => {
+        const fetchBalance = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('balanco_hidrico_historico')
+                    .select('*')
+                    .eq('patient_id', patientId);
+                
+                if (!error && data) {
+                    setBalanceData(data);
+                }
+            } catch (err) {
+                console.error('Erro ao buscar balanço hídrico:', err);
+            }
+        };
+
+        fetchBalance();
+    }, [patientId]);
 
     type TimelineEvent = {
         timestamp: string;
@@ -677,6 +742,38 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
+        // Adicionar diagnósticos
+        diagnostics.forEach(diagnostic => {
+            events.push({
+                timestamp: diagnostic.created_at || new Date().toISOString(),
+                icon: ClipboardIcon,
+                description: `Diagnóstico: ${diagnostic.opcao_id ? `Opção ${diagnostic.opcao_id}` : 'Registrado'}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''} (Status: ${diagnostic.status}).`,
+                hasTime: true,
+            });
+        });
+
+        // Adicionar diurese
+        diuresisData.forEach(diuresis => {
+            const result = ((diuresis.volume / diuresis.horas) / diuresis.peso).toFixed(2);
+            events.push({
+                timestamp: diuresis.created_at || new Date().toISOString(),
+                icon: DropletIcon,
+                description: `Diurese: ${result} mL/kg/h (Peso: ${diuresis.peso}kg | Volume: ${diuresis.volume}mL | Período: ${diuresis.horas}h).`,
+                hasTime: true,
+            });
+        });
+
+        // Adicionar balanço hídrico
+        balanceData.forEach(balance => {
+            const result = (balance.volume / (balance.peso * 10)).toFixed(2);
+            events.push({
+                timestamp: balance.created_at || new Date().toISOString(),
+                icon: DropletIcon,
+                description: `Balanço Hídrico: ${balance.volume > 0 ? '+' : ''}${result}% (Peso: ${balance.peso}kg | Volume: ${balance.volume > 0 ? '+' : ''}${balance.volume}mL).`,
+                hasTime: true,
+            });
+        });
+
         events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
         const groupedEvents = events.reduce((acc, event) => {
@@ -689,7 +786,7 @@ const PatientHistoryScreen: React.FC = () => {
         }, {} as Record<string, TimelineEvent[]>);
 
         return groupedEvents;
-    }, [patient, tasks]);
+    }, [patient, tasks, diagnostics, diuresisData, balanceData]);
 
     const handleGeneratePdf = () => {
         // ... (PDF generation logic remains the same)
@@ -1590,8 +1687,6 @@ const PatientDetailScreen: React.FC = () => {
             </button>
 
             <DestinoComponent patientId={patient.id.toString()} />
-
-            <DistintvoComponent patientId={patient.id.toString()} />
 
             {isAddDeviceModalOpen && <AddDeviceModal patientId={patient.id} onClose={() => setAddDeviceModalOpen(false)} />}
             {editingDevice && <EditDeviceModal device={editingDevice} patientId={patient.id} onClose={() => setEditingDevice(null)} />}

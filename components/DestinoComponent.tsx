@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { ChevronRightIcon } from './icons';
 
 interface DestinoComponentProps {
   patientId: string | number;
 }
 
 const DestinoComponent: React.FC<DestinoComponentProps> = ({ patientId }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
   const [destino, setDestino] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -29,8 +31,7 @@ const DestinoComponent: React.FC<DestinoComponentProps> = ({ patientId }) => {
     fetchDestino();
   }, [patientId]);
 
-  const handleDestinoChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newDestino = e.target.value;
+  const handleDestinoChange = async (newDestino: string) => {
     setDestino(newDestino);
     setLoading(true);
 
@@ -46,28 +47,61 @@ const DestinoComponent: React.FC<DestinoComponentProps> = ({ patientId }) => {
     }
   };
 
-  return (
-    <div className="w-full bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 mb-4 p-4">
-      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-        Destino da Transferência
-      </label>
-      <select
-        value={destino}
-        onChange={handleDestinoChange}
-        disabled={loading}
-        className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-medium disabled:opacity-50"
-      >
-        <option value="">Selecionar destino...</option>
-        <option value="interno">Interno</option>
-        <option value="externo">Externo</option>
-      </select>
+  const destinoLabels = {
+    interno: 'Interno',
+    externo: 'Externo',
+  };
 
-      {destino && (
-        <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-          <p className="text-xs text-slate-600 dark:text-slate-400">Destino Selecionado</p>
-          <p className="text-lg font-bold text-blue-600 dark:text-blue-400 capitalize">
-            {destino === 'interno' ? 'Interno' : 'Externo'}
-          </p>
+  return (
+    <div className="w-full bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 mb-4">
+      {/* Header Expansível */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-lg">📍</span>
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Destino da Transferência</h3>
+        </div>
+        <ChevronRightIcon className={`w-5 h-5 text-slate-400 transition transform ${isExpanded ? 'rotate-90' : ''}`} />
+      </button>
+
+      {/* Conteúdo Expansível */}
+      {isExpanded && (
+        <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => handleDestinoChange('interno')}
+              disabled={loading}
+              className={`p-3 rounded-lg font-medium transition ${
+                destino === 'interno'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+              } disabled:opacity-50`}
+            >
+              Interno
+            </button>
+            <button
+              onClick={() => handleDestinoChange('externo')}
+              disabled={loading}
+              className={`p-3 rounded-lg font-medium transition ${
+                destino === 'externo'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+              } disabled:opacity-50`}
+            >
+              Externo
+            </button>
+          </div>
+
+          {destino && (
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <p className="text-xs text-slate-600 dark:text-slate-400">Destino Selecionado</p>
+              <p className="text-lg font-bold text-blue-600 dark:text-blue-400 capitalize">
+                {destino === 'interno' ? 'Interno' : 'Externo'}
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>
