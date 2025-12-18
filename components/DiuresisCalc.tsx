@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { DropletIcon, SaveIcon, ChevronRightIcon } from './icons';
 import { supabase } from '../supabaseClient';
+import { NotificationContext } from '../contexts';
 
 interface DiuresisCalcProps {
   patientId: string | number;
 }
 
 const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
+  const { showNotification } = useContext(NotificationContext)!;
   const [weight, setWeight] = useState('');
   const [volume, setVolume] = useState('');
   const [hours, setHours] = useState('24');
@@ -51,9 +53,10 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
         created_at: new Date().toISOString(),
       });
 
-      // Mantém os dados visíveis na tela sem fechar
+      showNotification({ message: 'Diurese salva com sucesso!', type: 'success' });
     } catch (error) {
       console.error('Erro:', error);
+      showNotification({ message: 'Erro ao salvar diurese', type: 'error' });
     } finally {
       setLoading(false);
     }

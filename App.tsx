@@ -16,6 +16,7 @@ import { FSSScale } from './components/FSSScale';
 import { SecondaryNavigation } from './components/SecondaryNavigation';
 import { DiagnosticsSection } from './components/DiagnosticsSection';
 import DiuresisCalc from './components/DiuresisCalc';
+import DiuresisHistory from './components/DiuresisHistory';
 import FluidBalanceCalc from './components/FluidBalanceCalc';
 import StatusComponent from './components/StatusComponent';
 import ComorbidadeComponent from './components/ComorbidadeComponent';
@@ -996,6 +997,7 @@ const PatientHistoryScreen: React.FC = () => {
                     Gerar PDF
                 </button>
             </div>
+            <DiuresisHistory patientId={patientId!} />
             <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm">
                 {Object.keys(patientHistory).length > 0 ? (
                     <div className="space-y-6">

@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { DropletIcon, SaveIcon, ChevronRightIcon } from './icons';
 import { supabase } from '../supabaseClient';
+import { NotificationContext } from '../contexts';
 
 interface FluidBalanceCalcProps {
   patientId: string | number;
 }
 
 const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
+  const { showNotification } = useContext(NotificationContext)!;
   const [weight, setWeight] = useState('');
   const [volume, setVolume] = useState('');
   const [isPositive, setIsPositive] = useState(true);
@@ -50,9 +52,10 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
         created_at: new Date().toISOString(),
       });
 
-      // Mantém os dados visíveis na tela sem fechar
+      showNotification({ message: 'Balanço hídrico salvo com sucesso!', type: 'success' });
     } catch (error) {
       console.error('Erro:', error);
+      showNotification({ message: 'Erro ao salvar balanço hídrico', type: 'error' });
     } finally {
       setLoading(false);
     }
