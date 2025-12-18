@@ -14,6 +14,7 @@ import { BradenQDScale } from './components/BradenQDScale';
 import { VniCnafScale } from './components/VniCnafScale';
 import { FSSScale } from './components/FSSScale';
 import { SecondaryNavigation } from './components/SecondaryNavigation';
+import { DiagnosticsSection } from './components/DiagnosticsSection';
 import { supabase } from './supabaseClient';
 import { AlertsHistoryScreen } from './AlertsHistoryScreen';
 import {
@@ -1150,7 +1151,7 @@ const PatientDetailScreen: React.FC = () => {
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
     const [mainTab, setMainTab] = useState<'data' | 'scales'>('data');
-    const [dataTab, setDataTab] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures'>('devices');
+    const [dataTab, setDataTab] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diagnostics'>('devices');
     const [isAddDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
     const [editingDevice, setEditingDevice] = useState<Device | null>(null);
     const [editingDeviceRemovalDate, setEditingDeviceRemovalDate] = useState<Device | null>(null);
@@ -1538,6 +1539,8 @@ const PatientDetailScreen: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            <DiagnosticsSection patientId={patient.id.toString()} />
 
             {user?.access_level === 'adm' ? (
                 <Link to={`/patient/${patient.id}/round/categories`} className="w-full block text-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg">
