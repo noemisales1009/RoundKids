@@ -3247,6 +3247,9 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         console.log('  - questionsRes.data length:', questionsRes.data?.length);
         console.log('  - categoriesRes.error:', categoriesRes.error);
         console.log('  - categoriesRes.data length:', categoriesRes.data?.length);
+        if (questionsRes.data && questionsRes.data.length > 0) {
+            console.log('  - primeira pergunta:', questionsRes.data[0]);
+        }
 
         if (patientsRes.error) {
             console.error('Error fetching patients:', patientsRes.error);
