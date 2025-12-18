@@ -661,6 +661,8 @@ const PatientHistoryScreen: React.FC = () => {
     }, [patientId]);
 
     // Buscar alertas do Supabase
+    const [refreshAlerts, setRefreshAlerts] = React.useState(0);
+
     React.useEffect(() => {
         const fetchAlerts = async () => {
             if (!patientId) return;
@@ -692,7 +694,27 @@ const PatientHistoryScreen: React.FC = () => {
         };
 
         fetchAlerts();
-    }, [patientId]);
+        
+        // Subscribe a mudanças em tempo real
+        const unsubscribeAlertas = supabase
+            .channel(`public:alertas_paciente:patient_id=eq.${patientId}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'alertas_paciente' }, () => {
+                fetchAlerts();
+            })
+            .subscribe();
+            
+        const unsubscribeTasks = supabase
+            .channel(`public:tasks:patient_id=eq.${patientId}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
+                fetchAlerts();
+            })
+            .subscribe();
+        
+        return () => {
+            supabase.removeChannel(unsubscribeAlertas);
+            supabase.removeChannel(unsubscribeTasks);
+        };
+    }, [patientId, refreshAlerts]);
 
     type TimelineEvent = {
         timestamp: string;
@@ -3794,24 +3816,6 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             console.error("Error creating patient alert:", error);
         } else {
             fetchTasks();
-            // Recarregar alertas no histórico
-            const refreshAlerts = async () => {
-                try {
-                    const [alertasResult, tasksResult] = await Promise.all([
-                        supabase.from('alertas_paciente_view_completa').select('*').eq('patient_id', data.patientId),
-                        supabase.from('tasks_view_horario_br').select('*').eq('patient_id', data.patientId)
-                    ]);
-                    // Combinar dados de ambas as views
-                    const allAlerts = [
-                        ...(alertasResult.data || []).map(a => ({ ...a, source: 'alertas_paciente' })),
-                        ...(tasksResult.data || []).map(t => ({ ...t, source: 'tasks' }))
-                    ];
-                    // Nota: alertsData seria atualizado através do useEffect que monitora patientId
-                } catch (err) {
-                    console.error('Erro ao recarregar alertas:', err);
-                }
-            };
-            refreshAlerts();
         }
     }
 
