@@ -2911,22 +2911,22 @@ const TaskStatusScreen: React.FC = () => {
                                     )}
 
                                     {/* Descrição do Alerta */}
-                                    <p className="font-bold text-slate-800 dark:text-slate-200 whitespace-pre-wrap">{alert.alertaclinico}</p>
+                                    <p className="font-bold text-slate-800 dark:text-slate-200 whitespace-pre-wrap">🔔 {alert.alertaclinico}</p>
 
                                     {/* Responsável */}
                                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                                        Responsável: {alert.responsavel}
+                                        👤 Responsável: {alert.responsavel}
                                     </p>
 
                                     {/* Criado por */}
                                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                                        Criado por: {alert.created_by_name}
+                                        👨‍⚕️ Criado por: {alert.created_by_name}
                                     </p>
 
                                     {/* Prazo */}
                                     {prazoFormatado && (
                                         <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                                            Prazo: {prazoFormatado}
+                                            ⏱️ Tempo: {prazoFormatado}
                                         </p>
                                     )}
 
