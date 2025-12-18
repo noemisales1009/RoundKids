@@ -3242,6 +3242,12 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             supabase.from('culturas_pacientes').select('*')
         ]);
 
+        console.log('📊 Resultado das queries:');
+        console.log('  - questionsRes.error:', questionsRes.error);
+        console.log('  - questionsRes.data length:', questionsRes.data?.length);
+        console.log('  - categoriesRes.error:', categoriesRes.error);
+        console.log('  - categoriesRes.data length:', categoriesRes.data?.length);
+
         if (patientsRes.error) {
             console.error('Error fetching patients:', patientsRes.error);
             return;
