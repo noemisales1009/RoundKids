@@ -750,7 +750,7 @@ const PatientHistoryScreen: React.FC = () => {
             events.push({
                 timestamp: alert.deadline,
                 icon: BellIcon,
-                description: `Alerta Criado: ${alert.description}.`,
+                description: `🔔 ${alert.description}\n👤 Responsável: ${alert.responsible || 'Não informado'}\n📅 Prazo: ${alert.prazo_limite_formatado || 'N/A'}\n⏱️ Tempo: ${alert.prazo_formatado || 'N/A'}\n🕐 Data/Hora: ${alert.hora_criacao_formatado || 'N/A'}\n👨‍⚕️ Criado por: ${alert.created_by_name || 'Não informado'}\n✓ Status: ${alert.status}`,
                 hasTime: true,
             });
         });
