@@ -70,7 +70,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
     const weightNum = parseFloat(weight);
     const volumeAbsolute = parseFloat(volume);
     const finalVolume = isPositive ? volumeAbsolute : -volumeAbsolute;
-    const calculatedResult = finalVolume / (weightNum * 10);
+    const result = finalVolume / (weightNum * 10);
 
     try {
       // Salvar no balanco_hidrico
@@ -87,7 +87,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
         patient_id: patientId,
         peso: weightNum,
         volume: finalVolume,
-        resultado: calculatedResult,
+        resultado: result,
       });
 
       if (historyError) {

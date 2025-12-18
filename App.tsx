@@ -1547,9 +1547,9 @@ const PatientDetailScreen: React.FC = () => {
 
             <DiagnosticsSection patientId={patient.id.toString()} />
 
-            <DiuresisCalc patientId={patient.id.toString()} />
+            {/* <DiuresisCalc patientId={patient.id.toString()} /> */}
 
-            <FluidBalanceCalc patientId={patient.id.toString()} />
+            {/* <FluidBalanceCalc patientId={patient.id.toString()} /> */}
 
             {user?.access_level === 'adm' ? (
                 <Link to={`/patient/${patient.id}/round/categories`} className="w-full block text-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg">
