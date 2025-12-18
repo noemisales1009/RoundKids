@@ -3468,6 +3468,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             ctd: p.diagnosis || p.ctd || 'Estável',
             peso: p.peso,
             status: p.status || 'estavel',
+            localTransferencia: p.local_transferencia || undefined,
             devices: devicesMap[p.id] || [],
             exams: examsMap[p.id] || [],
             medications: medsMap[p.id] || [],

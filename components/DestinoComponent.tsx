@@ -8,48 +8,50 @@ interface DestinoComponentProps {
 
 const DestinoComponent: React.FC<DestinoComponentProps> = ({ patientId }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [destino, setDestino] = useState('');
+  const [localTransferencia, setLocalTransferencia] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchDestino = async () => {
+    const fetchData = async () => {
       try {
         const { data, error } = await supabase
           .from('patients')
-          .select('destino')
+          .select('local_transferencia')
           .eq('id', patientId)
           .single();
 
-        if (!error && data?.destino) {
-          setDestino(data.destino);
+        if (!error && data?.local_transferencia) {
+          setLocalTransferencia(data.local_transferencia);
         }
       } catch (err) {
-        console.error('Erro ao carregar destino:', err);
+        console.error('Erro ao carregar dados:', err);
       }
     };
 
-    fetchDestino();
+    fetchData();
   }, [patientId]);
 
-  const handleDestinoChange = async (newDestino: string) => {
-    setDestino(newDestino);
+  const handleLocalChange = async (newLocal: string) => {
+    setLocalTransferencia(newLocal);
     setLoading(true);
 
     try {
       await supabase
         .from('patients')
-        .update({ destino: newDestino })
+        .update({ local_transferencia: newLocal })
         .eq('id', patientId);
     } catch (err) {
-      console.error('Erro ao salvar destino:', err);
+      console.error('Erro ao salvar local:', err);
     } finally {
       setLoading(false);
     }
   };
 
   const destinoLabels = {
-    interno: 'Interno',
-    externo: 'Externo',
+    alta: 'Alta',
+    interna: 'Transferência Interna',
+    externa: 'Transferência Externa',
+    obito: 'Óbito',
   };
 
   return (
@@ -68,37 +70,30 @@ const DestinoComponent: React.FC<DestinoComponentProps> = ({ patientId }) => {
 
       {/* Conteúdo Expansível */}
       {isExpanded && (
-        <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => handleDestinoChange('interno')}
+        <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-700 space-y-4">
+          {/* Local de Transferência */}
+          <div>
+            <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Selecione o Local</h4>
+            <select
+              value={localTransferencia}
+              onChange={(e) => handleLocalChange(e.target.value)}
               disabled={loading}
-              className={`p-3 rounded-lg font-medium transition ${
-                destino === 'interno'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-              } disabled:opacity-50`}
+              className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-medium transition hover:border-slate-400 dark:hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              Interno
-            </button>
-            <button
-              onClick={() => handleDestinoChange('externo')}
-              disabled={loading}
-              className={`p-3 rounded-lg font-medium transition ${
-                destino === 'externo'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-              } disabled:opacity-50`}
-            >
-              Externo
-            </button>
+              <option value="">Selecione um local</option>
+              <option value="Alta">Alta</option>
+              <option value="Transferência Interna">Transferência Interna</option>
+              <option value="Transferência Externa">Transferência Externa</option>
+              <option value="Óbito">Óbito</option>
+            </select>
           </div>
 
-          {destino && (
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <p className="text-xs text-slate-600 dark:text-slate-400">Destino Selecionado</p>
-              <p className="text-lg font-bold text-blue-600 dark:text-blue-400 capitalize">
-                {destino === 'interno' ? 'Interno' : 'Externo'}
+          {/* Resumo */}
+          {localTransferencia && (
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 space-y-2">
+              <p className="text-xs text-slate-600 dark:text-slate-400">Local Selecionado</p>
+              <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                {localTransferencia}
               </p>
             </div>
           )}

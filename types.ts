@@ -63,6 +63,7 @@ export interface Patient {
   ctd: string; // Used for Diagnosis
   peso?: number;
   status?: string; // "estavel", "instavel", "em_risco"
+  localTransferencia?: string; // "Alta", "Transferência Interna", "Transferência Externa", "Óbito"
   devices: Device[];
   exams: Exam[];
   medications: Medication[];
