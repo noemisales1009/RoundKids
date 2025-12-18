@@ -30,7 +30,7 @@ const interpretarBraden = (score: number, scaleTitle: string) => {
 
 const escalasConfig = {
   braden: {
-    titulo: 'Escala de Braden (Adulto)',
+    titulo: 'Escala de Braden',
     nomeCompleto: 'Escala de Braden (Enfermaria)',
     idade: 'Maiores de 8 anos',
     tipo: 'score',
