@@ -1718,6 +1718,9 @@ const PatientDetailScreen: React.FC = () => {
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{culture.site}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Microorganismo: {culture.microorganism}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(culture.collectionDate)}</p>
+                                                        {culture.observation && (
+                                                            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 font-medium">Observação: {culture.observation}</p>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-1 shrink-0 ml-2">
@@ -3450,6 +3453,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 site: c.local,
                 microorganism: c.microorganismo,
                 collectionDate: c.data_coleta,
+                observation: c.observacao || undefined,
                 isArchived: c.is_archived
             });
             return acc;
@@ -3676,7 +3680,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             paciente_id: patientId,
             local: culture.site,
             microorganismo: culture.microorganism,
-            data_coleta: culture.collectionDate
+            data_coleta: culture.collectionDate,
+            observacao: culture.observation || null
         }]);
 
         if (error) console.warn("Culture table error", error);
@@ -3695,7 +3700,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             .update({
                 local: cultureData.site,
                 microorganismo: cultureData.microorganism,
-                data_coleta: cultureData.collectionDate
+                data_coleta: cultureData.collectionDate,
+                observacao: cultureData.observation || null
             })
             .eq('id', cultureData.id);
         if (!error) fetchPatients();
