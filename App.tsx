@@ -3757,6 +3757,9 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     };
 
     const addTask = async (taskData: Omit<Task, 'id' | 'status' | 'justification'>) => {
+        const user = await supabase.auth.getUser();
+        const userId = user.data?.user?.id;
+        
         const { error } = await supabase.from('tasks').insert([{
             patient_id: taskData.patientId,
             category_id: taskData.categoryId,
@@ -3767,7 +3770,8 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             patient_name: taskData.patientName,
             category: taskData.categoryName,
             time_label: taskData.timeLabel,
-            options: taskData.options
+            options: taskData.options,
+            created_by: userId
         }]);
         if (!error) fetchTasks();
     };
@@ -3790,6 +3794,24 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             console.error("Error creating patient alert:", error);
         } else {
             fetchTasks();
+            // Recarregar alertas no histórico
+            const refreshAlerts = async () => {
+                try {
+                    const [alertasResult, tasksResult] = await Promise.all([
+                        supabase.from('alertas_paciente_view_completa').select('*').eq('patient_id', data.patientId),
+                        supabase.from('tasks_view_horario_br').select('*').eq('patient_id', data.patientId)
+                    ]);
+                    // Combinar dados de ambas as views
+                    const allAlerts = [
+                        ...(alertasResult.data || []).map(a => ({ ...a, source: 'alertas_paciente' })),
+                        ...(tasksResult.data || []).map(t => ({ ...t, source: 'tasks' }))
+                    ];
+                    // Nota: alertsData seria atualizado através do useEffect que monitora patientId
+                } catch (err) {
+                    console.error('Erro ao recarregar alertas:', err);
+                }
+            };
+            refreshAlerts();
         }
     }
 
