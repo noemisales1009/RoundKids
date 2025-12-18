@@ -20,7 +20,7 @@ import FluidBalanceCalc from './components/FluidBalanceCalc';
 import StatusComponent from './components/StatusComponent';
 import ComorbidadeComponent from './components/ComorbidadeComponent';
 import DestinoComponent from './components/DestinoComponent';
-import HistorySection from './components/HistorySection';
+
 import { supabase } from './supabaseClient';
 import { AlertsHistoryScreen } from './AlertsHistoryScreen';
 import {
@@ -1659,8 +1659,6 @@ const PatientDetailScreen: React.FC = () => {
             <DiuresisCalc patientId={patient.id.toString()} />
 
             <FluidBalanceCalc patientId={patient.id.toString()} />
-
-            <HistorySection patientId={patient.id.toString()} />
 
             {user?.access_level === 'adm' ? (
                 <Link to={`/patient/${patient.id}/round/categories`} className="w-full block text-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg">
