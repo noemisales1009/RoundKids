@@ -50,8 +50,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
         created_at: new Date().toISOString(),
       });
 
-      setVolume('');
-      setIsExpanded(false);
+      // Mantém os dados visíveis na tela sem fechar
     } catch (error) {
       console.error('Erro:', error);
     } finally {
