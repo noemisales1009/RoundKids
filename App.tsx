@@ -24,6 +24,7 @@ import ConsciousnessCalculator from './components/ConsciousnessCalculator';
 import VNICNAFCalculator from './components/VNICNAFCalculator';
 import { SecondaryNavigation } from './components/SecondaryNavigation';
 import { DiagnosticsSection } from './components/DiagnosticsSection';
+import { AlertasSection } from './components/AlertasSection';
 import DiuresisCalc from './components/DiuresisCalc';
 import DiuresisHistory from './components/DiuresisHistory';
 import FluidBalanceCalc from './components/FluidBalanceCalc';
@@ -620,6 +621,7 @@ const PatientHistoryScreen: React.FC = () => {
     const [diuresisData, setDiuresisData] = React.useState<any[]>([]);
     const [balanceData, setBalanceData] = React.useState<any[]>([]);
     const [alertsData, setAlertsData] = React.useState<any[]>([]);
+    const [alertCompletions, setAlertCompletions] = React.useState<any[]>([]);
     const [resolvedDiagnostics, setResolvedDiagnostics] = React.useState<any[]>([]);
     const [dataInicio, setDataInicio] = React.useState<string>('');
     const [dataFinal, setDataFinal] = React.useState<string>('');
@@ -635,7 +637,8 @@ const PatientHistoryScreen: React.FC = () => {
         'Diurese': 'Diurese',
         'Balanço Hídrico': 'Balanço Hídrico',
         'Alertas': 'Alerta',
-        'Comorbidades': 'Comorbidade'
+        'Comorbidades': 'Comorbidade',
+        'Completações': 'Completação de Alerta'
     };
 
     useHeader(patient ? `Histórico: ${patient.name}` : 'Histórico do Paciente');
@@ -781,6 +784,38 @@ const PatientHistoryScreen: React.FC = () => {
         };
     }, [patientId, refreshAlerts]);
 
+    // Buscar completações de alertas do Supabase
+    React.useEffect(() => {
+        const fetchAlertCompletions = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('alert_completions_with_user')
+                    .select('*');
+                
+                if (!error && data) {
+                    setAlertCompletions(data);
+                }
+            } catch (err) {
+                console.error('Erro ao buscar completações de alertas:', err);
+            }
+        };
+
+        fetchAlertCompletions();
+        
+        // Subscribe a mudanças em tempo real
+        const unsubscribeCompletions = supabase
+            .channel('public:alert_completions')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'alert_completions' }, () => {
+                fetchAlertCompletions();
+            })
+            .subscribe();
+        
+        return () => {
+            supabase.removeChannel(unsubscribeCompletions);
+        };
+    }, [patientId]);
+
     type TimelineEvent = {
         timestamp: string;
         icon: React.FC<{ className?: string; }>;
@@ -923,6 +958,17 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
+        // Adicionar completações de alertas
+        alertCompletions.forEach(completion => {
+            const sourceLabel = completion.source === 'tasks' ? 'Task' : 'Alerta Clínico';
+            events.push({
+                timestamp: completion.completed_at || completion.created_at || new Date().toISOString(),
+                icon: CheckCircleIcon,
+                description: `[COMPLETACAO_ALERTA] ✓ Alerta Concluído (${sourceLabel}) - ID: ${completion.alert_id}\n👤 Concluído por: ${completion.completed_by_name || 'Não informado'}\n📅 Concluído em: ${completion.completed_at ? new Date(completion.completed_at).toLocaleString('pt-BR') : 'N/A'}`,
+                hasTime: true,
+            });
+        });
+
         events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
         const groupedEvents = events.reduce((acc, event) => {
@@ -935,7 +981,7 @@ const PatientHistoryScreen: React.FC = () => {
         }, {} as Record<string, TimelineEvent[]>);
 
         return groupedEvents;
-    }, [patient, tasks, diagnostics, diuresisData, balanceData, alertsData, resolvedDiagnostics]);
+    }, [patient, tasks, diagnostics, diuresisData, balanceData, alertsData, alertCompletions, resolvedDiagnostics]);
 
     const handleGeneratePdf = () => {
         // ... (PDF generation logic remains the same)
@@ -1087,7 +1133,8 @@ const PatientHistoryScreen: React.FC = () => {
             '[DIURESE]': 'Diurese',
             '[BALANÇO]': 'Balanço Hídrico',
             '[ALERTA]': 'Alertas',
-            '[COMORBIDADE]': 'Comorbidades'
+            '[COMORBIDADE]': 'Comorbidades',
+            '[COMPLETACAO_ALERTA]': 'Completações'
         };
         
         for (const [marker, category] of Object.entries(categoryMap)) {
@@ -2047,6 +2094,8 @@ const PatientDetailScreen: React.FC = () => {
             </div>
 
             <DiagnosticsSection patientId={patient.id.toString()} />
+
+            <AlertasSection patientId={patient.id.toString()} />
 
             <DiuresisCalc patientId={patient.id.toString()} />
 
