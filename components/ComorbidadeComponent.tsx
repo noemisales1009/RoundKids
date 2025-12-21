@@ -83,35 +83,31 @@ const ComorbidadeComponent: React.FC<ComorbidadeComponentProps> = ({ patientId }
         <ChevronRightIcon className={`w-5 h-5 text-slate-400 transition transform ${isExpanded ? 'rotate-90' : ''}`} />
       </button>
 
-      {/* Conteúdo Expansível */}
+      {/* Comorbidades sempre visíveis */}
+      {comorbidades.length > 0 && (
+        <div className="px-4 py-3 border-t border-slate-200 dark:border-slate-700">
+          <ul className="space-y-2 ml-4">
+            {comorbidades.map((comorbidade, index) => (
+              <li key={index} className="flex items-start gap-2 text-slate-700 dark:text-slate-300">
+                <span className="text-blue-600 dark:text-blue-400 font-bold mt-0.5">•</span>
+                <div className="flex-1 flex items-center gap-2">
+                  <span className="text-slate-800 dark:text-slate-200">{comorbidade}</span>
+                  <button
+                    onClick={() => handleRemoveComorbidade(index)}
+                    className="text-red-500 hover:text-red-700 font-bold text-sm transition ml-2"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Campo de entrada - Aparece apenas quando expandido */}
       {isExpanded && (
         <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
-          {/* Comorbidades já adicionadas */}
-          {comorbidades.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Adicionadas ({comorbidades.length})
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {comorbidades.map((comorbidade, index) => (
-                  <div
-                    key={index}
-                    className="bg-blue-600 dark:bg-blue-700 text-white px-3 py-2 rounded-full text-sm font-medium flex items-center gap-2"
-                  >
-                    <span>{comorbidade}</span>
-                    <button
-                      onClick={() => handleRemoveComorbidade(index)}
-                      className="text-blue-200 hover:text-white font-bold transition"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Campo de entrada */}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Adicionar Comorbidade
@@ -138,7 +134,7 @@ const ComorbidadeComponent: React.FC<ComorbidadeComponentProps> = ({ patientId }
 
           {/* Dica */}
           <p className="text-xs text-slate-500 dark:text-slate-400 italic">
-            💡 Digite uma comorbidade e clique "Adicionar" para adicionar outra no campo abaixo
+            💡 Digite uma comorbidade e clique "Adicionar" para adicionar outra no campo acima
           </p>
         </div>
       )}
