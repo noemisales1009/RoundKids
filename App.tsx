@@ -1437,14 +1437,19 @@ const CreateAlertModal: React.FC<{ patientId: number | string; onClose: () => vo
 const AddCultureModal: React.FC<{ patientId: number | string; onClose: () => void }> = ({ patientId, onClose }) => {
     const { addCultureToPatient } = useContext(PatientsContext)!;
     const [site, setSite] = useState('');
+    const [customSite, setCustomSite] = useState('');
     const [microorganism, setMicroorganism] = useState('');
+    const [customMicroorganism, setCustomMicroorganism] = useState('');
     const [collectionDate, setCollectionDate] = useState(getTodayDateString());
     const [observation, setObservation] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (site && microorganism && collectionDate) {
-            addCultureToPatient(patientId, { site, microorganism, collectionDate, observation: observation || undefined });
+        const finalSite = site === 'Outros' ? customSite : site;
+        const finalMicroorganism = microorganism === 'Outros' ? customMicroorganism : microorganism;
+        
+        if (finalSite && finalMicroorganism && collectionDate) {
+            addCultureToPatient(patientId, { site: finalSite, microorganism: finalMicroorganism, collectionDate, observation: observation || undefined });
             onClose();
         }
     };
@@ -1491,7 +1496,18 @@ const AddCultureModal: React.FC<{ patientId: number | string; onClose: () => voi
                                 <option value="Material de pele/lesão cutânea">Material de pele/lesão cutânea</option>
                                 <option value="Secreção ocular">Secreção ocular</option>
                                 <option value="Secreção ótica">Secreção ótica</option>
+                                <option value="Outros">Outros</option>
                             </select>
+                            {site === 'Outros' && (
+                                <input
+                                    type="text"
+                                    value={customSite}
+                                    onChange={(e) => setCustomSite(e.target.value)}
+                                    placeholder="Digite o local da coleta..."
+                                    className="mt-2 w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                    required
+                                />
+                            )}
                         </div>
                         <div>
                             <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Microorganismo</label>
@@ -1520,7 +1536,18 @@ const AddCultureModal: React.FC<{ patientId: number | string; onClose: () => voi
                                 <option value="Elizabethkingia meningoseptica">Elizabethkingia meningoseptica</option>
                                 <option value="Myroides spp.">Myroides spp.</option>
                                 <option value="Ralstonia pickettii">Ralstonia pickettii</option>
+                                <option value="Outros">Outros</option>
                             </select>
+                            {microorganism === 'Outros' && (
+                                <input
+                                    type="text"
+                                    value={customMicroorganism}
+                                    onChange={(e) => setCustomMicroorganism(e.target.value)}
+                                    placeholder="Digite o microorganismo..."
+                                    className="mt-2 w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                    required
+                                />
+                            )}
                         </div>
                         <div>
                             <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data</label>
@@ -1560,14 +1587,19 @@ const EditCultureModal: React.FC<{ culture: Culture; patientId: number | string;
     const { showNotification } = useContext(NotificationContext)!;
 
     const [site, setSite] = useState(culture.site);
+    const [customSite, setCustomSite] = useState('');
     const [microorganism, setMicroorganism] = useState(culture.microorganism);
+    const [customMicroorganism, setCustomMicroorganism] = useState('');
     const [collectionDate, setCollectionDate] = useState(culture.collectionDate);
     const [observation, setObservation] = useState(culture.observation || '');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!site || !microorganism || !collectionDate) return;
-        updateCultureInPatient(patientId, { ...culture, site, microorganism, collectionDate, observation: observation || undefined });
+        const finalSite = site === 'Outros' ? customSite : site;
+        const finalMicroorganism = microorganism === 'Outros' ? customMicroorganism : microorganism;
+        
+        if (!finalSite || !finalMicroorganism || !collectionDate) return;
+        updateCultureInPatient(patientId, { ...culture, site: finalSite, microorganism: finalMicroorganism, collectionDate, observation: observation || undefined });
         showNotification({ message: 'Cultura atualizada com sucesso!', type: 'success' });
         onClose();
     };
@@ -1611,7 +1643,18 @@ const EditCultureModal: React.FC<{ culture: Culture; patientId: number | string;
                             <option value="Material de pele/lesão cutânea">Material de pele/lesão cutânea</option>
                             <option value="Secreção ocular">Secreção ocular</option>
                             <option value="Secreção ótica">Secreção ótica</option>
+                            <option value="Outros">Outros</option>
                         </select>
+                        {site === 'Outros' && (
+                            <input
+                                type="text"
+                                value={customSite}
+                                onChange={(e) => setCustomSite(e.target.value)}
+                                placeholder="Digite o local da coleta..."
+                                className="mt-2 block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                required
+                            />
+                        )}
                     </div>
                     <div>
                         <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Microorganismo</label>
@@ -1640,7 +1683,18 @@ const EditCultureModal: React.FC<{ culture: Culture; patientId: number | string;
                             <option value="Elizabethkingia meningoseptica">Elizabethkingia meningoseptica</option>
                             <option value="Myroides spp.">Myroides spp.</option>
                             <option value="Ralstonia pickettii">Ralstonia pickettii</option>
+                            <option value="Outros">Outros</option>
                         </select>
+                        {microorganism === 'Outros' && (
+                            <input
+                                type="text"
+                                value={customMicroorganism}
+                                onChange={(e) => setCustomMicroorganism(e.target.value)}
+                                placeholder="Digite o microorganismo..."
+                                className="mt-2 block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                required
+                            />
+                        )}
                     </div>
                     <div>
                         <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
@@ -2154,13 +2208,16 @@ const AddDeviceModal: React.FC<{ patientId: number | string; onClose: () => void
     const { addDeviceToPatient } = useContext(PatientsContext)!;
     const { showNotification } = useContext(NotificationContext)!;
     const [type, setType] = useState('');
+    const [customType, setCustomType] = useState('');
     const [location, setLocation] = useState('');
     const [startDate, setStartDate] = useState(getTodayDateString());
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!type || !location || !startDate) return;
-        addDeviceToPatient(patientId, { name: type, location, startDate });
+        const finalType = type === 'Outros' ? customType : type;
+        
+        if (!finalType || !location || !startDate) return;
+        addDeviceToPatient(patientId, { name: finalType, location, startDate });
         showNotification({ message: 'Dispositivo cadastrado com sucesso!', type: 'success' });
         onClose();
     };
@@ -2178,7 +2235,18 @@ const AddDeviceModal: React.FC<{ patientId: number | string; onClose: () => void
                         <select value={type} onChange={e => setType(e.target.value)} className="mt-1 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200">
                             <option value="" disabled>Select...</option>
                             {DEVICE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                            <option value="Outros">Outros</option>
                         </select>
+                        {type === 'Outros' && (
+                            <input
+                                type="text"
+                                value={customType}
+                                onChange={(e) => setCustomType(e.target.value)}
+                                placeholder="Digite o tipo do dispositivo..."
+                                className="mt-2 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+                                required
+                            />
+                        )}
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Local</label>
@@ -2202,13 +2270,16 @@ const EditDeviceModal: React.FC<{ device: Device; patientId: number | string; on
     const { updateDeviceInPatient } = useContext(PatientsContext)!;
     const { showNotification } = useContext(NotificationContext)!;
     const [type, setType] = useState(device.name);
+    const [customType, setCustomType] = useState('');
     const [location, setLocation] = useState(device.location);
     const [startDate, setStartDate] = useState(device.startDate);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!type || !location || !startDate) return;
-        updateDeviceInPatient(patientId, { ...device, name: type, location, startDate });
+        const finalType = type === 'Outros' ? customType : type;
+        
+        if (!finalType || !location || !startDate) return;
+        updateDeviceInPatient(patientId, { ...device, name: finalType, location, startDate });
         showNotification({ message: 'Dispositivo atualizado com sucesso!', type: 'success' });
         onClose();
     };
@@ -2226,7 +2297,18 @@ const EditDeviceModal: React.FC<{ device: Device; patientId: number | string; on
                         <select value={type} onChange={e => setType(e.target.value)} className="mt-1 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200">
                             <option value="" disabled>Select...</option>
                             {DEVICE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                            <option value="Outros">Outros</option>
                         </select>
+                        {type === 'Outros' && (
+                            <input
+                                type="text"
+                                value={customType}
+                                onChange={(e) => setCustomType(e.target.value)}
+                                placeholder="Digite o tipo do dispositivo..."
+                                className="mt-2 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+                                required
+                            />
+                        )}
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Local</label>
