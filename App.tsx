@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useContext, useEffect, createContext, useRef } from 'react';
 import { HashRouter, Routes, Route, useNavigate, Link, useParams, useLocation, Outlet, NavLink, Navigate } from 'react-router-dom';
-import { Patient, Category, Question, ChecklistAnswer, Answer, Device, Exam, Medication, Task, TaskStatus, PatientsContextType, TasksContextType, NotificationState, NotificationContextType, User, UserContextType, Theme, ThemeContextType, SurgicalProcedure, ScaleScore, Culture } from './types';
+import { Patient, Category, Question, ChecklistAnswer, Answer, Device, Exam, Medication, Task, TaskStatus, PatientsContextType, TasksContextType, NotificationState, NotificationContextType, User, UserContextType, Theme, ThemeContextType, SurgicalProcedure, ScaleScore, Culture, Diet } from './types';
 import { PATIENTS as initialPatients, CATEGORIES as STATIC_CATEGORIES, QUESTIONS as STATIC_QUESTIONS, TASKS as initialTasks, DEVICE_TYPES, DEVICE_LOCATIONS, EXAM_STATUSES, RESPONSIBLES, ALERT_DEADLINES, INITIAL_USER, MEDICATION_DOSAGE_UNITS, ALERT_CATEGORIES, ICON_MAP, formatDateToBRL, formatDateTimeWithHour, calculateDaysSinceDate } from './constants';
 import { BackArrowIcon, PlusIcon, WarningIcon, ClockIcon, AlertIcon, CheckCircleIcon, BedIcon, UserIcon, PencilIcon, BellIcon, InfoIcon, EyeOffIcon, ClipboardIcon, FileTextIcon, LogOutIcon, ChevronRightIcon, MenuIcon, DashboardIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, HeartPulseIcon, BeakerIcon, LiverIcon, LungsIcon, DumbbellIcon, BrainIcon, ShieldIcon, UsersIcon, HomeIcon, CloseIcon, SettingsIcon, CameraIcon, ScalpelIcon, SaveIcon, CheckSquareIcon, SquareIcon, ChevronDownIcon, CheckIcon, ChevronLeftIcon } from './components/icons';
 import { ComfortBScale } from './components/ComfortBScale';
@@ -1723,16 +1723,289 @@ const EditCultureModal: React.FC<{ culture: Culture; patientId: number | string;
     );
 };
 
+const AddDietModal: React.FC<{ patientId: number | string; onClose: () => void }> = ({ patientId, onClose }) => {
+    const { addDietToPatient } = useContext(PatientsContext)!;
+    const { showNotification } = useContext(NotificationContext)!;
+    const [type, setType] = useState('');
+    const [dataInicio, setDataInicio] = useState(getTodayDateString());
+    const [volume, setVolume] = useState('');
+    const [vet, setVet] = useState('');
+    const [pt, setPt] = useState('');
+    const [th, setTh] = useState('');
+    const [observacao, setObservacao] = useState('');
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!type || !dataInicio) return;
+        addDietToPatient(patientId, {
+            type,
+            data_inicio: dataInicio,
+            volume: volume || undefined,
+            vet: vet || undefined,
+            pt: pt || undefined,
+            th: th || undefined,
+            observacao: observacao || undefined
+        });
+        showNotification({ message: 'Dieta cadastrada com sucesso!', type: 'success' });
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
+                <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white dark:bg-slate-900">
+                    <h3 className="font-bold text-base sm:text-lg text-slate-800 dark:text-slate-200">Cadastrar Dieta</h3>
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                        <CloseIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+                </div>
+                <div className="p-4 sm:p-5">
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        {/* Informações Básicas */}
+                        <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo de Dieta</label>
+                            <select
+                                value={type}
+                                onChange={(e) => setType(e.target.value)}
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                required
+                            >
+                                <option value="">Selecione o tipo...</option>
+                                <option value="Oral">Oral</option>
+                                <option value="Enteral">Enteral</option>
+                                <option value="Parenteral">Parenteral</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data de Início</label>
+                            <input
+                                type="date"
+                                value={dataInicio}
+                                onChange={(e) => setDataInicio(e.target.value)}
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                required
+                            />
+                        </div>
+
+                        {/* Divisor Visual */}
+                        <div className="border-t border-slate-200 dark:border-slate-700 my-2"></div>
+
+                        {/* Parâmetros Nutricionais */}
+                        <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Volume (ml) <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
+                            <input
+                                type="text"
+                                value={volume}
+                                onChange={(e) => setVolume(e.target.value)}
+                                placeholder="Ex: 1000"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">VET [kcal/dia] <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
+                            <input
+                                type="text"
+                                value={vet}
+                                onChange={(e) => setVet(e.target.value)}
+                                placeholder="Ex: 1800"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">PT [g/dia] <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
+                            <input
+                                type="text"
+                                value={pt}
+                                onChange={(e) => setPt(e.target.value)}
+                                placeholder="Ex: 60"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">TH [ml/m²/dia] <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
+                            <input
+                                type="text"
+                                value={th}
+                                onChange={(e) => setTh(e.target.value)}
+                                placeholder="Ex: 220"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            />
+                        </div>
+
+                        {/* Divisor Visual */}
+                        <div className="border-t border-slate-200 dark:border-slate-700 my-2"></div>
+
+                        {/* Observações */}
+                        <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Observação <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
+                            <textarea
+                                value={observacao}
+                                onChange={(e) => setObservacao(e.target.value)}
+                                placeholder="Adicione observações sobre a dieta..."
+                                rows={2}
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 sm:py-3 rounded-lg transition mt-2 text-sm sm:text-base"
+                        >
+                            Cadastrar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; onClose: () => void }> = ({ diet, patientId, onClose }) => {
+    const { updateDietInPatient } = useContext(PatientsContext)!;
+    const { showNotification } = useContext(NotificationContext)!;
+    const [type, setType] = useState(diet.type);
+    const [dataInicio, setDataInicio] = useState(diet.data_inicio.split('T')[0]);
+    const [volume, setVolume] = useState(diet.volume || '');
+    const [vet, setVet] = useState(diet.vet || '');
+    const [pt, setPt] = useState(diet.pt || '');
+    const [th, setTh] = useState(diet.th || '');
+    const [observacao, setObservacao] = useState(diet.observacao || '');
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!type || !dataInicio) return;
+        updateDietInPatient(patientId, {
+            ...diet,
+            type,
+            data_inicio: dataInicio,
+            volume: volume || undefined,
+            vet: vet || undefined,
+            pt: pt || undefined,
+            th: th || undefined,
+            observacao: observacao || undefined
+        });
+        showNotification({ message: 'Dieta atualizada com sucesso!', type: 'success' });
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
+                <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white dark:bg-slate-900">
+                    <h3 className="font-bold text-base sm:text-lg text-slate-800 dark:text-slate-200">Editar Dieta</h3>
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                        <CloseIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+                </div>
+                <div className="p-4 sm:p-5">
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        {/* Informações Básicas */}
+                        <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo de Dieta</label>
+                            <select
+                                value={type}
+                                onChange={(e) => setType(e.target.value)}
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                required
+                            >
+                                <option value="">Selecione o tipo...</option>
+                                <option value="Oral">Oral</option>
+                                <option value="Enteral">Enteral</option>
+                                <option value="Parenteral">Parenteral</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data de Início</label>
+                            <input
+                                type="date"
+                                value={dataInicio}
+                                onChange={(e) => setDataInicio(e.target.value)}
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                required
+                            />
+                        </div>
+
+                        {/* Divisor Visual */}
+                        <div className="border-t border-slate-200 dark:border-slate-700 my-2"></div>
+
+                        {/* Parâmetros Nutricionais */}
+                        <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Volume (ml) <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
+                            <input
+                                type="text"
+                                value={volume}
+                                onChange={(e) => setVolume(e.target.value)}
+                                placeholder="Ex: 1000"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">VET [kcal/dia] <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
+                            <input
+                                type="text"
+                                value={vet}
+                                onChange={(e) => setVet(e.target.value)}
+                                placeholder="Ex: 1800"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">PT [g/dia] <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
+                            <input
+                                type="text"
+                                value={pt}
+                                onChange={(e) => setPt(e.target.value)}
+                                placeholder="Ex: 60"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">TH [ml/m²/dia] <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
+                            <input
+                                type="text"
+                                value={th}
+                                onChange={(e) => setTh(e.target.value)}
+                                placeholder="Ex: 220"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            />
+                        </div>
+
+                        {/* Divisor Visual */}
+                        <div className="border-t border-slate-200 dark:border-slate-700 my-2"></div>
+
+                        {/* Observações */}
+                        <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Observação <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
+                            <textarea
+                                value={observacao}
+                                onChange={(e) => setObservacao(e.target.value)}
+                                placeholder="Adicione observações sobre a dieta..."
+                                rows={2}
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 sm:py-3 rounded-lg transition mt-2 text-sm sm:text-base"
+                        >
+                            Salvar Alterações
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const PatientDetailScreen: React.FC = () => {
     const { patientId } = useParams<{ patientId: string }>();
-    const { patients, addRemovalDateToDevice, deleteDeviceFromPatient, addEndDateToMedication, deleteMedicationFromPatient, deleteExamFromPatient, deleteSurgicalProcedureFromPatient, addScaleScoreToPatient, addCultureToPatient, deleteCultureFromPatient } = useContext(PatientsContext)!;
+    const { patients, addRemovalDateToDevice, deleteDeviceFromPatient, addEndDateToMedication, deleteMedicationFromPatient, deleteExamFromPatient, deleteSurgicalProcedureFromPatient, addScaleScoreToPatient, addCultureToPatient, deleteCultureFromPatient, addDietToPatient, updateDietInPatient, deleteDietFromPatient } = useContext(PatientsContext)!;
     const { user } = useContext(UserContext)!;
     const patient = patients.find(p => p.id.toString() === patientId);
 
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
     const [mainTab, setMainTab] = useState<'data' | 'scales'>('data');
-    const [dataTab, setDataTab] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diagnostics'>('devices');
+    const [dataTab, setDataTab] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'diagnostics'>('devices');
     const [isAddDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
     const [editingDevice, setEditingDevice] = useState<Device | null>(null);
     const [editingDeviceRemovalDate, setEditingDeviceRemovalDate] = useState<Device | null>(null);
@@ -1745,6 +2018,10 @@ const PatientDetailScreen: React.FC = () => {
     const [editingSurgicalProcedure, setEditingSurgicalProcedure] = useState<SurgicalProcedure | null>(null);
     const [isAddCultureModalOpen, setAddCultureModalOpen] = useState(false);
     const [editingCulture, setEditingCulture] = useState<Culture | null>(null);
+    const [isAddDietModalOpen, setAddDietModalOpen] = useState(false);
+    const [editingDiet, setEditingDiet] = useState<Diet | null>(null);
+    const [editingDietRemovalDate, setEditingDietRemovalDate] = useState<Diet | null>(null);
+    const [isDietRemovalModalOpen, setDietRemovalModalOpen] = useState<number | string | null>(null);
     const [isRemovalModalOpen, setRemovalModalOpen] = useState<number | string | null>(null);
     const [isEndDateModalOpen, setEndDateModalOpen] = useState<number | string | null>(null);
     const [isEditInfoModalOpen, setEditInfoModalOpen] = useState(false);
@@ -1806,6 +2083,13 @@ const PatientDetailScreen: React.FC = () => {
         }
     };
 
+    const handleDeleteDiet = (patientId: number | string, dietId: number | string) => {
+        if (window.confirm("Tem certeza que deseja arquivar esta dieta?")) {
+            deleteDietFromPatient(patientId, dietId);
+            showNotification({ message: 'Dieta arquivada.', type: 'info' });
+        }
+    };
+
     const formatAge = (dob: string) => {
         const birthDate = new Date(dob);
         const today = new Date();
@@ -1853,6 +2137,7 @@ const PatientDetailScreen: React.FC = () => {
         { id: 'medications', label: 'Medicações', icon: PillIcon },
         { id: 'surgical', label: 'Cirúrgico', icon: ScalpelIcon },
         { id: 'cultures', label: 'Culturas', icon: BeakerIcon },
+        { id: 'diets', label: 'Dietas', icon: AppleIcon },
     ];
 
     return (
@@ -2084,6 +2369,58 @@ const PatientDetailScreen: React.FC = () => {
                                     <button onClick={() => setAddCultureModalOpen(true)} className="w-full mt-2 text-center bg-blue-50 dark:bg-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-semibold py-2.5 rounded-lg transition">Cadastrar Cultura</button>
                                 </>
                             )}
+
+                            {/* Diets Tab Content */}
+                            {dataTab === 'diets' && (
+                                <>
+                                    {patient.diets.filter(diet => !diet.isArchived).map(diet => (
+                                        <div key={diet.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex items-start gap-3">
+                                                    <AppleIcon className="w-5 h-5 text-green-600 dark:text-green-400 mt-1 shrink-0" />
+                                                    <div>
+                                                        <p className="font-bold text-slate-800 dark:text-slate-200">{diet.type}</p>
+                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(diet.data_inicio)}</p>
+                                                        {diet.data_remocao ? (
+                                                            <p className="text-sm bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded mt-1 font-medium">Retirada: {formatDateToBRL(diet.data_remocao)}</p>
+                                                        ) : (
+                                                            <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(diet.data_inicio)}</p>
+                                                        )}
+                                                        {diet.volume && (
+                                                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Volume: {diet.volume} ml</p>
+                                                        )}
+                                                        {diet.vet && (
+                                                            <p className="text-sm text-slate-500 dark:text-slate-400">VET: {diet.vet} kcal/dia</p>
+                                                        )}
+                                                        {diet.pt && (
+                                                            <p className="text-sm text-slate-500 dark:text-slate-400">Proteína (PT): {diet.pt} g/dia</p>
+                                                        )}
+                                                        {diet.th && (
+                                                            <p className="text-sm text-slate-500 dark:text-slate-400">Taxa Hídrica (TH): {diet.th} ml/m²/dia</p>
+                                                        )}
+                                                        {diet.observacao && (
+                                                            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 font-medium">Observação: {diet.observacao}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2 shrink-0 ml-2">
+                                                    {!diet.data_remocao ? (
+                                                        <button onClick={() => setDietRemovalModalOpen(diet.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Retirada</button>
+                                                    ) : (
+                                                        <button onClick={() => handleDeleteDiet(patient.id, diet.id)} className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded-full transition" aria-label="Arquivar dieta">
+                                                            <CloseIcon className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                    <button onClick={() => diet.data_remocao ? setEditingDietRemovalDate(diet) : setEditingDiet(diet)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label={diet.data_remocao ? "Editar data de retirada" : "Editar dieta"}>
+                                                        <PencilIcon className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <button onClick={() => setAddDietModalOpen(true)} className="w-full mt-2 text-center bg-blue-50 dark:bg-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-semibold py-2.5 rounded-lg transition">Cadastrar Dieta</button>
+                                </>
+                            )}
                         </div>
                     </>
                 )}
@@ -2193,6 +2530,10 @@ const PatientDetailScreen: React.FC = () => {
             {editingSurgicalProcedure && <EditSurgicalProcedureModal procedure={editingSurgicalProcedure} patientId={patient.id} onClose={() => setEditingSurgicalProcedure(null)} />}
             {isAddCultureModalOpen && <AddCultureModal patientId={patient.id} onClose={() => setAddCultureModalOpen(false)} />}
             {editingCulture && <EditCultureModal culture={editingCulture} patientId={patient.id} onClose={() => setEditingCulture(null)} />}
+            {isAddDietModalOpen && <AddDietModal patientId={patient.id} onClose={() => setAddDietModalOpen(false)} />}
+            {editingDiet && <EditDietModal diet={editingDiet} patientId={patient.id} onClose={() => setEditingDiet(null)} />}
+            {isDietRemovalModalOpen && <AddDietRemovalDateModal dietId={isDietRemovalModalOpen} patientId={patient.id} onClose={() => setDietRemovalModalOpen(null)} />}
+            {editingDietRemovalDate && <EditDietRemovalDateModal diet={editingDietRemovalDate} patientId={patient.id} onClose={() => setEditingDietRemovalDate(null)} />}
             {isRemovalModalOpen && <AddRemovalDateModal deviceId={isRemovalModalOpen} patientId={patient.id} onClose={() => setRemovalModalOpen(null)} />}
             {isEndDateModalOpen && <AddEndDateModal medicationId={isEndDateModalOpen} patientId={patient.id} onClose={() => setEndDateModalOpen(null)} />}
             {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} currentMotherName={patient.motherName} currentDiagnosis={patient.ctd} currentWeight={patient.peso} onClose={() => setEditInfoModalOpen(false)} />}
@@ -2687,6 +3028,78 @@ const AddEndDateModal: React.FC<{ medicationId: number | string, patientId: numb
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Fim</label>
                         <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                    </div>
+                    <div className="flex gap-2">
+                        <button type="button" onClick={onClose} className="w-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                        <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+const AddDietRemovalDateModal: React.FC<{ dietId: number | string, patientId: number | string, onClose: () => void }> = ({ dietId, patientId, onClose }) => {
+    const { updateDietInPatient } = useContext(PatientsContext)!;
+    const { showNotification } = useContext(NotificationContext)!;
+    const { patients } = useContext(PatientsContext)!;
+    const patient = patients.find(p => p.id === patientId);
+    const diet = patient?.diets.find(d => d.id === dietId);
+    const [removalDate, setRemovalDate] = useState(getTodayDateString());
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!diet) return;
+        updateDietInPatient(patientId, {
+            ...diet,
+            data_remocao: removalDate
+        });
+        showNotification({ message: 'Data de retirada registrada com sucesso!', type: 'success' });
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+                <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-slate-200">Registrar Data de Retirada da Dieta</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data da Retirada</label>
+                        <input type="date" value={removalDate} onChange={e => setRemovalDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                    </div>
+                    <div className="flex gap-2">
+                        <button type="button" onClick={onClose} className="w-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                        <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+const EditDietRemovalDateModal: React.FC<{ diet: Diet; patientId: number | string; onClose: () => void }> = ({ diet, patientId, onClose }) => {
+    const { updateDietInPatient } = useContext(PatientsContext)!;
+    const { showNotification } = useContext(NotificationContext)!;
+    const [removalDate, setRemovalDate] = useState(diet.data_remocao ? diet.data_remocao.split('T')[0] : getTodayDateString());
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        updateDietInPatient(patientId, {
+            ...diet,
+            data_remocao: removalDate
+        });
+        showNotification({ message: 'Data de retirada atualizada com sucesso!', type: 'success' });
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+                <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-slate-200">Editar Data de Retirada da Dieta</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data da Retirada</label>
+                        <input type="date" value={removalDate} onChange={e => setRemovalDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
                     <div className="flex gap-2">
                         <button type="button" onClick={onClose} className="w-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-lg">Cancelar</button>
@@ -3683,7 +4096,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             optionsRes,
             categoriesRes,
             answersRes,
-            culturesRes
+            culturesRes,
+            dietsRes
         ] = await Promise.all([
             supabase.from('patients').select('*'),
             supabase.from('dispositivos_pacientes').select('*'),
@@ -3695,7 +4109,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             supabase.from('pergunta_opcoes').select('*').order('ordem', { ascending: true }),
             supabase.from('categorias').select('*').order('ordem', { ascending: true }),
             supabase.from('checklist_answers').select('*').eq('date', today),
-            supabase.from('culturas_pacientes').select('*')
+            supabase.from('culturas_pacientes').select('*'),
+            supabase.from('dietas_pacientes').select('*')
         ]);
 
         console.log('📊 Resultado das queries:');
@@ -3848,6 +4263,23 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             return acc;
         }, {});
 
+        const dietsMap = (dietsRes.data || []).reduce((acc: any, d: any) => {
+            if (!acc[d.paciente_id]) acc[d.paciente_id] = [];
+            acc[d.paciente_id].push({
+                id: d.id,
+                type: d.tipo,
+                data_inicio: d.data_inicio,
+                data_remocao: d.data_remocao || undefined,
+                volume: d.volume || undefined,
+                vet: d.vet || undefined,
+                pt: d.pt || undefined,
+                th: d.th || undefined,
+                observacao: d.observacao || undefined,
+                isArchived: d.is_archived
+            });
+            return acc;
+        }, {});
+
         const mappedPatients: Patient[] = patientsRes.data.map((p: any) => ({
             id: p.id,
             name: p.name,
@@ -3863,7 +4295,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             medications: medsMap[p.id] || [],
             surgicalProcedures: surgsMap[p.id] || [],
             scaleScores: scalesMap[p.id] || [],
-            cultures: culturesMap[p.id] || []
+            cultures: culturesMap[p.id] || [],
+            diets: dietsMap[p.id] || []
         }));
 
         setPatients(mappedPatients);
@@ -4097,6 +4530,46 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         if (!error) fetchPatients();
     };
 
+    const addDietToPatient = async (patientId: number | string, diet: Omit<Diet, 'id'>) => {
+        const { error } = await supabase.from('dietas_pacientes').insert([{
+            paciente_id: patientId,
+            tipo: diet.type,
+            data_inicio: diet.data_inicio,
+            data_remocao: diet.data_remocao || null,
+            volume: diet.volume || null,
+            vet: diet.vet || null,
+            pt: diet.pt || null,
+            th: diet.th || null,
+            observacao: diet.observacao || null
+        }]);
+
+        if (error) console.warn("Diet table error", error);
+        if (!error) fetchPatients();
+    };
+
+    const deleteDietFromPatient = async (patientId: number | string, dietId: number | string) => {
+        const { error } = await supabase.from('dietas_pacientes')
+            .update({ is_archived: true })
+            .eq('id', dietId);
+        if (!error) fetchPatients();
+    };
+
+    const updateDietInPatient = async (patientId: number | string, dietData: Diet) => {
+        const { error } = await supabase.from('dietas_pacientes')
+            .update({
+                tipo: dietData.type,
+                data_inicio: dietData.data_inicio,
+                data_remocao: dietData.data_remocao || null,
+                volume: dietData.volume || null,
+                vet: dietData.vet || null,
+                pt: dietData.pt || null,
+                th: dietData.th || null,
+                observacao: dietData.observacao || null
+            })
+            .eq('id', dietData.id);
+        if (!error) fetchPatients();
+    };
+
     const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number }) => {
         const updateData: any = {};
         if (data.motherName !== undefined) updateData.mother_name = data.motherName;
@@ -4135,6 +4608,9 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         addCultureToPatient,
         deleteCultureFromPatient,
         updateCultureInPatient,
+        addDietToPatient,
+        deleteDietFromPatient,
+        updateDietInPatient,
     };
 
     return <PatientsContext.Provider value={value as PatientsContextType}>{children}</PatientsContext.Provider>;

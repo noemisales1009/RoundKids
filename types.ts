@@ -54,6 +54,19 @@ export interface Culture {
   isArchived?: boolean;
 }
 
+export interface Diet {
+  id: number | string;
+  type: string; // "Oral", "Enteral", "Parenteral"
+  data_inicio: string; // "YYYY-MM-DD HH:MM:SS" - Data de início
+  data_remocao?: string; // "YYYY-MM-DD HH:MM:SS" - Data de fim/retirada (opcional)
+  volume?: string; // Volume em ml
+  vet?: string; // Valor Energético Total [kcal/dia]
+  pt?: string; // Proteína [g/dia]
+  th?: string; // Taxa Hídrica [ml/m²/dia]
+  observacao?: string; // Observações adicionais
+  isArchived?: boolean;
+}
+
 export interface Patient {
   id: number | string;
   name: string;
@@ -70,6 +83,7 @@ export interface Patient {
   surgicalProcedures: SurgicalProcedure[];
   scaleScores: ScaleScore[];
   cultures: Culture[];
+  diets: Diet[];
 }
 
 export interface Category {
@@ -171,6 +185,9 @@ export interface PatientsContextType {
   addCultureToPatient: (patientId: number | string, culture: Omit<Culture, 'id'>) => void;
   deleteCultureFromPatient: (patientId: number | string, cultureId: number | string) => void;
   updateCultureInPatient: (patientId: number | string, cultureData: Culture) => void;
+  addDietToPatient: (patientId: number | string, diet: Omit<Diet, 'id'>) => void;
+  deleteDietFromPatient: (patientId: number | string, dietId: number | string) => void;
+  updateDietInPatient: (patientId: number | string, dietData: Diet) => void;
 }
 
 // --- NOTIFICATION TYPES ---
