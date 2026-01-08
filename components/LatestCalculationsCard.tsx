@@ -32,25 +32,38 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
     try {
       const [diuresisResult, balanceResult] = await Promise.all([
         supabase
-          .from('diurese_historico')
+          .from('diurese')
           .select('*')
           .eq('patient_id', patientId)
-          .order('created_at', { ascending: false })
+          .order('data_registro', { ascending: false })
           .limit(1),
         supabase
-          .from('balanco_hidrico_historico')
+          .from('balanco_hidrico')
           .select('*')
           .eq('patient_id', patientId)
-          .order('created_at', { ascending: false })
+          .order('data_registro', { ascending: false })
           .limit(1),
       ]);
 
       if (diuresisResult.data && diuresisResult.data.length > 0) {
-        setLatestDiuresis(diuresisResult.data[0]);
+        const data = diuresisResult.data[0];
+        setLatestDiuresis({
+          id: data.id,
+          created_at: data.data_registro || new Date().toISOString(),
+          peso: data.peso,
+          volume: data.volume,
+          horas: data.horas
+        });
       }
 
       if (balanceResult.data && balanceResult.data.length > 0) {
-        setLatestBalance(balanceResult.data[0]);
+        const data = balanceResult.data[0];
+        setLatestBalance({
+          id: data.id,
+          created_at: data.data_registro || data.created_at || new Date().toISOString(),
+          peso: data.peso,
+          volume: data.volume
+        });
       }
     } catch (error) {
       console.error('Erro ao buscar últimos cálculos:', error);
