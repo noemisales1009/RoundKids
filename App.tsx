@@ -1172,19 +1172,76 @@ const PatientHistoryScreen: React.FC = () => {
 
         const diagnosticsData = generateDiagnosticsList();
 
-        const generateHistoryList = () => Object.entries(displayedHistory).map(([date, eventsOnDate]) => `
-            <div class="history-group">
-                <h3>${formatHistoryDate(date)}</h3>
-                <ul>
-                    ${(eventsOnDate as TimelineEvent[]).map(event => `
-                        <li>
-                            ${event.hasTime ? `Horário: [${new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}] ` : ''}
-                            ${event.description}
-                        </li>
-                    `).join('')}
-                </ul>
-            </div>
-        `).join('');
+        const generateHistoryList = () => Object.entries(displayedHistory).map(([date, eventsOnDate]) => {
+            // Filtrar eventos por data e categoria
+            const filtered = (eventsOnDate as TimelineEvent[]).filter(event => {
+                const eventDate = new Date(event.timestamp);
+                return isDateInRange(eventDate.toISOString()) && 
+                       (selectedCategories.size === 0 || selectedCategories.has('Histórico'));
+            });
+
+            if (filtered.length === 0) return '';
+
+            return `
+                <div class="history-group">
+                    <h3>${formatHistoryDate(date)}</h3>
+                    ${filtered.map(event => {
+                        const eventTime = new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        const eventDate = new Date(event.timestamp).toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                        const eventDateTime = new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        
+                        // Construir evento com todas as informações em linhas
+                        let lines = [];
+                        
+                        // Horário
+                        if (event.hasTime) {
+                            lines.push(`<strong>Horário: [${eventTime}]</strong>`);
+                        }
+                        
+                        // Descrição/Tipo
+                        if (event.description) {
+                            lines.push(event.description);
+                        }
+                        
+                        // Responsável
+                        if (event.responsible) {
+                            lines.push(`<strong>Responsável:</strong> ${event.responsible}`);
+                        }
+                        
+                        // Prazo
+                        if (event.deadline) {
+                            const deadlineDate = new Date(event.deadline).toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                            const deadlineTime = new Date(event.deadline).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                            lines.push(`<strong>Prazo:</strong> ${deadlineDate} ${deadlineTime}`);
+                        }
+                        
+                        // Tempo (duração)
+                        if (event.timeLabel) {
+                            lines.push(`<strong>Tempo:</strong> ${event.timeLabel}`);
+                        }
+                        
+                        // Data/Hora (completa)
+                        lines.push(`<strong>Data/Hora:</strong> ${eventDate} ${eventDateTime}`);
+                        
+                        // Criado por
+                        if (event.createdBy) {
+                            lines.push(`<strong>Criado por:</strong> ${event.createdBy}`);
+                        }
+                        
+                        // Status
+                        if (event.status) {
+                            lines.push(`<strong>Status:</strong> ${event.status}`);
+                        }
+                        
+                        return `
+                        <div class="event-item">
+                            ${lines.map(line => `<div class="event-line">${line}</div>`).join('')}
+                        </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }).join('');
 
         const htmlContent = `
             <html>
@@ -1195,14 +1252,16 @@ const PatientHistoryScreen: React.FC = () => {
                     h1, h2, h3 { color: #00796b; border-bottom: 2px solid #e0f2f1; padding-bottom: 5px; }
                     h1 { font-size: 24px; }
                     h2 { font-size: 20px; margin-top: 30px; }
-                    h3 { font-size: 16px; margin-top: 20px; border-bottom: 1px solid #e0f2f1; }
+                    h3 { font-size: 16px; margin-top: 20px; border-bottom: 2px solid #00796b; padding-bottom: 10px; color: #00796b; }
                     table { width: 100%; border-collapse: collapse; margin-top: 10px; }
                     td, th { border: 1px solid #ccc; padding: 8px; text-align: left; }
                     th { background-color: #e0f2f1; }
                     ul { list-style-type: none; padding-left: 0; }
                     li { background-color: #f7f7f7; border: 1px solid #eee; padding: 10px; margin-bottom: 8px; border-radius: 4px; }
-                    .history-group ul { padding-left: 20px; }
-                    .history-group li { background-color: transparent; border: none; padding: 5px 0; margin-bottom: 0; border-bottom: 1px dotted #ccc; }
+                    .history-group { margin-top: 20px; }
+                    .history-group h3 { font-size: 16px; color: #00796b; margin-bottom: 15px; border-bottom: 1px solid #e0f2f1; padding-bottom: 8px; }
+                    .event-item { margin: 10px 0; padding: 10px; background-color: #fafafa; border-left: 3px solid #00796b; border-radius: 2px; }
+                    .event-line { margin: 5px 0; font-size: 13px; line-height: 1.5; }
                 </style>
             </head>
             <body>
