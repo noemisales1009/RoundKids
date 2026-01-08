@@ -624,6 +624,7 @@ const PatientHistoryScreen: React.FC = () => {
     const [alertsData, setAlertsData] = React.useState<any[]>([]);
     const [alertCompletions, setAlertCompletions] = React.useState<any[]>([]);
     const [resolvedDiagnostics, setResolvedDiagnostics] = React.useState<any[]>([]);
+    const [dietsData, setDietsData] = React.useState<any[]>([]);
     const [dataInicio, setDataInicio] = React.useState<string>('');
     const [dataFinal, setDataFinal] = React.useState<string>('');
     const [selectedCategories, setSelectedCategories] = React.useState<Set<string>>(new Set());
@@ -637,6 +638,7 @@ const PatientHistoryScreen: React.FC = () => {
         'Diagnósticos': 'Diagnóstico',
         'Diurese': 'Diurese',
         'Balanço Hídrico': 'Balanço Hídrico',
+        'Dietas': 'Dieta',
         'Alertas': 'Alerta',
         'Comorbidades': 'Comorbidade',
         'Completações': 'Completação de Alerta'
@@ -727,6 +729,27 @@ const PatientHistoryScreen: React.FC = () => {
         };
 
         fetchBalance();
+    }, [patientId]);
+
+    // Buscar dietas do Supabase
+    React.useEffect(() => {
+        const fetchDiets = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('dietas_pacientes')
+                    .select('*')
+                    .eq('paciente_id', patientId);
+                
+                if (!error && data) {
+                    setDietsData(data);
+                }
+            } catch (err) {
+                console.error('Erro ao buscar dietas:', err);
+            }
+        };
+
+        fetchDiets();
     }, [patientId]);
 
     // Buscar alertas do Supabase
@@ -935,6 +958,24 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
+        // Adicionar dietas
+        dietsData.forEach(diet => {
+            events.push({
+                timestamp: diet.data_inicio || new Date().toISOString(),
+                icon: AppleIcon,
+                description: `[DIETA] Dieta Iniciada: ${diet.tipo}${diet.volume ? ` | Volume: ${diet.volume}mL` : ''}${diet.vet ? ` | VET: ${diet.vet}kcal/dia` : ''}${diet.pt ? ` | PT: ${diet.pt}g/dia` : ''}${diet.th ? ` | TH: ${diet.th}ml/m²/dia` : ''}${diet.observacao ? ` | Obs: ${diet.observacao}` : ''}`,
+                hasTime: false,
+            });
+            if (diet.data_remocao) {
+                events.push({
+                    timestamp: diet.data_remocao || new Date().toISOString(),
+                    icon: AppleIcon,
+                    description: `[DIETA] Dieta Retirada: ${diet.tipo}`,
+                    hasTime: false,
+                });
+            }
+        });
+
         // Adicionar alertas de ambas as tabelas
         alertsData.forEach(alert => {
             // Normalizar nomes de campos entre as duas views
@@ -982,7 +1023,7 @@ const PatientHistoryScreen: React.FC = () => {
         }, {} as Record<string, TimelineEvent[]>);
 
         return groupedEvents;
-    }, [patient, tasks, diagnostics, diuresisData, balanceData, alertsData, alertCompletions, resolvedDiagnostics]);
+    }, [patient, tasks, diagnostics, diuresisData, balanceData, dietsData, alertsData, alertCompletions, resolvedDiagnostics]);
 
     const handleGeneratePdf = () => {
         // ... (PDF generation logic remains the same)
@@ -1019,6 +1060,19 @@ const PatientHistoryScreen: React.FC = () => {
                 ${p.notes ? `<br><em>Obs: ${p.notes}</em>` : ''}
             </li>
         `).join('');
+
+        const generateDietList = () => patient.diets?.map(d => `
+            <li>
+                <strong>${d.type}</strong><br>
+                Início: ${formatDateToBRL(d.data_inicio)}
+                ${d.volume ? `<br>Volume: ${d.volume}mL` : ''}
+                ${d.vet ? `<br>VET: ${d.vet}kcal/dia` : ''}
+                ${d.pt ? `<br>Proteína (PT): ${d.pt}g/dia` : ''}
+                ${d.th ? `<br>Taxa Hídrica (TH): ${d.th}ml/m²/dia` : ''}
+                ${d.data_remocao ? `<br>Retirada: ${formatDateToBRL(d.data_remocao)}` : ''}
+                ${d.observacao ? `<br><em>Obs: ${d.observacao}</em>` : ''}
+            </li>
+        `).join('') || '<li>Nenhuma dieta registrada.</li>';
 
         const generateScaleScoresList = () => patient.scaleScores?.map(s => `
             <li>
@@ -1083,6 +1137,9 @@ const PatientHistoryScreen: React.FC = () => {
                 
                 <h2>Cirurgias</h2>
                 <ul>${generateSurgicalList()}</ul>
+
+                <h2>Dietas</h2>
+                <ul>${generateDietList()}</ul>
 
                 <h2>Avaliações de Escalas</h2>
                 <ul>${generateScaleScoresList()}</ul>
