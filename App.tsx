@@ -29,6 +29,7 @@ import DiuresisCalc from './components/DiuresisCalc';
 import DiuresisHistory from './components/DiuresisHistory';
 import FluidBalanceCalc from './components/FluidBalanceCalc';
 import FluidBalanceHistory from './components/FluidBalanceHistory';
+import LatestCalculationsCard from './components/LatestCalculationsCard';
 import StatusComponent from './components/StatusComponent';
 import ComorbidadeComponent from './components/ComorbidadeComponent';
 import DestinoComponent from './components/DestinoComponent';
@@ -2487,6 +2488,8 @@ const PatientDetailScreen: React.FC = () => {
             <DiagnosticsSection patientId={patient.id.toString()} />
 
             <AlertasSection patientId={patient.id.toString()} />
+
+            <LatestCalculationsCard patientId={patient.id.toString()} />
 
             <DiuresisCalc patientId={patient.id.toString()} />
 

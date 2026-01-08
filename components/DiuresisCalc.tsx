@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { DropletIcon, SaveIcon, ChevronRightIcon } from './icons';
 import { supabase } from '../supabaseClient';
-import { NotificationContext } from '../contexts';
+import { NotificationContext, PatientsContext } from '../contexts';
 
 interface DiuresisCalcProps {
   patientId: string | number;
@@ -9,12 +9,21 @@ interface DiuresisCalcProps {
 
 const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
   const { showNotification } = useContext(NotificationContext)!;
+  const { patients } = useContext(PatientsContext)!;
   const [weight, setWeight] = useState('');
   const [volume, setVolume] = useState('');
   const [hours, setHours] = useState('24');
   const [result, setResult] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  // Buscar peso do paciente automaticamente
+  useEffect(() => {
+    const patient = patients.find(p => p.id === parseInt(patientId.toString()));
+    if (patient && patient.peso && !weight) {
+      setWeight(patient.peso.toString());
+    }
+  }, [patientId, patients]);
 
   useEffect(() => {
     const w = parseFloat(weight) || 0;
