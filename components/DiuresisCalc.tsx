@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { DropletIcon, SaveIcon, ChevronRightIcon } from './icons';
 import { supabase } from '../supabaseClient';
-import { NotificationContext, PatientsContext } from '../contexts';
+import { NotificationContext } from '../contexts';
 
 interface DiuresisCalcProps {
   patientId: string | number;
@@ -9,7 +9,6 @@ interface DiuresisCalcProps {
 
 const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
   const { showNotification } = useContext(NotificationContext)!;
-  const { patients } = useContext(PatientsContext)!;
   const [weight, setWeight] = useState('');
   const [volume, setVolume] = useState('');
   const [hours, setHours] = useState('24');
@@ -17,14 +16,25 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
   const [loading, setLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
 
-  // Buscar peso do paciente automaticamente
+  // Buscar peso do paciente diretamente do Supabase
   useEffect(() => {
-    const patientIdNum = typeof patientId === 'string' ? parseInt(patientId) : patientId;
-    const patient = patients.find(p => p.id === patientIdNum);
-    if (patient && patient.peso && !weight) {
-      setWeight(patient.peso.toString());
-    }
-  }, [patientId, patients, weight]);
+    const fetchWeight = async () => {
+      if (!weight) { // Só busca se ainda não tem peso
+        const patientIdNum = typeof patientId === 'string' ? parseInt(patientId) : patientId;
+        const { data, error } = await supabase
+          .from('patients')
+          .select('peso')
+          .eq('id', patientIdNum)
+          .single();
+        
+        if (data && data.peso && !weight) {
+          setWeight(data.peso.toString());
+        }
+      }
+    };
+    
+    fetchWeight();
+  }, [patientId, weight]);
 
   useEffect(() => {
     const w = parseFloat(weight) || 0;
