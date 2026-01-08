@@ -1029,57 +1029,102 @@ const PatientHistoryScreen: React.FC = () => {
         // ... (PDF generation logic remains the same)
         if (!patient) return;
 
-        const generateDeviceList = () => patient.devices.map(d => `
-            <li>
-                <strong>${d.name} (${d.location})</strong><br>
-                Início: ${formatDateToBRL(d.startDate)}
-                ${d.removalDate ? `<br>Retirada: ${formatDateToBRL(d.removalDate)}` : ''}
-            </li>
-        `).join('');
+        // Função auxiliar para verificar se a data está dentro do filtro
+        const isDateInRange = (date: string | undefined) => {
+            if (!date) return false;
+            const eventDate = new Date(date).getTime();
+            const startDate = dataInicio ? new Date(dataInicio).getTime() : 0;
+            const endDate = dataFinal ? new Date(dataFinal).getTime() + 86400000 : Infinity;
+            return eventDate >= startDate && eventDate <= endDate;
+        };
 
-        const generateMedicationList = () => patient.medications.map(m => `
-            <li>
-                <strong>${m.name} (${m.dosage})</strong><br>
-                Início: ${formatDateToBRL(m.startDate)}
-                ${m.endDate ? `<br>Fim: ${formatDateToBRL(m.endDate)}` : ''}
-            </li>
-        `).join('');
+        // Função auxiliar para verificar se a categoria está selecionada
+        const isCategorySelected = (category: string) => {
+            if (selectedCategories.size === 0) return true; // Se nenhuma categoria selecionada, mostrar tudo
+            return selectedCategories.has(category);
+        };
 
-        const generateExamList = () => patient.exams.map(e => `
-            <li>
-                <strong>${e.name}</strong><br>
-                Data: ${formatDateToBRL(e.date)}
-                ${e.observation ? `<br><em>Obs: ${e.observation}</em>` : ''}
-            </li>
-        `).join('');
+        const generateDeviceList = () => {
+            const filtered = patient.devices.filter(d => 
+                isDateInRange(d.startDate) && isCategorySelected('Dispositivos')
+            );
+            return filtered.map(d => `
+                <li>
+                    <strong>${d.name} (${d.location})</strong><br>
+                    Início: ${formatDateToBRL(d.startDate)}
+                    ${d.removalDate ? `<br>Retirada: ${formatDateToBRL(d.removalDate)}` : ''}
+                </li>
+            `).join('') || '<li>Nenhum dispositivo neste período.</li>';
+        };
 
-        const generateSurgicalList = () => patient.surgicalProcedures.map(p => `
-            <li>
-                <strong>${p.name}</strong> - Dr(a): ${p.surgeon}<br>
-                Data: ${formatDateToBRL(p.date)}
-                ${p.notes ? `<br><em>Obs: ${p.notes}</em>` : ''}
-            </li>
-        `).join('');
+        const generateMedicationList = () => {
+            const filtered = patient.medications.filter(m => 
+                isDateInRange(m.startDate) && isCategorySelected('Medicações')
+            );
+            return filtered.map(m => `
+                <li>
+                    <strong>${m.name} (${m.dosage})</strong><br>
+                    Início: ${formatDateToBRL(m.startDate)}
+                    ${m.endDate ? `<br>Fim: ${formatDateToBRL(m.endDate)}` : ''}
+                </li>
+            `).join('') || '<li>Nenhuma medicação neste período.</li>';
+        };
 
-        const generateDietList = () => patient.diets?.map(d => `
-            <li>
-                <strong>${d.type}</strong><br>
-                Início: ${formatDateToBRL(d.data_inicio)}
-                ${d.volume ? `<br>Volume: ${d.volume}mL` : ''}
-                ${d.vet ? `<br>VET: ${d.vet}kcal/dia` : ''}
-                ${d.pt ? `<br>Proteína (PT): ${d.pt}g/dia` : ''}
-                ${d.th ? `<br>Taxa Hídrica (TH): ${d.th}ml/m²/dia` : ''}
-                ${d.data_remocao ? `<br>Retirada: ${formatDateToBRL(d.data_remocao)}` : ''}
-                ${d.observacao ? `<br><em>Obs: ${d.observacao}</em>` : ''}
-            </li>
-        `).join('') || '<li>Nenhuma dieta registrada.</li>';
+        const generateExamList = () => {
+            const filtered = patient.exams.filter(e => 
+                isDateInRange(e.date) && isCategorySelected('Exames')
+            );
+            return filtered.map(e => `
+                <li>
+                    <strong>${e.name}</strong><br>
+                    Data: ${formatDateToBRL(e.date)}
+                    ${e.observation ? `<br><em>Obs: ${e.observation}</em>` : ''}
+                </li>
+            `).join('') || '<li>Nenhum exame neste período.</li>';
+        };
 
-        const generateScaleScoresList = () => patient.scaleScores?.map(s => `
-            <li>
-                <strong>${s.scaleName}</strong> - Pontuação: ${s.score} (${s.interpretation})<br>
-                Data e Hora: ${formatDateTimeWithHour(s.date)}
-            </li>
-        `).join('') || '<li>Nenhuma avaliação registrada.</li>';
+        const generateSurgicalList = () => {
+            const filtered = patient.surgicalProcedures.filter(p => 
+                isDateInRange(p.date) && isCategorySelected('Cirúrgico')
+            );
+            return filtered.map(p => `
+                <li>
+                    <strong>${p.name}</strong> - Dr(a): ${p.surgeon}<br>
+                    Data: ${formatDateToBRL(p.date)}
+                    ${p.notes ? `<br><em>Obs: ${p.notes}</em>` : ''}
+                </li>
+            `).join('') || '<li>Nenhum procedimento cirúrgico neste período.</li>';
+        };
+
+        const generateDietList = () => {
+            const filtered = patient.diets?.filter(d => 
+                isDateInRange(d.data_inicio) && isCategorySelected('Dietas')
+            ) || [];
+            return filtered.map(d => `
+                <li>
+                    <strong>${d.type}</strong><br>
+                    Início: ${formatDateToBRL(d.data_inicio)}
+                    ${d.volume ? `<br>Volume: ${d.volume}mL` : ''}
+                    ${d.vet ? `<br>VET: ${d.vet}kcal/dia` : ''}
+                    ${d.pt ? `<br>Proteína (PT): ${d.pt}g/dia` : ''}
+                    ${d.th ? `<br>Taxa Hídrica (TH): ${d.th}ml/m²/dia` : ''}
+                    ${d.data_remocao ? `<br>Retirada: ${formatDateToBRL(d.data_remocao)}` : ''}
+                    ${d.observacao ? `<br><em>Obs: ${d.observacao}</em>` : ''}
+                </li>
+            `).join('') || '<li>Nenhuma dieta neste período.</li>';
+        };
+
+        const generateScaleScoresList = () => {
+            const filtered = patient.scaleScores?.filter(s => 
+                isDateInRange(s.date) && isCategorySelected('Escalas')
+            ) || [];
+            return filtered.map(s => `
+                <li>
+                    <strong>${s.scaleName}</strong> - Pontuação: ${s.score} (${s.interpretation})<br>
+                    Data e Hora: ${formatDateTimeWithHour(s.date)}
+                </li>
+            `).join('') || '<li>Nenhuma avaliação neste período.</li>';
+        };
 
         const generateHistoryList = () => Object.entries(displayedHistory).map(([date, eventsOnDate]) => `
             <div class="history-group">
