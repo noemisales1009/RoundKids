@@ -20,20 +20,24 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
   useEffect(() => {
     const fetchWeight = async () => {
       try {
-        const patientIdNum = typeof patientId === 'string' ? parseInt(patientId) : patientId;
+        const patientIdNum = Number(patientId);
+        console.log('Buscando peso para paciente:', patientIdNum);
+        
         const { data, error } = await supabase
           .from('patients')
           .select('peso')
-          .eq('id', patientIdNum)
-          .single();
+          .eq('id', patientIdNum);
+        
+        console.log('Resposta Supabase:', { data, error });
         
         if (error) {
           console.error('Erro ao buscar peso:', error);
           return;
         }
         
-        if (data && data.peso) {
-          setWeight(data.peso.toString());
+        if (data && data.length > 0 && data[0].peso) {
+          console.log('Peso encontrado:', data[0].peso);
+          setWeight(data[0].peso.toString());
         }
       } catch (err) {
         console.error('Erro ao carregar peso:', err);
