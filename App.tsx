@@ -1048,83 +1048,129 @@ const PatientHistoryScreen: React.FC = () => {
             const filtered = patient.devices.filter(d => 
                 isDateInRange(d.startDate) && isCategorySelected('Dispositivos')
             );
-            return filtered.map(d => `
-                <li>
-                    <strong>${d.name} (${d.location})</strong><br>
-                    Início: ${formatDateToBRL(d.startDate)}
-                    ${d.removalDate ? `<br>Retirada: ${formatDateToBRL(d.removalDate)}` : ''}
-                </li>
-            `).join('') || '<li>Nenhum dispositivo neste período.</li>';
+            return {
+                hasData: filtered.length > 0,
+                html: filtered.map(d => `
+                    <li>
+                        <strong>${d.name} (${d.location})</strong><br>
+                        Início: ${formatDateToBRL(d.startDate)}
+                        ${d.removalDate ? `<br>Retirada: ${formatDateToBRL(d.removalDate)}` : ''}
+                    </li>
+                `).join('')
+            };
         };
 
         const generateMedicationList = () => {
             const filtered = patient.medications.filter(m => 
                 isDateInRange(m.startDate) && isCategorySelected('Medicações')
             );
-            return filtered.map(m => `
-                <li>
-                    <strong>${m.name} (${m.dosage})</strong><br>
-                    Início: ${formatDateToBRL(m.startDate)}
-                    ${m.endDate ? `<br>Fim: ${formatDateToBRL(m.endDate)}` : ''}
-                </li>
-            `).join('') || '<li>Nenhuma medicação neste período.</li>';
+            return {
+                hasData: filtered.length > 0,
+                html: filtered.map(m => `
+                    <li>
+                        <strong>${m.name} (${m.dosage})</strong><br>
+                        Início: ${formatDateToBRL(m.startDate)}
+                        ${m.endDate ? `<br>Fim: ${formatDateToBRL(m.endDate)}` : ''}
+                    </li>
+                `).join('')
+            };
         };
 
         const generateExamList = () => {
             const filtered = patient.exams.filter(e => 
                 isDateInRange(e.date) && isCategorySelected('Exames')
             );
-            return filtered.map(e => `
-                <li>
-                    <strong>${e.name}</strong><br>
-                    Data: ${formatDateToBRL(e.date)}
-                    ${e.observation ? `<br><em>Obs: ${e.observation}</em>` : ''}
-                </li>
-            `).join('') || '<li>Nenhum exame neste período.</li>';
+            return {
+                hasData: filtered.length > 0,
+                html: filtered.map(e => `
+                    <li>
+                        <strong>${e.name}</strong><br>
+                        Data: ${formatDateToBRL(e.date)}
+                        ${e.observation ? `<br><em>Obs: ${e.observation}</em>` : ''}
+                    </li>
+                `).join('')
+            };
         };
 
         const generateSurgicalList = () => {
             const filtered = patient.surgicalProcedures.filter(p => 
                 isDateInRange(p.date) && isCategorySelected('Cirúrgico')
             );
-            return filtered.map(p => `
-                <li>
-                    <strong>${p.name}</strong> - Dr(a): ${p.surgeon}<br>
-                    Data: ${formatDateToBRL(p.date)}
-                    ${p.notes ? `<br><em>Obs: ${p.notes}</em>` : ''}
-                </li>
-            `).join('') || '<li>Nenhum procedimento cirúrgico neste período.</li>';
+            return {
+                hasData: filtered.length > 0,
+                html: filtered.map(p => `
+                    <li>
+                        <strong>${p.name}</strong> - Dr(a): ${p.surgeon}<br>
+                        Data: ${formatDateToBRL(p.date)}
+                        ${p.notes ? `<br><em>Obs: ${p.notes}</em>` : ''}
+                    </li>
+                `).join('')
+            };
         };
 
         const generateDietList = () => {
             const filtered = patient.diets?.filter(d => 
                 isDateInRange(d.data_inicio) && isCategorySelected('Dietas')
             ) || [];
-            return filtered.map(d => `
-                <li>
-                    <strong>${d.type}</strong><br>
-                    Início: ${formatDateToBRL(d.data_inicio)}
-                    ${d.volume ? `<br>Volume: ${d.volume}mL` : ''}
-                    ${d.vet ? `<br>VET: ${d.vet}kcal/dia` : ''}
-                    ${d.pt ? `<br>Proteína (PT): ${d.pt}g/dia` : ''}
-                    ${d.th ? `<br>Taxa Hídrica (TH): ${d.th}ml/m²/dia` : ''}
-                    ${d.data_remocao ? `<br>Retirada: ${formatDateToBRL(d.data_remocao)}` : ''}
-                    ${d.observacao ? `<br><em>Obs: ${d.observacao}</em>` : ''}
-                </li>
-            `).join('') || '<li>Nenhuma dieta neste período.</li>';
+            return {
+                hasData: filtered.length > 0,
+                html: filtered.map(d => `
+                    <li>
+                        <strong>${d.type}</strong><br>
+                        Início: ${formatDateToBRL(d.data_inicio)}
+                        ${d.volume ? `<br>Volume: ${d.volume}mL` : ''}
+                        ${d.vet ? `<br>VET: ${d.vet}kcal/dia` : ''}
+                        ${d.pt ? `<br>Proteína (PT): ${d.pt}g/dia` : ''}
+                        ${d.th ? `<br>Taxa Hídrica (TH): ${d.th}ml/m²/dia` : ''}
+                        ${d.data_remocao ? `<br>Retirada: ${formatDateToBRL(d.data_remocao)}` : ''}
+                        ${d.observacao ? `<br><em>Obs: ${d.observacao}</em>` : ''}
+                    </li>
+                `).join('')
+            };
         };
 
         const generateScaleScoresList = () => {
             const filtered = patient.scaleScores?.filter(s => 
                 isDateInRange(s.date) && isCategorySelected('Escalas')
             ) || [];
-            return filtered.map(s => `
-                <li>
-                    <strong>${s.scaleName}</strong> - Pontuação: ${s.score} (${s.interpretation})<br>
-                    Data e Hora: ${formatDateTimeWithHour(s.date)}
-                </li>
-            `).join('') || '<li>Nenhuma avaliação neste período.</li>';
+            return {
+                hasData: filtered.length > 0,
+                html: filtered.map(s => `
+                    <li>
+                        <strong>${s.scaleName}</strong> - Pontuação: ${s.score} (${s.interpretation})<br>
+                        Data e Hora: ${formatDateTimeWithHour(s.date)}
+                    </li>
+                `).join('')
+            };
         };
+
+        const devicesData = generateDeviceList();
+        const medicationsData = generateMedicationList();
+        const examsData = generateExamList();
+        const surgeriesData = generateSurgicalList();
+        const dietsData = generateDietList();
+        const scalesData = generateScaleScoresList();
+
+        const generateDiagnosticsList = () => {
+            const filtered = resolvedDiagnostics.filter((d: any) => {
+                const diagDate = d.created_at;
+                return isDateInRange(diagDate) && isCategorySelected('Diagnósticos');
+            });
+            return {
+                hasData: filtered.length > 0,
+                html: filtered.map((d: any) => `
+                    <li>
+                        <strong>${d.opcao_label || `Opção ${d.opcao_id}`}</strong><br>
+                        Status: ${d.status}<br>
+                        ${d.texto_digitado ? `Observação: ${d.texto_digitado}<br>` : ''}
+                        Data: ${formatDateToBRL(d.created_at)}<br>
+                        Registrado por: ${d.created_by_name || 'Não informado'}
+                    </li>
+                `).join('')
+            };
+        };
+
+        const diagnosticsData = generateDiagnosticsList();
 
         const generateHistoryList = () => Object.entries(displayedHistory).map(([date, eventsOnDate]) => `
             <div class="history-group">
@@ -1171,23 +1217,40 @@ const PatientHistoryScreen: React.FC = () => {
                     <tr><th>Diagnóstico</th><td>${patient.ctd}</td></tr>
                 </table>
 
-                <h2>Dispositivos</h2>
-                <ul>${generateDeviceList()}</ul>
+                ${devicesData.hasData ? `
+                    <h2>Dispositivos</h2>
+                    <ul>${devicesData.html}</ul>
+                ` : ''}
                 
-                <h2>Medicações</h2>
-                <ul>${generateMedicationList()}</ul>
+                ${medicationsData.hasData ? `
+                    <h2>Medicações</h2>
+                    <ul>${medicationsData.html}</ul>
+                ` : ''}
 
-                <h2>Exames</h2>
-                <ul>${generateExamList()}</ul>
+                ${examsData.hasData ? `
+                    <h2>Exames</h2>
+                    <ul>${examsData.html}</ul>
+                ` : ''}
                 
-                <h2>Cirurgias</h2>
-                <ul>${generateSurgicalList()}</ul>
+                ${surgeriesData.hasData ? `
+                    <h2>Cirurgias</h2>
+                    <ul>${surgeriesData.html}</ul>
+                ` : ''}
 
-                <h2>Dietas</h2>
-                <ul>${generateDietList()}</ul>
+                ${dietsData.hasData ? `
+                    <h2>Dietas</h2>
+                    <ul>${dietsData.html}</ul>
+                ` : ''}
 
-                <h2>Avaliações de Escalas</h2>
-                <ul>${generateScaleScoresList()}</ul>
+                ${scalesData.hasData ? `
+                    <h2>Avaliações de Escalas</h2>
+                    <ul>${scalesData.html}</ul>
+                ` : ''}
+
+                ${diagnosticsData.hasData ? `
+                    <h2>Diagnósticos</h2>
+                    <ul>${diagnosticsData.html}</ul>
+                ` : ''}
 
                 <h2>Histórico de Eventos</h2>
                 ${generateHistoryList()}
