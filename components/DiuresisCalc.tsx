@@ -15,7 +15,7 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
   const [hours, setHours] = useState('24');
   const [result, setResult] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Buscar peso do paciente do context (mais rápido e confiável)
   useEffect(() => {
