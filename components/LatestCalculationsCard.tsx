@@ -30,40 +30,52 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
   const fetchLatestCalculations = async () => {
     setLoading(true);
     try {
+      const patientIdStr = String(patientId);
+      console.log('Buscando cálculos para paciente:', patientIdStr);
+      
       const [diuresisResult, balanceResult] = await Promise.all([
         supabase
           .from('diurese')
           .select('*')
-          .eq('patient_id', patientId)
+          .eq('patient_id', patientIdStr)
           .order('data_registro', { ascending: false })
           .limit(1),
         supabase
           .from('balanco_hidrico')
           .select('*')
-          .eq('patient_id', patientId)
+          .eq('patient_id', patientIdStr)
           .order('data_registro', { ascending: false })
           .limit(1),
       ]);
 
+      console.log('Diurese:', diuresisResult);
+      console.log('Balanço Hídrico:', balanceResult);
+
       if (diuresisResult.data && diuresisResult.data.length > 0) {
         const data = diuresisResult.data[0];
+        console.log('Diurese encontrada:', data);
         setLatestDiuresis({
           id: data.id,
           created_at: data.data_registro || new Date().toISOString(),
-          peso: data.peso,
-          volume: data.volume,
-          horas: data.horas
+          peso: parseFloat(data.peso),
+          volume: parseFloat(data.volume),
+          horas: parseInt(data.horas)
         });
+      } else {
+        console.log('Nenhuma diurese encontrada');
       }
 
       if (balanceResult.data && balanceResult.data.length > 0) {
         const data = balanceResult.data[0];
+        console.log('Balanço encontrado:', data);
         setLatestBalance({
           id: data.id,
           created_at: data.data_registro || data.created_at || new Date().toISOString(),
-          peso: data.peso,
-          volume: data.volume
+          peso: parseFloat(data.peso),
+          volume: parseFloat(data.volume)
         });
+      } else {
+        console.log('Nenhum balanço encontrado');
       }
     } catch (error) {
       console.error('Erro ao buscar últimos cálculos:', error);
