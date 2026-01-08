@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { DropletIcon, SaveIcon, ChevronRightIcon } from './icons';
 import { supabase } from '../supabaseClient';
-import { NotificationContext } from '../contexts';
+import { NotificationContext, PatientsContext } from '../contexts';
 
 interface DiuresisCalcProps {
   patientId: string | number;
@@ -9,6 +9,7 @@ interface DiuresisCalcProps {
 
 const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
   const { showNotification } = useContext(NotificationContext)!;
+  const { patients } = useContext(PatientsContext)!;
   const [weight, setWeight] = useState('');
   const [volume, setVolume] = useState('');
   const [hours, setHours] = useState('24');
@@ -16,36 +17,16 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
   const [loading, setLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
 
-  // Buscar peso do paciente diretamente do Supabase
+  // Buscar peso do paciente do context (mais rápido e confiável)
   useEffect(() => {
-    const fetchWeight = async () => {
-      try {
-        const patientIdNum = Number(patientId);
-        console.log('Buscando peso para paciente:', patientIdNum);
-        
-        const { data, error } = await supabase
-          .from('patients')
-          .select('peso')
-          .eq('id', patientIdNum);
-        
-        console.log('Resposta Supabase:', { data, error });
-        
-        if (error) {
-          console.error('Erro ao buscar peso:', error);
-          return;
-        }
-        
-        if (data && data.length > 0 && data[0].peso) {
-          console.log('Peso encontrado:', data[0].peso);
-          setWeight(data[0].peso.toString());
-        }
-      } catch (err) {
-        console.error('Erro ao carregar peso:', err);
-      }
-    };
-    
-    fetchWeight();
-  }, [patientId]); // Apenas patientId como dependência
+    const patient = patients.find(p => p.id.toString() === patientId.toString());
+    if (patient?.peso) {
+      console.log('Peso encontrado do context:', patient.peso);
+      setWeight(patient.peso.toString());
+    } else {
+      console.log('Peso não encontrado para paciente:', patientId);
+    }
+  }, [patientId, patients]);
 
   useEffect(() => {
     const w = parseFloat(weight) || 0;
