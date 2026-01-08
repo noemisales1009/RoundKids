@@ -937,10 +937,10 @@ const PatientHistoryScreen: React.FC = () => {
         });
 
         // Adicionar diurese
-        diuresisData.forEach(diuresis => {
+        (patient.diurese || []).forEach(diuresis => {
             const result = ((diuresis.volume / diuresis.horas) / diuresis.peso).toFixed(2);
             events.push({
-                timestamp: diuresis.created_at || new Date().toISOString(),
+                timestamp: diuresis.data_registro || new Date().toISOString(),
                 icon: DropletIcon,
                 description: `[DIURESE] Diurese: ${result} mL/kg/h (Peso: ${diuresis.peso}kg | Volume: ${diuresis.volume}mL | Período: ${diuresis.horas}h).`,
                 hasTime: true,
@@ -948,10 +948,10 @@ const PatientHistoryScreen: React.FC = () => {
         });
 
         // Adicionar balanço hídrico
-        balanceData.forEach(balance => {
+        (patient.balanco_hidrico || []).forEach(balance => {
             const result = (balance.volume / (balance.peso * 10)).toFixed(2);
             events.push({
-                timestamp: balance.created_at || new Date().toISOString(),
+                timestamp: balance.data_registro || new Date().toISOString(),
                 icon: DropletIcon,
                 description: `[BALANÇO] Balanço Hídrico: ${balance.volume > 0 ? '+' : ''}${result}% (Peso: ${balance.peso}kg | Volume: ${balance.volume > 0 ? '+' : ''}${balance.volume}mL).`,
                 hasTime: true,
@@ -1144,12 +1144,46 @@ const PatientHistoryScreen: React.FC = () => {
             };
         };
 
+        const generateDiuresisListPDF = () => {
+            const filtered = (patient.diurese || []).filter(d => 
+                isDateInRange(d.data_registro) && isCategorySelected('Diurese')
+            );
+            return {
+                hasData: filtered.length > 0,
+                html: filtered.map(d => `
+                    <li>
+                        <strong>Diurese: ${d.resultado || 'N/A'} mL/kg/h</strong><br>
+                        Peso: ${d.peso}kg | Volume: ${d.volume}mL | Período: ${d.horas}h<br>
+                        Data: ${formatDateToBRL(d.data_registro)}
+                    </li>
+                `).join('')
+            };
+        };
+
+        const generateBalanceListPDF = () => {
+            const filtered = (patient.balanco_hidrico || []).filter(b => 
+                isDateInRange(b.data_registro) && isCategorySelected('Balanço Hídrico')
+            );
+            return {
+                hasData: filtered.length > 0,
+                html: filtered.map(b => `
+                    <li>
+                        <strong>Balanço Hídrico: ${b.resultado || 'N/A'}%</strong><br>
+                        Peso: ${b.peso}kg | Volume: ${b.volume > 0 ? '+' : ''}${b.volume}mL<br>
+                        Data: ${formatDateToBRL(b.data_registro)}
+                    </li>
+                `).join('')
+            };
+        };
+
         const devicesData = generateDeviceList();
         const medicationsData = generateMedicationList();
         const examsData = generateExamList();
         const surgeriesData = generateSurgicalList();
         const dietsData = generateDietList();
         const scalesData = generateScaleScoresList();
+        const diuresisData = generateDiuresisListPDF();
+        const balanceData = generateBalanceListPDF();
 
         const generateDiagnosticsList = () => {
             const filtered = resolvedDiagnostics.filter((d: any) => {
@@ -1172,76 +1206,88 @@ const PatientHistoryScreen: React.FC = () => {
 
         const diagnosticsData = generateDiagnosticsList();
 
-        const generateHistoryList = () => Object.entries(displayedHistory).map(([date, eventsOnDate]) => {
-            // Filtrar eventos por data e categoria
-            const filtered = (eventsOnDate as TimelineEvent[]).filter(event => {
-                const eventDate = new Date(event.timestamp);
-                return isDateInRange(eventDate.toISOString()) && 
-                       (selectedCategories.size === 0 || selectedCategories.has('Histórico'));
+        const generateHistoryList = () => {
+            let allEventsHtml = '';
+            let totalEvents = 0;
+
+            Object.entries(displayedHistory).forEach(([date, eventsOnDate]) => {
+                // Os eventos em displayedHistory já estão filtrados por data e categoria
+                // então apenas usar diretamente
+                const filtered = (eventsOnDate as TimelineEvent[]);
+
+                if (filtered.length === 0) return;
+
+                totalEvents += filtered.length;
+                
+                allEventsHtml += `
+                    <div class="history-group">
+                        <h3>${formatHistoryDate(date)}</h3>
+                        ${filtered.map(event => {
+                            const eventTime = new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                            const eventDate = new Date(event.timestamp).toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                            const eventDateTime = new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                            
+                            // Construir evento com todas as informações em linhas
+                            let lines = [];
+                            
+                            // Horário
+                            if (event.hasTime) {
+                                lines.push(`<strong>Horário: [${eventTime}]</strong>`);
+                            }
+                            
+                            // Descrição/Tipo (converter quebras de linha em <br/>)
+                            if (event.description) {
+                                const descriptionHtml = event.description.split('\n').join('<br/>');
+                                lines.push(descriptionHtml);
+                            }
+                            
+                            // Responsável
+                            // if (event.responsible) {
+                            //     lines.push(`<strong>Responsável:</strong> ${event.responsible}`);
+                            // }
+                            
+                            // Prazo
+                            // if (event.deadline) {
+                            //     const deadlineDate = new Date(event.deadline).toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                            //     const deadlineTime = new Date(event.deadline).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                            //     lines.push(`<strong>Prazo:</strong> ${deadlineDate} ${deadlineTime}`);
+                            // }
+                            
+                            // Tempo (duração)
+                            // if (event.timeLabel) {
+                            //     lines.push(`<strong>Tempo:</strong> ${event.timeLabel}`);
+                            // }
+                            
+                            // Data/Hora (completa)
+                            lines.push(`<strong>Data/Hora:</strong> ${eventDate} ${eventDateTime}`);
+                            
+                            // Criado por
+                            // if (event.createdBy) {
+                            //     lines.push(`<strong>Criado por:</strong> ${event.createdBy}`);
+                            // }
+                            
+                            // Status
+                            // if (event.status) {
+                            //     lines.push(`<strong>Status:</strong> ${event.status}`);
+                            // }
+                            
+                            return `
+                            <div class="event-item">
+                                ${lines.map(line => `<div class="event-line">${line}</div>`).join('')}
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
             });
 
-            if (filtered.length === 0) return '';
+            return {
+                hasData: totalEvents > 0,
+                html: allEventsHtml
+            };
+        };
 
-            return `
-                <div class="history-group">
-                    <h3>${formatHistoryDate(date)}</h3>
-                    ${filtered.map(event => {
-                        const eventTime = new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                        const eventDate = new Date(event.timestamp).toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit' });
-                        const eventDateTime = new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                        
-                        // Construir evento com todas as informações em linhas
-                        let lines = [];
-                        
-                        // Horário
-                        if (event.hasTime) {
-                            lines.push(`<strong>Horário: [${eventTime}]</strong>`);
-                        }
-                        
-                        // Descrição/Tipo
-                        if (event.description) {
-                            lines.push(event.description);
-                        }
-                        
-                        // Responsável
-                        if (event.responsible) {
-                            lines.push(`<strong>Responsável:</strong> ${event.responsible}`);
-                        }
-                        
-                        // Prazo
-                        if (event.deadline) {
-                            const deadlineDate = new Date(event.deadline).toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit' });
-                            const deadlineTime = new Date(event.deadline).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                            lines.push(`<strong>Prazo:</strong> ${deadlineDate} ${deadlineTime}`);
-                        }
-                        
-                        // Tempo (duração)
-                        if (event.timeLabel) {
-                            lines.push(`<strong>Tempo:</strong> ${event.timeLabel}`);
-                        }
-                        
-                        // Data/Hora (completa)
-                        lines.push(`<strong>Data/Hora:</strong> ${eventDate} ${eventDateTime}`);
-                        
-                        // Criado por
-                        if (event.createdBy) {
-                            lines.push(`<strong>Criado por:</strong> ${event.createdBy}`);
-                        }
-                        
-                        // Status
-                        if (event.status) {
-                            lines.push(`<strong>Status:</strong> ${event.status}`);
-                        }
-                        
-                        return `
-                        <div class="event-item">
-                            ${lines.map(line => `<div class="event-line">${line}</div>`).join('')}
-                        </div>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-        }).join('');
+        const historyData = generateHistoryList();
 
         const htmlContent = `
             <html>
@@ -1301,6 +1347,16 @@ const PatientHistoryScreen: React.FC = () => {
                     <ul>${dietsData.html}</ul>
                 ` : ''}
 
+                ${diuresisData.hasData ? `
+                    <h2>Diurese</h2>
+                    <ul>${diuresisData.html}</ul>
+                ` : ''}
+
+                ${balanceData.hasData ? `
+                    <h2>Balanço Hídrico</h2>
+                    <ul>${balanceData.html}</ul>
+                ` : ''}
+
                 ${scalesData.hasData ? `
                     <h2>Avaliações de Escalas</h2>
                     <ul>${scalesData.html}</ul>
@@ -1311,8 +1367,10 @@ const PatientHistoryScreen: React.FC = () => {
                     <ul>${diagnosticsData.html}</ul>
                 ` : ''}
 
-                <h2>Histórico de Eventos</h2>
-                ${generateHistoryList()}
+                ${historyData.hasData ? `
+                    <h2>Histórico de Eventos</h2>
+                    ${historyData.html}
+                ` : ''}
 
             </body>
             </html>
@@ -4324,7 +4382,9 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             categoriesRes,
             answersRes,
             culturesRes,
-            dietsRes
+            dietsRes,
+            diuresisRes,
+            balanceRes
         ] = await Promise.all([
             supabase.from('patients').select('*'),
             supabase.from('dispositivos_pacientes').select('*'),
@@ -4337,7 +4397,9 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             supabase.from('categorias').select('*').order('ordem', { ascending: true }),
             supabase.from('checklist_answers').select('*').eq('date', today),
             supabase.from('culturas_pacientes').select('*'),
-            supabase.from('dietas_pacientes').select('*')
+            supabase.from('dietas_pacientes').select('*'),
+            supabase.from('diurese').select('*'),
+            supabase.from('balanco_hidrico').select('*')
         ]);
 
         console.log('📊 Resultado das queries:');
@@ -4507,6 +4569,31 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             return acc;
         }, {});
 
+        const diuresisMap = (diuresisRes.data || []).reduce((acc: any, d: any) => {
+            if (!acc[d.patient_id]) acc[d.patient_id] = [];
+            acc[d.patient_id].push({
+                id: d.id,
+                peso: d.peso,
+                volume: d.volume,
+                horas: d.horas,
+                resultado: d.resultado,
+                data_registro: d.data_registro
+            });
+            return acc;
+        }, {});
+
+        const balanceMap = (balanceRes.data || []).reduce((acc: any, b: any) => {
+            if (!acc[b.patient_id]) acc[b.patient_id] = [];
+            acc[b.patient_id].push({
+                id: b.id,
+                peso: b.peso,
+                volume: b.volume,
+                resultado: b.resultado,
+                data_registro: b.data_registro
+            });
+            return acc;
+        }, {});
+
         const mappedPatients: Patient[] = patientsRes.data.map((p: any) => ({
             id: p.id,
             name: p.name,
@@ -4523,7 +4610,9 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             surgicalProcedures: surgsMap[p.id] || [],
             scaleScores: scalesMap[p.id] || [],
             cultures: culturesMap[p.id] || [],
-            diets: dietsMap[p.id] || []
+            diets: dietsMap[p.id] || [],
+            diurese: diuresisMap[p.id] || [],
+            balanco_hidrico: balanceMap[p.id] || []
         }));
 
         setPatients(mappedPatients);
