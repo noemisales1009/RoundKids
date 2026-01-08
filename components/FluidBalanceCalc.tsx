@@ -19,11 +19,12 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
 
   // Buscar peso do paciente automaticamente
   useEffect(() => {
-    const patient = patients.find(p => p.id === parseInt(patientId.toString()));
+    const patientIdNum = typeof patientId === 'string' ? parseInt(patientId) : patientId;
+    const patient = patients.find(p => p.id === patientIdNum);
     if (patient && patient.peso && !weight) {
       setWeight(patient.peso.toString());
     }
-  }, [patientId, patients]);
+  }, [patientId, patients, weight]);
 
   useEffect(() => {
     const w = parseFloat(weight) || 0;
