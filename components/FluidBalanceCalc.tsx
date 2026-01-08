@@ -19,7 +19,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
   // Buscar peso do paciente diretamente do Supabase
   useEffect(() => {
     const fetchWeight = async () => {
-      if (!weight) { // Só busca se ainda não tem peso
+      try {
         const patientIdNum = typeof patientId === 'string' ? parseInt(patientId) : patientId;
         const { data, error } = await supabase
           .from('patients')
@@ -27,14 +27,21 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
           .eq('id', patientIdNum)
           .single();
         
-        if (data && data.peso && !weight) {
+        if (error) {
+          console.error('Erro ao buscar peso:', error);
+          return;
+        }
+        
+        if (data && data.peso) {
           setWeight(data.peso.toString());
         }
+      } catch (err) {
+        console.error('Erro ao carregar peso:', err);
       }
     };
     
     fetchWeight();
-  }, [patientId, weight]);
+  }, [patientId]); // Apenas patientId como dependência
 
   useEffect(() => {
     const w = parseFloat(weight) || 0;
