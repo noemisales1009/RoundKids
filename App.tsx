@@ -2013,7 +2013,9 @@ const AddDietModal: React.FC<{ patientId: number | string; onClose: () => void }
     const [dataInicio, setDataInicio] = useState(getTodayDateString());
     const [volume, setVolume] = useState('');
     const [vet, setVet] = useState('');
+    const [vetPleno, setVetPleno] = useState('');
     const [pt, setPt] = useState('');
+    const [ptGDia, setPtGDia] = useState('');
     const [th, setTh] = useState('');
     const [observacao, setObservacao] = useState('');
 
@@ -2025,7 +2027,9 @@ const AddDietModal: React.FC<{ patientId: number | string; onClose: () => void }
             data_inicio: dataInicio,
             volume: volume || undefined,
             vet: vet || undefined,
+            vet_pleno: vetPleno || undefined,
             pt: pt || undefined,
+            pt_g_dia: ptGDia || undefined,
             th: th || undefined,
             observacao: observacao || undefined
         });
@@ -2095,12 +2099,32 @@ const AddDietModal: React.FC<{ patientId: number | string; onClose: () => void }
                             />
                         </div>
                         <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">VET Pleno [kcal/dia] <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
+                            <input
+                                type="text"
+                                value={vetPleno}
+                                onChange={(e) => setVetPleno(e.target.value)}
+                                placeholder="Ex: 2000"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            />
+                        </div>
+                        <div>
                             <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">PT [g/dia] <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
                             <input
                                 type="text"
                                 value={pt}
                                 onChange={(e) => setPt(e.target.value)}
                                 placeholder="Ex: 60"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">PT Plena (g/dia) <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
+                            <input
+                                type="text"
+                                value={ptGDia}
+                                onChange={(e) => setPtGDia(e.target.value)}
+                                placeholder="Ex: 65"
                                 className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             />
                         </div>
@@ -2129,6 +2153,30 @@ const AddDietModal: React.FC<{ patientId: number | string; onClose: () => void }
                                 className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             />
                         </div>
+                        {/* Card de Cálculo */}
+                        {((vet && vetPleno) || (pt && ptGDia)) && (
+                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                                <h4 className="text-xs sm:text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2">📊 Cálculos Automáticos</h4>
+                                <div className="space-y-1.5">
+                                    {vet && vetPleno && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">VET AT:</span>
+                                            <span className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-200">
+                                                {((parseFloat(vet) * 100) / parseFloat(vetPleno)).toFixed(1)}%
+                                            </span>
+                                        </div>
+                                    )}
+                                    {pt && ptGDia && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">PT AT:</span>
+                                            <span className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-200">
+                                                {((parseFloat(pt) * 100) / parseFloat(ptGDia)).toFixed(1)}%
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                         <button
                             type="submit"
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 sm:py-3 rounded-lg transition mt-2 text-sm sm:text-base"
@@ -2149,7 +2197,9 @@ const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; onClose:
     const [dataInicio, setDataInicio] = useState(diet.data_inicio.split('T')[0]);
     const [volume, setVolume] = useState(diet.volume || '');
     const [vet, setVet] = useState(diet.vet || '');
+    const [vetPleno, setVetPleno] = useState(diet.vet_pleno || '');
     const [pt, setPt] = useState(diet.pt || '');
+    const [ptGDia, setPtGDia] = useState(diet.pt_g_dia || '');
     const [th, setTh] = useState(diet.th || '');
     const [observacao, setObservacao] = useState(diet.observacao || '');
 
@@ -2162,7 +2212,9 @@ const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; onClose:
             data_inicio: dataInicio,
             volume: volume || undefined,
             vet: vet || undefined,
+            vet_pleno: vetPleno || undefined,
             pt: pt || undefined,
+            pt_g_dia: ptGDia || undefined,
             th: th || undefined,
             observacao: observacao || undefined
         });
@@ -2232,12 +2284,32 @@ const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; onClose:
                             />
                         </div>
                         <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">VET Pleno [kcal/dia] <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
+                            <input
+                                type="text"
+                                value={vetPleno}
+                                onChange={(e) => setVetPleno(e.target.value)}
+                                placeholder="Ex: 2000"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            />
+                        </div>
+                        <div>
                             <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">PT [g/dia] <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
                             <input
                                 type="text"
                                 value={pt}
                                 onChange={(e) => setPt(e.target.value)}
                                 placeholder="Ex: 60"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">PT Plena (g/dia) <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
+                            <input
+                                type="text"
+                                value={ptGDia}
+                                onChange={(e) => setPtGDia(e.target.value)}
+                                placeholder="Ex: 65"
                                 className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             />
                         </div>
@@ -2266,6 +2338,30 @@ const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; onClose:
                                 className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             />
                         </div>
+                        {/* Card de Cálculo */}
+                        {((vet && vetPleno) || (pt && ptGDia)) && (
+                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                                <h4 className="text-xs sm:text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2">📊 Cálculos Automáticos</h4>
+                                <div className="space-y-1.5">
+                                    {vet && vetPleno && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">VET AT:</span>
+                                            <span className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-200">
+                                                {((parseFloat(vet) * 100) / parseFloat(vetPleno)).toFixed(1)}%
+                                            </span>
+                                        </div>
+                                    )}
+                                    {pt && ptGDia && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">PT AT:</span>
+                                            <span className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-200">
+                                                {((parseFloat(pt) * 100) / parseFloat(ptGDia)).toFixed(1)}%
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                         <button
                             type="submit"
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 sm:py-3 rounded-lg transition mt-2 text-sm sm:text-base"
@@ -4847,6 +4943,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     };
 
     const addDietToPatient = async (patientId: number | string, diet: Omit<Diet, 'id'>) => {
+        // vet_at e pt_at são calculados automaticamente pelo banco (GENERATED ALWAYS AS)
         const { error } = await supabase.from('dietas_pacientes').insert([{
             paciente_id: patientId,
             tipo: diet.type,
@@ -4854,7 +4951,9 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             data_remocao: diet.data_remocao || null,
             volume: diet.volume || null,
             vet: diet.vet || null,
+            vet_pleno: diet.vet_pleno || null,
             pt: diet.pt || null,
+            pt_g_dia: diet.pt_g_dia || null,
             th: diet.th || null,
             observacao: diet.observacao || null
         }]);
@@ -4871,6 +4970,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     };
 
     const updateDietInPatient = async (patientId: number | string, dietData: Diet) => {
+        // vet_at e pt_at são calculados automaticamente pelo banco (GENERATED ALWAYS AS)
         const { error } = await supabase.from('dietas_pacientes')
             .update({
                 tipo: dietData.type,
@@ -4878,7 +4978,9 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 data_remocao: dietData.data_remocao || null,
                 volume: dietData.volume || null,
                 vet: dietData.vet || null,
+                vet_pleno: dietData.vet_pleno || null,
                 pt: dietData.pt || null,
+                pt_g_dia: dietData.pt_g_dia || null,
                 th: dietData.th || null,
                 observacao: dietData.observacao || null
             })

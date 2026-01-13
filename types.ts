@@ -61,7 +61,11 @@ export interface Diet {
   data_remocao?: string; // "YYYY-MM-DD HH:MM:SS" - Data de fim/retirada (opcional)
   volume?: string; // Volume em ml
   vet?: string; // Valor Energético Total [kcal/dia]
+  vet_pleno?: string; // VET Pleno - Valor Energético Total alvo/meta [kcal/dia]
+  vet_at?: number; // VET AT - Porcentagem calculada: (VET / VET Pleno) * 100
   pt?: string; // Proteína [g/dia]
+  pt_g_dia?: string; // Proteína Total em gramas absolutas [g/dia]
+  pt_at?: number; // PT AT - Porcentagem calculada: (PT / PT Plena) * 100
   th?: string; // Taxa Hídrica [ml/m²/dia]
   observacao?: string; // Observações adicionais
   isArchived?: boolean;
