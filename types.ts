@@ -209,6 +209,7 @@ export interface NotificationContextType {
 export interface UserContextType {
   user: User;
   updateUser: (userData: Partial<User>) => void;
+  loadUser: () => Promise<void>;
 }
 
 export interface ThemeContextType {

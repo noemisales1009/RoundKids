@@ -263,6 +263,7 @@ const Notification: React.FC<{ message: string; type: 'success' | 'error' | 'inf
 
 const LoginScreen: React.FC = () => {
     const navigate = useNavigate();
+    const { loadUser } = useContext(UserContext)!;
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -318,6 +319,8 @@ const LoginScreen: React.FC = () => {
             alert('Email ou senha incorretos');
             setLoading(false);
         } else {
+            // Carregar dados do usuário imediatamente após login
+            await loadUser();
             setLoginAttempts(0); // Resetar tentativas
             navigate('/dashboard');
         }
@@ -5291,7 +5294,7 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     };
 
     return (
-        <UserContext.Provider value={{ user, updateUser }}>
+        <UserContext.Provider value={{ user, updateUser, loadUser }}>
             {children}
         </UserContext.Provider>
     );
