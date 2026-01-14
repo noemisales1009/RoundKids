@@ -99,6 +99,47 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     loadData();
   }, [patientId]);
 
+  const handleRemoveDiagnostic = async (optionId: number) => {
+    try {
+      // Apagar do Supabase (tabela paciente_diagnosticos)
+      const { error } = await supabase
+        .from('paciente_diagnosticos')
+        .delete()
+        .eq('patient_id', patientId)
+        .eq('opcao_id', optionId);
+
+      if (error) {
+        console.error('Erro ao remover diagnóstico do Supabase:', error);
+        alert('Erro ao remover diagnóstico. Tente novamente.');
+        return;
+      }
+
+      // Remover diagnóstico da interface
+      setCheckedOptions(prev => {
+        const newChecked = { ...prev };
+        delete newChecked[optionId];
+        return newChecked;
+      });
+      
+      // Remover input associado
+      setInputValues(prev => {
+        const newInputs = { ...prev };
+        delete newInputs[optionId];
+        return newInputs;
+      });
+      
+      // Remover status associado
+      setSelectedStatus(prev => {
+        const newStatus = { ...prev };
+        delete newStatus[optionId];
+        return newStatus;
+      });
+    } catch (error) {
+      console.error('Erro ao remover diagnóstico:', error);
+      alert('Erro ao remover diagnóstico. Tente novamente.');
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -255,10 +296,17 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                       ) : (
                         <span>•</span>
                       )}
-                      <span className={`break-word ${selectedStatus[opt.id] === 'resolvido' ? 'line-through opacity-60' : ''}`}>
+                      <span className={`flex-1 break-word ${selectedStatus[opt.id] === 'resolvido' ? 'line-through opacity-60' : ''}`}>
                         {opt.label}
                         {inputValues[opt.id] && <span className={`block text-xs italic ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>"{inputValues[opt.id]}"</span>}
                       </span>
+                      <button
+                        onClick={() => handleRemoveDiagnostic(opt.id)}
+                        className={`ml-2 px-1.5 py-0.5 rounded text-xs font-bold transition-colors hover:bg-red-600 hover:text-white ${isDark ? 'text-red-400 hover:bg-red-700' : 'text-red-600 hover:bg-red-500'}`}
+                        title="Remover diagnóstico"
+                      >
+                        ✕
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -277,10 +325,17 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                       ) : (
                         <span>•</span>
                       )}
-                      <span className={`break-word ${selectedStatus[opt.id] === 'resolvido' ? 'line-through opacity-60' : ''}`}>
+                      <span className={`flex-1 break-word ${selectedStatus[opt.id] === 'resolvido' ? 'line-through opacity-60' : ''}`}>
                         {opt.label}
                         {inputValues[opt.id] && <span className={`block text-xs italic ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>"{inputValues[opt.id]}"</span>}
                       </span>
+                      <button
+                        onClick={() => handleRemoveDiagnostic(opt.id)}
+                        className={`ml-2 px-1.5 py-0.5 rounded text-xs font-bold transition-colors hover:bg-red-600 hover:text-white ${isDark ? 'text-red-400 hover:bg-red-700' : 'text-red-600 hover:bg-red-500'}`}
+                        title="Remover diagnóstico"
+                      >
+                        ✕
+                      </button>
                     </li>
                   ))}
                 </ul>

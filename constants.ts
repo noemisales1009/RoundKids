@@ -62,6 +62,8 @@ export const DEVICE_TYPES: string[] = [
     'CURATIVO À VÁCUO',
     'CVC 1',
     'CVC 2',
+    'CATETER DE SHILLY',
+    'CATETER DE TENCKHOFF',
     'DRENO TORÁXICO D',
     'DRENO TORÁXICO E',
     'DVE',

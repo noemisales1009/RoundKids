@@ -1,41 +1,43 @@
 
-import React, { useState, useMemo, useContext, useEffect, createContext, useRef } from 'react';
+import React, { useState, useMemo, useContext, useEffect, createContext, useRef, lazy, Suspense } from 'react';
 import { HashRouter, Routes, Route, useNavigate, Link, useParams, useLocation, Outlet, NavLink, Navigate } from 'react-router-dom';
 import { Patient, Category, Question, ChecklistAnswer, Answer, Device, Exam, Medication, Task, TaskStatus, PatientsContextType, TasksContextType, NotificationState, NotificationContextType, User, UserContextType, Theme, ThemeContextType, SurgicalProcedure, ScaleScore, Culture, Diet } from './types';
 import { PATIENTS as initialPatients, CATEGORIES as STATIC_CATEGORIES, QUESTIONS as STATIC_QUESTIONS, TASKS as initialTasks, DEVICE_TYPES, DEVICE_LOCATIONS, EXAM_STATUSES, RESPONSIBLES, ALERT_DEADLINES, INITIAL_USER, MEDICATION_DOSAGE_UNITS, ALERT_CATEGORIES, ICON_MAP, formatDateToBRL, formatDateTimeWithHour, calculateDaysSinceDate } from './constants';
 import { BackArrowIcon, PlusIcon, WarningIcon, ClockIcon, AlertIcon, CheckCircleIcon, BedIcon, UserIcon, PencilIcon, BellIcon, InfoIcon, EyeOffIcon, ClipboardIcon, FileTextIcon, LogOutIcon, ChevronRightIcon, MenuIcon, DashboardIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, HeartPulseIcon, BeakerIcon, LiverIcon, LungsIcon, DumbbellIcon, BrainIcon, ShieldIcon, UsersIcon, HomeIcon, CloseIcon, SettingsIcon, CameraIcon, ScalpelIcon, SaveIcon, CheckSquareIcon, SquareIcon, ChevronDownIcon, CheckIcon, ChevronLeftIcon } from './components/icons';
-import { ComfortBScale } from './components/ComfortBScale';
-import { DeliriumScale } from './components/DeliriumScale';
-import { GlasgowScale } from './components/GlasgowScale';
-import { CRSRScale } from './components/CRSRScale';
-import { FLACCScale } from './components/FLACCScale';
-import { BradenScale } from './components/BradenScale';
-import { BradenQDScale } from './components/BradenQDScale';
-import { VniCnafScale } from './components/VniCnafScale';
-import { FSSScale } from './components/FSSScale';
-import { BradenCalculator } from './components/BradenCalculator';
-import { FLACCCalculator } from './components/FLACCCalculator';
-import ComfortBCalculator from './components/ComfortBCalculator';
-import GlasgowCalculator from './components/GlasgowCalculator';
-import AbstinenciaCalculator from './components/AbstinenciaCalculator';
-import CAMICUCalculator from './components/CAMICUCalculator';
-import SOSPDCalculator from './components/SOSPDCalculator';
-import ConsciousnessCalculator from './components/ConsciousnessCalculator';
-import VNICNAFCalculator from './components/VNICNAFCalculator';
-import { SecondaryNavigation } from './components/SecondaryNavigation';
-import { DiagnosticsSection } from './components/DiagnosticsSection';
-import { AlertasSection } from './components/AlertasSection';
-import DiuresisCalc from './components/DiuresisCalc';
-import DiuresisHistory from './components/DiuresisHistory';
-import FluidBalanceCalc from './components/FluidBalanceCalc';
-import FluidBalanceHistory from './components/FluidBalanceHistory';
-import LatestCalculationsCard from './components/LatestCalculationsCard';
-import StatusComponent from './components/StatusComponent';
-import ComorbidadeComponent from './components/ComorbidadeComponent';
-import DestinoComponent from './components/DestinoComponent';
 
+// Lazy load components pesados
+const ComfortBScale = lazy(() => import('./components/ComfortBScale').then(m => ({ default: m.ComfortBScale })));
+const DeliriumScale = lazy(() => import('./components/DeliriumScale').then(m => ({ default: m.DeliriumScale })));
+const GlasgowScale = lazy(() => import('./components/GlasgowScale').then(m => ({ default: m.GlasgowScale })));
+const CRSRScale = lazy(() => import('./components/CRSRScale').then(m => ({ default: m.CRSRScale })));
+const FLACCScale = lazy(() => import('./components/FLACCScale').then(m => ({ default: m.FLACCScale })));
+const BradenScale = lazy(() => import('./components/BradenScale').then(m => ({ default: m.BradenScale })));
+const BradenQDScale = lazy(() => import('./components/BradenQDScale').then(m => ({ default: m.BradenQDScale })));
+const VniCnafScale = lazy(() => import('./components/VniCnafScale').then(m => ({ default: m.VniCnafScale })));
+const FSSScale = lazy(() => import('./components/FSSScale').then(m => ({ default: m.FSSScale })));
+const BradenCalculator = lazy(() => import('./components/BradenCalculator').then(m => ({ default: m.BradenCalculator })));
+const FLACCCalculator = lazy(() => import('./components/FLACCCalculator').then(m => ({ default: m.FLACCCalculator })));
+const ComfortBCalculator = lazy(() => import('./components/ComfortBCalculator'));
+const GlasgowCalculator = lazy(() => import('./components/GlasgowCalculator'));
+const AbstinenciaCalculator = lazy(() => import('./components/AbstinenciaCalculator'));
+const CAMICUCalculator = lazy(() => import('./components/CAMICUCalculator'));
+const SOSPDCalculator = lazy(() => import('./components/SOSPDCalculator'));
+const ConsciousnessCalculator = lazy(() => import('./components/ConsciousnessCalculator'));
+const VNICNAFCalculator = lazy(() => import('./components/VNICNAFCalculator'));
+const DiagnosticsSection = lazy(() => import('./components/DiagnosticsSection').then(m => ({ default: m.DiagnosticsSection })));
+const AlertasSection = lazy(() => import('./components/AlertasSection').then(m => ({ default: m.AlertasSection })));
+const DiuresisCalc = lazy(() => import('./components/DiuresisCalc'));
+const DiuresisHistory = lazy(() => import('./components/DiuresisHistory'));
+const FluidBalanceCalc = lazy(() => import('./components/FluidBalanceCalc'));
+const FluidBalanceHistory = lazy(() => import('./components/FluidBalanceHistory'));
+const LatestCalculationsCard = lazy(() => import('./components/LatestCalculationsCard'));
+const StatusComponent = lazy(() => import('./components/StatusComponent'));
+const ComorbidadeComponent = lazy(() => import('./components/ComorbidadeComponent'));
+const DestinoComponent = lazy(() => import('./components/DestinoComponent'));
+const AlertsHistoryScreen = lazy(() => import('./AlertsHistoryScreen').then(m => ({ default: m.AlertsHistoryScreen })));
+
+import { SecondaryNavigation } from './components/SecondaryNavigation';
 import { supabase } from './supabaseClient';
-import { AlertsHistoryScreen } from './AlertsHistoryScreen';
 import {
     TasksContext,
     PatientsContext,
@@ -44,6 +46,13 @@ import {
     ThemeContext,
     HeaderContext
 } from './contexts';
+
+// --- LOADING COMPONENT ---
+const LoadingSpinner: React.FC = () => (
+    <div className="flex justify-center items-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    </div>
+);
 
 // --- HELPER FOR DATES ---
 const getTodayDateString = () => {
@@ -263,7 +272,8 @@ const Notification: React.FC<{ message: string; type: 'success' | 'error' | 'inf
 
 const LoginScreen: React.FC = () => {
     const navigate = useNavigate();
-    const { loadUser } = useContext(UserContext)!;
+    const userContext = useContext(UserContext);
+    const { loadUser } = userContext || { loadUser: async () => {} };
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -319,9 +329,13 @@ const LoginScreen: React.FC = () => {
             alert('Email ou senha incorretos');
             setLoading(false);
         } else {
-            // Carregar dados do usuário imediatamente após login
-            await loadUser();
             setLoginAttempts(0); // Resetar tentativas
+            try {
+                // Carregar dados do usuário imediatamente após login
+                await loadUser();
+            } catch (err) {
+                console.error('Erro ao carregar usuário:', err);
+            }
             navigate('/dashboard');
         }
     };
@@ -963,10 +977,23 @@ const PatientHistoryScreen: React.FC = () => {
 
         // Adicionar dietas
         dietsData.forEach(diet => {
+            // Montar descrição com todos os dados, incluindo VET AT e PT AT
+            let description = `[DIETA] Dieta Iniciada: ${diet.tipo}`;
+            
+            if (diet.volume) description += ` | Volume: ${diet.volume}mL`;
+            if (diet.vet) description += ` | VET: ${diet.vet}kcal/dia`;
+            if (diet.vet_pleno) description += ` | VET Pleno: ${diet.vet_pleno}kcal/dia`;
+            if (diet.vet_at) description += ` | VET AT: ${Number(diet.vet_at).toFixed(1)}%`;
+            if (diet.pt) description += ` | PT: ${diet.pt}g/dia`;
+            if (diet.pt_g_dia) description += ` | PT Plena: ${diet.pt_g_dia}g/dia`;
+            if (diet.pt_at) description += ` | PT AT: ${Number(diet.pt_at).toFixed(1)}%`;
+            if (diet.th) description += ` | TH: ${diet.th}ml/m²/dia`;
+            if (diet.observacao) description += ` | Obs: ${diet.observacao}`;
+            
             events.push({
                 timestamp: diet.data_inicio || new Date().toISOString(),
                 icon: AppleIcon,
-                description: `[DIETA] Dieta Iniciada: ${diet.tipo}${diet.volume ? ` | Volume: ${diet.volume}mL` : ''}${diet.vet ? ` | VET: ${diet.vet}kcal/dia` : ''}${diet.pt ? ` | PT: ${diet.pt}g/dia` : ''}${diet.th ? ` | TH: ${diet.th}ml/m²/dia` : ''}${diet.observacao ? ` | Obs: ${diet.observacao}` : ''}`,
+                description: description,
                 hasTime: false,
             });
             if (diet.data_remocao) {
@@ -2850,31 +2877,41 @@ const PatientDetailScreen: React.FC = () => {
                                 </div>
                             </div>
                         )}
-                        {scaleView === 'comfort-b' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><ComfortBCalculator patientId={patient.id.toString()} /></div></div>)}
-                        {scaleView === 'delirium' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><CAMICUCalculator patientId={patient.id.toString()} /></div></div>)}
-                        {scaleView === 'glasgow' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><GlasgowCalculator patientId={patient.id.toString()} /></div></div>)}
-                        {scaleView === 'crs-r' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><CRSRScale onSaveScore={handleSaveScaleScore} /></div></div>)}
-                        {scaleView === 'flacc' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><FLACCCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></div></div>)}
-                        {scaleView === 'braden' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><BradenCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></div></div>)}
-                        {scaleView === 'braden-qd' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><BradenQDScale onSaveScore={handleSaveScaleScore} /></div></div>)}
-                        {scaleView === 'vni-cnaf' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><VNICNAFCalculator patientId={patient.id.toString()} /></div></div>)}
-                        {scaleView === 'fss' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><FSSScale onSaveScore={handleSaveScaleScore} /></div></div>)}
-                        {scaleView === 'abstinencia' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><AbstinenciaCalculator patientId={patient.id.toString()} /></div></div>)}
-                        {scaleView === 'sos-pd' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><SOSPDCalculator patientId={patient.id.toString()} /></div></div>)}
-                        {scaleView === 'consciousness' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><ConsciousnessCalculator patientId={patient.id.toString()} /></div></div>)}
+                        {scaleView === 'comfort-b' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><ComfortBCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
+                        {scaleView === 'delirium' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><CAMICUCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
+                        {scaleView === 'glasgow' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><GlasgowCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
+                        {scaleView === 'crs-r' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><CRSRScale onSaveScore={handleSaveScaleScore} /></Suspense></div></div>)}
+                        {scaleView === 'flacc' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><FLACCCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></Suspense></div></div>)}
+                        {scaleView === 'braden' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><BradenCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></Suspense></div></div>)}
+                        {scaleView === 'braden-qd' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><BradenQDScale onSaveScore={handleSaveScaleScore} /></Suspense></div></div>)}
+                        {scaleView === 'vni-cnaf' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><VNICNAFCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
+                        {scaleView === 'fss' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><FSSScale onSaveScore={handleSaveScaleScore} /></Suspense></div></div>)}
+                        {scaleView === 'abstinencia' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><AbstinenciaCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
+                        {scaleView === 'sos-pd' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><SOSPDCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
+                        {scaleView === 'consciousness' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><ConsciousnessCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
                     </div>
                 )}
             </div>
 
-            <DiagnosticsSection patientId={patient.id.toString()} />
+            <Suspense fallback={<LoadingSpinner />}>
+                <DiagnosticsSection patientId={patient.id.toString()} />
+            </Suspense>
 
-            <AlertasSection patientId={patient.id.toString()} />
+            <Suspense fallback={<LoadingSpinner />}>
+                <AlertasSection patientId={patient.id.toString()} />
+            </Suspense>
 
-            <LatestCalculationsCard patientId={patient.id.toString()} />
+            <Suspense fallback={<LoadingSpinner />}>
+                <LatestCalculationsCard patientId={patient.id.toString()} />
+            </Suspense>
 
-            <DiuresisCalc patientId={patient.id.toString()} />
+            <Suspense fallback={<LoadingSpinner />}>
+                <DiuresisCalc patientId={patient.id.toString()} />
+            </Suspense>
 
-            <FluidBalanceCalc patientId={patient.id.toString()} />
+            <Suspense fallback={<LoadingSpinner />}>
+                <FluidBalanceCalc patientId={patient.id.toString()} />
+            </Suspense>
 
             {user?.access_level === 'adm' ? (
                 <Link to={`/patient/${patient.id}/round/categories`} className="w-full block text-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg">
@@ -5234,40 +5271,41 @@ const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User>(INITIAL_USER);
 
-    useEffect(() => {
-        const loadUser = async () => {
-            // 1. Check for Supabase Auth Session
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                const { data, error } = await supabase
-                    .from('users')
-                    .select('*')
-                    .eq('id', session.user.id)
-                    .single();
+    const loadUser = async () => {
+        // 1. Check for Supabase Auth Session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
 
-                if (data) {
-                    // Update state from DB
-                    const dbUser = {
-                        id: data.id, // Store user ID
-                        name: data.name || '',
-                        title: data.role || '', // Mapping DB 'role' to App 'title'
-                        avatarUrl: data.foto || '', // Mapping DB 'foto' to App 'avatarUrl'
-                        sector: data.sector || '', // Mapping DB 'sector'
-                        access_level: (data.access_level || 'geral') as 'adm' | 'geral', // Mapping DB 'access_level'
-                    };
-                    setUser(dbUser);
-                    // ✅ SEGURANÇA: Não armazenar dados sensíveis em localStorage
-                    // Supabase gerencia a sessão em cookies HttpOnly automaticamente
-                } else if (error) {
-                    console.error('Erro ao carregar usuário');
-                    // Clear localStorage on error to prevent stale data
-                    localStorage.removeItem('round_juju_user');
-                }
-            } else {
-                // No session available - user is logged out
-                // Don't load stale user data from localStorage
+            if (data) {
+                // Update state from DB
+                const dbUser = {
+                    id: data.id, // Store user ID
+                    name: data.name || '',
+                    title: data.role || '', // Mapping DB 'role' to App 'title'
+                    avatarUrl: data.foto || '', // Mapping DB 'foto' to App 'avatarUrl'
+                    sector: data.sector || '', // Mapping DB 'sector'
+                    access_level: (data.access_level || 'geral') as 'adm' | 'geral', // Mapping DB 'access_level'
+                };
+                setUser(dbUser);
+                // ✅ SEGURANÇA: Não armazenar dados sensíveis em localStorage
+                // Supabase gerencia a sessão em cookies HttpOnly automaticamente
+            } else if (error) {
+                console.error('Erro ao carregar usuário');
+                // Clear localStorage on error to prevent stale data
+                localStorage.removeItem('round_juju_user');
             }
-        };
+        } else {
+            // No session available - user is logged out
+            // Don't load stale user data from localStorage
+        }
+    };
+
+    useEffect(() => {
         loadUser();
     }, []);
 
@@ -5363,7 +5401,7 @@ const App: React.FC = () => {
                                         <Route path="patient/:patientId/round/category/:categoryId/question/:questionIndex/create-alert" element={<CreateAlertScreen />} />
                                         <Route path="patient/:patientId/create-alert" element={<CreateAlertScreen />} />
                                         <Route path="status/:status" element={<TaskStatusScreen />} />
-                                        <Route path="history" element={<AlertsHistoryScreen useHeader={useHeader} />} />
+                                        <Route path="history" element={<Suspense fallback={<LoadingSpinner />}><AlertsHistoryScreen useHeader={useHeader} /></Suspense>} />
                                         <Route path="settings" element={<SettingsScreen />} />
                                     </Route>
                                 </Routes>
