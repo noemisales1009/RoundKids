@@ -4,6 +4,7 @@ import { ChevronRightIcon, DropletIcon } from './icons';
 
 interface LatestCalculationsCardProps {
   patientId: string | number;
+  refreshTrigger?: number;
 }
 
 interface DiuresisRecord {
@@ -21,7 +22,7 @@ interface BalanceRecord {
   volume: number;
 }
 
-const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patientId }) => {
+const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patientId, refreshTrigger }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [latestDiuresis, setLatestDiuresis] = useState<DiuresisRecord | null>(null);
   const [latestBalance, setLatestBalance] = useState<BalanceRecord | null>(null);
@@ -86,11 +87,7 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
 
   useEffect(() => {
     fetchLatestCalculations();
-    
-    // Atualizar a cada 30 segundos
-    const interval = setInterval(fetchLatestCalculations, 30000);
-    return () => clearInterval(interval);
-  }, [patientId]);
+  }, [patientId, refreshTrigger]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

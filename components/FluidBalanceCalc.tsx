@@ -5,9 +5,10 @@ import { NotificationContext, PatientsContext } from '../contexts';
 
 interface FluidBalanceCalcProps {
   patientId: string | number;
+  onCalculationSaved?: () => void;
 }
 
-const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
+const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId, onCalculationSaved }) => {
   const { showNotification } = useContext(NotificationContext)!;
   const { patients } = useContext(PatientsContext)!;
   const [weight, setWeight] = useState('');
@@ -58,6 +59,11 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId }) => {
       await supabase.from('balanco_hidrico').insert(balanceRecord);
 
       showNotification({ message: 'Balanço hídrico salvo com sucesso!', type: 'success' });
+      
+      // Notificar que foi salvo
+      if (onCalculationSaved) {
+        onCalculationSaved();
+      }
     } catch (error) {
       console.error('Erro:', error);
       showNotification({ message: 'Erro ao salvar balanço hídrico', type: 'error' });

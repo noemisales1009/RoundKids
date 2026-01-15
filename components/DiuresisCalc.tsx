@@ -5,9 +5,10 @@ import { NotificationContext, PatientsContext } from '../contexts';
 
 interface DiuresisCalcProps {
   patientId: string | number;
+  onCalculationSaved?: () => void;
 }
 
-const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
+const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId, onCalculationSaved }) => {
   const { showNotification } = useContext(NotificationContext)!;
   const { patients } = useContext(PatientsContext)!;
   const [weight, setWeight] = useState('');
@@ -59,6 +60,11 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId }) => {
       await supabase.from('diurese').insert(diuresisRecord);
 
       showNotification({ message: 'Diurese salva com sucesso!', type: 'success' });
+      
+      // Notificar que foi salvo
+      if (onCalculationSaved) {
+        onCalculationSaved();
+      }
     } catch (error) {
       console.error('Erro:', error);
       showNotification({ message: 'Erro ao salvar diurese', type: 'error' });

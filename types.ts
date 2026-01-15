@@ -71,6 +71,14 @@ export interface Diet {
   isArchived?: boolean;
 }
 
+export interface Precaution {
+  id: number | string;
+  tipo_precaucao: 'padrao' | 'contato' | 'goticula' | 'aerossois';
+  data_inicio: string; // "YYYY-MM-DD"
+  data_fim?: string; // "YYYY-MM-DD"
+  isArchived?: boolean;
+}
+
 export interface Patient {
   id: number | string;
   name: string;
@@ -88,6 +96,7 @@ export interface Patient {
   scaleScores: ScaleScore[];
   cultures: Culture[];
   diets: Diet[];
+  precautions: Precaution[];
 }
 
 export interface Category {
@@ -192,6 +201,10 @@ export interface PatientsContextType {
   addDietToPatient: (patientId: number | string, diet: Omit<Diet, 'id'>) => void;
   deleteDietFromPatient: (patientId: number | string, dietId: number | string) => void;
   updateDietInPatient: (patientId: number | string, dietData: Diet) => void;
+  addPrecautionToPatient: (patientId: number | string, precaution: Omit<Precaution, 'id'>) => void;
+  deletePrecautionFromPatient: (patientId: number | string, precautionId: number | string) => void;
+  updatePrecautionInPatient: (patientId: number | string, precautionData: Precaution) => void;
+  addEndDateToPrecaution: (patientId: number | string, precautionId: number | string, endDate: string) => void;
 }
 
 // --- NOTIFICATION TYPES ---

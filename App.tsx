@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useContext, useEffect, createContext, useRef, lazy, Suspense } from 'react';
 import { HashRouter, Routes, Route, useNavigate, Link, useParams, useLocation, Outlet, NavLink, Navigate } from 'react-router-dom';
-import { Patient, Category, Question, ChecklistAnswer, Answer, Device, Exam, Medication, Task, TaskStatus, PatientsContextType, TasksContextType, NotificationState, NotificationContextType, User, UserContextType, Theme, ThemeContextType, SurgicalProcedure, ScaleScore, Culture, Diet } from './types';
+import { Patient, Category, Question, ChecklistAnswer, Answer, Device, Exam, Medication, Task, TaskStatus, PatientsContextType, TasksContextType, NotificationState, NotificationContextType, User, UserContextType, Theme, ThemeContextType, SurgicalProcedure, ScaleScore, Culture, Diet, Precaution } from './types';
 import { PATIENTS as initialPatients, CATEGORIES as STATIC_CATEGORIES, QUESTIONS as STATIC_QUESTIONS, TASKS as initialTasks, DEVICE_TYPES, DEVICE_LOCATIONS, EXAM_STATUSES, RESPONSIBLES, ALERT_DEADLINES, INITIAL_USER, MEDICATION_DOSAGE_UNITS, ALERT_CATEGORIES, ICON_MAP, formatDateToBRL, formatDateTimeWithHour, calculateDaysSinceDate } from './constants';
 import { BackArrowIcon, PlusIcon, WarningIcon, ClockIcon, AlertIcon, CheckCircleIcon, BedIcon, UserIcon, PencilIcon, BellIcon, InfoIcon, EyeOffIcon, ClipboardIcon, FileTextIcon, LogOutIcon, ChevronRightIcon, MenuIcon, DashboardIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, HeartPulseIcon, BeakerIcon, LiverIcon, LungsIcon, DumbbellIcon, BrainIcon, ShieldIcon, UsersIcon, HomeIcon, CloseIcon, SettingsIcon, CameraIcon, ScalpelIcon, SaveIcon, CheckSquareIcon, SquareIcon, ChevronDownIcon, CheckIcon, ChevronLeftIcon } from './components/icons';
 
@@ -35,6 +35,7 @@ const StatusComponent = lazy(() => import('./components/StatusComponent'));
 const ComorbidadeComponent = lazy(() => import('./components/ComorbidadeComponent'));
 const DestinoComponent = lazy(() => import('./components/DestinoComponent'));
 const AlertsHistoryScreen = lazy(() => import('./AlertsHistoryScreen').then(m => ({ default: m.AlertsHistoryScreen })));
+const PrecautionsCard = lazy(() => import('./components/PrecautionsCard').then(m => ({ default: m.PrecautionsCard })));
 
 import { SecondaryNavigation } from './components/SecondaryNavigation';
 import { supabase } from './supabaseClient';
@@ -2436,6 +2437,7 @@ const PatientDetailScreen: React.FC = () => {
     const [isEditInfoModalOpen, setEditInfoModalOpen] = useState(false);
     const [isCreateAlertModalOpen, setCreateAlertModalOpen] = useState(false);
     const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'vni-cnaf' | 'fss' | 'abstinencia' | 'sos-pd' | 'consciousness'>('list');
+    const [calculationsRefresh, setCalculationsRefresh] = useState(0);
 
     const { showNotification } = useContext(NotificationContext)!;
 
@@ -2567,6 +2569,14 @@ const PatientDetailScreen: React.FC = () => {
                     {patient.peso && <span className="font-medium">Peso: <span className="font-normal">{patient.peso} kg</span></span>}
                 </div>
             </div>
+
+            {/* Precautions Card */}
+            <Suspense fallback={<LoadingSpinner />}>
+                <PrecautionsCard 
+                    patientId={patient.id} 
+                    precautions={patient.precautions || []} 
+                />
+            </Suspense>
 
             <Link to={`/patient/${patient.id}/history`} className="w-full block text-center bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold py-3 px-4 rounded-lg transition text-md">
                 <div className="flex items-center justify-center gap-2">
@@ -2902,15 +2912,21 @@ const PatientDetailScreen: React.FC = () => {
             </Suspense>
 
             <Suspense fallback={<LoadingSpinner />}>
-                <LatestCalculationsCard patientId={patient.id.toString()} />
+                <LatestCalculationsCard patientId={patient.id.toString()} refreshTrigger={calculationsRefresh} />
             </Suspense>
 
             <Suspense fallback={<LoadingSpinner />}>
-                <DiuresisCalc patientId={patient.id.toString()} />
+                <DiuresisCalc 
+                    patientId={patient.id.toString()} 
+                    onCalculationSaved={() => setCalculationsRefresh(prev => prev + 1)}
+                />
             </Suspense>
 
             <Suspense fallback={<LoadingSpinner />}>
-                <FluidBalanceCalc patientId={patient.id.toString()} />
+                <FluidBalanceCalc 
+                    patientId={patient.id.toString()}
+                    onCalculationSaved={() => setCalculationsRefresh(prev => prev + 1)}
+                />
             </Suspense>
 
             {user?.access_level === 'adm' ? (
@@ -3871,17 +3887,17 @@ const ChecklistScreen: React.FC = () => {
     const currentQuestion = categoryQuestions[currentQuestionIndex];
 
     return (
-        <div className="relative pb-24">
+        <div className="relative min-h-screen pb-6 px-4 flex items-center justify-center">
             {/* Main Card */}
-            <div className="w-full max-w-lg mx-auto bg-blue-600 dark:bg-blue-700 rounded-xl shadow-2xl overflow-hidden flex flex-col min-h-screen animate-in slide-in-from-right-4 duration-300">
+            <div className="w-full max-w-lg bg-blue-600 dark:bg-blue-700 rounded-xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-right-4 duration-300">
 
                 {/* Content */}
-                <div className="p-8 flex-1 flex flex-col items-center text-center space-y-6">
+                <div className="p-6 sm:p-8 flex-1 flex flex-col items-center text-center space-y-4 sm:space-y-6">
                     <span className="bg-blue-800/50 text-blue-100 px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase">
                         {category.name} • {currentQuestionIndex + 1}/{categoryQuestions.length}
                     </span>
 
-                    <h1 className="text-white text-xl md:text-2xl font-extrabold leading-tight min-h-20 flex items-center justify-center">
+                    <h1 className="text-white text-lg sm:text-xl md:text-2xl font-extrabold leading-tight flex items-center justify-center px-2">
                         {currentQuestion.text}
                     </h1>
 
@@ -3890,7 +3906,7 @@ const ChecklistScreen: React.FC = () => {
                             <button
                                 key={answer}
                                 onClick={() => handleAnswer(currentQuestion.id, answer)}
-                                className={`w-full py-3.5 rounded-lg font-bold transition shadow-sm border flex items-center justify-center gap-2
+                                className={`w-full py-3.5 rounded-lg font-bold transition shadow-sm border flex items-center justify-center gap-2 text-sm sm:text-base
                                 ${currentAnswer === answer
                                         ? 'bg-blue-800 text-white border-white ring-2 ring-blue-400'
                                         : 'bg-blue-500 hover:bg-blue-400 text-white border-blue-400/30'}`}
@@ -3902,7 +3918,7 @@ const ChecklistScreen: React.FC = () => {
 
                     <button
                         onClick={() => setActiveAlertQuestion(currentQuestion)}
-                        className="mt-6 flex items-center gap-2 text-red-100 hover:text-white bg-red-900/40 hover:bg-red-600/80 px-5 py-2.5 rounded-full transition text-xs font-bold border border-red-400/30 tracking-wide"
+                        className="mt-4 sm:mt-6 flex items-center gap-2 text-red-100 hover:text-white bg-red-900/40 hover:bg-red-600/80 px-4 sm:px-5 py-2.5 rounded-full transition text-xs font-bold border border-red-400/30 tracking-wide"
                     >
                         <AlertIcon className="w-4 h-4" />
                         GERAR ALERTA / INTERVENÇÃO
@@ -3910,17 +3926,17 @@ const ChecklistScreen: React.FC = () => {
                 </div>
 
                 {/* Footer Navigation */}
-                <div className="p-6 border-t border-blue-500/30 flex justify-between items-center bg-blue-700/20">
+                <div className="p-4 sm:p-6 border-t border-blue-500/30 flex justify-between items-center bg-blue-700/20">
                     <button
                         onClick={handlePrevious} disabled={currentQuestionIndex === 0}
-                        className={`px-6 py-2.5 rounded-lg text-sm font-bold transition flex items-center gap-2 ${currentQuestionIndex === 0 ? 'opacity-50 cursor-not-allowed text-blue-300' : 'bg-blue-800/50 hover:bg-blue-800 text-blue-100 hover:text-white'}`}
+                        className={`px-4 sm:px-6 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition flex items-center gap-2 ${currentQuestionIndex === 0 ? 'opacity-50 cursor-not-allowed text-blue-300' : 'bg-blue-800/50 hover:bg-blue-800 text-blue-100 hover:text-white'}`}
                     >
                         <ChevronLeftIcon className="w-4 h-4" /> Anterior
                     </button>
 
                     <button
                         onClick={handleNext}
-                        className={`px-8 py-2.5 rounded-lg text-sm font-bold transition shadow-lg flex items-center gap-2 bg-white hover:bg-gray-100 text-blue-700`}
+                        className={`px-6 sm:px-8 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition shadow-lg flex items-center gap-2 bg-white hover:bg-gray-100 text-blue-700`}
                     >
                         {currentQuestionIndex === categoryQuestions.length - 1 ? 'Salvar' : 'Próximo'} <ChevronRightIcon className="w-4 h-4" />
                     </button>
@@ -4519,6 +4535,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             answersRes,
             culturesRes,
             dietsRes,
+            precautionsRes,
             diuresisRes,
             balanceRes
         ] = await Promise.all([
@@ -4534,6 +4551,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             supabase.from('checklist_answers').select('*').eq('date', today),
             supabase.from('culturas_pacientes').select('*'),
             supabase.from('dietas_pacientes').select('*'),
+            supabase.from('precautions').select('*'),
             supabase.from('diurese').select('*'),
             supabase.from('balanco_hidrico').select('*')
         ]);
@@ -4705,6 +4723,18 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             return acc;
         }, {});
 
+        const precautionsMap = (precautionsRes.data || []).reduce((acc: any, p: any) => {
+            if (!acc[p.patient_id]) acc[p.patient_id] = [];
+            acc[p.patient_id].push({
+                id: p.id,
+                tipo_precaucao: p.tipo_precaucao,
+                data_inicio: p.data_inicio,
+                data_fim: p.data_fim || undefined,
+                isArchived: false
+            });
+            return acc;
+        }, {});
+
         const diuresisMap = (diuresisRes.data || []).reduce((acc: any, d: any) => {
             if (!acc[d.patient_id]) acc[d.patient_id] = [];
             acc[d.patient_id].push({
@@ -4747,6 +4777,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             scaleScores: scalesMap[p.id] || [],
             cultures: culturesMap[p.id] || [],
             diets: dietsMap[p.id] || [],
+            precautions: precautionsMap[p.id] || [],
             diurese: diuresisMap[p.id] || [],
             balanco_hidrico: balanceMap[p.id] || []
         }));
@@ -5028,6 +5059,44 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         if (!error) fetchPatients();
     };
 
+    // Precautions Functions
+    const addPrecautionToPatient = async (patientId: number | string, precaution: Omit<Precaution, 'id'>) => {
+        const { error } = await supabase.from('precautions').insert([{
+            patient_id: patientId,
+            tipo_precaucao: precaution.tipo_precaucao,
+            data_inicio: precaution.data_inicio,
+            data_fim: precaution.data_fim || null
+        }]);
+
+        if (error) console.warn("Precaution table error", error);
+        if (!error) fetchPatients();
+    };
+
+    const deletePrecautionFromPatient = async (patientId: number | string, precautionId: number | string) => {
+        const { error } = await supabase.from('precautions')
+            .delete()
+            .eq('id', precautionId);
+        if (!error) fetchPatients();
+    };
+
+    const updatePrecautionInPatient = async (patientId: number | string, precautionData: Precaution) => {
+        const { error } = await supabase.from('precautions')
+            .update({
+                tipo_precaucao: precautionData.tipo_precaucao,
+                data_inicio: precautionData.data_inicio,
+                data_fim: precautionData.data_fim || null
+            })
+            .eq('id', precautionData.id);
+        if (!error) fetchPatients();
+    };
+
+    const addEndDateToPrecaution = async (patientId: number | string, precautionId: number | string, endDate: string) => {
+        const { error } = await supabase.from('precautions')
+            .update({ data_fim: endDate })
+            .eq('id', precautionId);
+        if (!error) fetchPatients();
+    };
+
     const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number }) => {
         const updateData: any = {};
         if (data.motherName !== undefined) updateData.mother_name = data.motherName;
@@ -5069,6 +5138,10 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         addDietToPatient,
         deleteDietFromPatient,
         updateDietInPatient,
+        addPrecautionToPatient,
+        deletePrecautionFromPatient,
+        updatePrecautionInPatient,
+        addEndDateToPrecaution,
     };
 
     return <PatientsContext.Provider value={value as PatientsContextType}>{children}</PatientsContext.Provider>;
