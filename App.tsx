@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useContext, useEffect, createContext, useRef, lazy, Suspense } from 'react';
 import { HashRouter, Routes, Route, useNavigate, Link, useParams, useLocation, Outlet, NavLink, Navigate } from 'react-router-dom';
 import { Patient, Category, Question, ChecklistAnswer, Answer, Device, Exam, Medication, Task, TaskStatus, PatientsContextType, TasksContextType, NotificationState, NotificationContextType, User, UserContextType, Theme, ThemeContextType, SurgicalProcedure, ScaleScore, Culture, Diet, Precaution } from './types';
-import { PATIENTS as initialPatients, CATEGORIES as STATIC_CATEGORIES, QUESTIONS as STATIC_QUESTIONS, TASKS as initialTasks, DEVICE_TYPES, DEVICE_LOCATIONS, EXAM_STATUSES, RESPONSIBLES, ALERT_DEADLINES, INITIAL_USER, MEDICATION_DOSAGE_UNITS, ALERT_CATEGORIES, ICON_MAP, formatDateToBRL, formatDateTimeWithHour, calculateDaysSinceDate } from './constants';
+import { PATIENTS as initialPatients, CATEGORIES as STATIC_CATEGORIES, QUESTIONS as STATIC_QUESTIONS, TASKS as initialTasks, DEVICE_TYPES, DEVICE_LOCATIONS, EXAM_STATUSES, RESPONSIBLES, ALERT_DEADLINES, INITIAL_USER, MEDICATION_LIST, MEDICATION_DOSAGE_UNITS, ALERT_CATEGORIES, ICON_MAP, formatDateToBRL, formatDateTimeWithHour, calculateDaysSinceDate } from './constants';
 import { BackArrowIcon, PlusIcon, WarningIcon, ClockIcon, AlertIcon, CheckCircleIcon, BedIcon, UserIcon, PencilIcon, BellIcon, InfoIcon, EyeOffIcon, ClipboardIcon, FileTextIcon, LogOutIcon, ChevronRightIcon, MenuIcon, DashboardIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, HeartPulseIcon, BeakerIcon, LiverIcon, LungsIcon, DumbbellIcon, BrainIcon, ShieldIcon, UsersIcon, HomeIcon, CloseIcon, SettingsIcon, CameraIcon, ScalpelIcon, SaveIcon, CheckSquareIcon, SquareIcon, ChevronDownIcon, CheckIcon, ChevronLeftIcon } from './components/icons';
 
 // Lazy load components pesados
@@ -3194,35 +3194,62 @@ const EditExamModal: React.FC<{ exam: Exam; patientId: number | string; onClose:
 const AddMedicationModal: React.FC<{ patientId: number | string; onClose: () => void; }> = ({ patientId, onClose }) => {
     const { addMedicationToPatient } = useContext(PatientsContext)!;
     const { showNotification } = useContext(NotificationContext)!;
-    const [name, setName] = useState('');
+    const [selectedMedication, setSelectedMedication] = useState('');
+    const [customMedication, setCustomMedication] = useState('');
     const [dosageValue, setDosageValue] = useState('');
     const [dosageUnit, setDosageUnit] = useState(MEDICATION_DOSAGE_UNITS[0]);
     const [startDate, setStartDate] = useState(getTodayDateString());
 
+    const isOther = selectedMedication === 'Outro';
+    const finalMedicationName = isOther ? customMedication : selectedMedication;
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!name || !dosageValue || !dosageUnit || !startDate) return;
+        if (!finalMedicationName || !dosageValue || !dosageUnit || !startDate) return;
         const dosage = `${dosageValue} ${dosageUnit}`;
-        addMedicationToPatient(patientId, { name, dosage, startDate });
+        addMedicationToPatient(patientId, { name: finalMedicationName, dosage, startDate });
         showNotification({ message: 'Medicação cadastrada com sucesso!', type: 'success' });
         onClose();
     };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4 max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Cadastrar Medicação</h2>
                     <button onClick={onClose}><CloseIcon className="w-6 h-6 text-slate-500 dark:text-slate-400" /></button>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Medicamento</label>
-                        <input type="text" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Medicamento</label>
+                        <select 
+                            value={selectedMedication} 
+                            onChange={e => setSelectedMedication(e.target.value)} 
+                            className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+                        >
+                            <option value="">Selecione um medicamento...</option>
+                            {MEDICATION_LIST.map(med => (
+                                <option key={med} value={med}>{med}</option>
+                            ))}
+                        </select>
                     </div>
+                    
+                    {isOther && (
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Digite o medicamento</label>
+                            <input 
+                                type="text" 
+                                value={customMedication} 
+                                onChange={e => setCustomMedication(e.target.value)} 
+                                placeholder="Digite o nome do medicamento..."
+                                className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" 
+                            />
+                        </div>
+                    )}
+                    
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Dosagem</label>
-                        <div className="flex items-center mt-1 gap-2">
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Dosagem</label>
+                        <div className="flex items-center gap-2">
                             <input
                                 type="text"
                                 value={dosageValue}
@@ -3240,8 +3267,8 @@ const AddMedicationModal: React.FC<{ patientId: number | string; onClose: () => 
                         </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Início</label>
-                        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data de Início</label>
+                        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Cadastrar</button>
                 </form>
@@ -3253,7 +3280,11 @@ const AddMedicationModal: React.FC<{ patientId: number | string; onClose: () => 
 const EditMedicationModal: React.FC<{ medication: Medication; patientId: number | string; onClose: () => void; }> = ({ medication, patientId, onClose }) => {
     const { updateMedicationInPatient } = useContext(PatientsContext)!;
     const { showNotification } = useContext(NotificationContext)!;
-    const [name, setName] = useState(medication.name);
+    
+    // Check if medication is in the list or is custom
+    const isInList = MEDICATION_LIST.includes(medication.name);
+    const [selectedMedication, setSelectedMedication] = useState(isInList ? medication.name : 'Outro');
+    const [customMedication, setCustomMedication] = useState(isInList ? '' : medication.name);
     const [startDate, setStartDate] = useState(medication.startDate);
     const [endDate, setEndDate] = useState(medication.endDate || '');
 
@@ -3270,30 +3301,56 @@ const EditMedicationModal: React.FC<{ medication: Medication; patientId: number 
     const [dosageValue, setDosageValue] = useState(initialValue);
     const [dosageUnit, setDosageUnit] = useState(initialUnit);
 
+    const isOther = selectedMedication === 'Outro';
+    const finalMedicationName = isOther ? customMedication : selectedMedication;
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!name || !dosageValue || !dosageUnit || !startDate) return;
+        if (!finalMedicationName || !dosageValue || !dosageUnit || !startDate) return;
         const dosage = `${dosageValue} ${dosageUnit}`;
-        updateMedicationInPatient(patientId, { ...medication, name, dosage, startDate, endDate: endDate || undefined });
+        updateMedicationInPatient(patientId, { ...medication, name: finalMedicationName, dosage, startDate, endDate: endDate || undefined });
         showNotification({ message: 'Medicação atualizada com sucesso!', type: 'success' });
         onClose();
     };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4 max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Editar Medicação</h2>
                     <button onClick={onClose}><CloseIcon className="w-6 h-6 text-slate-500 dark:text-slate-400" /></button>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Medicamento</label>
-                        <input type="text" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Medicamento</label>
+                        <select 
+                            value={selectedMedication} 
+                            onChange={e => setSelectedMedication(e.target.value)} 
+                            className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+                        >
+                            <option value="">Selecione um medicamento...</option>
+                            {MEDICATION_LIST.map(med => (
+                                <option key={med} value={med}>{med}</option>
+                            ))}
+                        </select>
                     </div>
+                    
+                    {isOther && (
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Digite o medicamento</label>
+                            <input 
+                                type="text" 
+                                value={customMedication} 
+                                onChange={e => setCustomMedication(e.target.value)} 
+                                placeholder="Digite o nome do medicamento..."
+                                className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" 
+                            />
+                        </div>
+                    )}
+                    
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Dosagem</label>
-                        <div className="flex items-center mt-1 gap-2">
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Dosagem</label>
+                        <div className="flex items-center gap-2">
                             <input
                                 type="text"
                                 value={dosageValue}
@@ -3312,12 +3369,12 @@ const EditMedicationModal: React.FC<{ medication: Medication; patientId: number 
                         </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Início</label>
-                        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data de Início</label>
+                        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Fim <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
-                        <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data de Fim <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
+                        <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
                     </div>
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar Alterações</button>
                 </form>
