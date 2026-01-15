@@ -19,6 +19,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
     const [dosageValue, setDosageValue] = useState('');
     const [dosageUnit, setDosageUnit] = useState(MEDICATION_DOSAGE_UNITS[0]);
     const [startDate, setStartDate] = useState(getTodayDateString());
+    const [observacao, setObservacao] = useState('');
 
     const isOther = selectedMedication === 'Outro';
     const finalMedicationName = isOther ? customMedication : selectedMedication;
@@ -27,7 +28,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
         e.preventDefault();
         if (!finalMedicationName || !dosageValue || !dosageUnit || !startDate) return;
         const dosage = `${dosageValue} ${dosageUnit}`;
-        addMedicationToPatient(patientId, { name: finalMedicationName, dosage, startDate });
+        addMedicationToPatient(patientId, { name: finalMedicationName, dosage, startDate, observacao });
         showNotification({ message: 'Medicação cadastrada com sucesso!', type: 'success' });
         onClose();
     };
@@ -89,6 +90,16 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data de Início</label>
                         <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Observação <span className="text-slate-400 font-normal">(opcional)</span></label>
+                        <textarea 
+                            value={observacao} 
+                            onChange={e => setObservacao(e.target.value)} 
+                            placeholder="Digite observações sobre a medicação..."
+                            rows={3}
+                            className="block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 resize-none"
+                        />
                     </div>
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Cadastrar</button>
                 </form>

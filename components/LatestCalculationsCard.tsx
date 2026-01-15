@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { ChevronRightIcon, DropletIcon } from './icons';
+import { DropletIcon } from './icons';
 
 interface LatestCalculationsCardProps {
   patientId: string | number;
@@ -23,7 +23,6 @@ interface BalanceRecord {
 }
 
 const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patientId, refreshTrigger }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
   const [latestDiuresis, setLatestDiuresis] = useState<DiuresisRecord | null>(null);
   const [latestBalance, setLatestBalance] = useState<BalanceRecord | null>(null);
   const [loading, setLoading] = useState(false);
@@ -101,45 +100,35 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
     });
   };
 
-  const hasBothCalculations = latestDiuresis && latestBalance;
-
   return (
     <div className="w-full bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 mb-4">
-      {/* Header */}
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
-      >
+      {/* Header - Sempre visível, sem botão de colapsar */}
+      <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
         <div className="flex items-center gap-2">
           <DropletIcon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Últimos Cálculos</h3>
         </div>
-        <ChevronRightIcon
-          className={`w-5 h-5 text-slate-400 transition transform ${
-            isExpanded ? 'rotate-90' : ''
-          }`}
-        />
-      </button>
+      </div>
 
-      {/* Content */}
-      {isExpanded && (
-        <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-700">
-          {loading ? (
-            <div className="text-center py-4 text-slate-600 dark:text-slate-400">
-              Carregando cálculos...
-            </div>
-          ) : !latestDiuresis && !latestBalance ? (
-            <div className="text-center py-4 text-slate-600 dark:text-slate-400">
-              Nenhum cálculo registrado
-            </div>
-          ) : (
-            <div className={`space-y-4 ${hasBothCalculations ? 'grid grid-cols-2 gap-4 space-y-0' : ''}`}>
-              {/* Latest Diuresis */}
-              {latestDiuresis && (
-                <div className="p-4 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800">
-                  <div className="text-xs font-medium text-teal-700 dark:text-teal-400 mb-2">
-                    DIURESE
-                  </div>
+      {/* Content - Sempre visível */}
+      <div className="px-4 py-4">
+        {loading ? (
+          <div className="text-center py-4 text-slate-600 dark:text-slate-400">
+            Carregando cálculos...
+          </div>
+        ) : !latestDiuresis && !latestBalance ? (
+          <div className="text-center py-4 text-slate-600 dark:text-slate-400">
+            Nenhum cálculo registrado ainda
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Diurese - sempre mostra, mesmo sem dados */}
+            <div className="p-4 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800">
+              <div className="text-xs font-medium text-teal-700 dark:text-teal-400 mb-2">
+                DIURESE
+              </div>
+              {latestDiuresis ? (
+                <>
                   <div className="text-2xl font-bold text-teal-600 dark:text-teal-400 mb-2">
                     {((latestDiuresis.volume / latestDiuresis.horas) / latestDiuresis.peso).toFixed(2)}
                   </div>
@@ -152,23 +141,33 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
                   <div className="text-xs font-medium text-slate-500 dark:text-slate-500">
                     {formatDate(latestDiuresis.created_at)}
                   </div>
+                </>
+              ) : (
+                <div className="text-sm text-slate-500 dark:text-slate-400 py-2">
+                  Nenhum registro
                 </div>
               )}
+            </div>
 
-              {/* Latest Balance */}
-              {latestBalance && (
-                <div className={`p-4 rounded-lg border ${
-                  latestBalance.volume > 0
-                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-                    : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-                }`}>
-                  <div className={`text-xs font-medium mb-2 ${
-                    latestBalance.volume > 0
-                      ? 'text-blue-700 dark:text-blue-400'
-                      : 'text-red-700 dark:text-red-400'
-                  }`}>
-                    BALANÇO HÍDRICO
-                  </div>
+            {/* Balanço Hídrico - sempre mostra, mesmo sem dados */}
+            <div className={`p-4 rounded-lg border ${
+              latestBalance && latestBalance.volume > 0
+                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                : latestBalance && latestBalance.volume < 0
+                ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                : 'bg-slate-50 dark:bg-slate-900/20 border-slate-200 dark:border-slate-700'
+            }`}>
+              <div className={`text-xs font-medium mb-2 ${
+                latestBalance && latestBalance.volume > 0
+                  ? 'text-blue-700 dark:text-blue-400'
+                  : latestBalance && latestBalance.volume < 0
+                  ? 'text-red-700 dark:text-red-400'
+                  : 'text-slate-700 dark:text-slate-400'
+              }`}>
+                BALANÇO HÍDRICO
+              </div>
+              {latestBalance ? (
+                <>
                   <div className={`text-2xl font-bold mb-2 ${
                     latestBalance.volume > 0
                       ? 'text-blue-600 dark:text-blue-400'
@@ -189,12 +188,16 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
                   <div className="text-xs font-medium text-slate-500 dark:text-slate-500">
                     {formatDate(latestBalance.created_at)}
                   </div>
+                </>
+              ) : (
+                <div className="text-sm text-slate-500 dark:text-slate-400 py-2">
+                  Nenhum registro
                 </div>
               )}
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -55,6 +55,7 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId, onCalculationSav
         peso: w,
         volume: v,
         horas: h,
+        data_registro: new Date().toISOString(),
       };
 
       await supabase.from('diurese').insert(diuresisRecord);

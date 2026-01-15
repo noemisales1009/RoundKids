@@ -8,6 +8,7 @@ export interface Device {
   startDate: string; // "YYYY-MM-DD"
   removalDate?: string; // "YYYY-MM-DD"
   isArchived?: boolean;
+  observacao?: string;
 }
 
 export interface Exam {
@@ -26,6 +27,7 @@ export interface Medication {
   startDate: string; // "YYYY-MM-DD"
   endDate?: string; // "YYYY-MM-DD"
   isArchived?: boolean;
+  observacao?: string;
 }
 
 export interface SurgicalProcedure {

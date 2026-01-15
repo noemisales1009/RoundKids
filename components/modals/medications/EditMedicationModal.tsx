@@ -14,6 +14,7 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
     const [customMedication, setCustomMedication] = useState(isInList ? '' : medication.name);
     const [startDate, setStartDate] = useState(medication.startDate);
     const [endDate, setEndDate] = useState(medication.endDate || '');
+    const [observacao, setObservacao] = useState(medication.observacao || '');
 
     const [initialValue, initialUnit] = useMemo(() => {
         const dosageString = medication.dosage || '';
@@ -35,7 +36,7 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
         e.preventDefault();
         if (!finalMedicationName || !dosageValue || !dosageUnit || !startDate) return;
         const dosage = `${dosageValue} ${dosageUnit}`;
-        updateMedicationInPatient(patientId, { ...medication, name: finalMedicationName, dosage, startDate, endDate: endDate || undefined });
+        updateMedicationInPatient(patientId, { ...medication, name: finalMedicationName, dosage, startDate, endDate: endDate || undefined, observacao });
         showNotification({ message: 'Medicação atualizada com sucesso!', type: 'success' });
         onClose();
     };
@@ -102,6 +103,16 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data de Fim <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
                         <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Observação <span className="text-slate-400 font-normal">(opcional)</span></label>
+                        <textarea 
+                            value={observacao} 
+                            onChange={e => setObservacao(e.target.value)} 
+                            placeholder="Digite observações sobre a medicação..."
+                            rows={3}
+                            className="block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 resize-none"
+                        />
                     </div>
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar Alterações</button>
                 </form>

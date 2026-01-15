@@ -578,3 +578,12 @@ export const calculateDaysSinceDate = (startDateString: string | undefined | nul
         return -1;
     }
 };
+
+// Helper function to get today's date as string (YYYY-MM-DD)
+export const getTodayDateString = (): string => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};

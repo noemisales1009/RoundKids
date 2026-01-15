@@ -18,13 +18,14 @@ export const AddDeviceModal: React.FC<{ patientId: number | string; onClose: () 
     const [customType, setCustomType] = useState('');
     const [location, setLocation] = useState('');
     const [startDate, setStartDate] = useState(getTodayDateString());
+    const [observacao, setObservacao] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const finalType = type === 'Outros' ? customType : type;
         
         if (!finalType || !location || !startDate) return;
-        addDeviceToPatient(patientId, { name: finalType, location, startDate });
+        addDeviceToPatient(patientId, { name: finalType, location, startDate, observacao });
         showNotification({ message: 'Dispositivo cadastrado com sucesso!', type: 'success' });
         onClose();
     };
@@ -65,6 +66,16 @@ export const AddDeviceModal: React.FC<{ patientId: number | string; onClose: () 
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Dia da inserção</label>
                         <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Observação <span className="text-slate-400 font-normal">(opcional)</span></label>
+                        <textarea 
+                            value={observacao} 
+                            onChange={e => setObservacao(e.target.value)} 
+                            placeholder="Digite observações sobre o dispositivo..."
+                            rows={3}
+                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 resize-none"
+                        />
                     </div>
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Cadastrar</button>
                 </form>

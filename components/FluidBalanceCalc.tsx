@@ -54,6 +54,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId, onCalcul
         patient_id: patientId,
         peso: w,
         volume: signed,
+        data_registro: new Date().toISOString(),
       };
 
       await supabase.from('balanco_hidrico').insert(balanceRecord);

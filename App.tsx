@@ -693,10 +693,16 @@ const PatientHistoryScreen: React.FC = () => {
         const fetchDiagnostics = async () => {
             if (!patientId) return;
             try {
+                console.log('🔍 Buscando diagnósticos para patientId:', patientId);
+                console.log('🔍 Patient encontrado:', patient);
+                
                 const { data, error } = await supabase
-                    .from('patient_diagnostics')
+                    .from('paciente_diagnosticos')
                     .select('*')
                     .eq('patient_id', patientId);
+                
+                console.log('📋 Diagnósticos data:', data);
+                console.log('❌ Diagnósticos error:', error);
                 
                 if (!error && data) {
                     setDiagnostics(data);
@@ -720,6 +726,9 @@ const PatientHistoryScreen: React.FC = () => {
                     .eq('patient_id', patientId)
                     .eq('status', 'resolvido');
                 
+                console.log('✅ Diagnósticos resolvidos data:', data);
+                console.log('❌ Diagnósticos resolvidos error:', error);
+                
                 if (!error && data) {
                     setResolvedDiagnostics(data);
                 }
@@ -737,9 +746,13 @@ const PatientHistoryScreen: React.FC = () => {
             if (!patientId) return;
             try {
                 const { data, error } = await supabase
-                    .from('diurese_historico')
+                    .from('diurese')
                     .select('*')
-                    .eq('patient_id', patientId);
+                    .eq('patient_id', patientId)
+                    .order('data_registro', { ascending: false });
+                
+                console.log('📊 Diurese data:', data);
+                console.log('❌ Diurese error:', error);
                 
                 if (!error && data) {
                     setDiuresisData(data);
@@ -758,9 +771,13 @@ const PatientHistoryScreen: React.FC = () => {
             if (!patientId) return;
             try {
                 const { data, error } = await supabase
-                    .from('balanco_hidrico_historico')
+                    .from('balanco_hidrico')
                     .select('*')
-                    .eq('patient_id', patientId);
+                    .eq('patient_id', patientId)
+                    .order('data_registro', { ascending: false });
+                
+                console.log('💧 Balanço data:', data);
+                console.log('❌ Balanço error:', error);
                 
                 if (!error && data) {
                     setBalanceData(data);
@@ -959,6 +976,7 @@ const PatientHistoryScreen: React.FC = () => {
         });
 
         // Adicionar diagnósticos
+        console.log('🔵 Processando diagnostics no history:', diagnostics);
         diagnostics.forEach(diagnostic => {
             events.push({
                 timestamp: diagnostic.created_at || new Date().toISOString(),
@@ -978,26 +996,32 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
-        // Adicionar diurese
-        (patient.diurese || []).forEach(diuresis => {
+        // Adicionar diurese dos dados do Supabase
+        console.log('🔵 Processando diuresisData no history:', diuresisData);
+        diuresisData.forEach(diuresis => {
             const result = ((diuresis.volume / diuresis.horas) / diuresis.peso).toFixed(2);
-            events.push({
+            const eventData = {
                 timestamp: diuresis.data_registro || new Date().toISOString(),
                 icon: DropletIcon,
                 description: `[DIURESE] Diurese: ${result} mL/kg/h (Peso: ${diuresis.peso}kg | Volume: ${diuresis.volume}mL | Período: ${diuresis.horas}h).`,
                 hasTime: true,
-            });
+            };
+            console.log('➕ Adicionando evento de diurese:', eventData);
+            events.push(eventData);
         });
 
-        // Adicionar balanço hídrico
-        (patient.balanco_hidrico || []).forEach(balance => {
+        // Adicionar balanço hídrico dos dados do Supabase
+        console.log('🔵 Processando balanceData no history:', balanceData);
+        balanceData.forEach(balance => {
             const result = (balance.volume / (balance.peso * 10)).toFixed(2);
-            events.push({
+            const eventData = {
                 timestamp: balance.data_registro || new Date().toISOString(),
                 icon: DropletIcon,
                 description: `[BALANÇO] Balanço Hídrico: ${balance.volume > 0 ? '+' : ''}${result}% (Peso: ${balance.peso}kg | Volume: ${balance.volume > 0 ? '+' : ''}${balance.volume}mL).`,
                 hasTime: true,
-            });
+            };
+            console.log('➕ Adicionando evento de balanço:', eventData);
+            events.push(eventData);
         });
 
         // Adicionar dietas
@@ -1037,7 +1061,7 @@ const PatientHistoryScreen: React.FC = () => {
             const desc = alert.alertaclinico || alert.descricao_limpa || alert.description || 'Sem descrição';
             const resp = alert.responsavel || alert.responsible || 'Não informado';
             const prazoLimite = alert.prazo_limite_formatado || alert.prazo_limite_formatado || 'N/A';
-            const tempo = alert.prazo_formatado || alert.prazo_formatado || 'N/A';
+            const prazoDuracao = alert.prazo_formatado || alert.prazo_formatado || 'N/A';
             const dataHora = alert.hora_criacao_formatado || alert.hora_criacao_formatado || 'N/A';
             const criadoPor = alert.created_by_name || 'Não informado';
             
@@ -1045,12 +1069,12 @@ const PatientHistoryScreen: React.FC = () => {
             const liveStatus = alert.live_status || 'Não definido';
             
             // Usar SEMPRE a data de criação (created_at), não a data de vencimento
-            const creationDate = alert.created_at || alert.hora_criacao || new Date().toISOString();
+            const creationDateISO = alert.created_at || alert.hora_criacao || new Date().toISOString();
             
             events.push({
-                timestamp: creationDate,
+                timestamp: creationDateISO,
                 icon: BellIcon,
-                description: `[ALERTA] 🔔 ${desc}\n👤 Responsável: ${resp}\n📅 Prazo: ${prazoLimite}\n⏱️ Tempo: ${tempo}\n🕐 Data/Hora: ${dataHora}\n👨‍⚕️ Criado por: ${criadoPor}\n📊 Status: ${liveStatus}`,
+                description: `[ALERTA] 🔔 ${desc}\n👤 Responsável: ${resp}\n📅 Prazo Limite: ${prazoLimite}\n⏳ Prazo: ${prazoDuracao}\n🕐 Criado em: ${dataHora}\n👨‍⚕️ Criado por: ${criadoPor}\n📊 Status: ${liveStatus}`,
                 hasTime: true,
             });
         });
@@ -1087,10 +1111,13 @@ const PatientHistoryScreen: React.FC = () => {
         // Função auxiliar para verificar se a data está dentro do filtro
         const isDateInRange = (date: string | undefined) => {
             if (!date) return false;
-            const eventDate = new Date(date).getTime();
-            const startDate = dataInicio ? new Date(dataInicio).getTime() : 0;
-            const endDate = dataFinal ? new Date(dataFinal).getTime() + 86400000 : Infinity;
-            return eventDate >= startDate && eventDate <= endDate;
+            // Extrair apenas a parte da data (YYYY-MM-DD) ignorando hora/timezone
+            const eventDateStr = date.split('T')[0];
+            // Comparação de strings de data (YYYY-MM-DD format é comparável lexicograficamente)
+            const passesFilter = 
+                (!dataInicio || eventDateStr >= dataInicio) && 
+                (!dataFinal || eventDateStr <= dataFinal);
+            return passesFilter;
         };
 
         // Função auxiliar para verificar se a categoria está selecionada
@@ -1487,11 +1514,15 @@ const PatientHistoryScreen: React.FC = () => {
         const filtered: Record<string, TimelineEvent[]> = {};
         
         Object.entries(patientHistory).forEach(([date, eventsOnDate]) => {
-            const eventDate = new Date(date).getTime();
-            const startDate = dataInicio ? new Date(dataInicio).getTime() : 0;
-            const endDate = dataFinal ? new Date(dataFinal).getTime() + 86400000 : Infinity;
+            // Extrair apenas a parte da data (YYYY-MM-DD) ignorando hora/timezone
+            const eventDateStr = date.split('T')[0];
             
-            if (eventDate >= startDate && eventDate <= endDate) {
+            // Comparação de strings de data (YYYY-MM-DD format é comparável lexicograficamente)
+            const passesDateFilter = 
+                (!dataInicio || eventDateStr >= dataInicio) && 
+                (!dataFinal || eventDateStr <= dataFinal);
+            
+            if (passesDateFilter) {
                 let filteredEvents = eventsOnDate as TimelineEvent[];
                 
                 if (selectedCategories.size > 0) {
@@ -1878,6 +1909,11 @@ const PatientDetailScreen: React.FC = () => {
                                                         ) : (
                                                             <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(device.startDate)}</p>
                                                         )}
+                                                        {device.observacao && (
+                                                            <p className="text-sm text-slate-600 dark:text-slate-400 italic mt-1.5 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded">
+                                                                💬 {device.observacao}
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0 ml-2">
@@ -1941,6 +1977,11 @@ const PatientDetailScreen: React.FC = () => {
                                                             <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Fim: {formatDateToBRL(medication.endDate)}</p>
                                                         ) : (
                                                             <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(medication.startDate)}</p>
+                                                        )}
+                                                        {medication.observacao && (
+                                                            <p className="text-sm text-slate-600 dark:text-slate-400 italic mt-1.5 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded">
+                                                                💬 {medication.observacao}
+                                                            </p>
                                                         )}
                                                     </div>
                                                 </div>
@@ -3056,6 +3097,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 startDate: d.data_insercao,
                 removalDate: d.data_remocao,
                 isArchived: d.is_archived,
+                observacao: d.observacao,
             });
             return acc;
         }, {});
@@ -3080,7 +3122,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 dosage: `${m.dosagem_valor} ${m.unidade_medida}`,
                 startDate: m.data_inicio,
                 endDate: m.data_fim,
-                isArchived: m.is_archived
+                isArchived: m.is_archived,
+                observacao: m.observacao
             });
             return acc;
         }, {});
@@ -3237,7 +3280,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             paciente_id: patientId,
             tipo_dispositivo: device.name,
             localizacao: device.location,
-            data_insercao: device.startDate
+            data_insercao: device.startDate,
+            observacao: device.observacao || null
         }]);
         if (!error) fetchPatients();
     };
@@ -3262,7 +3306,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             nome_medicacao: medication.name,
             dosagem_valor: valor,
             unidade_medida: unidade,
-            data_inicio: medication.startDate
+            data_inicio: medication.startDate,
+            observacao: medication.observacao || null
         }]);
         if (!error) fetchPatients();
     };
@@ -3344,7 +3389,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 tipo_dispositivo: deviceData.name,
                 localizacao: deviceData.location,
                 data_insercao: deviceData.startDate,
-                data_remocao: deviceData.removalDate || null
+                data_remocao: deviceData.removalDate || null,
+                observacao: deviceData.observacao || null
             })
             .eq('id', deviceData.id);
         if (!error) fetchPatients();
@@ -3361,7 +3407,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 dosagem_valor: valor,
                 unidade_medida: unidade,
                 data_inicio: medicationData.startDate,
-                data_fim: medicationData.endDate || null
+                data_fim: medicationData.endDate || null,
+                observacao: medicationData.observacao || null
             })
             .eq('id', medicationData.id);
         if (!error) fetchPatients();
