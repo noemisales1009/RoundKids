@@ -3899,38 +3899,37 @@ const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
 const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User>(INITIAL_USER);
+    const [loading, setLoading] = useState(true);
 
     const loadUser = async () => {
-        // 1. Check for Supabase Auth Session
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-            const { data, error } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
+        setLoading(true);
+        try {
+            // 1. Check for Supabase Auth Session
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
 
-            if (data) {
-                // Update state from DB
-                const dbUser = {
-                    id: data.id, // Store user ID
-                    name: data.name || '',
-                    title: data.role || '', // Mapping DB 'role' to App 'title'
-                    avatarUrl: data.foto || '', // Mapping DB 'foto' to App 'avatarUrl'
-                    sector: data.sector || '', // Mapping DB 'sector'
-                    access_level: (data.access_level || 'geral') as 'adm' | 'geral', // Mapping DB 'access_level'
-                };
-                setUser(dbUser);
-                // ✅ SEGURANÇA: Não armazenar dados sensíveis em localStorage
-                // Supabase gerencia a sessão em cookies HttpOnly automaticamente
-            } else if (error) {
-                console.error('Erro ao carregar usuário');
-                // Clear localStorage on error to prevent stale data
-                localStorage.removeItem('round_juju_user');
+                if (data) {
+                    // Update state from DB
+                    const dbUser = {
+                        id: data.id, // Store user ID
+                        name: data.name || '',
+                        title: data.role || '', // Mapping DB 'role' to App 'title'
+                        avatarUrl: data.foto || '', // Mapping DB 'foto' to App 'avatarUrl'
+                        sector: data.sector || '', // Mapping DB 'sector'
+                        access_level: (data.access_level || 'geral') as 'adm' | 'geral', // Mapping DB 'access_level'
+                    };
+                    setUser(dbUser);
+                } else if (error) {
+                    console.error('Erro ao carregar usuário:', error);
+                }
             }
-        } else {
-            // No session available - user is logged out
-            // Don't load stale user data from localStorage
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -3959,6 +3958,17 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             });
         }
     };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-950">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-500 mx-auto mb-4"></div>
+                    <p className="text-slate-600 dark:text-slate-400">Carregando perfil...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <UserContext.Provider value={{ user, updateUser, loadUser }}>
