@@ -27,6 +27,12 @@ const TrashIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
+const DocumentTextIcon = ({ className }: { className?: string }) => (
+    <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+    </svg>
+);
+
 interface Alert {
     id: string;
     description: string;
@@ -39,12 +45,17 @@ interface Alert {
     responsible?: string;
     deadline?: string;
     source?: 'tasks' | 'alertas'; // Para diferenciar a origem
+    justificativa?: string | null;
+    justification?: string | null;
 }
 
 export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) => {
     const [alertas, setAlertas] = useState<Alert[]>([]);
     const [isExpanded, setIsExpanded] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [showJustificationModal, setShowJustificationModal] = useState(false);
+    const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
+    const [justificationText, setJustificationText] = useState('');
     const { showNotification } = useContext(NotificationContext)!;
 
     // Buscar alertas do paciente (de ambas as views)
@@ -87,7 +98,8 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                                 time_label: task.prazo_formatado,
                                 responsible: task.responsavel || task.responsible,
                                 deadline: task.deadline,
-                                source: 'tasks'
+                                source: 'tasks',
+                                justification: task.justification
                             });
                         }
                     });
@@ -109,7 +121,8 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                                 time_label: alert.prazo_formatado,
                                 responsible: alert.responsavel,
                                 deadline: alert.deadline,
-                                source: 'alertas'
+                                source: 'alertas',
+                                justificativa: alert.justificativa
                             });
                         }
                     });
@@ -254,7 +267,50 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
         }
     };
 
+    const handleOpenJustificationModal = (alerta: Alert) => {
+        setSelectedAlert(alerta);
+        setJustificationText(alerta.source === 'alertas' ? (alerta.justificativa || '') : (alerta.justification || ''));
+        setShowJustificationModal(true);
+    };
 
+    const handleSaveJustification = async () => {
+        if (!selectedAlert) return;
+
+        try {
+            if (selectedAlert.source === 'alertas') {
+                // Atualizar justificativa em alertas_paciente
+                const { error } = await supabase
+                    .from('alertas_paciente')
+                    .update({ justificativa: justificationText })
+                    .eq('id', selectedAlert.id);
+
+                if (error) throw error;
+            } else {
+                // Atualizar justificativa em tasks
+                const { error } = await supabase
+                    .from('tasks')
+                    .update({ justification: justificationText })
+                    .eq('id', selectedAlert.id);
+
+                if (error) throw error;
+            }
+
+            // Atualizar estado local
+            setAlertas(alertas.map(a => 
+                a.id === selectedAlert.id 
+                    ? { ...a, ...(a.source === 'alertas' ? { justificativa: justificationText } : { justification: justificationText }) }
+                    : a
+            ));
+
+            showNotification({ message: 'Justificativa salva com sucesso!', type: 'success' });
+            setShowJustificationModal(false);
+            setSelectedAlert(null);
+            setJustificationText('');
+        } catch (err) {
+            console.error('Erro ao salvar justificativa:', err);
+            showNotification({ message: 'Erro ao salvar justificativa', type: 'error' });
+        }
+    };
 
     const getPriorityColor = (priority: string | null) => {
         switch (priority?.toLowerCase()) {
@@ -348,8 +404,22 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                                                     <p>⏱️ {alerta.time_label}</p>
                                                 )}
                                             </div>
+                                            {((alerta.source === 'alertas' && alerta.justificativa) || (alerta.source === 'tasks' && alerta.justification)) && (
+                                                <div className="mt-2 p-2 bg-white/50 dark:bg-slate-800/50 rounded">
+                                                    <p className="text-xs font-semibold">📝 Justificativa:</p>
+                                                    <p className="text-xs">{alerta.source === 'alertas' ? alerta.justificativa : alerta.justification}</p>
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="flex gap-2 shrink-0">
+                                        <div className="flex flex-col gap-2 shrink-0">
+                                            <button
+                                                onClick={() => handleOpenJustificationModal(alerta)}
+                                                className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition"
+                                                title="Adicionar/Editar justificativa"
+                                            >
+                                                <DocumentTextIcon className="w-4 h-4" />
+                                                {((alerta.source === 'alertas' && alerta.justificativa) || (alerta.source === 'tasks' && alerta.justification)) ? 'Editar' : 'Justificar'}
+                                            </button>
                                             <button
                                                 onClick={() => handleConcluir(alerta.id, alerta.source)}
                                                 className="flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded transition"
@@ -372,6 +442,54 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                             ))}
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Modal de Justificativa */}
+            {showJustificationModal && selectedAlert && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-lg w-full p-6">
+                        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-4">
+                            {((selectedAlert.source === 'alertas' && selectedAlert.justificativa) || (selectedAlert.source === 'tasks' && selectedAlert.justification)) ? 'Editar Justificativa' : 'Adicionar Justificativa'}
+                        </h3>
+                        
+                        <div className="mb-4 p-3 bg-slate-100 dark:bg-slate-700 rounded">
+                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Alerta:</p>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">{selectedAlert.description}</p>
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                Justificativa:
+                            </label>
+                            <textarea
+                                value={justificationText}
+                                onChange={(e) => setJustificationText(e.target.value)}
+                                className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200"
+                                rows={4}
+                                placeholder="Digite a justificativa para este alerta..."
+                            />
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleSaveJustification}
+                                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition"
+                            >
+                                Salvar
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowJustificationModal(false);
+                                    setSelectedAlert(null);
+                                    setJustificationText('');
+                                }}
+                                className="flex-1 px-4 py-2 bg-slate-300 hover:bg-slate-400 dark:bg-slate-600 dark:hover:bg-slate-500 text-slate-800 dark:text-slate-200 font-semibold rounded-lg transition"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

@@ -91,6 +91,8 @@ export interface Patient {
   peso?: number;
   status?: string; // "estavel", "instavel", "em_risco"
   localTransferencia?: string; // "Alta", "Transferência Interna", "Transferência Externa", "Óbito"
+  comorbidade?: string; // Comorbidades separadas por pipe (|)
+  admissionDate?: string; // Data de internação
   devices: Device[];
   exams: Exam[];
   medications: Medication[];

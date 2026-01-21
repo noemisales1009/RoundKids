@@ -547,6 +547,14 @@ const PatientListScreen: React.FC = () => {
     useHeader('Leitos');
     const { patients, questions, checklistAnswers } = useContext(PatientsContext)!;
     const [searchTerm, setSearchTerm] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Detectar quando os pacientes terminaram de carregar
+    useEffect(() => {
+        if (patients.length > 0) {
+            setIsLoading(false);
+        }
+    }, [patients]);
 
     const filteredPatients = useMemo(() => {
         return patients
@@ -587,8 +595,20 @@ const PatientListScreen: React.FC = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200"
             />
-            <div className="space-y-3">
-                {filteredPatients.map(patient => {
+            
+            {/* Indicador de carregamento */}
+            {isLoading ? (
+                <div className="text-center py-8">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-blue-500"></div>
+                    <p className="mt-2 text-slate-600 dark:text-slate-400">Carregando leitos...</p>
+                </div>
+            ) : filteredPatients.length === 0 ? (
+                <div className="text-center py-8">
+                    <p className="text-slate-600 dark:text-slate-400">Nenhum paciente encontrado</p>
+                </div>
+            ) : (
+                <div className="space-y-3">
+                    {filteredPatients.map(patient => {
                     const progress = calculateProgress(patient.id);
                     const statusColors = {
                         'estavel': { border: 'border-green-500', bg: 'bg-green-50 dark:bg-green-900/20', text: 'text-green-700 dark:text-green-400' },
@@ -626,7 +646,8 @@ const PatientListScreen: React.FC = () => {
                         </Link>
                     );
                 })}
-            </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -874,7 +895,8 @@ const PatientHistoryScreen: React.FC = () => {
             try {
                 const { data, error } = await supabase
                     .from('alert_completions_with_user')
-                    .select('*');
+                    .select('*')
+                    .eq('patient_id', patientId);
                 
                 if (!error && data) {
                     setAlertCompletions(data);
@@ -910,6 +932,19 @@ const PatientHistoryScreen: React.FC = () => {
         if (!patient) return {};
 
         const events: TimelineEvent[] = [];
+
+        // Adicionar comorbidades
+        if (patient.comorbidade) {
+            const comorbidades = patient.comorbidade.split('|').filter((c: string) => c.trim());
+            comorbidades.forEach(comorbidade => {
+                events.push({
+                    timestamp: patient.admissionDate || new Date().toISOString(),
+                    icon: HeartPulseIcon,
+                    description: `[COMORBIDADE] Comorbidade: ${comorbidade}`,
+                    hasTime: false,
+                });
+            });
+        }
 
         patient.devices.forEach(device => {
             events.push({
@@ -1082,10 +1117,11 @@ const PatientHistoryScreen: React.FC = () => {
         // Adicionar completações de alertas
         alertCompletions.forEach(completion => {
             const sourceLabel = completion.source === 'tasks' ? 'Task' : 'Alerta Clínico';
+            const alertDesc = completion.alert_description || completion.description || `ID: ${completion.alert_id}`;
             events.push({
                 timestamp: completion.completed_at || completion.created_at || new Date().toISOString(),
                 icon: CheckCircleIcon,
-                description: `[COMPLETACAO_ALERTA] ✓ Alerta Concluído (${sourceLabel}) - ID: ${completion.alert_id}\n👤 Concluído por: ${completion.completed_by_name || 'Não informado'}\n📅 Concluído em: ${completion.completed_at ? new Date(completion.completed_at).toLocaleString('pt-BR') : 'N/A'}`,
+                description: `[COMPLETACAO_ALERTA] ✓ Alerta Concluído (${sourceLabel})\n📋 ${alertDesc}\n👤 Concluído por: ${completion.completed_by_name || 'Não informado'}\n📅 Concluído em: ${completion.completed_at ? new Date(completion.completed_at).toLocaleString('pt-BR') : 'N/A'}`,
                 hasTime: true,
             });
         });
@@ -1499,7 +1535,8 @@ const PatientHistoryScreen: React.FC = () => {
             '[BALANÇO]': 'Balanço Hídrico',
             '[ALERTA]': 'Alertas',
             '[COMORBIDADE]': 'Comorbidades',
-            '[COMPLETACAO_ALERTA]': 'Completações'
+            '[COMPLETACAO_ALERTA]': 'Completações',
+            '[DIETA]': 'Dietas'
         };
         
         for (const [marker, category] of Object.entries(categoryMap)) {
@@ -2975,45 +3012,228 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     const [categories, setCategories] = useState<Category[]>([]);
     const [checklistAnswers, setChecklistAnswers] = useState<Record<string, Record<number, Answer>>>({});
 
+    // 🔄 Função para processar e adicionar detalhes dos pacientes quando dados secundários chegarem
+    const processPatientDetails = (patientsData: any[], detailsData: any) => {
+        const { devicesRes, examsRes, medsRes, surgsRes, scalesRes, culturesRes, dietsRes, precautionsRes, diuresisRes, balanceRes } = detailsData;
+
+        const devicesMap = (devicesRes.data || []).reduce((acc: any, d: any) => {
+            if (!acc[d.paciente_id]) acc[d.paciente_id] = [];
+            acc[d.paciente_id].push({
+                id: d.id,
+                name: d.tipo_dispositivo,
+                location: d.localizacao,
+                startDate: d.data_insercao,
+                removalDate: d.data_remocao,
+                isArchived: d.is_archived,
+                observacao: d.observacao,
+            });
+            return acc;
+        }, {});
+
+        const examsMap = (examsRes.data || []).reduce((acc: any, e: any) => {
+            if (!acc[e.paciente_id]) acc[e.paciente_id] = [];
+            acc[e.paciente_id].push({
+                id: e.id,
+                name: e.nome_exame,
+                date: e.data_exame,
+                result: e.resultado || 'Pendente',
+                observation: e.observacao,
+            });
+            return acc;
+        }, {});
+
+        const medsMap = (medsRes.data || []).reduce((acc: any, m: any) => {
+            if (!acc[m.paciente_id]) acc[m.paciente_id] = [];
+            acc[m.paciente_id].push({
+                id: m.id,
+                name: m.nome_medicacao,
+                dosage: `${m.dosagem_valor} ${m.unidade_medida}`,
+                startDate: m.data_inicio,
+                endDate: m.data_fim,
+                isArchived: m.is_archived,
+                observacao: m.observacao
+            });
+            return acc;
+        }, {});
+
+        const surgsMap = (surgsRes.data || []).reduce((acc: any, s: any) => {
+            if (!acc[s.paciente_id]) acc[s.paciente_id] = [];
+            acc[s.paciente_id].push({
+                id: s.id,
+                name: s.nome_procedimento,
+                date: s.data_procedimento,
+                surgeon: s.nome_cirurgiao,
+                notes: s.notas,
+                isArchived: s.is_archived
+            });
+            return acc;
+        }, {});
+
+        const scalesMap = (scalesRes.data || []).reduce((acc: any, s: any) => {
+            if (!acc[s.patient_id]) acc[s.patient_id] = [];
+            acc[s.patient_id].push({
+                id: s.id,
+                scaleName: s.scale_name,
+                score: s.score,
+                interpretation: s.interpretation,
+                date: s.date
+            });
+            return acc;
+        }, {});
+
+        const culturesMap = (culturesRes.data || []).reduce((acc: any, c: any) => {
+            if (!acc[c.paciente_id]) acc[c.paciente_id] = [];
+            acc[c.paciente_id].push({
+                id: c.id,
+                site: c.local,
+                microorganism: c.microorganismo,
+                collectionDate: c.data_coleta,
+                observation: c.observacao || undefined,
+                isArchived: c.is_archived
+            });
+            return acc;
+        }, {});
+
+        const dietsMap = (dietsRes.data || []).reduce((acc: any, d: any) => {
+            if (!acc[d.paciente_id]) acc[d.paciente_id] = [];
+            acc[d.paciente_id].push({
+                id: d.id,
+                type: d.tipo,
+                data_inicio: d.data_inicio,
+                data_remocao: d.data_remocao || undefined,
+                volume: d.volume || undefined,
+                vet: d.vet || undefined,
+                pt: d.pt || undefined,
+                th: d.th || undefined,
+                observacao: d.observacao || undefined,
+                isArchived: d.is_archived
+            });
+            return acc;
+        }, {});
+
+        const precautionsMap = (precautionsRes.data || []).reduce((acc: any, p: any) => {
+            if (!acc[p.patient_id]) acc[p.patient_id] = [];
+            acc[p.patient_id].push({
+                id: p.id,
+                tipo_precaucao: p.tipo_precaucao,
+                data_inicio: p.data_inicio,
+                data_fim: p.data_fim || undefined,
+                isArchived: false
+            });
+            return acc;
+        }, {});
+
+        const diuresisMap = (diuresisRes.data || []).reduce((acc: any, d: any) => {
+            if (!acc[d.patient_id]) acc[d.patient_id] = [];
+            acc[d.patient_id].push({
+                id: d.id,
+                peso: d.peso,
+                volume: d.volume,
+                horas: d.horas,
+                resultado: d.resultado,
+                data_registro: d.data_registro
+            });
+            return acc;
+        }, {});
+
+        const balanceMap = (balanceRes.data || []).reduce((acc: any, b: any) => {
+            if (!acc[b.patient_id]) acc[b.patient_id] = [];
+            acc[b.patient_id].push({
+                id: b.id,
+                peso: b.peso,
+                volume: b.volume,
+                resultado: b.resultado,
+                data_registro: b.data_registro
+            });
+            return acc;
+        }, {});
+
+        const mappedPatients: Patient[] = patientsData.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            bedNumber: p.bed_number,
+            motherName: p.mother_name || '-',
+            dob: p.dob,
+            ctd: p.diagnosis || p.ctd || 'Estável',
+            peso: p.peso,
+            status: p.status || 'estavel',
+            localTransferencia: p.local_transferencia || undefined,
+            comorbidade: p.comorbidade || undefined,
+            admissionDate: p.dt_internacao || undefined,
+            devices: devicesMap[p.id] || [],
+            exams: examsMap[p.id] || [],
+            medications: medsMap[p.id] || [],
+            surgicalProcedures: surgsMap[p.id] || [],
+            scaleScores: scalesMap[p.id] || [],
+            cultures: culturesMap[p.id] || [],
+            diets: dietsMap[p.id] || [],
+            precautions: precautionsMap[p.id] || [],
+            diurese: diuresisMap[p.id] || [],
+            balanco_hidrico: balanceMap[p.id] || []
+        }));
+
+        setPatients(mappedPatients);
+        console.log('✅ Detalhes dos pacientes carregados em', Date.now());
+    };
+
     const fetchPatients = async () => {
         if (!supabase) return;
 
         const today = getTodayDateString();
 
-        // Fetch all related data tables in parallel
+        // 🚀 OTIMIZAÇÃO: Carregar apenas dados essenciais primeiro (pacientes + checklist)
         const [
             patientsRes,
-            devicesRes,
-            examsRes,
-            medsRes,
-            surgsRes,
-            scalesRes,
             questionsRes,
             optionsRes,
             categoriesRes,
-            answersRes,
-            culturesRes,
-            dietsRes,
-            precautionsRes,
-            diuresisRes,
-            balanceRes
+            answersRes
         ] = await Promise.all([
             supabase.from('patients').select('*'),
+            supabase.from('perguntas').select('*').order('ordem', { ascending: true }),
+            supabase.from('pergunta_opcoes').select('*').order('ordem', { ascending: true }),
+            supabase.from('categorias').select('*').order('ordem', { ascending: true }),
+            supabase.from('checklist_answers').select('*').eq('date', today)
+        ]);
+
+        // 🔄 Carregar dados detalhados em segundo plano (não bloqueia a renderização)
+        Promise.all([
             supabase.from('dispositivos_pacientes').select('*'),
             supabase.from('exames_pacientes').select('*'),
             supabase.from('medicacoes_pacientes').select('*'),
             supabase.from('procedimentos_pacientes').select('*'),
             supabase.from('scale_scores').select('*'),
-            supabase.from('perguntas').select('*').order('ordem', { ascending: true }),
-            supabase.from('pergunta_opcoes').select('*').order('ordem', { ascending: true }),
-            supabase.from('categorias').select('*').order('ordem', { ascending: true }),
-            supabase.from('checklist_answers').select('*').eq('date', today),
             supabase.from('culturas_pacientes').select('*'),
             supabase.from('dietas_pacientes').select('*'),
             supabase.from('precautions').select('*'),
             supabase.from('diurese').select('*'),
             supabase.from('balanco_hidrico').select('*')
-        ]);
+        ]).then(([
+            devicesRes,
+            examsRes,
+            medsRes,
+            surgsRes,
+            scalesRes,
+            culturesRes,
+            dietsRes,
+            precautionsRes,
+            diuresisRes,
+            balanceRes
+        ]) => {
+            // Processar e atualizar dados detalhados
+            processPatientDetails(patientsRes.data, {
+                devicesRes,
+                examsRes,
+                medsRes,
+                surgsRes,
+                scalesRes,
+                culturesRes,
+                dietsRes,
+                precautionsRes,
+                diuresisRes,
+                balanceRes
+            });
+        });
 
         console.log('📊 Resultado das queries:');
         console.log('  - questionsRes.error:', questionsRes.error);
@@ -3088,140 +3308,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             setChecklistAnswers(answersMap);
         }
 
-        const devicesMap = (devicesRes.data || []).reduce((acc: any, d: any) => {
-            if (!acc[d.paciente_id]) acc[d.paciente_id] = [];
-            acc[d.paciente_id].push({
-                id: d.id,
-                name: d.tipo_dispositivo,
-                location: d.localizacao,
-                startDate: d.data_insercao,
-                removalDate: d.data_remocao,
-                isArchived: d.is_archived,
-                observacao: d.observacao,
-            });
-            return acc;
-        }, {});
-
-        const examsMap = (examsRes.data || []).reduce((acc: any, e: any) => {
-            if (!acc[e.paciente_id]) acc[e.paciente_id] = [];
-            acc[e.paciente_id].push({
-                id: e.id,
-                name: e.nome_exame,
-                date: e.data_exame,
-                result: e.resultado || 'Pendente',
-                observation: e.observacao,
-            });
-            return acc;
-        }, {});
-
-        const medsMap = (medsRes.data || []).reduce((acc: any, m: any) => {
-            if (!acc[m.paciente_id]) acc[m.paciente_id] = [];
-            acc[m.paciente_id].push({
-                id: m.id,
-                name: m.nome_medicacao,
-                dosage: `${m.dosagem_valor} ${m.unidade_medida}`,
-                startDate: m.data_inicio,
-                endDate: m.data_fim,
-                isArchived: m.is_archived,
-                observacao: m.observacao
-            });
-            return acc;
-        }, {});
-
-        const surgsMap = (surgsRes.data || []).reduce((acc: any, s: any) => {
-            if (!acc[s.paciente_id]) acc[s.paciente_id] = [];
-            acc[s.paciente_id].push({
-                id: s.id,
-                name: s.nome_procedimento,
-                date: s.data_procedimento,
-                surgeon: s.nome_cirurgiao,
-                notes: s.notas,
-                isArchived: s.is_archived
-            });
-            return acc;
-        }, {});
-
-        const scalesMap = (scalesRes.data || []).reduce((acc: any, s: any) => {
-            if (!acc[s.patient_id]) acc[s.patient_id] = [];
-            acc[s.patient_id].push({
-                id: s.id,
-                scaleName: s.scale_name,
-                score: s.score,
-                interpretation: s.interpretation,
-                date: s.date
-            });
-            return acc;
-        }, {});
-
-
-        const culturesMap = (culturesRes.data || []).reduce((acc: any, c: any) => {
-            if (!acc[c.paciente_id]) acc[c.paciente_id] = [];
-            acc[c.paciente_id].push({
-                id: c.id,
-                site: c.local,
-                microorganism: c.microorganismo,
-                collectionDate: c.data_coleta,
-                observation: c.observacao || undefined,
-                isArchived: c.is_archived
-            });
-            return acc;
-        }, {});
-
-        const dietsMap = (dietsRes.data || []).reduce((acc: any, d: any) => {
-            if (!acc[d.paciente_id]) acc[d.paciente_id] = [];
-            acc[d.paciente_id].push({
-                id: d.id,
-                type: d.tipo,
-                data_inicio: d.data_inicio,
-                data_remocao: d.data_remocao || undefined,
-                volume: d.volume || undefined,
-                vet: d.vet || undefined,
-                pt: d.pt || undefined,
-                th: d.th || undefined,
-                observacao: d.observacao || undefined,
-                isArchived: d.is_archived
-            });
-            return acc;
-        }, {});
-
-        const precautionsMap = (precautionsRes.data || []).reduce((acc: any, p: any) => {
-            if (!acc[p.patient_id]) acc[p.patient_id] = [];
-            acc[p.patient_id].push({
-                id: p.id,
-                tipo_precaucao: p.tipo_precaucao,
-                data_inicio: p.data_inicio,
-                data_fim: p.data_fim || undefined,
-                isArchived: false
-            });
-            return acc;
-        }, {});
-
-        const diuresisMap = (diuresisRes.data || []).reduce((acc: any, d: any) => {
-            if (!acc[d.patient_id]) acc[d.patient_id] = [];
-            acc[d.patient_id].push({
-                id: d.id,
-                peso: d.peso,
-                volume: d.volume,
-                horas: d.horas,
-                resultado: d.resultado,
-                data_registro: d.data_registro
-            });
-            return acc;
-        }, {});
-
-        const balanceMap = (balanceRes.data || []).reduce((acc: any, b: any) => {
-            if (!acc[b.patient_id]) acc[b.patient_id] = [];
-            acc[b.patient_id].push({
-                id: b.id,
-                peso: b.peso,
-                volume: b.volume,
-                resultado: b.resultado,
-                data_registro: b.data_registro
-            });
-            return acc;
-        }, {});
-
-        const mappedPatients: Patient[] = patientsRes.data.map((p: any) => ({
+        // 🚀 RENDERIZAR PACIENTES BÁSICOS IMEDIATAMENTE (sem detalhes)
+        const basicPatients: Patient[] = patientsRes.data.map((p: any) => ({
             id: p.id,
             name: p.name,
             bedNumber: p.bed_number,
@@ -3231,19 +3319,22 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             peso: p.peso,
             status: p.status || 'estavel',
             localTransferencia: p.local_transferencia || undefined,
-            devices: devicesMap[p.id] || [],
-            exams: examsMap[p.id] || [],
-            medications: medsMap[p.id] || [],
-            surgicalProcedures: surgsMap[p.id] || [],
-            scaleScores: scalesMap[p.id] || [],
-            cultures: culturesMap[p.id] || [],
-            diets: dietsMap[p.id] || [],
-            precautions: precautionsMap[p.id] || [],
-            diurese: diuresisMap[p.id] || [],
-            balanco_hidrico: balanceMap[p.id] || []
+            comorbidade: p.comorbidade || undefined,
+            admissionDate: p.dt_internacao || undefined,
+            devices: [],
+            exams: [],
+            medications: [],
+            surgicalProcedures: [],
+            scaleScores: [],
+            cultures: [],
+            diets: [],
+            precautions: [],
+            diurese: [],
+            balanco_hidrico: []
         }));
-
-        setPatients(mappedPatients);
+        
+        setPatients(basicPatients);
+        console.log('✅ Pacientes básicos carregados em', Date.now());
     };
 
     useEffect(() => {
