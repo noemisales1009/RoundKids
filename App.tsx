@@ -3899,7 +3899,6 @@ const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
 const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User>(INITIAL_USER);
-    const [loading, setLoading] = useState(true);
 
     const loadUser = async () => {
         try {
@@ -3908,7 +3907,6 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             
             if (sessionError) {
                 console.error('Erro ao obter sessão:', sessionError);
-                setLoading(false);
                 return;
             }
             
@@ -3936,8 +3934,6 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             }
         } catch (error) {
             console.error('Erro no loadUser:', error);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -3966,17 +3962,6 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             });
         }
     };
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-950">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-500 mx-auto mb-4"></div>
-                    <p className="text-slate-600 dark:text-slate-400">Carregando perfil...</p>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <UserContext.Provider value={{ user, updateUser, loadUser }}>
