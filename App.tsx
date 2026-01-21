@@ -3902,32 +3902,40 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     const [loading, setLoading] = useState(true);
 
     const loadUser = async () => {
-        setLoading(true);
         try {
-            // 1. Check for Supabase Auth Session
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                const { data, error } = await supabase
-                    .from('users')
-                    .select('*')
-                    .eq('id', session.user.id)
-                    .single();
+            // Timeout de segurança: se demorar mais de 3 segundos, libera a tela
+            const timeout = new Promise((resolve) => setTimeout(resolve, 3000));
+            
+            const loadPromise = (async () => {
+                // 1. Check for Supabase Auth Session
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) {
+                    const { data, error } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('id', session.user.id)
+                        .single();
 
-                if (data) {
-                    // Update state from DB
-                    const dbUser = {
-                        id: data.id, // Store user ID
-                        name: data.name || '',
-                        title: data.role || '', // Mapping DB 'role' to App 'title'
-                        avatarUrl: data.foto || '', // Mapping DB 'foto' to App 'avatarUrl'
-                        sector: data.sector || '', // Mapping DB 'sector'
-                        access_level: (data.access_level || 'geral') as 'adm' | 'geral', // Mapping DB 'access_level'
-                    };
-                    setUser(dbUser);
-                } else if (error) {
-                    console.error('Erro ao carregar usuário:', error);
+                    if (data) {
+                        // Update state from DB
+                        const dbUser = {
+                            id: data.id, // Store user ID
+                            name: data.name || '',
+                            title: data.role || '', // Mapping DB 'role' to App 'title'
+                            avatarUrl: data.foto || '', // Mapping DB 'foto' to App 'avatarUrl'
+                            sector: data.sector || '', // Mapping DB 'sector'
+                            access_level: (data.access_level || 'geral') as 'adm' | 'geral', // Mapping DB 'access_level'
+                        };
+                        setUser(dbUser);
+                    } else if (error) {
+                        console.error('Erro ao carregar usuário:', error);
+                    }
                 }
-            }
+            })();
+
+            await Promise.race([loadPromise, timeout]);
+        } catch (error) {
+            console.error('Erro no loadUser:', error);
         } finally {
             setLoading(false);
         }
