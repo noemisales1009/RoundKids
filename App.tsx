@@ -721,7 +721,8 @@ const PatientHistoryScreen: React.FC = () => {
                     .from('diagnosticos_historico_com_usuario')
                     .select('*')
                     .eq('patient_id', patientId)
-                    .eq('status', 'nao_resolvido');
+                    .eq('status', 'nao_resolvido')
+                    .eq('arquivado', false);
                 
                 console.log('📋 Diagnósticos data:', data);
                 console.log('❌ Diagnósticos error:', error);
@@ -746,7 +747,8 @@ const PatientHistoryScreen: React.FC = () => {
                     .from('diagnosticos_historico_com_usuario')
                     .select('*')
                     .eq('patient_id', patientId)
-                    .eq('status', 'resolvido');
+                    .eq('status', 'resolvido')
+                    .eq('arquivado', false);
                 
                 console.log('✅ Diagnósticos resolvidos data:', data);
                 console.log('❌ Diagnósticos resolvidos error:', error);

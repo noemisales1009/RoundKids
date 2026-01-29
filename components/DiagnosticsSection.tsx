@@ -63,6 +63,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
             .from('paciente_diagnosticos')
             .select('*')
             .eq('patient_id', patientId)
+            .eq('arquivado', false)
         ]);
 
         if (questionsRes.error) throw questionsRes.error;
@@ -101,15 +102,16 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
   const handleRemoveDiagnostic = async (optionId: number) => {
     try {
-      // Apagar do Supabase (tabela paciente_diagnosticos)
+      // Arquivar diagnóstico (soft delete) em vez de deletar
       const { error } = await supabase
         .from('paciente_diagnosticos')
-        .delete()
+        .update({ arquivado: true })
         .eq('patient_id', patientId)
-        .eq('opcao_id', optionId);
+        .eq('opcao_id', optionId)
+        .eq('arquivado', false);
 
       if (error) {
-        console.error('Erro ao remover diagnóstico do Supabase:', error);
+        console.error('Erro ao arquivar diagnóstico:', error);
         alert('Erro ao remover diagnóstico. Tente novamente.');
         return;
       }
