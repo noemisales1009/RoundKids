@@ -682,11 +682,13 @@ const PatientHistoryScreen: React.FC = () => {
     const { tasks } = useContext(TasksContext)!;
     const patient = patients.find(p => p.id.toString() === patientId);
     const [diagnostics, setDiagnostics] = React.useState<any[]>([]);
+    const [resolvedDiagnostics, setResolvedDiagnostics] = React.useState<any[]>([]);
+    const [archivedDiagnostics, setArchivedDiagnostics] = React.useState<any[]>([]);
+    const [auditLogData, setAuditLogData] = React.useState<any[]>([]);
     const [diuresisData, setDiuresisData] = React.useState<any[]>([]);
     const [balanceData, setBalanceData] = React.useState<any[]>([]);
     const [alertsData, setAlertsData] = React.useState<any[]>([]);
     const [alertCompletions, setAlertCompletions] = React.useState<any[]>([]);
-    const [resolvedDiagnostics, setResolvedDiagnostics] = React.useState<any[]>([]);
     const [dietsData, setDietsData] = React.useState<any[]>([]);
     const [dataInicio, setDataInicio] = React.useState<string>('');
     const [dataFinal, setDataFinal] = React.useState<string>('');
@@ -722,7 +724,7 @@ const PatientHistoryScreen: React.FC = () => {
                     .select('*')
                     .eq('patient_id', patientId)
                     .eq('status', 'nao_resolvido')
-                    .eq('arquivado', false);
+                    .order('created_at', { ascending: false });
                 
                 console.log('📋 Diagnósticos data:', data);
                 console.log('❌ Diagnósticos error:', error);
@@ -748,7 +750,7 @@ const PatientHistoryScreen: React.FC = () => {
                     .select('*')
                     .eq('patient_id', patientId)
                     .eq('status', 'resolvido')
-                    .eq('arquivado', false);
+                    .order('created_at', { ascending: false });
                 
                 console.log('✅ Diagnósticos resolvidos data:', data);
                 console.log('❌ Diagnósticos resolvidos error:', error);
@@ -762,6 +764,58 @@ const PatientHistoryScreen: React.FC = () => {
         };
 
         fetchResolvedDiagnostics();
+    }, [patientId]);
+
+    // Buscar diagnósticos arquivados (ocultados)
+    React.useEffect(() => {
+        const fetchArchivedDiagnostics = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('diagnosticos_historico_com_usuario')
+                    .select('*')
+                    .eq('patient_id', patientId)
+                    .eq('arquivado', true)
+                    .order('archived_at', { ascending: false });
+                
+                console.log('🚫 Diagnósticos arquivados data:', data);
+                console.log('❌ Diagnósticos arquivados error:', error);
+                
+                if (!error && data) {
+                    setArchivedDiagnostics(data);
+                }
+            } catch (err) {
+                console.error('Erro ao buscar diagnósticos arquivados:', err);
+            }
+        };
+
+        fetchArchivedDiagnostics();
+    }, [patientId]);
+
+    // Buscar log de auditoria (quem deletou/ocultou diagnósticos)
+    React.useEffect(() => {
+        const fetchAuditLog = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('diagnosticos_audit_log')
+                    .select('*')
+                    .eq('patient_id', patientId)
+                    .eq('acao', 'OCULTADO')
+                    .order('created_at', { ascending: false });
+                
+                console.log('📋 Log de auditoria data:', data);
+                console.log('❌ Log de auditoria error:', error);
+                
+                if (!error && data) {
+                    setAuditLogData(data);
+                }
+            } catch (err) {
+                console.error('Erro ao buscar log de auditoria:', err);
+            }
+        };
+
+        fetchAuditLog();
     }, [patientId]);
 
     // Buscar diurese do Supabase
@@ -1019,20 +1073,65 @@ const PatientHistoryScreen: React.FC = () => {
             // Exibe o label vindo da view (que contém JOIN correto com pergunta_opcoes_diagnostico)
             const label = diagnostic.opcao_label || 'Não informado';
             const createdByName = diagnostic.created_by_name || 'Não informado';
+            
+            // Se está arquivado, adiciona informação de quem ocultou (view retorna archived_by_name)
+            let description = `[DIAGNOSTICO] Diagnóstico: ${label}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''} (Status: ${diagnostic.status}).\n👤 Criado por: ${createdByName}`;
+            if (diagnostic.arquivado && diagnostic.archived_by_name) {
+                description += `\n🚫 Ocultado por: ${diagnostic.archived_by_name}`;
+            }
+            
             events.push({
                 timestamp: diagnostic.created_at || new Date().toISOString(),
                 icon: ClipboardIcon,
-                description: `[DIAGNOSTICO] Diagnóstico: ${label}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''} (Status: ${diagnostic.status}).\n👤 Criado por: ${createdByName}`,
+                description: description,
                 hasTime: true,
             });
         });
 
         // Adicionar diagnósticos resolvidos com nome de quem resolveu
         resolvedDiagnostics.forEach(diagnostic => {
+            // Se está arquivado, adiciona informação de quem ocultou (view retorna archived_by_name)
+            let description = `[DIAGNOSTICO] ✓ Diagnóstico Resolvido: ${diagnostic.opcao_label || `Opção ${diagnostic.opcao_id}`}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''}\n👤 Resolvido por: ${diagnostic.created_by_name || 'Não informado'}`;
+            if (diagnostic.arquivado && diagnostic.archived_by_name) {
+                description += `\n🚫 Ocultado por: ${diagnostic.archived_by_name}`;
+            }
+            
             events.push({
                 timestamp: diagnostic.created_at || new Date().toISOString(),
-                icon: CheckCircleIcon,
-                description: `[DIAGNOSTICO] ✓ Diagnóstico Resolvido: ${diagnostic.opcao_label || `Opção ${diagnostic.opcao_id}`}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''}\n👤 Resolvido por: ${diagnostic.created_by_name || 'Não informado'}`,
+                icon: diagnostic.arquivado ? ClipboardIcon : CheckCircleIcon,
+                description: description,
+                hasTime: true,
+            });
+        });
+
+        // Adicionar diagnósticos ocultados/arquivados
+        console.log('🔵 Processando archivedDiagnostics no history:', archivedDiagnostics);
+        archivedDiagnostics.forEach(diagnostic => {
+            const label = diagnostic.opcao_label || 'Não informado';
+            const createdByName = diagnostic.created_by_name || 'Não informado';
+            const archivedByName = diagnostic.archived_by_name || 'Desconhecido';
+            const archivedAtTime = diagnostic.archived_at ? new Date(diagnostic.archived_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+            
+            // Descrição MUITO CLARA sobre quem apagou
+            let description = `[DIAGNOSTICO] ⚠️ DIAGNÓSTICO OCULTADO/APAGADO\n📋 Diagnóstico: ${label}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''}\n\n👤 Criado originalmente por: ${createdByName}\n\n🚫 DELETADO/OCULTADO POR: ${archivedByName}${archivedAtTime ? ` às ${archivedAtTime}` : ''}`;
+            
+            events.push({
+                timestamp: diagnostic.archived_at || diagnostic.created_at || new Date().toISOString(),
+                icon: ClipboardIcon,
+                description: description,
+                hasTime: true,
+            });
+        });
+
+        // Adicionar log de auditoria (para rastreamento de quem deletou)
+        console.log('🔵 Processando auditLogData no history:', auditLogData);
+        auditLogData.forEach(log => {
+            const description = `[AUDITORIA] 📋 DIAGNÓSTICO DELETADO REGISTRADO\nDiagnóstico: ${log.diagnostico_label || 'Não informado'}\n👤 Criado por: ${log.criado_por_nome || 'Desconhecido'}\n🚫 DELETADO/OCULTADO POR: ${log.modificado_por_nome || 'Desconhecido'}\nStatus: ${log.diagnostico_status || 'Não informado'}`;
+            
+            events.push({
+                timestamp: log.created_at || new Date().toISOString(),
+                icon: ClipboardIcon,
+                description: description,
                 hasTime: true,
             });
         });
@@ -3012,6 +3111,10 @@ const SettingsScreen: React.FC = () => {
 // --- PROVIDERS for Global State ---
 
 const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    // Importar showNotification do NotificationContext
+    const notificationContext = useContext(NotificationContext);
+    const showNotification = notificationContext?.showNotification || (() => {});
+    
     // Initialize with empty array, will fetch on mount
     const [patients, setPatients] = useState<Patient[]>([]);
     const [questions, setQuestions] = useState<Question[]>([]);
@@ -3720,16 +3823,60 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     };
 
     const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number }) => {
-        const updateData: any = {};
-        if (data.motherName !== undefined) updateData.mother_name = data.motherName;
-        if (data.ctd !== undefined) updateData.diagnosis = data.ctd;
-        if (data.peso !== undefined) updateData.peso = data.peso;
+        try {
+            const updateData: any = {};
+            if (data.motherName !== undefined) updateData.mother_name = data.motherName;
+            if (data.ctd !== undefined) updateData.diagnosis = data.ctd;
+            if (data.peso !== undefined) updateData.peso = data.peso;
 
-        const { error } = await supabase.from('patients')
-            .update(updateData)
-            .eq('id', patientId);
+            console.log('💾 Salvando dados do paciente:', { patientId, updateData, tipoPatientId: typeof patientId });
 
-        if (!error) fetchPatients();
+            const { data: result, error } = await supabase.from('patients')
+                .update(updateData)
+                .eq('id', patientId)
+                .select();
+
+            console.log('📊 Resultado da atualização:', result);
+            console.log('❌ Erro (se houver):', error);
+            console.log('🔍 PatientId usado:', { patientId, tipo: typeof patientId });
+
+            if (error) {
+                console.error('❌ ERRO DETALHADO ao salvar dados do paciente:', error);
+                console.error('Mensagem:', error.message);
+                console.error('Detalhes:', error.details);
+                console.error('Hint:', error.hint);
+                showNotification({ 
+                    message: `❌ Erro ao salvar: ${error.message}`, 
+                    type: 'error' 
+                });
+                return;
+            }
+
+            if (!result || result.length === 0) {
+                console.error('❌ Nenhuma linha foi atualizada. Verifique se o ID existe.');
+                showNotification({ 
+                    message: 'Erro: Paciente não encontrado ou sem permissão para atualizar.', 
+                    type: 'error' 
+                });
+                return;
+            }
+
+            console.log('✅ Dados do paciente salvos com sucesso!', result);
+            showNotification({ 
+                message: '✅ Informações atualizadas com sucesso!', 
+                type: 'success' 
+            });
+            // Pequeno delay para garantir que o banco atualizou
+            setTimeout(() => {
+                fetchPatients();
+            }, 500);
+        } catch (err) {
+            console.error('❌ Erro ao salvar dados do paciente:', err);
+            showNotification({ 
+                message: `Erro ao salvar: ${err}`, 
+                type: 'error' 
+            });
+        }
     };
 
     const value = {

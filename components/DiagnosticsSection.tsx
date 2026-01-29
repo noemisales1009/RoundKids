@@ -102,10 +102,18 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
   const handleRemoveDiagnostic = async (optionId: number) => {
     try {
+      // Obter o usuário logado
+      const { data: { user } } = await supabase.auth.getUser();
+      
       // Arquivar diagnóstico (soft delete) em vez de deletar
+      // Registra quem ocultou e quando
       const { error } = await supabase
         .from('paciente_diagnosticos')
-        .update({ arquivado: true })
+        .update({ 
+          arquivado: true,
+          archived_by: user?.id,
+          archived_at: new Date().toISOString()
+        })
         .eq('patient_id', patientId)
         .eq('opcao_id', optionId)
         .eq('arquivado', false);
