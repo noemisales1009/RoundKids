@@ -36,163 +36,41 @@ export const ICON_MAP: Record<string, React.FC<{className?: string}>> = {
     'UserIcon': UserIcon
 };
 
-// Sample data for the new fields for Patient 1 (Leandro)
-const devices1: Device[] = [
-  { id: 1, name: 'CVC 1', location: 'VJID', startDate: '2025-11-10' },
-  { id: 2, name: 'SNE', location: 'Nasal', startDate: '2025-11-11' },
-];
-
-const exams1: Exam[] = [
-  { id: 1, name: 'Hemograma completo', date: '2025-11-11', result: 'Pendente', observation: 'Aguardando resultado laboratorial.' },
-];
-
-const medications1: Medication[] = [
-  { id: 1, name: 'Dipirona', dosage: '500mg 6/6h', startDate: '2025-11-10' },
-  { id: 2, name: 'Amoxicilina', dosage: '250mg 8/8h', startDate: '2025-11-11' },
-];
-
-const surgicalProcedures1: SurgicalProcedure[] = [
-  { id: 1, name: 'Apendicectomia', date: '2025-11-05', surgeon: 'Dr. House', notes: 'Procedimento ocorreu sem intercorrências.' },
-];
+// Remove static sample data - load from database instead
 
 export const DEVICE_TYPES: string[] = [
-    'AVP1',
-    'AVP2',
-    'CNAF',
-    'CURATIVO À VÁCUO',
-    'CVC 1',
-    'CVC 2',
-    'CATETER DE SHILLY',
-    'CATETER DE TENCKHOFF',
-    'DRENO TORÁXICO D',
-    'DRENO TORÁXICO E',
-    'DVE',
-    'GTT',
-    'OUTROS DRENOS',
-    'PICC1',
-    'PICC2',
-    'SNE',
-    'SNG',
-    'SVD',
-    'TOT',
-    'VENTURY',
-    'VNI',
-    'VPM',
-];
+    'AVP1', 'AVP2', 'CNAF', 'CURATIVO À VÁCUO', 'CVC 1', 'CVC 2', 'CATETER DE SHILLY',
+    'CATETER DE TENCKHOFF', 'DRENO TORÁXICO D', 'DRENO TORÁXICO E', 'DVE', 'GTT',
+    'OUTROS DRENOS', 'PICC1', 'PICC2', 'SNE', 'SNG', 'SVD', 'TOT', 'VENTURY', 'VNI', 'VPM',
+] as const;
+
 export const DEVICE_LOCATIONS: string[] = [
-    'ABDOME',
-    'CABEÇA',
-    'FACE',
-    'HTD',
-    'HTE',
-    'LOCAIS',
-    'MÃO D',
-    'MÃO E',
-    'MID',
-    'MIE',
-    'MSD',
-    'MSE',
-    'NASAL',
-    'ORAL',
-    'PÉ D',
-    'PÉ E',
-    'PERÍNEO',
-    'REGIÃO LOMBAR',
-    'TRAQUÉIA',
-    'TRONCO',
-    'VBD',
-    'VBE',
-    'VFD',
-    'VFE',
-    'VJID',
-    'VJIE',
-    'VJED',
-    'VJEE',
-    'VSD',
-    'VSE',
-];
-export const EXAM_STATUSES: Array<'Pendente' | 'Normal' | 'Alterado'> = ['Pendente', 'Normal', 'Alterado'];
+    'ABDOME', 'CABEÇA', 'FACE', 'HTD', 'HTE', 'LOCAIS', 'MÃO D', 'MÃO E', 'MID', 'MIE',
+    'MSD', 'MSE', 'NASAL', 'ORAL', 'PÉ D', 'PÉ E', 'PERÍNEO', 'REGIÃO LOMBAR', 'TRAQUÉIA',
+    'TRONCO', 'VBD', 'VBE', 'VFD', 'VFE', 'VJID', 'VJIE', 'VJED', 'VJEE', 'VSD', 'VSE',
+] as const;
+
+export const EXAM_STATUSES: Array<'Pendente' | 'Normal' | 'Alterado'> = ['Pendente', 'Normal', 'Alterado'] as const;
 
 export const MEDICATION_LIST: string[] = [
-    'Epinefrina',
-    'Noraepinefrina',
-    'Milrinona',
-    'Dobutamina',
-    'Vasopressina',
-    'Nipride',
-    'Midazolam',
-    'Fentanyl (Fentanila)',
-    'Morfina',
-    'Precedex (Dexmedetomidina)',
-    'Propofol',
-    'Clonidina',
-    'Cetamina',
-    'Tiopental',
-    'Lorazepam',
-    'Metadona',
-    'Diazepam',
-    'Fenitoína',
-    'Fenobarbital',
-    'Topiramato',
-    'Levetiracetam',
-    'Ácido Valproico',
-    'Oxcarbazepina',
-    'Furosemida',
-    'Hidroclorotiazida',
-    'Omeprazol',
-    'Espironolactona',
-    'Acetazolamida',
-    'Bicarbonato de Sódio',
-    'Correção de Potássio',
-    'Hidrocortisona',
-    'Octreotida',
-    'N-Acetilcisteína',
-    'Vitamina K',
-    'Complexo Protrombínico',
-    'Plasma Fresco',
-    'Concentrado de Hemácias',
-    'Plaquetas',
-    'Crioprecipitado',
-    'Tazocin',
-    'Meropenem',
-    'Polimixina B',
-    'Amicacina',
-    'Ceftriaxone',
-    'Teicoplanina',
-    'Vancomicina',
-    'Cefepime',
-    'Cefazolina',
-    'Metronidazol',
-    'Gentamicina',
-    'Tigeciclina',
-    'Torgena',
-    'Aztreonam',
-    'Anfotericina B',
-    'Fluconazol',
-    'Micafungina',
-    'Outro'
-];
+    'Epinefrina', 'Noraepinefrina', 'Milrinona', 'Dobutamina', 'Vasopressina', 'Nipride',
+    'Midazolam', 'Fentanyl (Fentanila)', 'Morfina', 'Precedex (Dexmedetomidina)', 'Propofol',
+    'Clonidina', 'Cetamina', 'Tiopental', 'Lorazepam', 'Metadona', 'Diazepam', 'Fenitoína',
+    'Fenobarbital', 'Topiramato', 'Levetiracetam', 'Ácido Valproico', 'Oxcarbazepina',
+    'Furosemida', 'Hidroclorotiazida', 'Omeprazol', 'Espironolactona', 'Acetazolamida',
+    'Bicarbonato de Sódio', 'Correção de Potássio', 'Hidrocortisona', 'Octreotida',
+    'N-Acetilcisteína', 'Vitamina K', 'Complexo Protrombínico', 'Plasma Fresco',
+    'Concentrado de Hemácias', 'Plaquetas', 'Crioprecipitado', 'Tazocin', 'Meropenem',
+    'Polimixina B', 'Amicacina', 'Ceftriaxone', 'Teicoplanina', 'Vancomicina', 'Cefepime',
+    'Cefazolina', 'Metronidazol', 'Gentamicina', 'Tigeciclina', 'Torgena', 'Aztreonam',
+    'Anfotericina B', 'Fluconazol', 'Micafungina', 'Outro'
+] as const;
 
 export const MEDICATION_DOSAGE_UNITS: string[] = [
-    'mg/dia',
-    'mg/h',
-    'mg/kg/dia',
-    'mg/kg/h',
-    'mg/kg/min',
-    'mg/ml',
-    'UI/dia',
-    'UI/h',
-    'UI/kg/dia',
-    'UI/kg/h',
-    'UI/kg/min',
-    'UI/ml',
-    'ug/dia',
-    'ug/h',
-    'ug/kg/dia',
-    'ug/kg/h',
-    'ug/kg/min',
-    'ug/ml'
-];
+    'mg/dia', 'mg/h', 'mg/kg/dia', 'mg/kg/h', 'mg/kg/min', 'mg/ml', 'UI/dia', 'UI/h',
+    'UI/kg/dia', 'UI/kg/h', 'UI/kg/min', 'UI/ml', 'ug/dia', 'ug/h', 'ug/kg/dia',
+    'ug/kg/h', 'ug/kg/min', 'ug/ml'
+] as const;
 
 // Alert Categories for Dashboard
 export const ALERT_CATEGORIES: string[] = [
@@ -212,31 +90,8 @@ export const ALERT_CATEGORIES: string[] = [
     'Geral'
 ];
 
-// Updated Patient List based on the provided screenshot
-export const PATIENTS: Patient[] = [
-  { id: 1, name: 'LEANDRO SOUSA SOARES', bedNumber: 115, motherName: '-', dob: '2025-05-11', ctd: 'Estável', devices: devices1, exams: exams1, medications: medications1, surgicalProcedures: surgicalProcedures1, scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 2, name: 'MARIA MAITE DA SILVA DE SOUSA', bedNumber: 110, motherName: '-', dob: '2025-10-03', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 3, name: 'SOPHIA SOUSA ALVES', bedNumber: 104, motherName: '-', dob: '2014-01-31', ctd: 'Observação', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 4, name: 'ARTHUR CARVALHO MOURA', bedNumber: 112, motherName: '-', dob: '2017-04-16', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 5, name: 'AVILA MANUELLE NASCIMENTO BRASIL', bedNumber: 4, motherName: '-', dob: '2025-09-18', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 6, name: 'AYLA VALENTINA ALMEIDA BRITO', bedNumber: 98, motherName: '-', dob: '2017-01-26', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 7, name: 'GABRIEL RAVICK LIMEIRA GOMES', bedNumber: 108, motherName: '-', dob: '2016-02-11', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 8, name: 'DAVI EVANGELISTA DA CRUZ', bedNumber: 102, motherName: 'Orcilene Barros', dob: '2019-03-12', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 9, name: 'ELIAS DOS SANTOS SILVA LIMA', bedNumber: 101, motherName: '-', dob: '2024-10-03', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 10, name: 'CARLOS DANIEL COSTA FERREIRA', bedNumber: 45, motherName: '-', dob: '2018-05-06', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 11, name: 'JOSE ALEF SOUSA VILANTE FIALHO', bedNumber: 105, motherName: '-', dob: '2023-10-20', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 12, name: 'NICOLAS EMANUEL BRITO BEZERRA', bedNumber: 113, motherName: '-', dob: '2017-01-31', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 13, name: 'VITORIA DOS MILAGRES SOUSA', bedNumber: 100, motherName: '-', dob: '2020-10-12', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 14, name: 'PABLO GAEL SILVA SANTOS', bedNumber: 106, motherName: '-', dob: '2025-07-18', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 15, name: 'ANNALICY DE MIRANDA OLIVEIRA DA', bedNumber: 107, motherName: '-', dob: '2015-10-06', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 16, name: 'NATANAEL RIKELMY DE AGUIAR LIMA', bedNumber: 99, motherName: 'Francisca da Costa', dob: '2012-06-20', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 17, name: 'MAYLLA LAVINIA SILVA CANTANHEDE', bedNumber: 103, motherName: 'Maria Clara', dob: '2025-08-15', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 18, name: 'DAVILLA HELOYSA CHAVES PEREIRA', bedNumber: 109, motherName: '-', dob: '2020-12-01', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 19, name: 'CAIO EDUARDO DOS SANTOS CAMPOS', bedNumber: 3, motherName: 'Ana paula', dob: '2024-03-09', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 20, name: 'DAVI LUIZ SILVA BRITO', bedNumber: 111, motherName: '-', dob: '2025-04-05', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 21, name: 'ABIMAEL MENDES DA CONCEICAO', bedNumber: 46, motherName: 'MARIA FLORISMAR', dob: '2017-01-09', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-  { id: 22, name: 'MARIA HELOISA SOUSA SILVA', bedNumber: 114, motherName: '-', dob: '2022-05-16', ctd: 'Estável', devices: [], exams: [], medications: [], surgicalProcedures: [], scaleScores: [], cultures: [], diets: [], precautions: [] },
-];
+// DEPRECATED: Load from database instead. Kept for backward compatibility.
+export const PATIENTS: Patient[] = [];
 
 export const CATEGORIES: Category[] = [
   { id: 1, name: 'Sistema Nutricional', icon: AppleIcon },
@@ -375,48 +230,9 @@ export const QUESTIONS: Question[] = [
   }
 ];
 
-// Updated Alerts to match new patient list IDs
-export const ALERTS: Alert[] = [
-    { id: 1, text: "PA instável", categoryId: 3, patientId: 1 },
-    { id: 2, text: "Saturação baixa", categoryId: 6, patientId: 16 },
-    { id: 3, text: "Pico hipertensivo", categoryId: 3, patientId: 2 },
-    { id: 4, text: "Necessidade de ajuste de ventilação", categoryId: 6, patientId: 5 },
-    { id: 5, text: "Glicemia alta", categoryId: 1, patientId: 3 },
-    { id: 6, text: "Taquicardia", categoryId: 3, patientId: 16 },
-    { id: 7, text: "Risco de queda", categoryId: 10, patientId: 1 },
-    { id: 8, text: "Interação medicamentosa", categoryId: 9, patientId: 3 },
-    { id: 9, text: "Esforço respiratório", categoryId: 6, patientId: 1 },
-    { id: 10, text: "Balanço hídrico muito positivo", categoryId: 2, patientId: 2 },
-    { id: 11, text: "Hipotensão", categoryId: 3, patientId: 3 },
-    { id: 12, text: "Anemia importante", categoryId: 4, patientId: 1 },
-];
-
-export const TASKS: Task[] = [
-    // Alertas
-    ...ALERTS.map((alert, index) => ({
-        id: index + 1,
-        patientId: alert.patientId,
-        categoryId: alert.categoryId,
-        description: alert.text,
-        responsible: 'Dr. João',
-        deadline: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
-        status: 'alerta' as const,
-    })),
-    // Fora do Prazo
-    { id: 13, patientId: 1, categoryId: 1, description: 'Reavaliar necessidade de SNE', responsible: 'Enf. Maria', deadline: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), status: 'fora_do_prazo', justification: 'Aguardando avaliação do nutricionista.' },
-    { id: 14, patientId: 16, categoryId: 9, description: 'Checar interação medicamentosa', responsible: 'Farm. Ana', deadline: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), status: 'fora_do_prazo' },
-    { id: 15, patientId: 3, categoryId: 7, description: 'Iniciar fisioterapia motora', responsible: 'Fisio. Carlos', deadline: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(), status: 'fora_do_prazo' },
-    { id: 16, patientId: 1, categoryId: 10, description: 'Aplicar escala de Braden', responsible: 'Enf. Maria', deadline: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), status: 'fora_do_prazo', justification: 'Paciente instável hemodinamicamente.' },
-    { id: 17, patientId: 16, categoryId: 8, description: 'Avaliação neurológica completa', responsible: 'Dr. João', deadline: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), status: 'fora_do_prazo' },
-    { id: 18, patientId: 3, categoryId: 2, description: 'Ajustar balanço hídrico', responsible: 'Dr. João', deadline: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), status: 'fora_do_prazo' },
-    { id: 19, patientId: 1, categoryId: 4, description: 'Coletar nova amostra de sangue', responsible: 'Téc. Lúcia', deadline: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), status: 'fora_do_prazo' },
-    { id: 20, patientId: 16, categoryId: 5, description: 'Solicitar ultrassom hepático', responsible: 'Dr. João', deadline: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), status: 'fora_do_prazo' },
-    // No Prazo
-    { id: 21, patientId: 3, categoryId: 1, description: 'Monitorar glicemia capilar 4x/dia', responsible: 'Enf. Maria', deadline: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(), status: 'no_prazo' },
-    { id: 22, patientId: 1, categoryId: 6, description: 'Realizar aspiração de vias aéreas se necessário', responsible: 'Fisio. Carlos', deadline: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(), status: 'no_prazo' },
-    // Concluídos
-    { id: 23, patientId: 16, categoryId: 10, description: 'Avaliar risco de lesão por pressão', responsible: 'Enf. Maria', deadline: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(), status: 'concluido' },
-];
+// DEPRECATED: Load from database instead
+export const ALERTS: Alert[] = [];
+export const TASKS: Task[] = [];
 
 export const RESPONSIBLES: string[] = [
     'Médico', 
@@ -427,34 +243,26 @@ export const RESPONSIBLES: string[] = [
     'Odontólogo', 
     'Médico / Enfermeiro', 
     'Médico / Fisioterapeuta'
-];
+] as const;
 
+// Lazy generate alert deadlines
+let cachedAlertDeadlines: string[] | null = null;
+export const getAlertDeadlines = (): string[] => {
+    if (!cachedAlertDeadlines) {
+        cachedAlertDeadlines = Array.from({ length: 24 }, (_, i) => 
+            `${i + 1} hora${i === 0 ? '' : 's'}`
+        );
+    }
+    return cachedAlertDeadlines;
+};
+
+// Keep backward compatibility
 export const ALERT_DEADLINES: string[] = [
-    '1 hora', 
-    '2 horas', 
-    '3 horas', 
-    '4 horas',
-    '5 horas',
-    '6 horas',
-    '7 horas',
-    '8 horas',
-    '9 horas',
-    '10 horas',
-    '11 horas',
-    '12 horas',
-    '13 horas',
-    '14 horas',
-    '15 horas',
-    '16 horas',
-    '17 horas',
-    '18 horas',
-    '19 horas',
-    '20 horas',
-    '21 horas',
-    '22 horas',
-    '23 horas',
-    '24 horas'
-];
+    '1 hora', '2 horas', '3 horas', '4 horas', '5 horas', '6 horas',
+    '7 horas', '8 horas', '9 horas', '10 horas', '11 horas', '12 horas',
+    '13 horas', '14 horas', '15 horas', '16 horas', '17 horas', '18 horas',
+    '19 horas', '20 horas', '21 horas', '22 horas', '23 horas', '24 horas'
+] as const;
 
 export const INITIAL_USER: User = {
     name: 'Noemi',
@@ -587,3 +395,17 @@ export const getTodayDateString = (): string => {
     const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 };
+
+
+/**
+ * Busca o label de uma opção de diagnóstico a partir do id da pergunta e do id da opção
+ * @param questionId - id da pergunta
+ * @param optionId - id da opção (string)
+ * @returns label da opção ou o próprio id se não encontrar
+ */
+export function getDiagnosisOptionLabel(questionId: number, optionId: string): string {
+  const question = QUESTIONS.find(q => q.id === questionId);
+  if (!question) return optionId;
+  const option = question.alertOptions.find(opt => opt.id === optionId);
+  return option ? option.label : optionId;
+}

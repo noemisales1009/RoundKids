@@ -200,7 +200,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       if (diagnosticsForHistory.length > 0) {
         try {
           const historyData = diagnosticsForHistory.map(d => {
-            // Encontrar o label da opção
+            // Encontrar o label da opção pelo ID
             const opcao = options.find(o => o.id === d.opcao_id);
             return {
               ...d,

@@ -142,7 +142,7 @@ export default function ScaleScoresHistory({ patientId }: ScaleScoresHistoryProp
                   </div>
                 </div>
 
-                <div className={`transform transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`}>
+                <div className={`transform transition-transform shrink-0 ${isExpanded ? 'rotate-180' : ''}`}>
                   <ChevronDownIcon className={`w-5 h-5 ${colors.text}`} />
                 </div>
               </button>

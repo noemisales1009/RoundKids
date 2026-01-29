@@ -19,15 +19,41 @@ export const AddDeviceModal: React.FC<{ patientId: number | string; onClose: () 
     const [location, setLocation] = useState('');
     const [startDate, setStartDate] = useState(getTodayDateString());
     const [observacao, setObservacao] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const finalType = type === 'Outros' ? customType : type;
         
-        if (!finalType || !location || !startDate) return;
-        addDeviceToPatient(patientId, { name: finalType, location, startDate, observacao });
-        showNotification({ message: 'Dispositivo cadastrado com sucesso!', type: 'success' });
-        onClose();
+        console.log('🔍 DEBUG AddDeviceModal:', { patientId, finalType, location, startDate, observacao });
+        
+        // ✅ VALIDAÇÃO COM FEEDBACK
+        if (!finalType) {
+            showNotification({ message: 'Selecione ou digite um tipo de dispositivo', type: 'error' });
+            return;
+        }
+        if (!location) {
+            showNotification({ message: 'Selecione um local', type: 'error' });
+            return;
+        }
+        if (!startDate) {
+            showNotification({ message: 'Selecione a data de inserção', type: 'error' });
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            console.log('📤 Enviando para addDeviceToPatient...');
+            const result = await addDeviceToPatient(patientId, { name: finalType, location, startDate, observacao });
+            console.log('✅ Resposta:', result);
+            showNotification({ message: 'Dispositivo cadastrado com sucesso!', type: 'success' });
+            onClose();
+        } catch (error) {
+            console.error('❌ Erro completo:', error);
+            showNotification({ message: `Erro ao cadastrar: ${error instanceof Error ? error.message : 'Desconhecido'}`, type: 'error' });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -77,7 +103,9 @@ export const AddDeviceModal: React.FC<{ patientId: number | string; onClose: () 
                             className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 resize-none"
                         />
                     </div>
-                    <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Cadastrar</button>
+                    <button type="submit" disabled={isLoading} className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-400 text-white font-bold py-2 px-4 rounded-lg transition">
+                        {isLoading ? 'Cadastrando...' : 'Cadastrar'}
+                    </button>
                 </form>
             </div>
         </div>
