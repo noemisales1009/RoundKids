@@ -3311,7 +3311,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             categoriesRes,
             answersRes
         ] = await Promise.all([
-            supabase.from('patients').select('id, name, bed_number, dob, status'),
+            supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso'),
             supabase.from('perguntas').select('*').order('ordem', { ascending: true }),
             supabase.from('pergunta_opcoes').select('*').order('ordem', { ascending: true }),
             supabase.from('categorias').select('*').order('ordem', { ascending: true }),
