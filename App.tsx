@@ -3111,10 +3111,6 @@ const SettingsScreen: React.FC = () => {
 // --- PROVIDERS for Global State ---
 
 const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    // Importar showNotification do NotificationContext
-    const notificationContext = useContext(NotificationContext);
-    const showNotification = notificationContext?.showNotification || (() => {});
-    
     // Initialize with empty array, will fetch on mount
     const [patients, setPatients] = useState<Patient[]>([]);
     const [questions, setQuestions] = useState<Question[]>([]);
@@ -3269,10 +3265,9 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             bedNumber: p.bed_number,
             motherName: p.mother_name || '-',
             dob: p.dob,
-            ctd: 'Estável',
+            ctd: p.diagnosis || 'Estável',
             peso: p.peso,
             status: p.status || 'estavel',
-            localTransferencia: p.local_transferencia || undefined,
             comorbidade: p.comorbidade || undefined,
             admissionDate: p.dt_internacao || undefined,
             devices: devicesMap[p.id] || [],
@@ -3331,8 +3326,9 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             bedNumber: p.bed_number || 0,
             dob: p.dob || '',
             status: p.status || 'estavel',
-            motherName: '',
-            ctd: 'Estável',
+            motherName: p.mother_name || '',
+            ctd: p.diagnosis || 'Estável',
+            peso: p.peso || undefined,
             devices: [],
             exams: [],
             medications: [],
@@ -3827,55 +3823,38 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             const updateData: any = {};
             if (data.motherName !== undefined) updateData.mother_name = data.motherName;
             if (data.ctd !== undefined) updateData.diagnosis = data.ctd;
-            if (data.peso !== undefined) updateData.peso = data.peso;
+            if (data.peso !== undefined) {
+                // Garantir que peso é um número
+                const pesoNumero = typeof data.peso === 'string' ? parseFloat(data.peso) : data.peso;
+                updateData.peso = pesoNumero || null;
+                console.log('⚖️ DEBUG PESO:', { original: data.peso, convertido: pesoNumero, final: updateData.peso });
+            }
 
-            console.log('💾 Salvando dados do paciente:', { patientId, updateData, tipoPatientId: typeof patientId });
+            console.log('💾 Salvando dados do paciente:', { patientId, updateData });
 
             const { data: result, error } = await supabase.from('patients')
                 .update(updateData)
                 .eq('id', patientId)
                 .select();
 
-            console.log('📊 Resultado da atualização:', result);
-            console.log('❌ Erro (se houver):', error);
-            console.log('🔍 PatientId usado:', { patientId, tipo: typeof patientId });
+            console.log('📊 Resultado completo:', { resultado: result, erro: error });
 
             if (error) {
-                console.error('❌ ERRO DETALHADO ao salvar dados do paciente:', error);
-                console.error('Mensagem:', error.message);
-                console.error('Detalhes:', error.details);
-                console.error('Hint:', error.hint);
-                showNotification({ 
-                    message: `❌ Erro ao salvar: ${error.message}`, 
-                    type: 'error' 
-                });
-                return;
-            }
-
-            if (!result || result.length === 0) {
-                console.error('❌ Nenhuma linha foi atualizada. Verifique se o ID existe.');
-                showNotification({ 
-                    message: 'Erro: Paciente não encontrado ou sem permissão para atualizar.', 
-                    type: 'error' 
-                });
+                console.error('❌ Erro ao salvar dados do paciente:', error);
+                alert(`Erro ao salvar: ${error.message}`);
                 return;
             }
 
             console.log('✅ Dados do paciente salvos com sucesso!', result);
-            showNotification({ 
-                message: '✅ Informações atualizadas com sucesso!', 
-                type: 'success' 
-            });
+            alert('✅ Informações atualizadas com sucesso!');
+            
             // Pequeno delay para garantir que o banco atualizou
             setTimeout(() => {
                 fetchPatients();
             }, 500);
         } catch (err) {
             console.error('❌ Erro ao salvar dados do paciente:', err);
-            showNotification({ 
-                message: `Erro ao salvar: ${err}`, 
-                type: 'error' 
-            });
+            alert(`Erro ao salvar: ${err}`);
         }
     };
 
