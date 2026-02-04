@@ -54,8 +54,10 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
     const [isExpanded, setIsExpanded] = useState(false);
     const [loading, setLoading] = useState(true);
     const [showJustificationModal, setShowJustificationModal] = useState(false);
+    const [showArchiveModal, setShowArchiveModal] = useState(false);
     const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
     const [justificationText, setJustificationText] = useState('');
+    const [archiveReason, setArchiveReason] = useState('');
     const { showNotification } = useContext(NotificationContext)!;
     const { user } = useContext(UserContext)!;
 
@@ -71,11 +73,13 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                     supabase
                         .from('tasks_view_horario_br')
                         .select('*')
-                        .eq('patient_id', patientId),
+                        .eq('patient_id', patientId)
+                        .is('archived_at', null), // Filtrar apenas não arquivados
                     supabase
                         .from('alertas_paciente_view_completa')
                         .select('*')
                         .eq('patient_id', patientId)
+                        .is('archived_at', null) // Filtrar apenas não arquivados
                 ]);
 
                 console.log('tasksResult:', tasksResult);
@@ -232,39 +236,65 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
     };
 
     const handleDeletar = async (alertId: string, source?: 'tasks' | 'alertas') => {
-        if (!window.confirm('Tem certeza que deseja DELETAR este alerta?')) return;
+        // Abrir modal de arquivamento ao invés de deletar
+        const alertToArchive = alertas.find(a => a.id === alertId);
+        if (alertToArchive) {
+            setSelectedAlert(alertToArchive);
+            setArchiveReason('');
+            setShowArchiveModal(true);
+        }
+    };
+
+    const handleArquivar = async () => {
+        if (!selectedAlert || !archiveReason.trim()) {
+            showNotification({ message: 'Por favor, informe o motivo do arquivamento', type: 'error' });
+            return;
+        }
 
         try {
-            if (source === 'alertas') {
-                // Deletar de alertas_paciente
+            if (selectedAlert.source === 'alertas') {
+                // Arquivar em alertas_paciente
                 const { error } = await supabase
                     .from('alertas_paciente')
-                    .delete()
-                    .eq('id', alertId);
+                    .update({
+                        archived_at: new Date().toISOString(),
+                        archived_by: user?.id || null,
+                        motivo_arquivamento: archiveReason
+                    })
+                    .eq('id', selectedAlert.id);
 
                 if (error) {
-                    showNotification({ message: 'Erro ao deletar alerta clínico', type: 'error' });
+                    console.error('Erro ao arquivar alerta clínico:', error);
+                    showNotification({ message: 'Erro ao arquivar alerta clínico', type: 'error' });
                     return;
                 }
             } else {
-                // Deletar de tasks
+                // Arquivar em tasks
                 const { error } = await supabase
                     .from('tasks')
-                    .delete()
-                    .eq('id', alertId);
+                    .update({
+                        archived_at: new Date().toISOString(),
+                        archived_by: user?.id || null,
+                        motivo_arquivamento: archiveReason
+                    })
+                    .eq('id', selectedAlert.id);
 
                 if (error) {
-                    showNotification({ message: 'Erro ao deletar task', type: 'error' });
+                    console.error('Erro ao arquivar task:', error);
+                    showNotification({ message: 'Erro ao arquivar task', type: 'error' });
                     return;
                 }
             }
 
             // Remove do estado local
-            setAlertas(alertas.filter(a => a.id !== alertId));
-            showNotification({ message: 'Alerta deletado com sucesso!', type: 'success' });
+            setAlertas(alertas.filter(a => a.id !== selectedAlert.id));
+            setShowArchiveModal(false);
+            setSelectedAlert(null);
+            setArchiveReason('');
+            showNotification({ message: 'Alerta arquivado com sucesso!', type: 'success' });
         } catch (err) {
-            console.error('Erro ao deletar alerta:', err);
-            showNotification({ message: 'Erro ao deletar alerta', type: 'error' });
+            console.error('Erro ao arquivar alerta:', err);
+            showNotification({ message: 'Erro ao arquivar alerta', type: 'error' });
         }
     };
 
@@ -439,11 +469,11 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                                             </button>
                                             <button
                                                 onClick={() => handleDeletar(alerta.id, alerta.source)}
-                                                className="flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded transition"
-                                                title="Deletar alerta"
+                                                className="flex items-center gap-1 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded transition"
+                                                title="Arquivar alerta"
                                             >
                                                 <TrashIcon className="w-4 h-4" />
-                                                Deletar
+                                                Arquivar
                                             </button>
                                         </div>
                                     </div>
@@ -492,6 +522,61 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                                     setShowJustificationModal(false);
                                     setSelectedAlert(null);
                                     setJustificationText('');
+                                }}
+                                className="flex-1 px-4 py-2 bg-slate-300 hover:bg-slate-400 dark:bg-slate-600 dark:hover:bg-slate-500 text-slate-800 dark:text-slate-200 font-semibold rounded-lg transition"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Arquivamento */}
+            {showArchiveModal && selectedAlert && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-lg w-full p-6">
+                        <h3 className="text-xl font-bold text-amber-600 dark:text-amber-400 mb-4">
+                            ⚠️ Arquivar Alerta
+                        </h3>
+                        
+                        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded">
+                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Alerta:</p>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">{selectedAlert.description}</p>
+                        </div>
+
+                        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
+                            <p className="text-sm text-blue-800 dark:text-blue-300">
+                                ℹ️ O alerta será arquivado e não aparecerá mais na lista ativa, mas ficará registrado no histórico do paciente com o motivo do arquivamento.
+                            </p>
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                Motivo do Arquivamento: <span className="text-red-500">*</span>
+                            </label>
+                            <textarea
+                                value={archiveReason}
+                                onChange={(e) => setArchiveReason(e.target.value)}
+                                className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200"
+                                rows={4}
+                                placeholder="Por favor, informe o motivo do arquivamento deste alerta..."
+                            />
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleArquivar}
+                                disabled={!archiveReason.trim()}
+                                className="flex-1 px-4 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition"
+                            >
+                                Arquivar
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowArchiveModal(false);
+                                    setSelectedAlert(null);
+                                    setArchiveReason('');
                                 }}
                                 className="flex-1 px-4 py-2 bg-slate-300 hover:bg-slate-400 dark:bg-slate-600 dark:hover:bg-slate-500 text-slate-800 dark:text-slate-200 font-semibold rounded-lg transition"
                             >

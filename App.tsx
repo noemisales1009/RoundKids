@@ -689,6 +689,8 @@ const PatientHistoryScreen: React.FC = () => {
     const [balanceData, setBalanceData] = React.useState<any[]>([]);
     const [alertsData, setAlertsData] = React.useState<any[]>([]);
     const [alertCompletions, setAlertCompletions] = React.useState<any[]>([]);
+    const [alertJustifications, setAlertJustifications] = React.useState<any[]>([]);
+    const [archivedAlerts, setArchivedAlerts] = React.useState<any[]>([]);
     const [dietsData, setDietsData] = React.useState<any[]>([]);
     const [dataInicio, setDataInicio] = React.useState<string>('');
     const [dataFinal, setDataFinal] = React.useState<string>('');
@@ -706,7 +708,9 @@ const PatientHistoryScreen: React.FC = () => {
         'Dietas': 'Dieta',
         'Alertas': 'Alerta',
         'Comorbidades': 'Comorbidade',
-        'Completações': 'Completação de Alerta'
+        'Completações': 'Completação de Alerta',
+        'Justificativas': 'Justificativa Adicionada',
+        'Arquivamentos': 'Alerta Arquivado'
     };
 
     useHeader(patient ? `Histórico: ${patient.name}` : 'Histórico do Paciente');
@@ -776,7 +780,7 @@ const PatientHistoryScreen: React.FC = () => {
                     .select('*')
                     .eq('patient_id', patientId)
                     .eq('arquivado', true)
-                    .order('archived_at', { ascending: false });
+                    .order('created_at', { ascending: false });
                 
                 if (error) {
                     console.warn('⚠️ View diagnosticos_historico_com_usuario pode não existir:', error.message);
@@ -988,6 +992,62 @@ const PatientHistoryScreen: React.FC = () => {
         };
     }, [patientId]);
 
+    // Buscar justificativas de alertas
+    React.useEffect(() => {
+        const fetchAlertJustifications = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('monitoramento_geral_justificativas')
+                    .select('*')
+                    .eq('patient_id', patientId);
+                
+                if (error) {
+                    console.warn('⚠️ View monitoramento_geral_justificativas pode não existir:', error.message);
+                    return;
+                }
+                
+                console.log('🟢 Justificativas carregadas:', data);
+                
+                if (data) {
+                    setAlertJustifications(data);
+                }
+            } catch (err) {
+                console.warn('View monitoramento_geral_justificativas não disponível');
+            }
+        };
+
+        fetchAlertJustifications();
+    }, [patientId]);
+
+    // Buscar alertas arquivados
+    React.useEffect(() => {
+        const fetchArchivedAlerts = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('monitoramento_arquivamento_geral')
+                    .select('*')
+                    .eq('patient_id', patientId);
+                
+                if (error) {
+                    console.warn('⚠️ View monitoramento_arquivamento_geral pode não existir:', error.message);
+                    return;
+                }
+                
+                console.log('🗄️ Alertas arquivados carregados:', data);
+                
+                if (data) {
+                    setArchivedAlerts(data);
+                }
+            } catch (err) {
+                console.warn('View monitoramento_arquivamento_geral não disponível');
+            }
+        };
+
+        fetchArchivedAlerts();
+    }, [patientId]);
+
     type TimelineEvent = {
         timestamp: string;
         icon: React.FC<{ className?: string; }>;
@@ -1084,11 +1144,7 @@ const PatientHistoryScreen: React.FC = () => {
             const label = diagnostic.opcao_label || 'Não informado';
             const createdByName = diagnostic.created_by_name || 'Não informado';
             
-            // Se está arquivado, adiciona informação de quem ocultou (view retorna archived_by_name)
             let description = `[DIAGNOSTICO] Diagnóstico: ${label}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''} (Status: ${diagnostic.status}).\n👤 Criado por: ${createdByName}`;
-            if (diagnostic.arquivado && diagnostic.archived_by_name) {
-                description += `\n🚫 Ocultado por: ${diagnostic.archived_by_name}`;
-            }
             
             events.push({
                 timestamp: diagnostic.created_at || new Date().toISOString(),
@@ -1100,11 +1156,7 @@ const PatientHistoryScreen: React.FC = () => {
 
         // Adicionar diagnósticos resolvidos com nome de quem resolveu
         resolvedDiagnostics.forEach(diagnostic => {
-            // Se está arquivado, adiciona informação de quem ocultou (view retorna archived_by_name)
             let description = `[DIAGNOSTICO] ✓ Diagnóstico Resolvido: ${diagnostic.opcao_label || `Opção ${diagnostic.opcao_id}`}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''}\n👤 Resolvido por: ${diagnostic.created_by_name || 'Não informado'}`;
-            if (diagnostic.arquivado && diagnostic.archived_by_name) {
-                description += `\n🚫 Ocultado por: ${diagnostic.archived_by_name}`;
-            }
             
             events.push({
                 timestamp: diagnostic.created_at || new Date().toISOString(),
@@ -1119,14 +1171,12 @@ const PatientHistoryScreen: React.FC = () => {
         archivedDiagnostics.forEach(diagnostic => {
             const label = diagnostic.opcao_label || 'Não informado';
             const createdByName = diagnostic.created_by_name || 'Não informado';
-            const archivedByName = diagnostic.archived_by_name || 'Desconhecido';
-            const archivedAtTime = diagnostic.archived_at ? new Date(diagnostic.archived_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
             
-            // Descrição MUITO CLARA sobre quem apagou
-            let description = `[DIAGNOSTICO] ⚠️ DIAGNÓSTICO OCULTADO/APAGADO\n📋 Diagnóstico: ${label}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''}\n\n👤 Criado originalmente por: ${createdByName}\n\n🚫 DELETADO/OCULTADO POR: ${archivedByName}${archivedAtTime ? ` às ${archivedAtTime}` : ''}`;
+            // Descrição sobre diagnóstico arquivado
+            let description = `[DIAGNOSTICO] ⚠️ DIAGNÓSTICO OCULTADO/APAGADO\n📋 Diagnóstico: ${label}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''}\n👤 Criado por: ${createdByName}`;
             
             events.push({
-                timestamp: diagnostic.archived_at || diagnostic.created_at || new Date().toISOString(),
+                timestamp: diagnostic.created_at || new Date().toISOString(),
                 icon: ClipboardIcon,
                 description: description,
                 hasTime: true,
@@ -1249,6 +1299,32 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
+        // Adicionar justificativas de alertas
+        console.log('🔵 Processando alertJustifications:', alertJustifications);
+        alertJustifications.forEach(just => {
+            const tipoLabel = just.tipo_origem === 'Alerta' ? '🔔 Alerta' : '📋 Tarefa';
+            console.log('➕ Adicionando justificativa:', just);
+            events.push({
+                timestamp: just.data_justificativa || new Date().toISOString(),
+                icon: CheckCircleIcon,
+                description: `[JUSTIFICATIVA_ADICIONADA] ✓ Justificativa Adicionada (${tipoLabel})\n📋 ${just.descricao}\n Justificativa: ${just.justificativa}\n👨‍⚕️ Justificado por: ${just.quem_justificou_nome}\n📅 Justificado em: ${just.data_justificativa ? new Date(just.data_justificativa).toLocaleString('pt-BR') : 'N/A'}`,
+                hasTime: true,
+            });
+        });
+
+        // Adicionar alertas arquivados
+        console.log('🗄️ Processando archivedAlerts:', archivedAlerts);
+        archivedAlerts.forEach(archived => {
+            const tipoLabel = archived.tipo_origem === 'Alerta' ? '🔔 Alerta' : '📋 Tarefa';
+            console.log('📦 Adicionando arquivamento:', archived);
+            events.push({
+                timestamp: archived.data_arquivamento || new Date().toISOString(),
+                icon: CheckCircleIcon,
+                description: `[ALERTA_ARQUIVADO] 📦 ${tipoLabel} Arquivado\n📋 Descrição: ${archived.descricao_original}\n📝 Motivo do Arquivamento: ${archived.motivo_do_arquivamento}\n👨‍⚕️ Arquivado por: ${archived.quem_arquivou}\n📅 Arquivado em: ${archived.data_arquivamento ? new Date(archived.data_arquivamento).toLocaleString('pt-BR') : 'N/A'}`,
+                hasTime: true,
+            });
+        });
+
         events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
         const groupedEvents = events.reduce((acc, event) => {
@@ -1261,7 +1337,7 @@ const PatientHistoryScreen: React.FC = () => {
         }, {} as Record<string, TimelineEvent[]>);
 
         return groupedEvents;
-    }, [patient, tasks, diagnostics, diuresisData, balanceData, dietsData, alertsData, alertCompletions, resolvedDiagnostics]);
+    }, [patient, tasks, diagnostics, diuresisData, balanceData, dietsData, alertsData, alertCompletions, alertJustifications, archivedAlerts, resolvedDiagnostics]);
 
     const handleGeneratePdf = () => {
         // ... (PDF generation logic remains the same)
@@ -1659,7 +1735,9 @@ const PatientHistoryScreen: React.FC = () => {
             '[ALERTA]': 'Alertas',
             '[COMORBIDADE]': 'Comorbidades',
             '[COMPLETACAO_ALERTA]': 'Completações',
-            '[DIETA]': 'Dietas'
+            '[DIETA]': 'Dietas',
+            '[JUSTIFICATIVA_ADICIONADA]': 'Justificativas',
+            '[ALERTA_ARQUIVADO]': 'Arquivamentos'
         };
         
         for (const [marker, category] of Object.entries(categoryMap)) {
