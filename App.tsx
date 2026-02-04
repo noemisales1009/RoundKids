@@ -778,14 +778,16 @@ const PatientHistoryScreen: React.FC = () => {
                     .eq('arquivado', true)
                     .order('archived_at', { ascending: false });
                 
-                console.log('🚫 Diagnósticos arquivados data:', data);
-                console.log('❌ Diagnósticos arquivados error:', error);
+                if (error) {
+                    console.warn('⚠️ View diagnosticos_historico_com_usuario pode não existir:', error.message);
+                    return;
+                }
                 
-                if (!error && data) {
+                if (data) {
                     setArchivedDiagnostics(data);
                 }
             } catch (err) {
-                console.error('Erro ao buscar diagnósticos arquivados:', err);
+                console.warn('View diagnosticos_historico_com_usuario não disponível');
             }
         };
 
@@ -804,10 +806,12 @@ const PatientHistoryScreen: React.FC = () => {
                     .eq('acao', 'OCULTADO')
                     .order('created_at', { ascending: false });
                 
-                console.log('📋 Log de auditoria data:', data);
-                console.log('❌ Log de auditoria error:', error);
+                if (error) {
+                    console.warn('⚠️ Tabela diagnosticos_audit_log pode não existir:', error.message);
+                    return;
+                }
                 
-                if (!error && data) {
+                if (data) {
                     setAuditLogData(data);
                 }
             } catch (err) {
@@ -954,12 +958,18 @@ const PatientHistoryScreen: React.FC = () => {
                     .from('alert_completions_with_user')
                     .select('*')
                     .eq('patient_id', patientId);
+                    // Nota: patient_id vem do JOIN com tasks na view
                 
-                if (!error && data) {
+                if (error) {
+                    console.warn('⚠️ View alert_completions_with_user pode não existir:', error.message);
+                    return;
+                }
+                
+                if (data) {
                     setAlertCompletions(data);
                 }
             } catch (err) {
-                console.error('Erro ao buscar completações de alertas:', err);
+                console.warn('View alert_completions_with_user não disponível');
             }
         };
 
@@ -1970,7 +1980,7 @@ const PatientDetailScreen: React.FC = () => {
                     <span className="font-medium">Idade: <span className="font-normal">{formatAge(patient.dob)}</span></span>
                     <span className="font-medium">Mãe: <span className="font-normal">{patient.motherName}</span></span>
                     <span className="font-medium">Diagnóstico: <span className="font-normal">{patient.ctd}</span></span>
-                    {patient.peso && <span className="font-medium">Peso: <span className="font-normal">{patient.peso} kg</span></span>}
+                    <span className="font-medium">Peso: <span className="font-normal">{patient.peso ? `${patient.peso} kg` : <span className="text-orange-500 italic">Não informado</span>}</span></span>
                 </div>
             </div>
 
@@ -2219,17 +2229,44 @@ const PatientDetailScreen: React.FC = () => {
                                                         ) : (
                                                             <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(diet.data_inicio)}</p>
                                                         )}
+                                                        
+                                                        {/* Parâmetros Nutricionais */}
                                                         {diet.volume && (
                                                             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Volume: {diet.volume} ml</p>
                                                         )}
                                                         {diet.vet && (
                                                             <p className="text-sm text-slate-500 dark:text-slate-400">VET: {diet.vet} kcal/dia</p>
                                                         )}
+                                                        {diet.vet_pleno && (
+                                                            <p className="text-sm text-slate-500 dark:text-slate-400">VET Pleno: {diet.vet_pleno} kcal/dia</p>
+                                                        )}
                                                         {diet.pt && (
                                                             <p className="text-sm text-slate-500 dark:text-slate-400">Proteína (PT): {diet.pt} g/dia</p>
                                                         )}
+                                                        {diet.pt_g_dia && (
+                                                            <p className="text-sm text-slate-500 dark:text-slate-400">PT Plena: {diet.pt_g_dia} g/dia</p>
+                                                        )}
                                                         {diet.th && (
                                                             <p className="text-sm text-slate-500 dark:text-slate-400">Taxa Hídrica (TH): {diet.th} ml/m²/dia</p>
+                                                        )}
+                                                        
+                                                        {/* Cálculos Automáticos */}
+                                                        {(diet.vet_at || diet.pt_at) && (
+                                                            <div className="mt-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2">
+                                                                <p className="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1">📊 Cálculos Automáticos</p>
+                                                                {diet.vet_at && diet.vet && diet.vet_pleno && (
+                                                                    <div className="space-y-0.5">
+                                                                        <p className="text-sm font-bold text-blue-900 dark:text-blue-200">VET AT: {diet.vet_at.toFixed(1)}%</p>
+                                                                        <p className="text-xs text-blue-600 dark:text-blue-400">{diet.vet} kcal/dia de {diet.vet_pleno} kcal/dia</p>
+                                                                    </div>
+                                                                )}
+                                                                {diet.pt_at && diet.pt && diet.pt_g_dia && (
+                                                                    <div className="space-y-0.5 mt-1">
+                                                                        <p className="text-sm font-bold text-blue-900 dark:text-blue-200">PT AT: {diet.pt_at.toFixed(1)}%</p>
+                                                                        <p className="text-xs text-blue-600 dark:text-blue-400">{diet.pt} g/dia de {diet.pt_g_dia} g/dia</p>
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         )}
                                                         {diet.observacao && (
                                                             <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 font-medium">Observação: {diet.observacao}</p>
@@ -3214,7 +3251,11 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 data_remocao: d.data_remocao || undefined,
                 volume: d.volume || undefined,
                 vet: d.vet || undefined,
+                vet_pleno: d.vet_pleno || undefined,
+                vet_at: d.vet_at || undefined,
                 pt: d.pt || undefined,
+                pt_g_dia: d.pt_g_dia || undefined,
+                pt_at: d.pt_at || undefined,
                 th: d.th || undefined,
                 observacao: d.observacao || undefined,
                 isArchived: d.is_archived
@@ -3346,7 +3387,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         // 🔄 Carregar dados detalhados EM BACKGROUND (não bloqueia renderização)
         setTimeout(() => {
             Promise.all([
-                supabase.from('patients').select('id, name, bed_number, dob, status, mother_name'),
+                supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso'),
                 supabase.from('dispositivos_pacientes').select('*'),
                 supabase.from('exames_pacientes').select('*'),
                 supabase.from('medicacoes_pacientes').select('*'),

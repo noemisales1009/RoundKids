@@ -102,29 +102,36 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
   const handleRemoveDiagnostic = async (optionId: number) => {
     try {
-      // Obter o usuário logado
-      const { data: { user } } = await supabase.auth.getUser();
+      console.log('🗑️ Removendo diagnóstico:', { patientId, optionId });
       
-      // Arquivar diagnóstico (soft delete) em vez de deletar
-      // Registra quem ocultou e quando
+      // Arquivar diagnóstico (soft delete)
       const { error } = await supabase
         .from('paciente_diagnosticos')
         .update({ 
-          arquivado: true,
-          archived_by: user?.id,
-          archived_at: new Date().toISOString()
+          arquivado: true
         })
         .eq('patient_id', patientId)
         .eq('opcao_id', optionId)
         .eq('arquivado', false);
 
       if (error) {
-        console.error('Erro ao arquivar diagnóstico:', error);
-        alert('Erro ao remover diagnóstico. Tente novamente.');
+        console.error('❌ Erro detalhado ao arquivar diagnóstico:', {
+          error,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        alert(`Erro ao remover diagnóstico: ${error.message}`);
         return;
       }
 
-      // Remover diagnóstico da interface
+      console.log('✅ Diagnóstico removido com sucesso!');
+
+      // Atualizar a lista de diagnósticos removendo o arquivado
+      setDiagnostics(prev => prev.filter(d => d.opcao_id !== optionId));
+
+      // Remover diagnóstico da interface - Garantir que o checkbox seja desmarcado
       setCheckedOptions(prev => {
         const newChecked = { ...prev };
         delete newChecked[optionId];
@@ -144,9 +151,12 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         delete newStatus[optionId];
         return newStatus;
       });
+
+      // Mensagem de sucesso
+      alert('✅ Diagnóstico removido com sucesso!');
     } catch (error) {
-      console.error('Erro ao remover diagnóstico:', error);
-      alert('Erro ao remover diagnóstico. Tente novamente.');
+      console.error('❌ Erro ao remover diagnóstico (catch):', error);
+      alert(`Erro ao remover diagnóstico: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   };
 
@@ -248,6 +258,11 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       }
 
       alert('✅ Diagnósticos salvos com sucesso!');
+      
+      // Fechar/colapsar todos os grupos após salvar
+      setExpandedGroup(null);
+      setExpandedQuestion(null);
+      setExpandedParentOption(null);
     } catch (error: any) {
       console.error('Erro ao salvar diagnósticos:', error);
       alert(`❌ ${error.message || 'Erro ao salvar diagnósticos. Tente novamente.'}`);

@@ -20,11 +20,16 @@ const DestinoComponent: React.FC<DestinoComponentProps> = ({ patientId }) => {
           .eq('id', patientId)
           .single();
 
-        if (!error && data?.local_transferencia) {
+        if (error) {
+          console.warn('⚠️ Campo local_transferencia pode não existir na tabela patients:', error.message);
+          return;
+        }
+
+        if (data?.local_transferencia) {
           setLocalTransferencia(data.local_transferencia);
         }
       } catch (err) {
-        console.error('Erro ao carregar dados:', err);
+        console.warn('Campo local_transferencia não disponível');
       }
     };
 

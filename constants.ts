@@ -53,17 +53,90 @@ export const DEVICE_LOCATIONS: string[] = [
 export const EXAM_STATUSES: Array<'Pendente' | 'Normal' | 'Alterado'> = ['Pendente', 'Normal', 'Alterado'] as const;
 
 export const MEDICATION_LIST: string[] = [
-    'Epinefrina', 'Noraepinefrina', 'Milrinona', 'Dobutamina', 'Vasopressina', 'Nipride',
-    'Midazolam', 'Fentanyl (Fentanila)', 'Morfina', 'Precedex (Dexmedetomidina)', 'Propofol',
-    'Clonidina', 'Cetamina', 'Tiopental', 'Lorazepam', 'Metadona', 'Diazepam', 'Fenitoína',
-    'Fenobarbital', 'Topiramato', 'Levetiracetam', 'Ácido Valproico', 'Oxcarbazepina',
-    'Furosemida', 'Hidroclorotiazida', 'Omeprazol', 'Espironolactona', 'Acetazolamida',
-    'Bicarbonato de Sódio', 'Correção de Potássio', 'Hidrocortisona', 'Octreotida',
-    'N-Acetilcisteína', 'Vitamina K', 'Complexo Protrombínico', 'Plasma Fresco',
-    'Concentrado de Hemácias', 'Plaquetas', 'Crioprecipitado', 'Tazocin', 'Meropenem',
-    'Polimixina B', 'Amicacina', 'Ceftriaxone', 'Teicoplanina', 'Vancomicina', 'Cefepime',
-    'Cefazolina', 'Metronidazol', 'Gentamicina', 'Tigeciclina', 'Torgena', 'Aztreonam',
-    'Anfotericina B', 'Fluconazol', 'Micafungina', 'Outro'
+    // Vasoativos
+    'Epinefrina',
+    'Noraepinefrina',
+    'Milrinona',
+    'Dobutamina',
+    'Vasopressina',
+    'Nipride',
+    // Sedativos e Analgésicos
+    'Midazolam',
+    'Fentanyl (Fentanila)',
+    'Morfina',
+    'Precedex (Dexmedetomidina)',
+    'Propofol',
+    'Clonidina',
+    'Cetamina',
+    'Tiopental',
+    'Lorazepam',
+    'Metadona',
+    'Diazepam',
+    // Anticonvulsivantes
+    'Fenitoína',
+    'Fenobarbital',
+    'Topiramato',
+    'Levetiracetam',
+    'Ácido Valproico',
+    'Oxcarbazepina',
+    // Diuréticos e Eletrólitos
+    'Furosemida',
+    'Hidroclorotiazida',
+    'Omeprazol',
+    'Espironolactona',
+    'Acetazolamida',
+    'Bicarbonato de Sódio',
+    'Correção de Potássio',
+    // Corticoides
+    'Hidrocortisona',
+    'Metilprednisolona',
+    'Dexametasona',
+    // Broncodilatadores
+    'Salbutamol injetável',
+    'Salbutamol spray',
+    'Clenil Spray',
+    'Terbutalina EV',
+    // Outros
+    'Octreotida',
+    'N-Acetilcisteína',
+    'Vitamina K',
+    // Hemoderivados
+    'Complexo Protrombínico',
+    'Plasma Fresco',
+    'Concentrado de Hemácias',
+    'Plaquetas',
+    'Crioprecipitado',
+    // Antibióticos
+    'Tazocin',
+    'Oxacilina',
+    'Cefepime',
+    'Linezolida',
+    'Ampicilina',
+    'Cefalotina',
+    'Sulfametoxazol + TMP',
+    'Ciprofloxacino',
+    'Levofloxacino',
+    'Anfotericina L',
+    'Meropenem',
+    'Polimixina B',
+    'Amicacina',
+    'Ceftriaxone',
+    'Teicoplanina',
+    'Vancomicina',
+    'Cefazolina',
+    'Metronidazol',
+    'Gentamicina',
+    'Tigeciclina',
+    'Torgena',
+    'Aztreonam',
+    // Antifúngicos
+    'Anfotericina B',
+    'Fluconazol',
+    'Micafungina',
+    // Insulinas
+    'Insulina Regular',
+    'Insulina NPH',
+    'Outro'
 ] as const;
 
 export const MEDICATION_DOSAGE_UNITS: string[] = [

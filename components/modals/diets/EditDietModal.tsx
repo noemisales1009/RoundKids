@@ -19,6 +19,8 @@ export const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; o
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!type || !dataInicio) return;
+        
+        // vet_at e pt_at são calculados automaticamente pelo banco (GENERATED ALWAYS AS)
         updateDietInPatient(patientId, {
             ...diet,
             type,
@@ -140,6 +142,41 @@ export const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; o
                         {/* Divisor Visual */}
                         <div className="border-t border-slate-200 dark:border-slate-700 my-2"></div>
 
+                        {/* Card de Cálculo */}
+                        {((vet && vetPleno) || (pt && ptGDia)) && (
+                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                                <h4 className="text-xs sm:text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2">📊 Cálculos Automáticos</h4>
+                                <div className="space-y-2">
+                                    {vet && vetPleno && (
+                                        <div className="space-y-0.5">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">VET AT:</span>
+                                                <span className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-200">
+                                                    {((parseFloat(vet) * 100) / parseFloat(vetPleno)).toFixed(1)}%
+                                                </span>
+                                            </div>
+                                            <div className="text-xs text-blue-600 dark:text-blue-400 text-right">
+                                                {vet} kcal/dia de {vetPleno} kcal/dia
+                                            </div>
+                                        </div>
+                                    )}
+                                    {pt && ptGDia && (
+                                        <div className="space-y-0.5">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">PT AT:</span>
+                                                <span className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-200">
+                                                    {((parseFloat(pt) * 100) / parseFloat(ptGDia)).toFixed(1)}%
+                                                </span>
+                                            </div>
+                                            <div className="text-xs text-blue-600 dark:text-blue-400 text-right">
+                                                {pt} g/dia de {ptGDia} g/dia
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Observações */}
                         <div>
                             <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Observação <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
@@ -151,30 +188,6 @@ export const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; o
                                 className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             />
                         </div>
-                        {/* Card de Cálculo */}
-                        {((vet && vetPleno) || (pt && ptGDia)) && (
-                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                                <h4 className="text-xs sm:text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2">📊 Cálculos Automáticos</h4>
-                                <div className="space-y-1.5">
-                                    {vet && vetPleno && (
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">VET AT:</span>
-                                            <span className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-200">
-                                                {((parseFloat(vet) * 100) / parseFloat(vetPleno)).toFixed(1)}%
-                                            </span>
-                                        </div>
-                                    )}
-                                    {pt && ptGDia && (
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">PT AT:</span>
-                                            <span className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-200">
-                                                {((parseFloat(pt) * 100) / parseFloat(ptGDia)).toFixed(1)}%
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
                         <button
                             type="submit"
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 sm:py-3 rounded-lg transition mt-2 text-sm sm:text-base"

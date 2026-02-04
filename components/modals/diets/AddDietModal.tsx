@@ -26,6 +26,8 @@ export const AddDietModal: React.FC<{ patientId: number | string; onClose: () =>
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!type || !dataInicio) return;
+        
+        // vet_at e pt_at são calculados automaticamente pelo banco (GENERATED ALWAYS AS)
         addDietToPatient(patientId, {
             type,
             data_inicio: dataInicio,
@@ -161,21 +163,31 @@ export const AddDietModal: React.FC<{ patientId: number | string; onClose: () =>
                         {((vet && vetPleno) || (pt && ptGDia)) && (
                             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                                 <h4 className="text-xs sm:text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2">📊 Cálculos Automáticos</h4>
-                                <div className="space-y-1.5">
+                                <div className="space-y-2">
                                     {vet && vetPleno && (
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">VET AT:</span>
-                                            <span className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-200">
-                                                {((parseFloat(vet) * 100) / parseFloat(vetPleno)).toFixed(1)}%
-                                            </span>
+                                        <div className="space-y-0.5">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">VET AT:</span>
+                                                <span className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-200">
+                                                    {((parseFloat(vet) * 100) / parseFloat(vetPleno)).toFixed(1)}%
+                                                </span>
+                                            </div>
+                                            <div className="text-xs text-blue-600 dark:text-blue-400 text-right">
+                                                {vet} kcal/dia de {vetPleno} kcal/dia
+                                            </div>
                                         </div>
                                     )}
                                     {pt && ptGDia && (
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">PT AT:</span>
-                                            <span className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-200">
-                                                {((parseFloat(pt) * 100) / parseFloat(ptGDia)).toFixed(1)}%
-                                            </span>
+                                        <div className="space-y-0.5">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">PT AT:</span>
+                                                <span className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-200">
+                                                    {((parseFloat(pt) * 100) / parseFloat(ptGDia)).toFixed(1)}%
+                                                </span>
+                                            </div>
+                                            <div className="text-xs text-blue-600 dark:text-blue-400 text-right">
+                                                {pt} g/dia de {ptGDia} g/dia
+                                            </div>
                                         </div>
                                     )}
                                 </div>

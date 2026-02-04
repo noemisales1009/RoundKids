@@ -99,6 +99,7 @@ export const EditCultureModal: React.FC<{ culture: Culture; patientId: number | 
                             <option value="Enterococcus faecalis">Enterococcus faecalis</option>
                             <option value="Enterococcus faecium">Enterococcus faecium</option>
                             <option value="Streptococcus pneumoniae">Streptococcus pneumoniae</option>
+                            <option value="H. influenzae">H. influenzae</option>
                             <option value="Stenotrophomonas maltophilia">Stenotrophomonas maltophilia</option>
                             <option value="Burkholderia cepacia complex">Burkholderia cepacia complex</option>
                             <option value="Elizabethkingia meningoseptica">Elizabethkingia meningoseptica</option>
