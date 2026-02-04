@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { supabase } from '../supabaseClient';
-import { NotificationContext } from '../contexts';
+import { NotificationContext, UserContext } from '../contexts';
 
 // Ícones simples usando símbolos
 const ChevronDownIcon = ({ className }: { className?: string }) => (
@@ -57,6 +57,7 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
     const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
     const [justificationText, setJustificationText] = useState('');
     const { showNotification } = useContext(NotificationContext)!;
+    const { user } = useContext(UserContext)!;
 
     // Buscar alertas do paciente (de ambas as views)
     useEffect(() => {
@@ -281,7 +282,11 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                 // Atualizar justificativa em alertas_paciente
                 const { error } = await supabase
                     .from('alertas_paciente')
-                    .update({ justificativa: justificationText })
+                    .update({
+                        justificativa: justificationText,
+                        justificativa_by: user?.id || null,
+                        justificativa_at: new Date().toISOString()
+                    })
                     .eq('id', selectedAlert.id);
 
                 if (error) throw error;
@@ -289,7 +294,11 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                 // Atualizar justificativa em tasks
                 const { error } = await supabase
                     .from('tasks')
-                    .update({ justification: justificationText })
+                    .update({ 
+                        justification: justificationText,
+                        justification_by: user?.id || null,
+                        justification_at: new Date().toISOString()
+                    })
                     .eq('id', selectedAlert.id);
 
                 if (error) throw error;

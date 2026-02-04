@@ -1214,6 +1214,7 @@ const PatientHistoryScreen: React.FC = () => {
             const prazoDuracao = alert.prazo_formatado || alert.prazo_formatado || 'N/A';
             const dataHora = alert.hora_criacao_formatado || alert.hora_criacao_formatado || 'N/A';
             const criadoPor = alert.created_by_name || 'Não informado';
+            const justificativa = alert.justificativa || alert.justification || null;
             
             // Usar live_status para mostrar se está no prazo ou fora do prazo
             const liveStatus = alert.live_status || 'Não definido';
@@ -1221,10 +1222,17 @@ const PatientHistoryScreen: React.FC = () => {
             // Usar SEMPRE a data de criação (created_at), não a data de vencimento
             const creationDateISO = alert.created_at || alert.hora_criacao || new Date().toISOString();
             
+            // Montar descrição com justificativa se existir
+            let description = `[ALERTA] 🔔 ${desc}\n👤 Responsável: ${resp}\n📅 Prazo Limite: ${prazoLimite}\n⏳ Prazo: ${prazoDuracao}\n🕐 Criado em: ${dataHora}\n👨‍⚕️ Criado por: ${criadoPor}\n📊 Status: ${liveStatus}`;
+            
+            if (justificativa) {
+                description += `\n\n📝 Justificativa: ${justificativa}`;
+            }
+            
             events.push({
                 timestamp: creationDateISO,
                 icon: BellIcon,
-                description: `[ALERTA] 🔔 ${desc}\n👤 Responsável: ${resp}\n📅 Prazo Limite: ${prazoLimite}\n⏳ Prazo: ${prazoDuracao}\n🕐 Criado em: ${dataHora}\n👨‍⚕️ Criado por: ${criadoPor}\n📊 Status: ${liveStatus}`,
+                description: description,
                 hasTime: true,
             });
         });
@@ -2714,6 +2722,7 @@ const CreateAlertScreen: React.FC = () => {
 const TaskStatusScreen: React.FC = () => {
     const { status } = useParams<{ status: TaskStatus }>();
     const { showNotification } = useContext(NotificationContext)!;
+    const { user } = useContext(UserContext)!;
 
     const [alerts, setAlerts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -2831,10 +2840,16 @@ const TaskStatusScreen: React.FC = () => {
     const handleJustifyAlert = async (alert: any, justification: string) => {
         try {
             const table = alert.source === 'tasks' ? 'tasks' : 'alertas_paciente';
+            const justificationField = alert.source === 'tasks' ? 'justification' : 'justificativa';
+            const justificationByField = alert.source === 'tasks' ? 'justification_by' : 'justificativa_by';
+            const justificationAtField = alert.source === 'tasks' ? 'justification_at' : 'justificativa_at';
+            
             const { error } = await supabase
                 .from(table)
                 .update({
-                    justificativa: justification,
+                    [justificationField]: justification,
+                    [justificationByField]: user?.id || null,
+                    [justificationAtField]: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', alert.id_alerta);
@@ -4032,11 +4047,16 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         fetchTasks();
     }, []);
 
-    const updateTaskJustification = async (taskId: number | string, justification: string) => {
+    const updateTaskJustification = async (taskId: number | string, justification: string, userId?: string) => {
         // Only updating standard tasks for now as ID types might differ (int vs uuid)
         // Ideally check ID type or table source
         const { error } = await supabase.from('tasks')
-            .update({ justification, status: 'fora_do_prazo' })
+            .update({ 
+                justification, 
+                justification_by: userId || null,
+                justification_at: new Date().toISOString(),
+                status: 'fora_do_prazo' 
+            })
             .eq('id', taskId);
         if (!error) fetchTasks();
     };
