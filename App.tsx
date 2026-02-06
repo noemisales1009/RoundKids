@@ -546,6 +546,11 @@ const DashboardScreen: React.FC = () => {
                     </div>
                 </>
             )}
+            <div className="border-t border-slate-200 dark:border-slate-700 mt-8 pt-6">
+                <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+                    Idealizado por Dra. Lélia Braga / Criado por Noemi Sales
+                </p>
+            </div>
         </div>
     );
 };
