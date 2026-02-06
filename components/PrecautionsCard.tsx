@@ -56,10 +56,8 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
   };
 
   const handleDeletePrecaution = (precautionId: number | string) => {
-    if (window.confirm('Tem certeza que deseja arquivar esta precaução?')) {
-      deletePrecautionFromPatient(patientId, precautionId);
-      showNotification({ message: 'Precaução arquivada.', type: 'info' });
-    }
+    deletePrecautionFromPatient(patientId, precautionId);
+    showNotification({ message: 'Precaução apagada.', type: 'info' });
   };
 
   const calculateDays = (startDate: string): number => {
@@ -144,18 +142,18 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                     </p>
                   </div>
 
-                  {precaution.tipo_precaucao !== 'padrao' && (
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => {
-                          setSelectedPrecaution(precaution);
-                          setEditModalOpen(true);
-                        }}
-                        className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded transition"
-                        title="Editar"
-                      >
-                        <PencilIcon className="w-4 h-4" />
-                      </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => {
+                        setSelectedPrecaution(precaution);
+                        setEditModalOpen(true);
+                      }}
+                      className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded transition"
+                      title="Editar"
+                    >
+                      <PencilIcon className="w-4 h-4" />
+                    </button>
+                    {precaution.tipo_precaucao !== 'padrao' && (
                       <button
                         onClick={() => setEndDateModalOpen(precaution.id)}
                         className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded transition text-xs font-medium"
@@ -163,15 +161,15 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                       >
                         Finalizar
                       </button>
-                      <button
-                        onClick={() => handleDeletePrecaution(precaution.id)}
-                        className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/50 rounded transition text-red-600 dark:text-red-400"
-                        title="Apagar precaução"
-                      >
-                        <CloseIcon className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
+                    )}
+                    <button
+                      onClick={() => handleDeletePrecaution(precaution.id)}
+                      className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/50 rounded transition text-red-600 dark:text-red-400"
+                      title="Apagar precaução"
+                    >
+                      <CloseIcon className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -291,12 +289,6 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
             </div>
 
             <div className="flex space-x-3 mt-6">
-              <button
-                onClick={() => handleDeletePrecaution(selectedPrecaution.id)}
-                className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition font-medium"
-              >
-                Arquivar
-              </button>
               <button
                 onClick={() => setEditModalOpen(false)}
                 className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition font-medium"
