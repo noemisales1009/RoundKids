@@ -1,10 +1,12 @@
 import React, { useState, useContext } from 'react';
-import { PatientsContext } from '../../../contexts';
+import { PatientsContext, NotificationContext, UserContext } from '../../../contexts';
 import { CloseIcon } from '../../icons';
 import { getTodayDateString } from '../../../constants';
 
 export const AddCultureModal: React.FC<{ patientId: number | string; onClose: () => void }> = ({ patientId, onClose }) => {
     const { addCultureToPatient } = useContext(PatientsContext)!;
+    const { showNotification } = useContext(NotificationContext)!;
+    const { user } = useContext(UserContext)!;
     const [site, setSite] = useState('');
     const [customSite, setCustomSite] = useState('');
     const [microorganism, setMicroorganism] = useState('');
@@ -17,10 +19,18 @@ export const AddCultureModal: React.FC<{ patientId: number | string; onClose: ()
         const finalSite = site === 'Outros' ? customSite : site;
         const finalMicroorganism = microorganism === 'Outros' ? customMicroorganism : microorganism;
         
-        if (finalSite && finalMicroorganism && collectionDate) {
-            addCultureToPatient(patientId, { site: finalSite, microorganism: finalMicroorganism, collectionDate, observation: observation || undefined });
-            onClose();
+        if (!finalSite || !finalMicroorganism || !collectionDate) return;
+        
+        if (!user?.id) {
+            console.error('⚠️ User não está autenticado!');
+            showNotification({ message: 'Erro: Usuário não autenticado', type: 'error' });
+            return;
         }
+        
+        console.log('👤 User ID no AddCultureModal:', user.id);
+        addCultureToPatient(patientId, { site: finalSite, microorganism: finalMicroorganism, collectionDate, observation: observation || undefined }, user.id);
+        showNotification({ message: 'Cultura cadastrada com sucesso!', type: 'success' });
+        onClose();
     };
 
     return (

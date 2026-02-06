@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { PatientsContext, NotificationContext } from '../../../contexts';
+import { PatientsContext, NotificationContext, UserContext } from '../../../contexts';
 import { CloseIcon } from '../../icons';
 import { MEDICATION_LIST, MEDICATION_DOSAGE_UNITS } from '../../../constants';
 
@@ -14,6 +14,7 @@ const getTodayDateString = () => {
 export const AddMedicationModal: React.FC<{ patientId: number | string; onClose: () => void; }> = ({ patientId, onClose }) => {
     const { addMedicationToPatient } = useContext(PatientsContext)!;
     const { showNotification } = useContext(NotificationContext)!;
+    const { user } = useContext(UserContext)!;
     const [selectedMedication, setSelectedMedication] = useState('');
     const [customMedication, setCustomMedication] = useState('');
     const [dosageValue, setDosageValue] = useState('');
@@ -27,8 +28,16 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!finalMedicationName || !dosageValue || !dosageUnit || !startDate) return;
+        
+        if (!user?.id) {
+            console.error('⚠️ User não está autenticado!');
+            showNotification({ message: 'Erro: Usuário não autenticado', type: 'error' });
+            return;
+        }
+        
         const dosage = `${dosageValue} ${dosageUnit}`;
-        addMedicationToPatient(patientId, { name: finalMedicationName, dosage, startDate, observacao });
+        console.log('👤 User ID no AddMedicationModal:', user.id);
+        addMedicationToPatient(patientId, { name: finalMedicationName, dosage, startDate, observacao }, user.id);
         showNotification({ message: 'Medicação cadastrada com sucesso!', type: 'success' });
         onClose();
     };

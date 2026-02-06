@@ -163,6 +163,13 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                       >
                         Finalizar
                       </button>
+                      <button
+                        onClick={() => handleDeletePrecaution(precaution.id)}
+                        className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/50 rounded transition text-red-600 dark:text-red-400"
+                        title="Apagar precaução"
+                      >
+                        <CloseIcon className="w-4 h-4" />
+                      </button>
                     </div>
                   )}
                 </div>

@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { PatientsContext, NotificationContext } from '../../../contexts';
+import { PatientsContext, NotificationContext, UserContext } from '../../../contexts';
 import { CloseIcon } from '../../icons';
 import { DEVICE_TYPES, DEVICE_LOCATIONS } from '../../../constants';
 
@@ -14,6 +14,7 @@ const getTodayDateString = () => {
 export const AddDeviceModal: React.FC<{ patientId: number | string; onClose: () => void; }> = ({ patientId, onClose }) => {
     const { addDeviceToPatient } = useContext(PatientsContext)!;
     const { showNotification } = useContext(NotificationContext)!;
+    const { user } = useContext(UserContext)!;
     const [type, setType] = useState('');
     const [customType, setCustomType] = useState('');
     const [location, setLocation] = useState('');
@@ -40,11 +41,18 @@ export const AddDeviceModal: React.FC<{ patientId: number | string; onClose: () 
             showNotification({ message: 'Selecione a data de inserção', type: 'error' });
             return;
         }
+        
+        if (!user?.id) {
+            console.error('⚠️ User não está autenticado!');
+            showNotification({ message: 'Erro: Usuário não autenticado', type: 'error' });
+            return;
+        }
 
         setIsLoading(true);
         try {
             console.log('📤 Enviando para addDeviceToPatient...');
-            const result = await addDeviceToPatient(patientId, { name: finalType, location, startDate, observacao });
+            console.log('👤 User ID:', user.id);
+            const result = await addDeviceToPatient(patientId, { name: finalType, location, startDate, observacao }, user.id);
             console.log('✅ Resposta:', result);
             showNotification({ message: 'Dispositivo cadastrado com sucesso!', type: 'success' });
             onClose();

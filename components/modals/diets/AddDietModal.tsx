@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { PatientsContext, NotificationContext } from '../../../contexts';
+import { PatientsContext, NotificationContext, UserContext } from '../../../contexts';
 import { CloseIcon } from '../../icons';
 
 const getTodayDateString = () => {
@@ -13,6 +13,7 @@ const getTodayDateString = () => {
 export const AddDietModal: React.FC<{ patientId: number | string; onClose: () => void }> = ({ patientId, onClose }) => {
     const { addDietToPatient } = useContext(PatientsContext)!;
     const { showNotification } = useContext(NotificationContext)!;
+    const { user } = useContext(UserContext)!;  // 🟢 Capturar usuário autenticado
     const [type, setType] = useState('');
     const [dataInicio, setDataInicio] = useState(getTodayDateString());
     const [volume, setVolume] = useState('');
@@ -38,7 +39,7 @@ export const AddDietModal: React.FC<{ patientId: number | string; onClose: () =>
             pt_g_dia: ptGDia || undefined,
             th: th || undefined,
             observacao: observacao || undefined
-        });
+        }, user?.id);  // 🟢 Passar o ID do usuário autenticado
         showNotification({ message: 'Dieta cadastrada com sucesso!', type: 'success' });
         onClose();
     };

@@ -51,6 +51,11 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const [inputValues, setInputValues] = useState<Record<number, string>>({});
   const [selectedStatus, setSelectedStatus] = useState<Record<number, 'resolvido' | 'nao_resolvido'>>({});
   const [checkedOptions, setCheckedOptions] = useState<Record<number, boolean>>({});
+  
+  // Estado para modal de arquivamento
+  const [archiveModalOpen, setArchiveModalOpen] = useState(false);
+  const [optionToArchive, setOptionToArchive] = useState<number | null>(null);
+  const [archiveReason, setArchiveReason] = useState('');
 
   useEffect(() => {
     const loadData = async () => {
@@ -100,18 +105,33 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     loadData();
   }, [patientId]);
 
-  const handleRemoveDiagnostic = async (optionId: number) => {
+  const handleRemoveDiagnostic = (optionId: number) => {
+    setOptionToArchive(optionId);
+    setArchiveReason('');
+    setArchiveModalOpen(true);
+  };
+
+  const handleConfirmArchive = async () => {
+    if (!optionToArchive) return;
+    
     try {
-      console.log('🗑️ Removendo diagnóstico:', { patientId, optionId });
+      console.log('🗑️ Arquivando diagnóstico:', { patientId, optionToArchive, reason: archiveReason });
       
-      // Arquivar diagnóstico (soft delete)
+      // Obter o ID do usuário logado
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id || null;
+      
+      // Arquivar diagnóstico (soft delete) com informações do arquivador
       const { error } = await supabase
         .from('paciente_diagnosticos')
         .update({ 
-          arquivado: true
+          arquivado: true,
+          archived_by: userId,
+          archived_at: new Date().toISOString(),
+          motivo_arquivamento: archiveReason || null
         })
         .eq('patient_id', patientId)
-        .eq('opcao_id', optionId)
+        .eq('opcao_id', optionToArchive)
         .eq('arquivado', false);
 
       if (error) {
@@ -129,34 +149,39 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       console.log('✅ Diagnóstico removido com sucesso!');
 
       // Atualizar a lista de diagnósticos removendo o arquivado
-      setDiagnostics(prev => prev.filter(d => d.opcao_id !== optionId));
+      setDiagnostics(prev => prev.filter(d => d.opcao_id !== optionToArchive));
 
       // Remover diagnóstico da interface - Garantir que o checkbox seja desmarcado
       setCheckedOptions(prev => {
         const newChecked = { ...prev };
-        delete newChecked[optionId];
+        delete newChecked[optionToArchive];
         return newChecked;
       });
       
       // Remover input associado
       setInputValues(prev => {
         const newInputs = { ...prev };
-        delete newInputs[optionId];
+        delete newInputs[optionToArchive];
         return newInputs;
       });
       
       // Remover status associado
       setSelectedStatus(prev => {
         const newStatus = { ...prev };
-        delete newStatus[optionId];
+        delete newStatus[optionToArchive];
         return newStatus;
       });
+
+      // Fechar modal
+      setArchiveModalOpen(false);
+      setOptionToArchive(null);
+      setArchiveReason('');
 
       // Mensagem de sucesso
       alert('✅ Diagnóstico removido com sucesso!');
     } catch (error) {
-      console.error('❌ Erro ao remover diagnóstico (catch):', error);
-      alert(`Erro ao remover diagnóstico: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      console.error('❌ Erro ao arquivar diagnóstico (catch):', error);
+      alert(`Erro ao arquivar diagnóstico: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   };
 
@@ -176,6 +201,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           patient_id: patientId,
           pergunta_id: option.pergunta_id,
           opcao_id: option.id,
+          opcao_label: option.label,  // ← Adicionar o rótulo da opção
           texto_digitado: inputValues[option.id] || null,
           status: selectedStatus[option.id] || 'nao_resolvido' as const
         }));
@@ -201,9 +227,14 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
       // Inserir apenas diagnósticos novos (evita duplicatas)
       if (newDiagnostics.length > 0) {
+        const diagnosticsWithUserId = newDiagnostics.map(d => ({
+          ...d,
+          created_by: userId
+        }));
+        
         const { error } = await supabase
           .from('paciente_diagnosticos')
-          .insert(newDiagnostics);
+          .insert(diagnosticsWithUserId);
 
         if (error) {
           console.error('Erro ao inserir diagnósticos:', error);
@@ -211,32 +242,8 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         }
       }
 
-      // Salvar no histórico APENAS diagnósticos novos (não duplicar) + resolvidos
-      const diagnosticsForHistory = [
-        ...newDiagnostics,  // Diagnósticos novos que foram inseridos
-        ...diagnosticsResolved  // Diagnósticos marcados como resolvidos
-      ];
-
-      if (diagnosticsForHistory.length > 0) {
-        try {
-          const historyData = diagnosticsForHistory.map(d => {
-            // Encontrar o label da opção pelo ID
-            const opcao = options.find(o => o.id === d.opcao_id);
-            return {
-              ...d,
-              opcao_label: opcao?.label || 'N/A',
-              created_at: new Date().toISOString(),
-              created_by: userId  // Adicionar ID do usuário logado
-            };
-          });
-          
-          await supabase
-            .from('diagnosticos_historico')
-            .insert(historyData);
-        } catch (historyError) {
-          console.warn('Aviso: Histórico não foi salvo', historyError);
-        }
-      }
+      // Não é mais necessário salvar em diagnosticos_historico separadamente
+      // Os dados já estão em paciente_diagnosticos com opcao_label
 
       // Recarregar dados para refletir mudanças
       const { data: diagnosticsData } = await supabase
@@ -789,6 +796,60 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         <SaveIcon className="w-4 h-4" />
         {saving ? 'Salvando...' : 'Salvar'}
       </button>
+
+      {/* Modal de Confirmação de Arquivamento */}
+      {archiveModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className={`${isDark ? 'bg-slate-800' : 'bg-white'} rounded-lg shadow-xl max-w-md w-full mx-4 p-6 space-y-4`}>
+            {/* Título */}
+            <h3 className={`text-lg font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+              📋 Arquivar Diagnóstico
+            </h3>
+
+            {/* Mensagem */}
+            <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+              Você está prestes a arquivar este diagnóstico. Por favor, informe o motivo do arquivamento:
+            </p>
+
+            {/* Campo de Motivo */}
+            <textarea
+              value={archiveReason}
+              onChange={(e) => setArchiveReason(e.target.value)}
+              placeholder="Motivo do arquivamento (opcional)"
+              className={`w-full px-3 py-2 rounded border resize-none ${
+                isDark
+                  ? 'bg-slate-700 border-slate-600 text-slate-100 placeholder-slate-400'
+                  : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-500'
+              } focus:outline-none focus:ring-2 focus:ring-amber-500`}
+              rows={4}
+            />
+
+            {/* Botões */}
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setArchiveModalOpen(false);
+                  setOptionToArchive(null);
+                  setArchiveReason('');
+                }}
+                className={`px-4 py-2 rounded-lg font-semibold transition ${
+                  isDark
+                    ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                    : 'bg-slate-200 hover:bg-slate-300 text-slate-800'
+                }`}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmArchive}
+                className="px-4 py-2 rounded-lg font-semibold bg-amber-600 hover:bg-amber-700 text-white transition"
+              >
+                Arquivar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

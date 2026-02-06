@@ -36,6 +36,7 @@ const ComorbidadeComponent = lazy(() => import('./components/ComorbidadeComponen
 const DestinoComponent = lazy(() => import('./components/DestinoComponent'));
 const AlertsHistoryScreen = lazy(() => import('./AlertsHistoryScreen').then(m => ({ default: m.AlertsHistoryScreen })));
 const PrecautionsCard = lazy(() => import('./components/PrecautionsCard').then(m => ({ default: m.PrecautionsCard })));
+const DiagnosticsResultsCard = lazy(() => import('./components/DiagnosticsResultsCard'));
 
 // Lazy load modals
 const EditPatientInfoModal = lazy(() => import('./components/modals').then(m => ({ default: m.EditPatientInfoModal })));
@@ -44,6 +45,8 @@ const AlertModal = lazy(() => import('./components/modals').then(m => ({ default
 const JustificationModal = lazy(() => import('./components/modals').then(m => ({ default: m.JustificationModal })));
 const AddCultureModal = lazy(() => import('./components/modals').then(m => ({ default: m.AddCultureModal })));
 const EditCultureModal = lazy(() => import('./components/modals').then(m => ({ default: m.EditCultureModal })));
+const ArchiveCultureModal = lazy(() => import('./components/modals').then(m => ({ default: m.ArchiveCultureModal })));
+const ArchiveDietModal = lazy(() => import('./components/modals').then(m => ({ default: m.ArchiveDietModal })));
 const AddDietModal = lazy(() => import('./components/modals').then(m => ({ default: m.AddDietModal })));
 const EditDietModal = lazy(() => import('./components/modals').then(m => ({ default: m.EditDietModal })));
 const AddDietRemovalDateModal = lazy(() => import('./components/modals').then(m => ({ default: m.AddDietRemovalDateModal })));
@@ -52,14 +55,18 @@ const AddDeviceModal = lazy(() => import('./components/modals').then(m => ({ def
 const EditDeviceModal = lazy(() => import('./components/modals').then(m => ({ default: m.EditDeviceModal })));
 const AddRemovalDateModal = lazy(() => import('./components/modals').then(m => ({ default: m.AddRemovalDateModal })));
 const EditDeviceRemovalDateModal = lazy(() => import('./components/modals').then(m => ({ default: m.EditDeviceRemovalDateModal })));
+const ArchiveDeviceModal = lazy(() => import('./components/modals').then(m => ({ default: m.ArchiveDeviceModal })));
 const AddExamModal = lazy(() => import('./components/modals').then(m => ({ default: m.AddExamModal })));
 const EditExamModal = lazy(() => import('./components/modals').then(m => ({ default: m.EditExamModal })));
+const ArchiveExamModal = lazy(() => import('./components/modals').then(m => ({ default: m.ArchiveExamModal })));
 const AddMedicationModal = lazy(() => import('./components/modals').then(m => ({ default: m.AddMedicationModal })));
 const EditMedicationModal = lazy(() => import('./components/modals').then(m => ({ default: m.EditMedicationModal })));
 const AddEndDateModal = lazy(() => import('./components/modals').then(m => ({ default: m.AddEndDateModal })));
 const EditMedicationEndDateModal = lazy(() => import('./components/modals').then(m => ({ default: m.EditMedicationEndDateModal })));
+const ArchiveMedicationModal = lazy(() => import('./components/modals').then(m => ({ default: m.ArchiveMedicationModal })));
 const AddSurgicalProcedureModal = lazy(() => import('./components/modals').then(m => ({ default: m.AddSurgicalProcedureModal })));
 const EditSurgicalProcedureModal = lazy(() => import('./components/modals').then(m => ({ default: m.EditSurgicalProcedureModal })));
+const ArchiveSurgicalProcedureModal = lazy(() => import('./components/modals').then(m => ({ default: m.ArchiveSurgicalProcedureModal })));
 
 import { SecondaryNavigation } from './components/SecondaryNavigation';
 import { supabase } from './supabaseClient';
@@ -691,6 +698,12 @@ const PatientHistoryScreen: React.FC = () => {
     const [alertCompletions, setAlertCompletions] = React.useState<any[]>([]);
     const [alertJustifications, setAlertJustifications] = React.useState<any[]>([]);
     const [archivedAlerts, setArchivedAlerts] = React.useState<any[]>([]);
+    const [archivedDevices, setArchivedDevices] = React.useState<any[]>([]);
+    const [archivedExams, setArchivedExams] = React.useState<any[]>([]);
+    const [archivedMedications, setArchivedMedications] = React.useState<any[]>([]);
+    const [archivedProcedures, setArchivedProcedures] = React.useState<any[]>([]);
+    const [archivedCultures, setArchivedCultures] = React.useState<any[]>([]);
+    const [archivedDiets, setArchivedDiets] = React.useState<any[]>([]);
     const [dietsData, setDietsData] = React.useState<any[]>([]);
     const [dataInicio, setDataInicio] = React.useState<string>('');
     const [dataFinal, setDataFinal] = React.useState<string>('');
@@ -703,6 +716,7 @@ const PatientHistoryScreen: React.FC = () => {
         'Cirúrgico': 'Cirurgia',
         'Escalas': 'Avaliação de Escala',
         'Diagnósticos': 'Diagnóstico',
+        'Culturas': 'Cultura',
         'Diurese': 'Diurese',
         'Balanço Hídrico': 'Balanço Hídrico',
         'Dietas': 'Dieta',
@@ -710,7 +724,14 @@ const PatientHistoryScreen: React.FC = () => {
         'Comorbidades': 'Comorbidade',
         'Completações': 'Completação de Alerta',
         'Justificativas': 'Justificativa Adicionada',
-        'Arquivamentos': 'Alerta Arquivado'
+        'Arquivamentos': 'Alerta Arquivado',
+        'Arquivamentos Dispositivos': 'Dispositivo Arquivado',
+        'Arquivamentos Exames': 'Exame Arquivado',
+        'Arquivamentos Medicações': 'Medicação Arquivada',
+        'Arquivamentos Procedimentos': 'Procedimento Arquivado',
+        'Arquivamentos Culturas': 'Cultura Arquivada',
+        'Arquivamentos Dietas': 'Dieta Arquivada',
+        'Arquivamentos Diagnósticos': 'Diagnóstico Arquivado'
     };
 
     useHeader(patient ? `Histórico: ${patient.name}` : 'Histórico do Paciente');
@@ -721,20 +742,34 @@ const PatientHistoryScreen: React.FC = () => {
             if (!patientId) return;
             try {
                 console.log('🔍 Buscando diagnósticos para patientId:', patientId);
-                console.log('🔍 Patient encontrado:', patient);
                 
                 const { data, error } = await supabase
                     .from('diagnosticos_historico_com_usuario')
                     .select('*')
-                    .eq('patient_id', patientId)
-                    .eq('status', 'nao_resolvido')
-                    .order('created_at', { ascending: false });
+                    .eq('patient_id', patientId);
                 
                 console.log('📋 Diagnósticos data:', data);
                 console.log('❌ Diagnósticos error:', error);
                 
-                if (!error && data) {
-                    setDiagnostics(data);
+                if (error) {
+                    console.error('❌ Erro ao buscar diagnósticos:', error.message);
+                    return;
+                }
+                
+                if (data && data.length > 0) {
+                    // Separar diagnósticos ATIVOS (não arquivados) e ARQUIVADOS
+                    const active = data.filter(d => !d.arquivado);
+                    const archived = data.filter(d => d.arquivado === true);
+                    
+                    console.log('✅ Diagnósticos ATIVOS:', active.length);
+                    console.log('🗂️ Diagnósticos ARQUIVADOS:', archived.length);
+                    
+                    setDiagnostics(active);
+                    setArchivedDiagnostics(archived);
+                } else {
+                    console.log('ℹ️ Nenhum diagnóstico encontrado para este paciente');
+                    setDiagnostics([]);
+                    setArchivedDiagnostics([]);
                 }
             } catch (err) {
                 console.error('Erro ao buscar diagnósticos:', err);
@@ -742,32 +777,6 @@ const PatientHistoryScreen: React.FC = () => {
         };
 
         fetchDiagnostics();
-    }, [patientId]);
-
-    // Buscar diagnósticos resolvidos da view
-    React.useEffect(() => {
-        const fetchResolvedDiagnostics = async () => {
-            if (!patientId) return;
-            try {
-                const { data, error } = await supabase
-                    .from('diagnosticos_historico_com_usuario')
-                    .select('*')
-                    .eq('patient_id', patientId)
-                    .eq('status', 'resolvido')
-                    .order('created_at', { ascending: false });
-                
-                console.log('✅ Diagnósticos resolvidos data:', data);
-                console.log('❌ Diagnósticos resolvidos error:', error);
-                
-                if (!error && data) {
-                    setResolvedDiagnostics(data);
-                }
-            } catch (err) {
-                console.error('Erro ao buscar diagnósticos resolvidos:', err);
-            }
-        };
-
-        fetchResolvedDiagnostics();
     }, [patientId]);
 
     // Buscar diagnósticos arquivados (ocultados)
@@ -779,19 +788,21 @@ const PatientHistoryScreen: React.FC = () => {
                     .from('diagnosticos_historico_com_usuario')
                     .select('*')
                     .eq('patient_id', patientId)
-                    .eq('arquivado', true)
-                    .order('created_at', { ascending: false });
+                    .eq('arquivado', true);
                 
                 if (error) {
-                    console.warn('⚠️ View diagnosticos_historico_com_usuario pode não existir:', error.message);
+                    console.warn('⚠️ Erro ao buscar diagnósticos arquivados:', error.message);
                     return;
                 }
                 
                 if (data) {
+                    console.log('✅ Diagnósticos arquivados encontrados:', data.length);
                     setArchivedDiagnostics(data);
+                } else {
+                    setArchivedDiagnostics([]);
                 }
             } catch (err) {
-                console.warn('View diagnosticos_historico_com_usuario não disponível');
+                console.warn('Erro ao buscar diagnósticos arquivados:', err);
             }
         };
 
@@ -1048,6 +1059,180 @@ const PatientHistoryScreen: React.FC = () => {
         fetchArchivedAlerts();
     }, [patientId]);
 
+    // Buscar dispositivos arquivados
+    React.useEffect(() => {
+        const fetchArchivedDevices = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('vw_dispositivos_detalhado')
+                    .select('*')
+                    .eq('paciente_id', patientId)
+                    .eq('is_archived', true);
+                
+                if (error) {
+                    console.warn('⚠️ Erro ao buscar dispositivos arquivados:', error.message);
+                    return;
+                }
+                
+                console.log('🗄️ Dispositivos arquivados carregados:', data);
+                
+                if (data) {
+                    setArchivedDevices(data);
+                }
+            } catch (err) {
+                console.warn('Erro ao buscar dispositivos arquivados:', err);
+            }
+        };
+
+        fetchArchivedDevices();
+    }, [patientId]);
+
+    // Buscar exames arquivados
+    React.useEffect(() => {
+        const fetchArchivedExams = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('vw_exames_detalhado')
+                    .select('*')
+                    .eq('paciente_id', patientId)
+                    .eq('is_archived', true);
+                
+                if (error) {
+                    console.warn('⚠️ Erro ao buscar exames arquivados:', error.message);
+                    return;
+                }
+                
+                console.log('🗄️ Exames arquivados carregados:', data);
+                
+                if (data) {
+                    setArchivedExams(data);
+                }
+            } catch (err) {
+                console.warn('Erro ao buscar exames arquivados:', err);
+            }
+        };
+
+        fetchArchivedExams();
+    }, [patientId]);
+
+    // Buscar medicações arquivadas
+    React.useEffect(() => {
+        const fetchArchivedMedications = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('vw_medicacoes_detalhado')
+                    .select('*')
+                    .eq('paciente_id', patientId)
+                    .eq('is_archived', true);
+                
+                if (error) {
+                    console.warn('⚠️ Erro ao buscar medicações arquivadas:', error.message);
+                    return;
+                }
+                
+                console.log('🗄️ Medicações arquivadas carregadas:', data);
+                
+                if (data) {
+                    setArchivedMedications(data);
+                }
+            } catch (err) {
+                console.warn('Erro ao buscar medicações arquivadas:', err);
+            }
+        };
+
+        fetchArchivedMedications();
+    }, [patientId]);
+
+    // Buscar procedimentos arquivados
+    React.useEffect(() => {
+        const fetchArchivedProcedures = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('vw_procedimentos_detalhado')
+                    .select('*')
+                    .eq('paciente_id', patientId)
+                    .eq('is_archived', true);
+                
+                if (error) {
+                    console.warn('⚠️ Erro ao buscar procedimentos arquivados:', error.message);
+                    return;
+                }
+                
+                console.log('🗄️ Procedimentos arquivados carregados:', data);
+                
+                if (data) {
+                    setArchivedProcedures(data);
+                }
+            } catch (err) {
+                console.warn('Erro ao buscar procedimentos arquivados:', err);
+            }
+        };
+
+        fetchArchivedProcedures();
+    }, [patientId]);
+
+    // Buscar culturas arquivadas
+    React.useEffect(() => {
+        const fetchArchivedCultures = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('vw_culturas_detalhado')
+                    .select('*')
+                    .eq('paciente_id', patientId)
+                    .eq('is_archived', true);
+                
+                if (error) {
+                    console.warn('⚠️ Erro ao buscar culturas arquivadas:', error.message);
+                    return;
+                }
+                
+                console.log('🗄️ Culturas arquivadas carregadas:', data);
+                
+                if (data) {
+                    setArchivedCultures(data);
+                }
+            } catch (err) {
+                console.warn('Erro ao buscar culturas arquivadas:', err);
+            }
+        };
+
+        fetchArchivedCultures();
+    }, [patientId]);
+
+    // Buscar dietas arquivadas
+    React.useEffect(() => {
+        const fetchArchivedDiets = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('vw_dietas_detalhado')
+                    .select('*')
+                    .eq('paciente_id', patientId)
+                    .eq('is_archived', true);
+                
+                if (error) {
+                    console.warn('⚠️ Erro ao buscar dietas arquivadas:', error.message);
+                    return;
+                }
+                
+                console.log('🗄️ Dietas arquivadas carregadas:', data);
+                
+                if (data) {
+                    setArchivedDiets(data);
+                }
+            } catch (err) {
+                console.warn('Erro ao buscar dietas arquivadas:', err);
+            }
+        };
+
+        fetchArchivedDiets();
+    }, [patientId]);
+
     type TimelineEvent = {
         timestamp: string;
         icon: React.FC<{ className?: string; }>;
@@ -1073,7 +1258,7 @@ const PatientHistoryScreen: React.FC = () => {
             });
         }
 
-        patient.devices.forEach(device => {
+        patient.devices.filter(d => !d.isArchived).forEach(device => {
             events.push({
                 timestamp: new Date(device.startDate).toISOString(),
                 icon: CpuIcon,
@@ -1090,7 +1275,7 @@ const PatientHistoryScreen: React.FC = () => {
             }
         });
 
-        patient.medications.forEach(med => {
+        patient.medications.filter(m => !m.isArchived).forEach(med => {
             events.push({
                 timestamp: new Date(med.startDate).toISOString(),
                 icon: PillIcon,
@@ -1107,7 +1292,7 @@ const PatientHistoryScreen: React.FC = () => {
             }
         });
 
-        patient.exams.forEach(exam => {
+        patient.exams.filter(e => !e.isArchived).forEach(exam => {
             events.push({
                 timestamp: new Date(exam.date).toISOString(),
                 icon: FileTextIcon,
@@ -1116,7 +1301,7 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
-        patient.surgicalProcedures.forEach(procedure => {
+        patient.surgicalProcedures.filter(p => !p.isArchived).forEach(procedure => {
             events.push({
                 timestamp: new Date(procedure.date).toISOString(),
                 icon: ScalpelIcon,
@@ -1137,30 +1322,18 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
-        // Adicionar diagnósticos
+        // Adicionar diagnósticos ATIVOS (não arquivados)
         console.log('🔵 Processando diagnostics no history:', diagnostics);
         diagnostics.forEach(diagnostic => {
             // Exibe o label vindo da view (que contém JOIN correto com pergunta_opcoes_diagnostico)
             const label = diagnostic.opcao_label || 'Não informado';
-            const createdByName = diagnostic.created_by_name || 'Não informado';
+            const createdByName = diagnostic.nome_criador || 'Não informado';
             
             let description = `[DIAGNOSTICO] Diagnóstico: ${label}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''} (Status: ${diagnostic.status}).\n👤 Criado por: ${createdByName}`;
             
             events.push({
-                timestamp: diagnostic.created_at || new Date().toISOString(),
+                timestamp: diagnostic.data_criacao || new Date().toISOString(),
                 icon: ClipboardIcon,
-                description: description,
-                hasTime: true,
-            });
-        });
-
-        // Adicionar diagnósticos resolvidos com nome de quem resolveu
-        resolvedDiagnostics.forEach(diagnostic => {
-            let description = `[DIAGNOSTICO] ✓ Diagnóstico Resolvido: ${diagnostic.opcao_label || `Opção ${diagnostic.opcao_id}`}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''}\n👤 Resolvido por: ${diagnostic.created_by_name || 'Não informado'}`;
-            
-            events.push({
-                timestamp: diagnostic.created_at || new Date().toISOString(),
-                icon: diagnostic.arquivado ? ClipboardIcon : CheckCircleIcon,
                 description: description,
                 hasTime: true,
             });
@@ -1170,13 +1343,14 @@ const PatientHistoryScreen: React.FC = () => {
         console.log('🔵 Processando archivedDiagnostics no history:', archivedDiagnostics);
         archivedDiagnostics.forEach(diagnostic => {
             const label = diagnostic.opcao_label || 'Não informado';
-            const createdByName = diagnostic.created_by_name || 'Não informado';
+            const createdByName = diagnostic.nome_criador || 'Não informado';
+            const archivedByName = diagnostic.nome_arquivador || 'Desconhecido';
             
             // Descrição sobre diagnóstico arquivado
-            let description = `[DIAGNOSTICO] ⚠️ DIAGNÓSTICO OCULTADO/APAGADO\n📋 Diagnóstico: ${label}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''}\n👤 Criado por: ${createdByName}`;
+            let description = `[DIAGNOSTICO_ARQUIVADO] ⚠️ DIAGNÓSTICO OCULTADO/ARQUIVADO\n📋 Diagnóstico: ${label}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''}\n👤 Criado por: ${createdByName}\n🚫 Arquivado por: ${archivedByName}\n📅 Motivo: ${diagnostic.motivo_arquivamento || 'Não informado'}`;
             
             events.push({
-                timestamp: diagnostic.created_at || new Date().toISOString(),
+                timestamp: diagnostic.data_arquivamento || diagnostic.data_criacao || new Date().toISOString(),
                 icon: ClipboardIcon,
                 description: description,
                 hasTime: true,
@@ -1225,7 +1399,7 @@ const PatientHistoryScreen: React.FC = () => {
         });
 
         // Adicionar dietas
-        dietsData.forEach(diet => {
+        dietsData.filter((d: any) => !d.is_archived).forEach(diet => {
             // Montar descrição com todos os dados, incluindo VET AT e PT AT
             let description = `[DIETA] Dieta Iniciada: ${diet.tipo}`;
             
@@ -1325,6 +1499,95 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
+        // Adicionar dispositivos arquivados
+        console.log('🗄️ Processando archivedDevices:', archivedDevices);
+        archivedDevices.forEach(device => {
+            console.log('📦 Adicionando dispositivo arquivado:', device);
+            const dataArquivamento = device.created_at; // A data de quando foi arquivado
+            events.push({
+                timestamp: dataArquivamento || new Date().toISOString(),
+                icon: CpuIcon,
+                description: `[DISPOSITIVO_ARQUIVADO] 🔌 Dispositivo Arquivado\n📋 Dispositivo: ${device.tipo_dispositivo} - ${device.localizacao}\n📝 Motivo do Arquivamento: ${device.motivo_arquivamento || 'Não informado'}\n👨‍⚕️ Arquivado por: ${device.nome_arquivador || 'Sistema'}\n📅 Arquivado em: ${dataArquivamento ? new Date(dataArquivamento).toLocaleString('pt-BR') : 'N/A'}`,
+                hasTime: true,
+            });
+        });
+
+        // Adicionar exames arquivados
+        console.log('🗄️ Processando archivedExams:', archivedExams);
+        archivedExams.forEach(exam => {
+            console.log('📦 Adicionando exame arquivado:', exam);
+            const dataArquivamento = exam.created_at;
+            events.push({
+                timestamp: dataArquivamento || new Date().toISOString(),
+                icon: FileTextIcon,
+                description: `[EXAME_ARQUIVADO] 📄 Exame Arquivado\n📋 Exame: ${exam.nome_exame}\n📝 Motivo do Arquivamento: ${exam.motivo_arquivamento || 'Não informado'}\n👨‍⚕️ Arquivado por: ${exam.nome_arquivador || 'Sistema'}\n📅 Arquivado em: ${dataArquivamento ? new Date(dataArquivamento).toLocaleString('pt-BR') : 'N/A'}`,
+                hasTime: true,
+            });
+        });
+
+        // Adicionar medicações arquivadas
+        console.log('🗄️ Processando archivedMedications:', archivedMedications);
+        archivedMedications.forEach(medication => {
+            console.log('📦 Adicionando medicação arquivada:', medication);
+            const dataArquivamento = medication.created_at;
+            const dosagem = `${medication.dosagem_valor} ${medication.unidade_medida}`;
+            events.push({
+                timestamp: dataArquivamento || new Date().toISOString(),
+                icon: PillIcon,
+                description: `[MEDICACAO_ARQUIVADA] 💊 Medicação Arquivada\n📋 Medicação: ${medication.nome_medicacao} - ${dosagem}\n📝 Motivo do Arquivamento: ${medication.motivo_arquivamento || 'Não informado'}\n👨‍⚕️ Arquivado por: ${medication.nome_arquivador || 'Sistema'}\n📅 Arquivado em: ${dataArquivamento ? new Date(dataArquivamento).toLocaleString('pt-BR') : 'N/A'}`,
+                hasTime: true,
+            });
+        });
+
+        // Adicionar procedimentos arquivados
+        console.log('🗄️ Processando archivedProcedures:', archivedProcedures);
+        archivedProcedures.forEach(procedure => {
+            console.log('📦 Adicionando procedimento arquivado:', procedure);
+            const dataArquivamento = procedure.created_at;
+            events.push({
+                timestamp: dataArquivamento || new Date().toISOString(),
+                icon: ScalpelIcon,
+                description: `[PROCEDIMENTO_ARQUIVADO] ⚒️ Procedimento Cirúrgico Arquivado\n📋 Procedimento: ${procedure.nome_procedimento}\n👨‍⚕️ Cirurgião: ${procedure.nome_cirurgiao || 'Não informado'}\n📝 Motivo do Arquivamento: ${procedure.motivo_arquivamento || 'Não informado'}\n👨‍⚕️ Arquivado por: ${procedure.nome_arquivador || 'Sistema'}\n📅 Arquivado em: ${dataArquivamento ? new Date(dataArquivamento).toLocaleString('pt-BR') : 'N/A'}`,
+                hasTime: true,
+            });
+        });
+
+        // Adicionar culturas ativas
+        patient.cultures?.filter(c => !c.isArchived).forEach(culture => {
+            events.push({
+                timestamp: culture.collectionDate || new Date().toISOString(),
+                icon: BeakerIcon,
+                description: `[CULTURA] 🧪 Cultura: ${culture.site || 'Não informado'} - ${culture.microorganism || 'Não identificado'}${culture.observation ? ` | Obs: ${culture.observation}` : ''}`,
+                hasTime: false,
+            });
+        });
+
+        // Adicionar culturas arquivadas
+        console.log('🗄️ Processando archivedCultures:', archivedCultures);
+        archivedCultures.forEach(culture => {
+            console.log('📦 Adicionando cultura arquivada:', culture);
+            const dataArquivamento = culture.created_at;
+            events.push({
+                timestamp: dataArquivamento || new Date().toISOString(),
+                icon: BeakerIcon,
+                description: `[CULTURA_ARQUIVADA] 🧪 Cultura Arquivada\n📋 Local: ${culture.local}\n🦠 Microorganismo: ${culture.microorganismo}\n📝 Motivo do Arquivamento: ${culture.motivo_arquivamento || 'Não informado'}\n👨‍⚕️ Arquivado por: ${culture.nome_arquivador || 'Sistema'}\n📅 Arquivado em: ${dataArquivamento ? new Date(dataArquivamento).toLocaleString('pt-BR') : 'N/A'}`,
+                hasTime: true,
+            });
+        });
+
+        // Adicionar dietas arquivadas
+        console.log('🗄️ Processando archivedDiets:', archivedDiets);
+        archivedDiets.forEach(diet => {
+            console.log('📦 Adicionando dieta arquivada:', diet);
+            const dataArquivamento = diet.created_at;
+            events.push({
+                timestamp: dataArquivamento || new Date().toISOString(),
+                icon: AppleIcon,
+                description: `[DIETA_ARQUIVADA] 🍽️ Dieta Arquivada\n📋 Tipo: ${diet.tipo}\n${diet.volume ? `💧 Volume: ${diet.volume} ml\n` : ''}${diet.vet ? `⚡ VET: ${diet.vet} kcal/dia\n` : ''}📝 Motivo do Arquivamento: ${diet.motivo_arquivamento || 'Não informado'}\n👨‍⚕️ Arquivado por: ${diet.nome_arquivador || 'Sistema'}\n📅 Arquivado em: ${dataArquivamento ? new Date(dataArquivamento).toLocaleString('pt-BR') : 'N/A'}`,
+                hasTime: true,
+            });
+        });
+
         events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
         const groupedEvents = events.reduce((acc, event) => {
@@ -1337,7 +1600,7 @@ const PatientHistoryScreen: React.FC = () => {
         }, {} as Record<string, TimelineEvent[]>);
 
         return groupedEvents;
-    }, [patient, tasks, diagnostics, diuresisData, balanceData, dietsData, alertsData, alertCompletions, alertJustifications, archivedAlerts, resolvedDiagnostics]);
+    }, [patient, tasks, diagnostics, diuresisData, balanceData, dietsData, alertsData, alertCompletions, alertJustifications, archivedAlerts, archivedDevices, archivedExams, archivedMedications, archivedProcedures, archivedCultures, archivedDiets, resolvedDiagnostics]);
 
     const handleGeneratePdf = () => {
         // ... (PDF generation logic remains the same)
@@ -1502,27 +1765,6 @@ const PatientHistoryScreen: React.FC = () => {
         const diuresisData = generateDiuresisListPDF();
         const balanceData = generateBalanceListPDF();
 
-        const generateDiagnosticsList = () => {
-            const filtered = resolvedDiagnostics.filter((d: any) => {
-                const diagDate = d.created_at;
-                return isDateInRange(diagDate) && isCategorySelected('Diagnósticos');
-            });
-            return {
-                hasData: filtered.length > 0,
-                html: filtered.map((d: any) => `
-                    <li>
-                        <strong>${d.opcao_label || `Opção ${d.opcao_id}`}</strong><br>
-                        Status: ${d.status}<br>
-                        ${d.texto_digitado ? `Observação: ${d.texto_digitado}<br>` : ''}
-                        Data: ${formatDateToBRL(d.created_at)}<br>
-                        Registrado por: ${d.created_by_name || 'Não informado'}
-                    </li>
-                `).join('')
-            };
-        };
-
-        const diagnosticsData = generateDiagnosticsList();
-
         const generateHistoryList = () => {
             let allEventsHtml = '';
             let totalEvents = 0;
@@ -1679,11 +1921,6 @@ const PatientHistoryScreen: React.FC = () => {
                     <ul>${scalesData.html}</ul>
                 ` : ''}
 
-                ${diagnosticsData.hasData ? `
-                    <h2>Diagnósticos</h2>
-                    <ul>${diagnosticsData.html}</ul>
-                ` : ''}
-
                 ${historyData.hasData ? `
                     <h2>Histórico de Eventos</h2>
                     ${historyData.html}
@@ -1721,7 +1958,7 @@ const PatientHistoryScreen: React.FC = () => {
         return Array.from(types).sort();
     };
 
-    const getEventCategory = (description: string): string | null => {
+        const getEventCategory = (description: string): string | null => {
         // Usar os marcadores [TIPO] que foram adicionados às descrições
         const categoryMap: Record<string, string> = {
             '[DISPOSITIVO]': 'Dispositivos',
@@ -1730,6 +1967,7 @@ const PatientHistoryScreen: React.FC = () => {
             '[CIRURGICO]': 'Cirúrgico',
             '[ESCALA]': 'Escalas',
             '[DIAGNOSTICO]': 'Diagnósticos',
+            '[CULTURA]': 'Culturas',
             '[DIURESE]': 'Diurese',
             '[BALANÇO]': 'Balanço Hídrico',
             '[ALERTA]': 'Alertas',
@@ -1737,7 +1975,14 @@ const PatientHistoryScreen: React.FC = () => {
             '[COMPLETACAO_ALERTA]': 'Completações',
             '[DIETA]': 'Dietas',
             '[JUSTIFICATIVA_ADICIONADA]': 'Justificativas',
-            '[ALERTA_ARQUIVADO]': 'Arquivamentos'
+            '[ALERTA_ARQUIVADO]': 'Arquivamentos',
+            '[DISPOSITIVO_ARQUIVADO]': 'Arquivamentos Dispositivos',
+            '[EXAME_ARQUIVADO]': 'Arquivamentos Exames',
+            '[MEDICACAO_ARQUIVADA]': 'Arquivamentos Medicações',
+            '[PROCEDIMENTO_ARQUIVADO]': 'Arquivamentos Procedimentos',
+            '[CULTURA_ARQUIVADA]': 'Arquivamentos Culturas',
+            '[DIETA_ARQUIVADA]': 'Arquivamentos Dietas',
+            '[DIAGNOSTICO_ARQUIVADO]': 'Arquivamentos Diagnósticos'
         };
         
         for (const [marker, category] of Object.entries(categoryMap)) {
@@ -1878,7 +2123,7 @@ const PatientHistoryScreen: React.FC = () => {
                                                 <p className="text-slate-800 dark:text-slate-200 text-sm whitespace-pre-wrap">{event.description}</p>
                                                 {event.hasTime && (
                                                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                                        Horário: {new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                        Horário: {new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })}
                                                     </p>
                                                 )}
                                             </div>
@@ -1919,15 +2164,21 @@ const PatientDetailScreen: React.FC = () => {
     const [isAddDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
     const [editingDevice, setEditingDevice] = useState<Device | null>(null);
     const [editingDeviceRemovalDate, setEditingDeviceRemovalDate] = useState<Device | null>(null);
+    const [archiveDeviceModal, setArchiveDeviceModal] = useState<Device | null>(null);
     const [isAddExamModalOpen, setAddExamModalOpen] = useState(false);
     const [editingExam, setEditingExam] = useState<Exam | null>(null);
+    const [archiveExamModal, setArchiveExamModal] = useState<Exam | null>(null);
     const [isAddMedicationModalOpen, setAddMedicationModalOpen] = useState(false);
     const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
     const [editingMedicationEndDate, setEditingMedicationEndDate] = useState<Medication | null>(null);
+    const [archiveMedicationModal, setArchiveMedicationModal] = useState<Medication | null>(null);
     const [isAddSurgicalModalOpen, setAddSurgicalModalOpen] = useState(false);
     const [editingSurgicalProcedure, setEditingSurgicalProcedure] = useState<SurgicalProcedure | null>(null);
+    const [archiveSurgicalModal, setArchiveSurgicalModal] = useState<SurgicalProcedure | null>(null);
     const [isAddCultureModalOpen, setAddCultureModalOpen] = useState(false);
     const [editingCulture, setEditingCulture] = useState<Culture | null>(null);
+    const [archiveCultureModal, setArchiveCultureModal] = useState<Culture | null>(null);
+    const [archiveDietModal, setArchiveDietModal] = useState<Diet | null>(null);
     const [isAddDietModalOpen, setAddDietModalOpen] = useState(false);
     const [editingDiet, setEditingDiet] = useState<Diet | null>(null);
     const [editingDietRemovalDate, setEditingDietRemovalDate] = useState<Diet | null>(null);
@@ -1940,6 +2191,11 @@ const PatientDetailScreen: React.FC = () => {
     const [calculationsRefresh, setCalculationsRefresh] = useState(0);
 
     const { showNotification } = useContext(NotificationContext)!;
+
+    useEffect(() => {
+        // 🔝 Scroll para o topo quando entra na página
+        window.scrollTo(0, 0);
+    }, [patientId]);
 
     useEffect(() => {
         if (mainTab !== 'scales') {
@@ -1996,7 +2252,7 @@ const PatientDetailScreen: React.FC = () => {
 
     const handleDeleteDiet = (patientId: number | string, dietId: number | string) => {
         if (window.confirm("Tem certeza que deseja arquivar esta dieta?")) {
-            deleteDietFromPatient(patientId, dietId);
+            deleteDietFromPatient(patientId, dietId, user?.id);  // 🟢 Passar user.id
             showNotification({ message: 'Dieta arquivada.', type: 'info' });
         }
     };
@@ -2155,15 +2411,17 @@ const PatientDetailScreen: React.FC = () => {
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0 ml-2">
-                                                    {!device.removalDate ? (
-                                                        <button onClick={() => setRemovalModalOpen(device.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Retirada</button>
-                                                    ) : (
-                                                        <button onClick={() => handleDeleteDevice(patient.id, device.id)} className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded-full transition" aria-label="Apagar dispositivo">
-                                                            <CloseIcon className="w-4 h-4" />
-                                                        </button>
-                                                    )}
+                                                    {!device.removalDate && <button onClick={() => setRemovalModalOpen(device.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Retirada</button>}
                                                     <button onClick={() => device.removalDate ? setEditingDeviceRemovalDate(device) : setEditingDevice(device)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar dispositivo">
                                                         <PencilIcon className="w-4 h-4" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => setArchiveDeviceModal(device)} 
+                                                        className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition" 
+                                                        title="Arquivar dispositivo"
+                                                        aria-label="Arquivar dispositivo"
+                                                    >
+                                                        <CloseIcon className="w-4 h-4" />
                                                     </button>
                                                 </div>
                                             </div>
@@ -2190,7 +2448,12 @@ const PatientDetailScreen: React.FC = () => {
                                                     <button onClick={() => setEditingExam(exam)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar exame">
                                                         <PencilIcon className="w-4 h-4" />
                                                     </button>
-                                                    <button onClick={() => handleDeleteExam(patient.id, exam.id)} className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded-full transition" aria-label="Arquivar exame">
+                                                    <button 
+                                                        onClick={() => setArchiveExamModal(exam)} 
+                                                        className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition" 
+                                                        title="Arquivar exame"
+                                                        aria-label="Arquivar exame"
+                                                    >
                                                         <CloseIcon className="w-4 h-4" />
                                                     </button>
                                                 </div>
@@ -2228,7 +2491,12 @@ const PatientDetailScreen: React.FC = () => {
                                                     <button onClick={() => medication.endDate ? setEditingMedicationEndDate(medication) : setEditingMedication(medication)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar medicação">
                                                         <PencilIcon className="w-4 h-4" />
                                                     </button>
-                                                    <button onClick={() => handleDeleteMedication(patient.id, medication.id)} className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded-full transition" aria-label="Excluir medicação">
+                                                    <button 
+                                                        onClick={() => setArchiveMedicationModal(medication)} 
+                                                        className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition" 
+                                                        title="Arquivar medicação"
+                                                        aria-label="Arquivar medicação"
+                                                    >
                                                         <CloseIcon className="w-4 h-4" />
                                                     </button>
                                                 </div>
@@ -2257,7 +2525,12 @@ const PatientDetailScreen: React.FC = () => {
                                                     <button onClick={() => setEditingSurgicalProcedure(procedure)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar cirurgia">
                                                         <PencilIcon className="w-4 h-4" />
                                                     </button>
-                                                    <button onClick={() => handleDeleteProcedure(patient.id, procedure.id)} className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded-full transition" aria-label="Arquivar cirurgia">
+                                                    <button 
+                                                        onClick={() => setArchiveSurgicalModal(procedure)} 
+                                                        className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition" 
+                                                        title="Arquivar procedimento"
+                                                        aria-label="Arquivar cirurgia"
+                                                    >
                                                         <CloseIcon className="w-4 h-4" />
                                                     </button>
                                                 </div>
@@ -2288,7 +2561,12 @@ const PatientDetailScreen: React.FC = () => {
                                                     <button onClick={() => setEditingCulture(culture)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar cultura">
                                                         <PencilIcon className="w-4 h-4" />
                                                     </button>
-                                                    <button onClick={() => handleDeleteCulture(patient.id, culture.id)} className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded-full transition" aria-label="Arquivar cultura">
+                                                    <button 
+                                                        onClick={() => setArchiveCultureModal(culture)} 
+                                                        className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition" 
+                                                        title="Arquivar cultura"
+                                                        aria-label="Arquivar cultura"
+                                                    >
                                                         <CloseIcon className="w-4 h-4" />
                                                     </button>
                                                 </div>
@@ -2360,15 +2638,14 @@ const PatientDetailScreen: React.FC = () => {
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0 ml-2">
-                                                    {!diet.data_remocao ? (
+                                                    {!diet.data_remocao && (
                                                         <button onClick={() => setDietRemovalModalOpen(diet.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Retirada</button>
-                                                    ) : (
-                                                        <button onClick={() => handleDeleteDiet(patient.id, diet.id)} className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded-full transition" aria-label="Arquivar dieta">
-                                                            <CloseIcon className="w-4 h-4" />
-                                                        </button>
                                                     )}
                                                     <button onClick={() => diet.data_remocao ? setEditingDietRemovalDate(diet) : setEditingDiet(diet)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label={diet.data_remocao ? "Editar data de retirada" : "Editar dieta"}>
                                                         <PencilIcon className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={() => setArchiveDietModal(diet)} className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition" aria-label="Arquivar dieta">
+                                                        <CloseIcon className="w-4 h-4" />
                                                     </button>
                                                 </div>
                                             </div>
@@ -2495,17 +2772,65 @@ const PatientDetailScreen: React.FC = () => {
             {isAddDeviceModalOpen && <AddDeviceModal patientId={patient.id} onClose={() => setAddDeviceModalOpen(false)} />}
             {editingDevice && <EditDeviceModal device={editingDevice} patientId={patient.id} onClose={() => setEditingDevice(null)} />}
             {editingDeviceRemovalDate && <EditDeviceRemovalDateModal device={editingDeviceRemovalDate} patientId={patient.id} onClose={() => setEditingDeviceRemovalDate(null)} />}
+            {archiveDeviceModal && (
+                <ArchiveDeviceModal 
+                    device={archiveDeviceModal} 
+                    patientId={patient.id} 
+                    onClose={() => setArchiveDeviceModal(null)} 
+                    onSuccess={() => window.location.reload()}
+                />
+            )}
             {isAddExamModalOpen && <AddExamModal patientId={patient.id} onClose={() => setAddExamModalOpen(false)} />}
             {editingExam && <EditExamModal exam={editingExam} patientId={patient.id} onClose={() => setEditingExam(null)} />}
+            {archiveExamModal && (
+                <ArchiveExamModal 
+                    exam={archiveExamModal} 
+                    patientId={patient.id} 
+                    onClose={() => setArchiveExamModal(null)} 
+                    onSuccess={() => window.location.reload()}
+                />
+            )}
             {isAddMedicationModalOpen && <AddMedicationModal patientId={patient.id} onClose={() => setAddMedicationModalOpen(false)} />}
             {editingMedication && <EditMedicationModal medication={editingMedication} patientId={patient.id} onClose={() => setEditingMedication(null)} />}
             {editingMedicationEndDate && <EditMedicationEndDateModal medication={editingMedicationEndDate} patientId={patient.id} onClose={() => setEditingMedicationEndDate(null)} />}
+            {archiveMedicationModal && (
+                <ArchiveMedicationModal 
+                    medication={archiveMedicationModal} 
+                    patientId={patient.id} 
+                    onClose={() => setArchiveMedicationModal(null)} 
+                    onSuccess={() => window.location.reload()}
+                />
+            )}
             {isAddSurgicalModalOpen && <AddSurgicalProcedureModal patientId={patient.id} onClose={() => setAddSurgicalModalOpen(false)} />}
             {editingSurgicalProcedure && <EditSurgicalProcedureModal procedure={editingSurgicalProcedure} patientId={patient.id} onClose={() => setEditingSurgicalProcedure(null)} />}
+            {archiveSurgicalModal && (
+                <ArchiveSurgicalProcedureModal 
+                    procedure={archiveSurgicalModal} 
+                    patientId={patient.id} 
+                    onClose={() => setArchiveSurgicalModal(null)} 
+                    onSuccess={() => window.location.reload()}
+                />
+            )}
             {isAddCultureModalOpen && <AddCultureModal patientId={patient.id} onClose={() => setAddCultureModalOpen(false)} />}
             {editingCulture && <EditCultureModal culture={editingCulture} patientId={patient.id} onClose={() => setEditingCulture(null)} />}
+            {archiveCultureModal && (
+                <ArchiveCultureModal 
+                    culture={archiveCultureModal} 
+                    patientId={patient.id} 
+                    onClose={() => setArchiveCultureModal(null)} 
+                    onSuccess={() => window.location.reload()}
+                />
+            )}
             {isAddDietModalOpen && <AddDietModal patientId={patient.id} onClose={() => setAddDietModalOpen(false)} />}
             {editingDiet && <EditDietModal diet={editingDiet} patientId={patient.id} onClose={() => setEditingDiet(null)} />}
+            {archiveDietModal && (
+                <ArchiveDietModal 
+                    diet={archiveDietModal} 
+                    patientId={patient.id} 
+                    onClose={() => setArchiveDietModal(null)} 
+                    onSuccess={() => window.location.reload()}
+                />
+            )}
             {isDietRemovalModalOpen && <AddDietRemovalDateModal dietId={isDietRemovalModalOpen} patientId={patient.id} onClose={() => setDietRemovalModalOpen(null)} />}
             {editingDietRemovalDate && <EditDietRemovalDateModal diet={editingDietRemovalDate} patientId={patient.id} onClose={() => setEditingDietRemovalDate(null)} />}
             {isRemovalModalOpen && <AddRemovalDateModal deviceId={isRemovalModalOpen} patientId={patient.id} onClose={() => setRemovalModalOpen(null)} />}
@@ -3634,14 +3959,16 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         }
     };
 
-    const addDeviceToPatient = async (patientId: number | string, device: Omit<Device, 'id'>) => {
+    const addDeviceToPatient = async (patientId: number | string, device: Omit<Device, 'id'>, userId?: string) => {
         try {
+            console.log('🔍 addDeviceToPatient - userId recebido:', userId);
             const { data, error } = await supabase.from('dispositivos_pacientes').insert([{
                 paciente_id: patientId,
                 tipo_dispositivo: device.name,
                 localizacao: device.location,
                 data_insercao: device.startDate,
-                observacao: device.observacao || null
+                observacao: device.observacao || null,
+                criado_por_id: userId || null
             }]);
             
             if (error) {
@@ -3658,40 +3985,76 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         }
     };
 
-    const addExamToPatient = async (patientId: number | string, exam: Omit<Exam, 'id'>) => {
-        const { error } = await supabase.from('exames_pacientes').insert([{
+    const addExamToPatient = async (patientId: number | string, exam: Omit<Exam, 'id'>, userId?: string) => {
+        console.log('🔍 addExamToPatient - userId recebido:', userId);
+        const payload = {
             paciente_id: patientId,
             nome_exame: exam.name,
             data_exame: exam.date,
-            observacao: exam.observation
-        }]);
+            observacao: exam.observation,
+            criado_por_id: userId || null
+        };
+        console.log('📦 Payload para Supabase:', payload);
+        const { data, error } = await supabase.from('exames_pacientes').insert([payload]);
+        
+        if (error) {
+            console.error('❌ Erro ao inserir exame:', error);
+        } else {
+            console.log('✅ Exame inserido com sucesso:', data);
+        }
+        
         if (!error) fetchPatients();
     };
 
-    const addMedicationToPatient = async (patientId: number | string, medication: Omit<Medication, 'id'>) => {
+    const addMedicationToPatient = async (patientId: number | string, medication: Omit<Medication, 'id'>, userId?: string) => {
+        console.log('🔍 addMedicationToPatient - userId recebido:', userId);
         const parts = medication.dosage.split(' ');
         const valor = parts[0] || '';
         const unidade = parts.slice(1).join(' ') || '';
 
-        const { error } = await supabase.from('medicacoes_pacientes').insert([{
+        const payload = {
             paciente_id: patientId,
             nome_medicacao: medication.name,
             dosagem_valor: valor,
             unidade_medida: unidade,
             data_inicio: medication.startDate,
-            observacao: medication.observacao || null
-        }]);
+            observacao: medication.observacao || null,
+            criado_por_id: userId || null
+        };
+        console.log('📦 Payload para Supabase (medicação):', payload);
+        
+        const { data, error } = await supabase.from('medicacoes_pacientes').insert([payload]);
+        
+        if (error) {
+            console.error('❌ Erro ao inserir medicação:', error);
+        } else {
+            console.log('✅ Medicação inserida com sucesso:', data);
+        }
+        
         if (!error) fetchPatients();
     };
 
-    const addSurgicalProcedureToPatient = async (patientId: number | string, procedure: Omit<SurgicalProcedure, 'id'>) => {
-        const { error } = await supabase.from('procedimentos_pacientes').insert([{
+    const addSurgicalProcedureToPatient = async (patientId: number | string, procedure: Omit<SurgicalProcedure, 'id'>, userId?: string) => {
+        console.log('🔍 addSurgicalProcedureToPatient - userId recebido:', userId);
+        
+        const payload = {
             paciente_id: patientId,
             nome_procedimento: procedure.name,
             data_procedimento: procedure.date,
             nome_cirurgiao: procedure.surgeon,
-            notas: procedure.notes
-        }]);
+            notas: procedure.notes,
+            criado_por_id: userId || null
+        };
+        console.log('📦 Payload para Supabase (procedimento):', payload);
+        
+        const { data, error } = await supabase.from('procedimentos_pacientes').insert([payload]);
+        
+        if (error) {
+            console.error('❌ Erro ao inserir procedimento:', error);
+        } else {
+            console.log('✅ Procedimento inserido com sucesso:', data);
+        }
+        
         if (!error) fetchPatients();
     };
 
@@ -3836,16 +4199,27 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         if (!error) fetchPatients();
     };
 
-    const addCultureToPatient = async (patientId: number | string, culture: Omit<Culture, 'id'>) => {
-        const { error } = await supabase.from('culturas_pacientes').insert([{
+    const addCultureToPatient = async (patientId: number | string, culture: Omit<Culture, 'id'>, userId?: string) => {
+        console.log('🔍 addCultureToPatient - userId recebido:', userId);
+        
+        const payload = {
             paciente_id: patientId,
             local: culture.site,
             microorganismo: culture.microorganism,
             data_coleta: culture.collectionDate,
-            observacao: culture.observation || null
-        }]);
+            observacao: culture.observation || null,
+            criado_por_id: userId || null
+        };
+        console.log('📦 Payload para Supabase (cultura):', payload);
+        
+        const { data, error } = await supabase.from('culturas_pacientes').insert([payload]);
 
-        if (error) console.warn("Culture table error", error);
+        if (error) {
+            console.error('❌ Erro ao inserir cultura:', error);
+        } else {
+            console.log('✅ Cultura inserida com sucesso:', data);
+        }
+        
         if (!error) fetchPatients();
     };
 
@@ -3868,9 +4242,11 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         if (!error) fetchPatients();
     };
 
-    const addDietToPatient = async (patientId: number | string, diet: Omit<Diet, 'id'>) => {
+    const addDietToPatient = async (patientId: number | string, diet: Omit<Diet, 'id'>, userId?: string) => {
         // vet_at e pt_at são calculados automaticamente pelo banco (GENERATED ALWAYS AS)
-        const { error } = await supabase.from('dietas_pacientes').insert([{
+        console.log('🔍 addDietToPatient - userId recebido:', userId);
+        
+        const payload = {
             paciente_id: patientId,
             tipo: diet.type,
             data_inicio: diet.data_inicio,
@@ -3881,17 +4257,39 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             pt: diet.pt || null,
             pt_g_dia: diet.pt_g_dia || null,
             th: diet.th || null,
-            observacao: diet.observacao || null
-        }]);
+            observacao: diet.observacao || null,
+            criado_por_id: userId || null  // 🟢 Capturar o ID de quem está criando
+        };
+        
+        console.log('📦 Payload para Supabase (dieta):', payload);
+        
+        const { error } = await supabase.from('dietas_pacientes').insert([payload]);
 
-        if (error) console.warn("Diet table error", error);
+        if (error) {
+            console.error('❌ Erro ao inserir dieta:', error);
+        } else {
+            console.log('✅ Dieta inserida com sucesso');
+        }
+        
         if (!error) fetchPatients();
     };
 
-    const deleteDietFromPatient = async (patientId: number | string, dietId: number | string) => {
+    const deleteDietFromPatient = async (patientId: number | string, dietId: number | string, userId?: string) => {
+        console.log('🔍 deleteDietFromPatient - userId recebido:', userId);
+        
         const { error } = await supabase.from('dietas_pacientes')
-            .update({ is_archived: true })
+            .update({ 
+                is_archived: true,
+                arquivado_por_id: userId || null  // 🟢 Capturar quem está arquivando
+            })
             .eq('id', dietId);
+        
+        if (error) {
+            console.error('❌ Erro ao arquivar dieta:', error);
+        } else {
+            console.log('✅ Dieta arquivada com sucesso');
+        }
+        
         if (!error) fetchPatients();
     };
 
@@ -4194,8 +4592,14 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
         if (error) {
             console.error("Error creating patient alert:", error);
+            return false;
         } else {
             fetchTasks();
+            // Aguarda um pouco para garantir que o banco processou
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+            return true;
         }
     }
 

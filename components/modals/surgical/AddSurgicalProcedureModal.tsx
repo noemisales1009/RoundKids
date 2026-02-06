@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { PatientsContext, NotificationContext } from '../../../contexts';
+import { PatientsContext, NotificationContext, UserContext } from '../../../contexts';
 import { CloseIcon } from '../../icons';
 
 const getTodayDateString = () => {
@@ -13,6 +13,7 @@ const getTodayDateString = () => {
 export const AddSurgicalProcedureModal: React.FC<{ patientId: number | string; onClose: () => void; }> = ({ patientId, onClose }) => {
     const { addSurgicalProcedureToPatient } = useContext(PatientsContext)!;
     const { showNotification } = useContext(NotificationContext)!;
+    const { user } = useContext(UserContext)!;
     const [name, setName] = useState('');
     const [date, setDate] = useState(getTodayDateString());
     const [surgeon, setSurgeon] = useState('');
@@ -21,7 +22,15 @@ export const AddSurgicalProcedureModal: React.FC<{ patientId: number | string; o
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!name || !date || !surgeon) return;
-        addSurgicalProcedureToPatient(patientId, { name, date, surgeon, notes });
+        
+        if (!user?.id) {
+            console.error('⚠️ User não está autenticado!');
+            showNotification({ message: 'Erro: Usuário não autenticado', type: 'error' });
+            return;
+        }
+        
+        console.log('👤 User ID no AddSurgicalProcedureModal:', user.id);
+        addSurgicalProcedureToPatient(patientId, { name, date, surgeon, notes }, user.id);
         showNotification({ message: 'Procedimento cirúrgico cadastrado!', type: 'success' });
         onClose();
     };

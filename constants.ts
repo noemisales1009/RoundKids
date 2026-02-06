@@ -313,7 +313,9 @@ export const RESPONSIBLES: string[] = [
     'Fisioterapeuta', 
     'Farmacêutico', 
     'Nutricionista',
-    'Odontólogo', 
+    'Odontólogo',
+    'Psicólogo',
+    'Fonoaudiólogo',
     'Médico / Enfermeiro', 
     'Médico / Fisioterapeuta'
 ] as const;

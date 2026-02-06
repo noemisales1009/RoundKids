@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { PatientsContext, NotificationContext } from '../../../contexts';
+import { PatientsContext, NotificationContext, UserContext } from '../../../contexts';
 import { CloseIcon } from '../../icons';
 
 const getTodayDateString = () => {
@@ -13,6 +13,7 @@ const getTodayDateString = () => {
 export const AddExamModal: React.FC<{ patientId: number | string; onClose: () => void; }> = ({ patientId, onClose }) => {
     const { addExamToPatient } = useContext(PatientsContext)!;
     const { showNotification } = useContext(NotificationContext)!;
+    const { user } = useContext(UserContext)!;
     const [name, setName] = useState('');
     const [date, setDate] = useState(getTodayDateString());
     const [observation, setObservation] = useState('');
@@ -20,7 +21,15 @@ export const AddExamModal: React.FC<{ patientId: number | string; onClose: () =>
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!name || !date) return;
-        addExamToPatient(patientId, { name, date, result: 'Pendente', observation });
+        
+        if (!user?.id) {
+            console.error('⚠️ User não está autenticado!');
+            showNotification({ message: 'Erro: Usuário não autenticado', type: 'error' });
+            return;
+        }
+        
+        console.log('👤 User ID no AddExamModal:', user.id);
+        addExamToPatient(patientId, { name, date, result: 'Pendente', observation }, user.id);
         showNotification({ message: 'Exame cadastrado com sucesso!', type: 'success' });
         onClose();
     };
