@@ -340,9 +340,9 @@ export const ALERT_DEADLINES: string[] = [
 ] as const;
 
 export const INITIAL_USER: User = {
-    name: 'Noemi',
-    title: 'Médica',
-    avatarUrl: 'https://i.pravatar.cc/150?u=noemi',
+    name: '',
+    title: '',
+    avatarUrl: '',
 };
 
 // ========== DATE FORMATTING UTILITIES ==========

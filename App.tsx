@@ -4,6 +4,7 @@ import { HashRouter, Routes, Route, useNavigate, Link, useParams, useLocation, O
 import { Patient, Category, Question, ChecklistAnswer, Answer, Device, Exam, Medication, Task, TaskStatus, PatientsContextType, TasksContextType, NotificationState, NotificationContextType, User, UserContextType, Theme, ThemeContextType, SurgicalProcedure, ScaleScore, Culture, Diet, Precaution } from './types';
 import { PATIENTS as initialPatients, CATEGORIES as STATIC_CATEGORIES, QUESTIONS as STATIC_QUESTIONS, TASKS as initialTasks, DEVICE_TYPES, DEVICE_LOCATIONS, EXAM_STATUSES, RESPONSIBLES, ALERT_DEADLINES, INITIAL_USER, MEDICATION_LIST, MEDICATION_DOSAGE_UNITS, ALERT_CATEGORIES, ICON_MAP, formatDateToBRL, formatDateTimeWithHour, calculateDaysSinceDate, getDiagnosisOptionLabel } from './constants';
 import { BackArrowIcon, PlusIcon, WarningIcon, ClockIcon, AlertIcon, CheckCircleIcon, BedIcon, UserIcon, PencilIcon, BellIcon, InfoIcon, EyeOffIcon, ClipboardIcon, FileTextIcon, LogOutIcon, ChevronRightIcon, MenuIcon, DashboardIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, HeartPulseIcon, BeakerIcon, LiverIcon, LungsIcon, DumbbellIcon, BrainIcon, ShieldIcon, UsersIcon, HomeIcon, CloseIcon, SettingsIcon, CameraIcon, ScalpelIcon, SaveIcon, CheckSquareIcon, SquareIcon, ChevronDownIcon, CheckIcon, ChevronLeftIcon } from './components/icons';
+import { LoadingIndicator } from './components/LoadingIndicator';
 
 // Lazy load components pesados
 const ComfortBScale = lazy(() => import('./components/ComfortBScale').then(m => ({ default: m.ComfortBScale })));
@@ -99,7 +100,7 @@ const getTodayDateString = () => {
 
 const Sidebar: React.FC = () => {
     const navigate = useNavigate();
-    const { user } = useContext(UserContext)!;
+    const { user, isLoading } = useContext(UserContext)!;
     const navItems = [
         { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
         { path: '/patients', label: 'Leitos', icon: BedIcon },
@@ -137,22 +138,78 @@ const Sidebar: React.FC = () => {
                 ))}
             </nav>
             <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-                <div className="flex items-center space-x-3 mb-4">
-                    <img src={user.avatarUrl} alt="User avatar" className="w-12 h-12 rounded-full object-cover bg-slate-200" />
-                    <div className="overflow-hidden">
-                        <p className="font-bold text-slate-800 dark:text-slate-200 truncate">{user.name}</p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{user.title}</p>
+                {isLoading ? (
+                    <LoadingIndicator 
+                        type="spinner"
+                        message="Carregando seu perfil..."
+                        size="md"
+                    />
+                ) : user.name ? (
+                    <>
+                        <div className="flex items-center space-x-3 mb-4">
+                            {user.avatarUrl ? (
+                                <img src={user.avatarUrl} alt="User avatar" className="w-12 h-12 rounded-full object-cover bg-slate-200" />
+                            ) : (
+                                <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                                    {user.name.charAt(0).toUpperCase()}
+                                </div>
+                            )}
+                            <div className="overflow-hidden">
+                                <p className="font-bold text-slate-800 dark:text-slate-200 truncate">{user.name}</p>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{user.title || 'Usuário'}</p>
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded text-sm text-yellow-700 dark:text-yellow-300">
+                        ⚠️ Nenhum usuário encontrado
                     </div>
-                </div>
+                )}
                 <button
                     onClick={handleLogout}
-                    className="w-full flex items-center justify-center space-x-2 px-3 py-2.5 rounded-lg font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900 dark:hover:text-red-300 transition"
+                    disabled={isLoading}
+                    className={`w-full flex items-center justify-center space-x-2 px-3 py-2.5 rounded-lg font-semibold transition ${
+                        isLoading 
+                            ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed' 
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900 dark:hover:text-red-300'
+                    }`}
                 >
                     <LogOutIcon className="w-5 h-5" />
                     <span>Sair</span>
                 </button>
             </div>
         </aside>
+    );
+};
+
+const BottomNav: React.FC = () => {
+    const navItems = [
+        { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
+        { path: '/patients', label: 'Leitos', icon: BedIcon },
+        { path: '/history', label: 'Histórico Geral', icon: FileTextIcon },
+        { path: '/settings', label: 'Ajustes', icon: SettingsIcon },
+    ];
+
+    const activeLinkClass = "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30";
+    const inactiveLinkClass = "text-slate-600 dark:text-slate-300";
+
+    return (
+        <nav className="fixed bottom-0 left-0 right-0 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-2 py-2 flex items-center justify-between lg:hidden">
+            <div className="flex flex-1 gap-1">
+                {navItems.map(item => (
+                    <NavLink
+                        key={item.path}
+                        to={item.path}
+                        className={({ isActive }) =>
+                            `flex-1 flex flex-col items-center py-2 px-1 rounded-lg transition text-xs font-semibold ${isActive ? activeLinkClass : inactiveLinkClass}`
+                        }
+                    >
+                        <item.icon className="w-5 h-5 mb-1" />
+                        <span className="truncate">{item.label}</span>
+                    </NavLink>
+                ))}
+            </div>
+        </nav>
     );
 };
 
@@ -209,21 +266,23 @@ const Header: React.FC<{ title: string; onMenuClick: () => void }> = ({ title, o
     const showBackButton = backPath !== -1 && location.pathname !== '/dashboard';
 
     return (
-        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-3 sm:p-4 sticky top-0 z-10 flex items-center shrink-0">
-            <button
-                onClick={showBackButton ? () => (typeof backPath === 'string' ? navigate(backPath) : navigate(-1)) : onMenuClick}
-                className="p-2 -ml-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition mr-2 lg:hidden"
-            >
-                {showBackButton ? <BackArrowIcon className="w-5 h-5 sm:w-6 sm:h-6" /> : <MenuIcon className="w-5 h-5 sm:w-6 sm:h-6" />}
-            </button>
-            <div className="hidden lg:block mr-4">
-                {showBackButton && (
-                    <button onClick={() => typeof backPath === 'string' ? navigate(backPath) : navigate(-1)} className="p-2 -ml-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition">
-                        <BackArrowIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                    </button>
-                )}
+        <header className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-3 sm:p-4 sticky top-0 z-10 flex items-center justify-between shrink-0">
+            <div className="flex items-center">
+                <button
+                    onClick={showBackButton ? () => (typeof backPath === 'string' ? navigate(backPath) : navigate(-1)) : onMenuClick}
+                    className="p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-200 transition mr-2 lg:hidden"
+                >
+                    {showBackButton ? <BackArrowIcon className="w-5 h-5 sm:w-6 sm:h-6" /> : <MenuIcon className="w-5 h-5 sm:w-6 sm:h-6" />}
+                </button>
+                <div className="hidden lg:block mr-4">
+                    {showBackButton && (
+                        <button onClick={() => typeof backPath === 'string' ? navigate(backPath) : navigate(-1)} className="p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-200 transition">
+                            <BackArrowIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                        </button>
+                    )}
+                </div>
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 truncate">{title}</h1>
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200 truncate">{title}</h1>
         </header>
     );
 };
@@ -242,7 +301,7 @@ const AppLayout: React.FC = () => {
 
     return (
         <HeaderContext.Provider value={contextValue}>
-            <div className="flex h-screen bg-slate-5 dark:bg-slate-950">
+            <div className="flex flex-col h-screen bg-slate-5 dark:bg-slate-950 lg:flex-row">
                 {/* Mobile Sidebar */}
                 <div className={`fixed inset-0 z-30 transition-opacity bg-black bg-opacity-50 lg:hidden ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setSidebarOpen(false)}></div>
                 <div className={`fixed inset-y-0 left-0 z-40 w-64 transform transition-transform lg:hidden ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -256,13 +315,14 @@ const AppLayout: React.FC = () => {
 
                 <div className="flex flex-col flex-1 min-w-0">
                     <Header title={title} onMenuClick={() => setSidebarOpen(true)} />
-                    <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+                    <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 pb-28 lg:pb-8">
                         <div className="max-w-4xl mx-auto">
                             <Outlet />
                         </div>
                     </main>
                 </div>
             </div>
+            <BottomNav />
             {notification && (
                 <Notification message={notification.message} type={notification.type} onClose={hideNotification} />
             )}
@@ -363,10 +423,50 @@ const LoginScreen: React.FC = () => {
         } else {
             setLoginAttempts(0); // Resetar tentativas
             try {
-                // Carregar dados do usuário imediatamente após login
+                console.log('✅ [LOGIN SUCCESS] Usuário autenticado');
+                
+                // 1. Obter dados da sessão autenticada
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                if (session?.user) {
+                    const userId = session.user.id;
+                    const userEmail = session.user.email || '';
+                    
+                    console.log('🔵 [LOGIN] Verificando usuário no banco:', userEmail);
+                    
+                    // 2. Verificar se usuário existe no banco
+                    const { data: existingUser } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('id', userId)
+                        .maybeSingle();
+                    
+                    if (!existingUser) {
+                        // Se não existe, criar agora
+                        const userName = session.user.user_metadata?.name || userEmail.split('@')[0];
+                        
+                        console.log('🔵 [LOGIN] Usuário não existe no banco, criando...');
+                        
+                        await supabase.from('users').insert({
+                            id: userId,
+                            email: userEmail,
+                            name: userName,
+                            role: 'Médica',
+                            access_level: 'geral'
+                        });
+                        
+                        console.log('✅ [LOGIN] Usuário criado no banco');
+                    } else {
+                        console.log('✅ [LOGIN] Usuário já existe no banco:', existingUser.name);
+                    }
+                }
+                
+                // 3. Carregar dados do usuário autenticado
+                console.log('🔵 [LOGIN] Carregando dados do usuário...');
                 await loadUser();
+                console.log('✅ [LOGIN] Dados carregados com sucesso!');
             } catch (err) {
-                console.error('Erro ao carregar usuário:', err);
+                console.error('❌ [LOGIN] Erro ao processar login:', err);
             }
             navigate('/dashboard');
         }
@@ -405,10 +505,23 @@ const LoginScreen: React.FC = () => {
                     </div>
                     <button
                         type="submit"
-                        disabled={loading}
-                        className={`w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 sm:py-3 px-4 rounded-lg transition text-base sm:text-lg flex items-center justify-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        disabled={loading || isLockedOut}
+                        className={`w-full font-bold py-2 sm:py-3 px-4 rounded-lg transition text-base sm:text-lg flex items-center justify-center gap-2 ${
+                            loading || isLockedOut
+                                ? 'bg-slate-400 text-white cursor-not-allowed opacity-75'
+                                : 'bg-blue-500 hover:bg-blue-600 text-white'
+                        }`}
                     >
-                        {loading ? 'Entrando...' : 'Entrar'}
+                        {loading ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <span>Autenticando...</span>
+                            </>
+                        ) : isLockedOut ? (
+                            '⏳ Aguarde antes de tentar novamente'
+                        ) : (
+                            'Entrar'
+                        )}
                     </button>
                 </form>
             </div>
@@ -501,10 +614,11 @@ const DashboardScreen: React.FC = () => {
         <div className="space-y-8">
             {loading ? (
                 <div className="flex justify-center items-center h-64">
-                    <div className="text-center">
-                        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-                        <p className="text-slate-500 dark:text-slate-400">Carregando dados do dashboard...</p>
-                    </div>
+                    <LoadingIndicator 
+                        type="spinner"
+                        message="Carregando dados do dashboard..."
+                        size="lg"
+                    />
                 </div>
             ) : (
                 <>
@@ -546,9 +660,9 @@ const DashboardScreen: React.FC = () => {
                     </div>
                 </>
             )}
-            <div className="border-t border-slate-200 dark:border-slate-700 mt-8 pt-6">
+            <div className="border-t border-slate-200 dark:border-slate-700 mt-8 pt-6 pb-4">
                 <p className="text-center text-xs text-slate-500 dark:text-slate-400">
-                    Idealizado por Dra. Lélia Braga / Criado por Noemi Sales
+                    Idealizado por Dra. Lélia Braga
                 </p>
             </div>
         </div>
@@ -610,9 +724,12 @@ const PatientListScreen: React.FC = () => {
             
             {/* Indicador de carregamento */}
             {isLoading ? (
-                <div className="text-center py-8">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-blue-500"></div>
-                    <p className="mt-2 text-slate-600 dark:text-slate-400">Carregando leitos...</p>
+                <div className="py-12 flex justify-center">
+                    <LoadingIndicator 
+                        type="spinner"
+                        message="Carregando leitos..."
+                        size="md"
+                    />
                 </div>
             ) : filteredPatients.length === 0 ? (
                 <div className="text-center py-8">
@@ -4639,25 +4756,38 @@ const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
 const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User>(INITIAL_USER);
+    const [isLoading, setIsLoading] = useState(true);
 
     const loadUser = async () => {
         try {
+            console.log('🟡 [LOADUSER] Iniciando carregamento...');
+            setIsLoading(true);
+            
             // 1. Check for Supabase Auth Session
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();
             
+            console.log('🟡 [LOADUSER] Sessão obtida:', session?.user?.id, session?.user?.email);
+            
             if (sessionError) {
-                console.error('Erro ao obter sessão:', sessionError);
+                console.error('❌ [LOADUSER] Erro ao obter sessão:', sessionError);
+                setIsLoading(false);
                 return;
             }
             
             if (session?.user) {
+                console.log('🟡 [LOADUSER] Buscando usuário no banco com ID:', session.user.id);
+                
                 const { data, error } = await supabase
                     .from('users')
                     .select('*')
                     .eq('id', session.user.id)
-                    .single();
+                    .maybeSingle();
+
+                console.log('🟡 [LOADUSER] Resultado da busca:', { data, error });
 
                 if (data) {
+                    console.log('✅ [LOADUSER] Dados encontrados! Nome:', data.name);
+                    
                     // Update state from DB
                     const dbUser = {
                         id: data.id,
@@ -4667,17 +4797,26 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                         sector: data.sector || '',
                         access_level: (data.access_level || 'geral') as 'adm' | 'geral',
                     };
+                    
+                    console.log('✅ [LOADUSER] Objeto do usuário criado:', dbUser);
                     setUser(dbUser);
                 } else if (error) {
-                    console.error('Erro ao carregar usuário:', error);
+                    console.error('❌ [LOADUSER] Erro ao carregar usuário:', error);
+                } else {
+                    console.warn('⚠️ [LOADUSER] Nenhum dado retornado (usuário não existe no banco)');
                 }
+            } else {
+                console.warn('⚠️ [LOADUSER] Nenhuma sessão ativa');
             }
         } catch (error) {
-            console.error('Erro no loadUser:', error);
+            console.error('❌ [LOADUSER] Erro geral:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     useEffect(() => {
+        console.log('🟢 [USERPROVIDER] Componente montado, chamando loadUser()');
         loadUser();
     }, []);
 
@@ -4704,7 +4843,7 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     };
 
     return (
-        <UserContext.Provider value={{ user, updateUser, loadUser }}>
+        <UserContext.Provider value={{ user, isLoading, updateUser, loadUser }}>
             {children}
         </UserContext.Provider>
     );
