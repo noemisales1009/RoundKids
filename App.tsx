@@ -3556,8 +3556,18 @@ const SettingsScreen: React.FC = () => {
     const [avatarPreview, setAvatarPreview] = useState(user.avatarUrl);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    useEffect(() => {
+        setName(user.name || '');
+        setTitle(user.title || '');
+        setSector(user.sector || '');
+        setAvatarPreview(user.avatarUrl || '');
+    }, [user.id, user.name, user.title, user.sector, user.avatarUrl]);
+
     const handleSave = () => {
-        updateUser({ name, title, avatarUrl: avatarPreview, sector });
+        const isDataUrl = /^data:image\//i.test(avatarPreview || '');
+        const avatarToSave = isDataUrl ? (user.avatarUrl || '') : avatarPreview;
+
+        updateUser({ name, title, avatarUrl: avatarToSave, sector });
         showNotification({ message: 'Perfil salvo com sucesso!', type: 'success' });
     };
 
@@ -3568,6 +3578,11 @@ const SettingsScreen: React.FC = () => {
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
+            const configuredBucket = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET;
+            const bucketCandidates = [configuredBucket, 'avatars', 'roundfoto'].filter(
+                (bucket, index, array): bucket is string => !!bucket && array.indexOf(bucket) === index
+            );
+
             // 1. Preview local imediato para feedback visual
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -3577,24 +3592,45 @@ const SettingsScreen: React.FC = () => {
 
             // 2. Upload para o Supabase Storage (bucket 'roundfoto')
             try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.user) {
+                    throw new Error('Sessão expirada. Faça login novamente para enviar a foto.');
+                }
+
                 const fileExt = file.name.split('.').pop();
                 // Cria um nome de arquivo único: avatars/timestamp-random.ext
                 const fileName = `avatars/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-                const { error: uploadError } = await supabase.storage
-                    .from('roundfoto')
-                    .upload(fileName, file, {
-                        cacheControl: '3600',
-                        upsert: false
-                    });
+                let selectedBucket: string | null = null;
+                let lastUploadError: any = null;
 
-                if (uploadError) {
-                    throw uploadError;
+                for (const bucket of bucketCandidates) {
+                    const { error: uploadError } = await supabase.storage
+                        .from(bucket)
+                        .upload(fileName, file, {
+                            cacheControl: '3600',
+                            upsert: false
+                        });
+
+                    if (!uploadError) {
+                        selectedBucket = bucket;
+                        break;
+                    }
+
+                    lastUploadError = uploadError;
+                    const uploadErrorMessage = (uploadError?.message || '').toLowerCase();
+                    if (!uploadErrorMessage.includes('bucket not found')) {
+                        throw uploadError;
+                    }
+                }
+
+                if (!selectedBucket) {
+                    throw lastUploadError || new Error('Nenhum bucket válido encontrado para upload.');
                 }
 
                 // 3. Obter a URL pública
                 const { data } = supabase.storage
-                    .from('roundfoto')
+                    .from(selectedBucket)
                     .getPublicUrl(fileName);
 
                 if (data.publicUrl) {
@@ -3604,7 +3640,22 @@ const SettingsScreen: React.FC = () => {
                 }
             } catch (error: any) {
                 console.error("Erro no upload:", error);
-                showNotification({ message: 'Erro ao enviar foto. Verifique se o bucket "roundfoto" é PÚBLICO no painel do Supabase.', type: 'error' });
+                const errorMessage = (error?.message || '').toLowerCase();
+                if (errorMessage.includes('bucket not found')) {
+                    showNotification({
+                        message: 'Nenhum bucket encontrado para upload. Crie o bucket "avatars" ou configure VITE_SUPABASE_STORAGE_BUCKET corretamente.',
+                        type: 'error'
+                    });
+                    return;
+                }
+
+                const message =
+                    error?.message ||
+                    error?.error_description ||
+                    error?.details ||
+                    'Falha ao enviar foto.';
+
+                showNotification({ message: `Erro ao enviar foto: ${message}`, type: 'error' });
             }
         }
     };
@@ -3616,7 +3667,13 @@ const SettingsScreen: React.FC = () => {
                 <div className="space-y-6">
                     <div className="flex justify-center">
                         <div className="relative group">
-                            <img src={avatarPreview} alt="User avatar" className="w-24 h-24 rounded-full object-cover bg-slate-200" />
+                            {avatarPreview ? (
+                                <img src={avatarPreview} alt="User avatar" className="w-24 h-24 rounded-full object-cover bg-slate-200" />
+                            ) : (
+                                <div className="w-24 h-24 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+                                    {(name || 'U').charAt(0).toUpperCase()}
+                                </div>
+                            )}
                             <button
                                 onClick={handleAvatarClick}
                                 className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100"
@@ -4054,6 +4111,25 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 
     useEffect(() => {
         fetchPatients();
+    }, []);
+
+    useEffect(() => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+                if (session?.user) {
+                    fetchPatients();
+                }
+            }
+
+            if (event === 'SIGNED_OUT') {
+                setPatients([]);
+                setChecklistAnswers({});
+            }
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
 
     const saveChecklistAnswer = async (patientId: number | string, categoryId: number, questionId: number, answer: Answer) => {
@@ -4758,6 +4834,25 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     const [user, setUser] = useState<User>(INITIAL_USER);
     const [isLoading, setIsLoading] = useState(true);
 
+    const getAvatarUrl = (foto?: string | null) => {
+        if (!foto) return '';
+        if (/^data:image\//i.test(foto)) return foto;
+        if (/^https?:\/\//i.test(foto)) return foto;
+
+        const bucketName = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'avatars';
+        const { data } = supabase.storage.from(bucketName).getPublicUrl(foto);
+        return data?.publicUrl || '';
+    };
+
+    const mapDbUserToAppUser = (data: any): User => ({
+        id: data.id,
+        name: data.name || '',
+        title: data.role || '',
+        avatarUrl: getAvatarUrl(data.foto),
+        sector: data.sector || '',
+        access_level: (data.access_level || 'geral') as 'adm' | 'geral',
+    });
+
     const loadUser = async () => {
         try {
             console.log('🟡 [LOADUSER] Iniciando carregamento...');
@@ -4787,26 +4882,51 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
                 if (data) {
                     console.log('✅ [LOADUSER] Dados encontrados! Nome:', data.name);
-                    
-                    // Update state from DB
-                    const dbUser = {
-                        id: data.id,
-                        name: data.name || '',
-                        title: data.role || '',
-                        avatarUrl: data.foto || '',
-                        sector: data.sector || '',
-                        access_level: (data.access_level || 'geral') as 'adm' | 'geral',
-                    };
-                    
+
+                    const dbUser = mapDbUserToAppUser(data);
                     console.log('✅ [LOADUSER] Objeto do usuário criado:', dbUser);
                     setUser(dbUser);
                 } else if (error) {
                     console.error('❌ [LOADUSER] Erro ao carregar usuário:', error);
                 } else {
                     console.warn('⚠️ [LOADUSER] Nenhum dado retornado (usuário não existe no banco)');
+
+                    const fallbackName =
+                        session.user.user_metadata?.name ||
+                        session.user.email?.split('@')[0] ||
+                        'Usuário';
+
+                    const { data: upsertedUser, error: upsertError } = await supabase
+                        .from('users')
+                        .upsert({
+                            id: session.user.id,
+                            email: session.user.email,
+                            name: fallbackName,
+                            role: 'Médica',
+                            access_level: 'geral',
+                            updated_at: new Date().toISOString()
+                        }, { onConflict: 'id' })
+                        .select('*')
+                        .maybeSingle();
+
+                    if (upsertError) {
+                        console.error('❌ [LOADUSER] Erro ao auto-criar usuário em public.users:', upsertError);
+                        setUser({
+                            id: session.user.id,
+                            name: fallbackName,
+                            title: 'Médica',
+                            avatarUrl: '',
+                            sector: '',
+                            access_level: 'geral'
+                        });
+                    } else if (upsertedUser) {
+                        console.log('✅ [LOADUSER] Usuário auto-criado em public.users');
+                        setUser(mapDbUserToAppUser(upsertedUser));
+                    }
                 }
             } else {
                 console.warn('⚠️ [LOADUSER] Nenhuma sessão ativa');
+                setUser(INITIAL_USER);
             }
         } catch (error) {
             console.error('❌ [LOADUSER] Erro geral:', error);
@@ -4818,6 +4938,23 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     useEffect(() => {
         console.log('🟢 [USERPROVIDER] Componente montado, chamando loadUser()');
         loadUser();
+    }, []);
+
+    useEffect(() => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+                loadUser();
+            }
+
+            if (event === 'SIGNED_OUT') {
+                setUser(INITIAL_USER);
+                setIsLoading(false);
+            }
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
 
     const updateUser = async (userData: Partial<User>) => {
