@@ -36,6 +36,8 @@ const LatestCalculationsCard = lazy(() => import('./components/LatestCalculation
 const StatusComponent = lazy(() => import('./components/StatusComponent'));
 const ComorbidadeComponent = lazy(() => import('./components/ComorbidadeComponent'));
 const DestinoComponent = lazy(() => import('./components/DestinoComponent'));
+const ClinicalSituation24hCard = lazy(() => import('./components/ClinicalSituation24hCard').then(m => ({ default: m.ClinicalSituation24hCard })));
+const AportesCard = lazy(() => import('./components/AportesCard').then(m => ({ default: m.AportesCard })));
 const AlertsHistoryScreen = lazy(() => import('./AlertsHistoryScreen').then(m => ({ default: m.AlertsHistoryScreen })));
 const PrecautionsCard = lazy(() => import('./components/PrecautionsCard').then(m => ({ default: m.PrecautionsCard })));
 const DiagnosticsResultsCard = lazy(() => import('./components/DiagnosticsResultsCard'));
@@ -663,7 +665,7 @@ const DashboardScreen: React.FC = () => {
             )}
             <div className="border-t border-slate-200 dark:border-slate-700 mt-8 pt-6 pb-4">
                 <p className="text-center text-xs text-slate-500 dark:text-slate-400">
-                    Idealizado por Dra. Lélia Braga
+                    Idealizado por Dra. Lélia Braga / Criado por Noemi Sales
                 </p>
             </div>
         </div>
@@ -827,6 +829,8 @@ const PatientHistoryScreen: React.FC = () => {
     const [archivedProcedures, setArchivedProcedures] = React.useState<any[]>([]);
     const [archivedCultures, setArchivedCultures] = React.useState<any[]>([]);
     const [archivedDiets, setArchivedDiets] = React.useState<any[]>([]);
+    const [clinicalSituations24h, setClinicalSituations24h] = React.useState<any[]>([]);
+    const [aportesHistorico, setAportesHistorico] = React.useState<any[]>([]);
     const [dietsData, setDietsData] = React.useState<any[]>([]);
     const [dataInicio, setDataInicio] = React.useState<string>('');
     const [dataFinal, setDataFinal] = React.useState<string>('');
@@ -854,7 +858,9 @@ const PatientHistoryScreen: React.FC = () => {
         'Arquivamentos Procedimentos': 'Procedimento Arquivado',
         'Arquivamentos Culturas': 'Cultura Arquivada',
         'Arquivamentos Dietas': 'Dieta Arquivada',
-        'Arquivamentos Diagnósticos': 'Diagnóstico Arquivado'
+        'Arquivamentos Diagnósticos': 'Diagnóstico Arquivado',
+        'Situação Clínica 24h': 'Situação Clínica 24h',
+        'Aportes': 'Aportes'
     };
 
     useHeader(patient ? `Histórico: ${patient.name}` : 'Histórico do Paciente');
@@ -1356,6 +1362,56 @@ const PatientHistoryScreen: React.FC = () => {
         fetchArchivedDiets();
     }, [patientId]);
 
+    // Buscar situações clínicas 24h (ativas + históricas)
+    React.useEffect(() => {
+        const fetchClinicalSituations24h = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('clinical_situations_24h')
+                    .select('*')
+                    .eq('patient_id', patientId)
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.warn('⚠️ Erro ao buscar situação clínica 24h:', error.message);
+                    return;
+                }
+
+                setClinicalSituations24h(data || []);
+            } catch (err) {
+                console.warn('Erro ao buscar situação clínica 24h:', err);
+            }
+        };
+
+        fetchClinicalSituations24h();
+    }, [patientId]);
+
+    // Buscar histórico de aportes
+    React.useEffect(() => {
+        const fetchAportesHistorico = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('aportes_pacientes')
+                    .select('*')
+                    .eq('paciente_id', patientId)
+                    .order('data_referencia', { ascending: false });
+
+                if (error) {
+                    console.warn('⚠️ Erro ao buscar aportes:', error.message);
+                    return;
+                }
+
+                setAportesHistorico(data || []);
+            } catch (err) {
+                console.warn('Erro ao buscar aportes:', err);
+            }
+        };
+
+        fetchAportesHistorico();
+    }, [patientId]);
+
     type TimelineEvent = {
         timestamp: string;
         icon: React.FC<{ className?: string; }>;
@@ -1711,6 +1767,35 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
+        // Situação clínica das últimas 24h (depois de 24h fica só no histórico)
+        clinicalSituations24h.forEach((situation: any) => {
+            const visibleUntil = situation.visible_until ? new Date(situation.visible_until) : null;
+            const now = new Date();
+            const status24h = visibleUntil && visibleUntil > now ? 'Ativa (24h)' : 'Histórico (>24h)';
+
+            events.push({
+                timestamp: situation.created_at || new Date().toISOString(),
+                icon: ClipboardIcon,
+                description: `[SITUACAO_24H] 📝 Situação clínica 24h (${status24h})\n${situation.situacao_texto}`,
+                hasTime: true,
+            });
+        });
+
+        // Aportes
+        aportesHistorico.forEach((aporte: any) => {
+            const vo = Number(aporte.vo_ml_kg_h || 0);
+            const hv = Number(aporte.hv_npt_ml_kg_h || 0);
+            const med = Number(aporte.medicacoes_ml_kg_h || 0);
+            const tht = Number(aporte.tht_ml_kg_h || 0);
+
+            events.push({
+                timestamp: aporte.created_at || `${aporte.data_referencia}T00:00:00`,
+                icon: DropletIcon,
+                description: `[APORTES] 💧 Aportes (${aporte.data_referencia})\nVO: ${vo.toFixed(2)} ml/kg/h | HV/NPT: ${hv.toFixed(2)} ml/kg/h | MED: ${med.toFixed(2)} ml/kg/h\nTHT: ${tht.toFixed(2)} ml/kg/h`,
+                hasTime: true,
+            });
+        });
+
         events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
         const groupedEvents = events.reduce((acc, event) => {
@@ -1723,7 +1808,7 @@ const PatientHistoryScreen: React.FC = () => {
         }, {} as Record<string, TimelineEvent[]>);
 
         return groupedEvents;
-    }, [patient, tasks, diagnostics, diuresisData, balanceData, dietsData, alertsData, alertCompletions, alertJustifications, archivedAlerts, archivedDevices, archivedExams, archivedMedications, archivedProcedures, archivedCultures, archivedDiets, resolvedDiagnostics]);
+    }, [patient, tasks, diagnostics, diuresisData, balanceData, dietsData, alertsData, alertCompletions, alertJustifications, archivedAlerts, archivedDevices, archivedExams, archivedMedications, archivedProcedures, archivedCultures, archivedDiets, clinicalSituations24h, aportesHistorico, resolvedDiagnostics]);
 
     const handleGeneratePdf = () => {
         // ... (PDF generation logic remains the same)
@@ -2105,7 +2190,9 @@ const PatientHistoryScreen: React.FC = () => {
             '[PROCEDIMENTO_ARQUIVADO]': 'Arquivamentos Procedimentos',
             '[CULTURA_ARQUIVADA]': 'Arquivamentos Culturas',
             '[DIETA_ARQUIVADA]': 'Arquivamentos Dietas',
-            '[DIAGNOSTICO_ARQUIVADO]': 'Arquivamentos Diagnósticos'
+            '[DIAGNOSTICO_ARQUIVADO]': 'Arquivamentos Diagnósticos',
+            '[SITUACAO_24H]': 'Situação Clínica 24h',
+            '[APORTES]': 'Aportes'
         };
         
         for (const [marker, category] of Object.entries(categoryMap)) {
@@ -2283,7 +2370,7 @@ const PatientDetailScreen: React.FC = () => {
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
     const [mainTab, setMainTab] = useState<'data' | 'scales'>('data');
-    const [dataTab, setDataTab] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'diagnostics'>('devices');
+    const [dataTab, setDataTab] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'diagnostics'>('devices');
     const [isAddDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
     const [editingDevice, setEditingDevice] = useState<Device | null>(null);
     const [editingDeviceRemovalDate, setEditingDeviceRemovalDate] = useState<Device | null>(null);
@@ -2408,7 +2495,8 @@ const PatientDetailScreen: React.FC = () => {
     };
 
     const calculateDays = (startDate: string) => {
-        const parts = startDate.split('-').map(Number);
+        const normalizedDate = startDate.split('T')[0];
+        const parts = normalizedDate.split('-').map(Number);
         const start = new Date(parts[0], parts[1] - 1, parts[2]);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -2428,6 +2516,7 @@ const PatientDetailScreen: React.FC = () => {
         { id: 'surgical', label: 'Cirúrgico', icon: ScalpelIcon },
         { id: 'cultures', label: 'Culturas', icon: BeakerIcon },
         { id: 'diets', label: 'Dietas', icon: AppleIcon },
+        { id: 'aportes', label: 'Aportes', icon: DropletIcon },
     ];
 
     return (
@@ -2444,7 +2533,15 @@ const PatientDetailScreen: React.FC = () => {
                 <div className="flex flex-col gap-1 text-slate-500 dark:text-slate-400 mt-3">
                     <span className="font-medium">Idade: <span className="font-normal">{formatAge(patient.dob)}</span></span>
                     <span className="font-medium">Mãe: <span className="font-normal">{patient.motherName}</span></span>
-                    <span className="font-medium">Diagnóstico: <span className="font-normal">{patient.ctd}</span></span>
+                    <span className="font-medium">
+                        Data de admissão:{' '}
+                        <span className="font-normal">
+                            {patient.admissionDate
+                                ? `${formatDateToBRL(patient.admissionDate)} (${calculateDays(patient.admissionDate)} ${calculateDays(patient.admissionDate) === 1 ? 'dia' : 'dias'} internado)`
+                                : <span className="text-orange-500 italic">Não informado</span>}
+                        </span>
+                    </span>
+                    <span className="font-medium">SC: <span className="font-normal">{patient.sc ? patient.sc : <span className="text-orange-500 italic">Não informado</span>}</span></span>
                     <span className="font-medium">Peso: <span className="font-normal">{patient.peso ? `${patient.peso} kg` : <span className="text-orange-500 italic">Não informado</span>}</span></span>
                 </div>
             </div>
@@ -2454,6 +2551,14 @@ const PatientDetailScreen: React.FC = () => {
                 <PrecautionsCard 
                     patientId={patient.id} 
                     precautions={patient.precautions || []} 
+                />
+            </Suspense>
+
+            <Suspense fallback={<LoadingSpinner />}>
+                <ClinicalSituation24hCard
+                    patientId={patient.id}
+                    userId={user?.id}
+                    accessLevel={user?.access_level}
                 />
             </Suspense>
 
@@ -2777,6 +2882,14 @@ const PatientDetailScreen: React.FC = () => {
                                     <button onClick={() => setAddDietModalOpen(true)} className="w-full mt-2 text-center bg-blue-50 dark:bg-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-semibold py-2.5 rounded-lg transition">Cadastrar Dieta</button>
                                 </>
                             )}
+
+                            {dataTab === 'aportes' && (
+                                <AportesCard
+                                    patientId={patient.id}
+                                    userId={user?.id}
+                                    accessLevel={user?.access_level}
+                                />
+                            )}
                         </div>
                     </>
                 )}
@@ -2958,7 +3071,7 @@ const PatientDetailScreen: React.FC = () => {
             {editingDietRemovalDate && <EditDietRemovalDateModal diet={editingDietRemovalDate} patientId={patient.id} onClose={() => setEditingDietRemovalDate(null)} />}
             {isRemovalModalOpen && <AddRemovalDateModal deviceId={isRemovalModalOpen} patientId={patient.id} onClose={() => setRemovalModalOpen(null)} />}
             {isEndDateModalOpen && <AddEndDateModal medicationId={isEndDateModalOpen} patientId={patient.id} onClose={() => setEndDateModalOpen(null)} />}
-            {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} currentMotherName={patient.motherName} currentDiagnosis={patient.ctd} currentWeight={patient.peso} onClose={() => setEditInfoModalOpen(false)} />}
+            {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} currentMotherName={patient.motherName} currentWeight={patient.peso} currentSC={patient.sc} onClose={() => setEditInfoModalOpen(false)} />}
             {isCreateAlertModalOpen && <CreateAlertModal patientId={patient.id} onClose={() => setCreateAlertModalOpen(false)} />}
         </div>
     );
@@ -3906,6 +4019,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             dob: p.dob,
             ctd: p.diagnosis || 'Estável',
             peso: p.peso,
+            sc: p.sc,
             status: p.status || 'estavel',
             comorbidade: p.comorbidade || undefined,
             admissionDate: p.dt_internacao || undefined,
@@ -3945,7 +4059,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             categoriesRes,
             answersRes
         ] = await Promise.all([
-            supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso'),
+            supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc'),
             supabase.from('perguntas').select('*').order('ordem', { ascending: true }),
             supabase.from('pergunta_opcoes').select('*').order('ordem', { ascending: true }),
             supabase.from('categorias').select('*').order('ordem', { ascending: true }),
@@ -3967,7 +4081,9 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             status: p.status || 'estavel',
             motherName: p.mother_name || '',
             ctd: p.diagnosis || 'Estável',
+            admissionDate: p.dt_internacao || undefined,
             peso: p.peso || undefined,
+            sc: p.sc || undefined,
             devices: [],
             exams: [],
             medications: [],
@@ -3985,7 +4101,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         // 🔄 Carregar dados detalhados EM BACKGROUND (não bloqueia renderização)
         setTimeout(() => {
             Promise.all([
-                supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso'),
+                supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc'),
                 supabase.from('dispositivos_pacientes').select('*'),
                 supabase.from('exames_pacientes').select('*'),
                 supabase.from('medicacoes_pacientes').select('*'),
@@ -4549,7 +4665,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         if (!error) fetchPatients();
     };
 
-    const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number }) => {
+    const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number; sc?: number }) => {
         try {
             const updateData: any = {};
             if (data.motherName !== undefined) updateData.mother_name = data.motherName;
@@ -4559,6 +4675,11 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 const pesoNumero = typeof data.peso === 'string' ? parseFloat(data.peso) : data.peso;
                 updateData.peso = pesoNumero || null;
                 console.log('⚖️ DEBUG PESO:', { original: data.peso, convertido: pesoNumero, final: updateData.peso });
+            }
+            if (data.sc !== undefined) {
+                const scNumero = typeof data.sc === 'string' ? parseFloat(data.sc) : data.sc;
+                updateData.sc = scNumero || null;
+                console.log('🫁 DEBUG SC:', { original: data.sc, convertido: scNumero, final: updateData.sc });
             }
 
             console.log('💾 Salvando dados do paciente:', { patientId, updateData });

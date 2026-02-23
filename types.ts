@@ -89,6 +89,7 @@ export interface Patient {
   dob: string; // "YYYY-MM-DD"
   ctd: string; // Used for Diagnosis
   peso?: number;
+  sc?: number;
   status?: string; // "estavel", "instavel", "em_risco"
   localTransferencia?: string; // "Alta", "Transferência Interna", "Transferência Externa", "Óbito"
   comorbidade?: string; // Comorbidades separadas por pipe (|)
@@ -197,7 +198,7 @@ export interface PatientsContextType {
   updateSurgicalProcedureInPatient: (patientId: number | string, procedureData: SurgicalProcedure) => void;
   deleteSurgicalProcedureFromPatient: (patientId: number | string, procedureId: number | string) => void;
   addScaleScoreToPatient: (patientId: number | string, score: Omit<ScaleScore, 'id'>) => void;
-  updatePatientDetails: (patientId: number | string, data: { motherName?: string; ctd?: string }) => void;
+  updatePatientDetails: (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number; sc?: number }) => void;
   saveChecklistAnswer: (patientId: number | string, categoryId: number, questionId: number, answer: Answer) => Promise<void>;
   addCultureToPatient: (patientId: number | string, culture: Omit<Culture, 'id'>) => void;
   deleteCultureFromPatient: (patientId: number | string, cultureId: number | string) => void;

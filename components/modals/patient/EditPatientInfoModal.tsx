@@ -5,26 +5,30 @@ import { CloseIcon } from '../../icons';
 interface EditPatientInfoModalProps {
     patientId: number | string;
     currentMotherName: string;
-    currentDiagnosis: string;
     currentWeight?: number;
+    currentSC?: number;
     onClose: () => void;
 }
 
 export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({ 
     patientId, 
     currentMotherName, 
-    currentDiagnosis, 
     currentWeight, 
+    currentSC,
     onClose 
 }) => {
     const { updatePatientDetails } = useContext(PatientsContext)!;
     const [motherName, setMotherName] = useState(currentMotherName);
-    const [diagnosis, setDiagnosis] = useState(currentDiagnosis);
     const [weight, setWeight] = useState(currentWeight?.toString() || '');
+    const [sc, setSc] = useState(currentSC?.toString() || '');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        updatePatientDetails(patientId, { motherName, ctd: diagnosis, peso: weight ? parseFloat(weight) : undefined });
+        updatePatientDetails(patientId, {
+            motherName,
+            peso: weight ? parseFloat(weight) : undefined,
+            sc: sc ? parseFloat(sc) : undefined
+        });
         onClose();
     };
 
@@ -46,21 +50,22 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Diagnóstico</label>
-                        <textarea
-                            value={diagnosis}
-                            onChange={(e) => setDiagnosis(e.target.value)}
-                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
-                            rows={3}
-                        />
-                    </div>
-                    <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Peso (kg)</label>
                         <input
                             type="number"
                             step="0.1"
                             value={weight}
                             onChange={e => setWeight(e.target.value)}
+                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">SC</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            value={sc}
+                            onChange={e => setSc(e.target.value)}
                             className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
                         />
                     </div>
