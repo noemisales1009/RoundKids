@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo, useContext, useEffect, createContext, useRef, lazy, Suspense } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import { HashRouter, Routes, Route, useNavigate, Link, useParams, useLocation, Outlet, NavLink, Navigate } from 'react-router-dom';
 import { Patient, Category, Question, ChecklistAnswer, Answer, Device, Exam, Medication, Task, TaskStatus, PatientsContextType, TasksContextType, NotificationState, NotificationContextType, User, UserContextType, Theme, ThemeContextType, SurgicalProcedure, ScaleScore, Culture, Diet, Precaution } from './types';
 import { PATIENTS as initialPatients, CATEGORIES as STATIC_CATEGORIES, QUESTIONS as STATIC_QUESTIONS, TASKS as initialTasks, DEVICE_TYPES, DEVICE_LOCATIONS, EXAM_STATUSES, RESPONSIBLES, ALERT_DEADLINES, INITIAL_USER, MEDICATION_LIST, MEDICATION_DOSAGE_UNITS, ALERT_CATEGORIES, ICON_MAP, formatDateToBRL, formatDateTimeWithHour, calculateDaysSinceDate, getDiagnosisOptionLabel } from './constants';
@@ -301,7 +302,7 @@ const AppLayout: React.FC = () => {
 
     return (
         <HeaderContext.Provider value={contextValue}>
-            <div className="flex flex-col h-screen bg-slate-5 dark:bg-slate-950 lg:flex-row">
+            <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 lg:flex-row">
                 {/* Mobile Sidebar */}
                 <div className={`fixed inset-0 z-30 transition-opacity bg-black bg-opacity-50 lg:hidden ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setSidebarOpen(false)}></div>
                 <div className={`fixed inset-y-0 left-0 z-40 w-64 transform transition-transform lg:hidden ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -315,7 +316,7 @@ const AppLayout: React.FC = () => {
 
                 <div className="flex flex-col flex-1 min-w-0">
                     <Header title={title} onMenuClick={() => setSidebarOpen(true)} />
-                    <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 pb-28 lg:pb-8">
+                    <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 p-4 md:p-6 lg:p-8 pb-28 lg:pb-8">
                         <div className="max-w-4xl mx-auto">
                             <Outlet />
                         </div>
@@ -4853,18 +4854,35 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         access_level: (data.access_level || 'geral') as 'adm' | 'geral',
     });
 
-    const loadUser = async () => {
+    const loadUser = async (sessionOverride?: Session | null) => {
         try {
             console.log('🟡 [LOADUSER] Iniciando carregamento...');
             setIsLoading(true);
             
             // 1. Check for Supabase Auth Session
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            let session = sessionOverride;
+            let sessionError: any = null;
+
+            if (sessionOverride === undefined) {
+                const sessionResult = await supabase.auth.getSession();
+                session = sessionResult.data.session;
+                sessionError = sessionResult.error;
+            }
             
             console.log('🟡 [LOADUSER] Sessão obtida:', session?.user?.id, session?.user?.email);
             
             if (sessionError) {
-                console.error('❌ [LOADUSER] Erro ao obter sessão:', sessionError);
+                const message = String(sessionError?.message || '');
+                const isInvalidRefreshToken =
+                    /Invalid Refresh Token/i.test(message) || /Refresh Token Not Found/i.test(message);
+
+                if (isInvalidRefreshToken) {
+                    console.warn('⚠️ [LOADUSER] Refresh token inválido. Limpando sessão local...');
+                    await supabase.auth.signOut({ scope: 'local' });
+                    setUser(INITIAL_USER);
+                } else {
+                    console.error('❌ [LOADUSER] Erro ao obter sessão:', sessionError);
+                }
                 setIsLoading(false);
                 return;
             }
@@ -4941,9 +4959,9 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     }, []);
 
     useEffect(() => {
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-                loadUser();
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+                loadUser(session);
             }
 
             if (event === 'SIGNED_OUT') {
