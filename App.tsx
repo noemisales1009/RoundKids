@@ -2623,6 +2623,20 @@ const PatientDetailScreen: React.FC = () => {
                 </div>
             </div>
 
+            {/* Status do Paciente */}
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-4 mb-4">
+                <Suspense fallback={<LoadingSpinner />}>
+                    <StatusComponent patientId={patient.id.toString()} />
+                </Suspense>
+            </div>
+
+            {/* Comorbidade */}
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-4 mb-4">
+                <Suspense fallback={<LoadingSpinner />}>
+                    <ComorbidadeComponent patientId={patient.id.toString()} />
+                </Suspense>
+            </div>
+
             {/* Precautions Card */}
             <Suspense fallback={<LoadingSpinner />}>
                 <PrecautionsCard 
@@ -2648,15 +2662,6 @@ const PatientDetailScreen: React.FC = () => {
 
             {/* ... Tabs and Content ... */}
             <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm">
-                {/* Status Selector */}
-                <div className="border-b border-slate-200 dark:border-slate-800 p-4">
-                    <StatusComponent patientId={patient.id.toString()} />
-                </div>
-
-                {/* Comorbidade */}
-                <div className="border-b border-slate-200 dark:border-slate-800 p-4">
-                    <ComorbidadeComponent patientId={patient.id.toString()} />
-                </div>
 
                 {/* Main Tabs */}
                 <div className="border-b border-slate-200 dark:border-slate-800">
