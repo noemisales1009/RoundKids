@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { DropletIcon, SaveIcon, ChevronRightIcon } from './icons';
 import { supabase } from '../supabaseClient';
-import { NotificationContext, PatientsContext } from '../contexts';
+import { NotificationContext, PatientsContext, UserContext } from '../contexts';
 
 interface FluidBalanceCalcProps {
   patientId: string | number;
@@ -11,6 +11,7 @@ interface FluidBalanceCalcProps {
 const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId, onCalculationSaved }) => {
   const { showNotification } = useContext(NotificationContext)!;
   const { patients } = useContext(PatientsContext)!;
+  const { user } = useContext(UserContext)!;
   const [weight, setWeight] = useState('');
   const [volume, setVolume] = useState('');
   const [isPositive, setIsPositive] = useState(true);
@@ -55,6 +56,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId, onCalcul
         peso: w,
         volume: signed,
         data_registro: new Date().toISOString(),
+        created_by: user?.id,
       };
 
       await supabase.from('balanco_hidrico').insert(balanceRecord);

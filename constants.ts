@@ -316,8 +316,11 @@ export const RESPONSIBLES: string[] = [
     'Odontólogo',
     'Psicólogo',
     'Fonoaudiólogo',
+    'Serviço Social',
+    'Terapeuta Ocupacional',
     'Médico / Enfermeiro', 
-    'Médico / Fisioterapeuta'
+    'Médico / Fisioterapeuta',
+    'Médico / Nutricionista'
 ] as const;
 
 // Lazy generate alert deadlines

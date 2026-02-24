@@ -22,6 +22,26 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
     const [weight, setWeight] = useState(currentWeight?.toString() || '');
     const [sc, setSc] = useState(currentSC?.toString() || '');
 
+    // Fórmula de SC: (P × 4 + 7) / (P + 90)
+    const calculateSC = (pesoKg: number) => {
+        if (pesoKg && pesoKg > 0) {
+            const scCalculated = (pesoKg * 4 + 7) / (pesoKg + 90);
+            return scCalculated.toFixed(2);
+        }
+        return '';
+    };
+
+    const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newWeight = e.target.value;
+        setWeight(newWeight);
+        
+        // Calcular SC automaticamente
+        if (newWeight && parseFloat(newWeight) > 0) {
+            const calculatedSC = calculateSC(parseFloat(newWeight));
+            setSc(calculatedSC);
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         updatePatientDetails(patientId, {
@@ -55,18 +75,19 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
                             type="number"
                             step="0.1"
                             value={weight}
-                            onChange={e => setWeight(e.target.value)}
+                            onChange={handleWeightChange}
                             className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">SC</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">SC (calculado automaticamente)</label>
                         <input
                             type="number"
                             step="0.01"
                             value={sc}
                             onChange={e => setSc(e.target.value)}
-                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                            readOnly
+                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 cursor-not-allowed"
                         />
                     </div>
                     <div className="flex gap-2">
