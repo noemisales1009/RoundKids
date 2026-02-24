@@ -16,6 +16,12 @@ export const EditDeviceRemovalDateModal: React.FC<{ device: Device; patientId: n
         onClose();
     };
 
+    const handleRevertRemoval = () => {
+        updateDeviceInPatient(patientId, { ...device, removalDate: undefined });
+        showNotification({ message: 'Retirada revertida com sucesso! O dispositivo voltou como ativo.', type: 'success' });
+        onClose();
+    };
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
             <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-sm m-4">
@@ -28,6 +34,13 @@ export const EditDeviceRemovalDateModal: React.FC<{ device: Device; patientId: n
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data de Retirada</label>
                         <input type="date" value={removalDate} onChange={e => setRemovalDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" required />
                     </div>
+                    <button
+                        type="button"
+                        onClick={handleRevertRemoval}
+                        className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg"
+                    >
+                        Reverter retirada
+                    </button>
                     <div className="flex gap-2">
                         <button type="button" onClick={onClose} className="w-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-lg">Cancelar</button>
                         <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar</button>

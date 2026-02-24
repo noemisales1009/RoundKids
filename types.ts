@@ -150,9 +150,12 @@ export interface Task {
   justification?: string;
   // New fields for DB integration
   patientName?: string;
+  bedNumber?: string | number;
   categoryName?: string;
   timeLabel?: string;
   options?: any; // JSONB
+  deadlineFormatted?: string; // Formatted deadline from view (DD/MM/YYYY HH24:MI)
+  houraCriacaoFormatado?: string; // Formatted creation time from view (DD/MM/YYYY HH24:MI)
 }
 
 // --- USER & THEME ---

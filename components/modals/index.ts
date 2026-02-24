@@ -1,6 +1,9 @@
 // Patient modals
 export { EditPatientInfoModal } from './patient';
 
+// Aporte modals
+export { AddAporteModal } from './aportes';
+
 // Alert modals
 export { CreateAlertModal, AlertModal, JustificationModal } from './alerts';
 

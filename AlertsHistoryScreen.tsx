@@ -18,6 +18,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedDate, setSelectedDate] = useState('');
     const [selectedStatus, setSelectedStatus] = useState('todos');
+    const [selectedProfessional, setSelectedProfessional] = useState('todos');
 
     // Buscar todos os alertas
     const fetchAllAlerts = async () => {
@@ -71,25 +72,58 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
         fetchAllAlerts();
     }, []);
 
+    // Gerar lista de profissionais únicos
+    const professionals = useMemo(() => {
+        const uniqueProfessionals = [...new Set(alerts.map(a => a.responsavel).filter(Boolean))];
+        return uniqueProfessionals.sort();
+    }, [alerts]);
+
     // Filtrar alertas
     const filteredAlerts = useMemo(() => {
-        return alerts.filter(alert => {
+        const result = alerts.filter(alert => {
+            // Excluir concluídos (verificar live_status) e arquivados
+            if (alert.live_status === 'concluido' || alert.archived_at) {
+                return false;
+            }
+
             // Filtro por busca (nome ou leito)
             const matchesSearch = searchTerm === '' ||
                 alert.patient_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 alert.bed_number?.toString().includes(searchTerm);
 
-            // Filtro por data
-            const matchesDate = selectedDate === '' ||
-                alert.created_at?.startsWith(selectedDate);
+            // Filtro por data - converter para YYYY-MM-DD format
+            let matchesDate = selectedDate === '';
+            if (selectedDate && alert.created_at) {
+                const alertDate = alert.created_at.split('T')[0]; // Pega só YYYY-MM-DD
+                matchesDate = alertDate === selectedDate;
+            }
 
             // Filtro por status
             const matchesStatus = selectedStatus === 'todos' ||
                 alert.live_status === selectedStatus;
 
-            return matchesSearch && matchesDate && matchesStatus;
+            // Filtro por profissional
+            const matchesProfessional = selectedProfessional === 'todos' ||
+                alert.responsavel === selectedProfessional;
+
+            return matchesSearch && matchesDate && matchesStatus && matchesProfessional;
         });
-    }, [alerts, searchTerm, selectedDate, selectedStatus]);
+
+        // Log de debug
+        if (searchTerm || selectedDate || selectedStatus !== 'todos' || selectedProfessional !== 'todos') {
+            console.log('🔍 Filtros aplicados:', {
+                searchTerm,
+                selectedDate,
+                selectedStatus,
+                selectedProfessional,
+                totalAlerts: alerts.length,
+                filteredCount: result.length,
+                sample: result[0]
+            });
+        }
+
+        return result;
+    }, [alerts, searchTerm, selectedDate, selectedStatus, selectedProfessional]);
 
     // Gerar PDF
     const handleGeneratePDF = () => {
@@ -178,7 +212,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
         <div className="space-y-6">
             {/* Filtros */}
             <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                     {/* Busca */}
                     <input
                         type="text"
@@ -206,6 +240,18 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                         <option value="no_prazo">No Prazo</option>
                         <option value="fora_do_prazo">Fora do Prazo</option>
                         <option value="concluido">Concluídos</option>
+                    </select>
+
+                    {/* Profissional */}
+                    <select
+                        value={selectedProfessional}
+                        onChange={(e) => setSelectedProfessional(e.target.value)}
+                        className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200"
+                    >
+                        <option value="todos">Todos os Profissionais</option>
+                        {professionals.map(prof => (
+                            <option key={prof} value={prof}>{prof}</option>
+                        ))}
                     </select>
 
                     {/* Botão Gerar PDF */}

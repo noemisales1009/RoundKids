@@ -535,8 +535,9 @@ const LoginScreen: React.FC = () => {
 const DashboardScreen: React.FC = () => {
     useHeader('Dashboard');
     const navigate = useNavigate();
-    const { tasks } = useContext(TasksContext)!;
-    const { categories } = useContext(PatientsContext)!;
+    const { showNotification } = useContext(NotificationContext)!;
+    const [expandedProfessionals, setExpandedProfessionals] = useState<Set<string>>(new Set());
+    const [allAlerts, setAllAlerts] = useState<any[]>([]);
 
     // Estado para armazenar dados do Supabase
     const [dashboardData, setDashboardData] = useState({
@@ -547,28 +548,55 @@ const DashboardScreen: React.FC = () => {
     });
     const [loading, setLoading] = useState(true);
 
+    const professionalColorMap: Record<string, { border: string; icon: string; bg: string }> = {
+        'Enfermeiro': { border: 'border-blue-400', icon: '👩‍⚕️', bg: 'bg-blue-900/30' },
+        'Farmacêutico': { border: 'border-orange-400', icon: '💊', bg: 'bg-orange-900/30' },
+        'Fisioterapeuta': { border: 'border-green-400', icon: '🏃', bg: 'bg-green-900/30' },
+        'Médico': { border: 'border-red-400', icon: '👨‍⚕️', bg: 'bg-red-900/30' },
+        'Médico / Enfermeiro': { border: 'border-purple-400', icon: '👥', bg: 'bg-purple-900/30' },
+        'Médico / Fisioterapeuta': { border: 'border-indigo-400', icon: '👥', bg: 'bg-indigo-900/30' },
+        'Nutricionista': { border: 'border-amber-400', icon: '🍎', bg: 'bg-amber-900/30' },
+        'Odontólogo': { border: 'border-cyan-400', icon: '🦷', bg: 'bg-cyan-900/30' },
+        'Psicólogo': { border: 'border-pink-400', icon: '🧠', bg: 'bg-pink-900/30' },
+        'Fonoaudiólogo': { border: 'border-fuchsia-400', icon: '🗣️', bg: 'bg-fuchsia-900/30' },
+    };
+
     // Buscar dados do Supabase ao montar o componente
     useEffect(() => {
         const fetchDashboardData = async () => {
             setLoading(true);
             try {
-                const { data, error } = await supabase
-                    .from('dashboard_summary')
-                    .select('*')
-                    .single();
+                // Buscar dados de ambas as views
+                const { data: tasksData } = await supabase
+                    .from('tasks_view_horario_br')
+                    .select('*');
 
-                if (error) {
-                    console.error('Erro ao buscar dados do dashboard:', error);
-                } else if (data) {
-                    setDashboardData({
-                        totalAlertas: data.totalAlertas || 0,
-                        totalNoPrazo: data.totalNoPrazo || 0,
-                        totalForaDoPrazo: data.totalForaDoPrazo || 0,
-                        totalConcluidos: data.totalConcluidos || 0
-                    });
-                }
+                const { data: alertasData } = await supabase
+                    .from('alertas_paciente_view_completa')
+                    .select('*');
+
+                // Combinar dados de ambas as views
+                const combined = [...(tasksData || []), ...(alertasData || [])];
+                
+                console.log('✅ Total de alertas carregados:', combined.length);
+                console.log('✅ Tasks:', tasksData?.length || 0);
+                console.log('✅ Alertas Paciente:', alertasData?.length || 0);
+
+                setAllAlerts(combined);
+
+                // Calcular estatísticas
+                const totalAlertas = combined.length;
+                const totalNoPrazo = combined.filter(a => a.live_status === 'no_prazo').length;
+                const totalForaDoPrazo = combined.filter(a => a.live_status === 'fora_do_prazo').length;
+
+                setDashboardData({
+                    totalAlertas,
+                    totalNoPrazo,
+                    totalForaDoPrazo,
+                    totalConcluidos: 0
+                });
             } catch (err) {
-                console.error('Erro ao buscar dados do dashboard:', err);
+                console.error('❌ Erro ao buscar dados:', err);
             } finally {
                 setLoading(false);
             }
@@ -586,32 +614,41 @@ const DashboardScreen: React.FC = () => {
         ];
     }, [dashboardData]);
 
-    const alertChartData = useMemo(() => {
-        // Count alerts by categoryName (from tasks with 'alerta' status)
-        const counts: Record<string, number> = {};
+    const toggleProfessional = (professional: string) => {
+        const newExpanded = new Set(expandedProfessionals);
+        if (newExpanded.has(professional)) {
+            newExpanded.delete(professional);
+        } else {
+            newExpanded.add(professional);
+        }
+        setExpandedProfessionals(newExpanded);
+    };
+
+    const alertsByProfessional = useMemo(() => {
+        const grouped: Record<string, any[]> = {};
         
-        tasks
-            .filter(t => t.status === 'alerta')
-            .forEach(task => {
-                const categoryName = task.categoryName || 'Geral';
-                counts[categoryName] = (counts[categoryName] || 0) + 1;
-            });
+        allAlerts.forEach(alert => {
+            // Ambas as views têm coluna 'responsavel'
+            const professional = alert.responsavel || 'Não informado';
+            if (!grouped[professional]) {
+                grouped[professional] = [];
+            }
+            grouped[professional].push(alert);
+        });
 
-        // Debug log
-        console.log('Alert Chart Data - Tasks with alerta status:', tasks.filter(t => t.status === 'alerta').length);
-        console.log('Alert Chart Data - Counts by category:', counts);
-
-        // Convert to sorted array, filtering out zero counts
-        const entries = Object.entries(counts).filter(([, count]) => count > 0);
-        const sorted = (entries as [string, number][]).sort(([, countA], [, countB]) => countB - countA);
-        const maxCount = Math.max(...sorted.map(([, count]) => count), 0);
-
-        return sorted.map(([name, count]) => ({
-            name,
-            count,
-            percentage: maxCount > 0 ? (count / maxCount) * 100 : 0,
-        }));
-    }, [tasks]);
+        return Object.entries(grouped)
+            .map(([professional, alerts]) => ({
+                professional,
+                count: alerts.length,
+                tasks: alerts,
+                colors: professionalColorMap[professional] || {
+                    border: 'border-gray-400',
+                    icon: '👤',
+                    bg: 'bg-gray-900/30'
+                }
+            }))
+            .sort((a, b) => b.count - a.count);
+    }, [allAlerts]);
 
     return (
         <div className="space-y-8">
@@ -640,24 +677,63 @@ const DashboardScreen: React.FC = () => {
                         </div>
                     </div>
                     <div>
-                        <h2 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-4">Alertas por Categoria</h2>
-                        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm">
-                            {alertChartData.length > 0 ? (
-                                <div className="space-y-4">
-                                    {alertChartData.map(item => (
-                                        <div key={item.name}>
-                                            <div className="flex justify-between items-center mb-1">
-                                                <span className="text-sm font-medium text-slate-600 dark:text-slate-400">{item.name}</span>
-                                                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{item.count}</span>
+                        <h2 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-4">Alertas por Profissional</h2>
+                        <div className="space-y-3">
+                            {alertsByProfessional.length > 0 ? (
+                                alertsByProfessional.map(item => (
+                                    <div
+                                        key={item.professional}
+                                        className={`border-l-4 ${item.colors.border} ${item.colors.bg} bg-slate-800 dark:bg-slate-800/50 p-4 rounded-lg transition`}
+                                    >
+                                        <div
+                                            className="flex justify-between items-center cursor-pointer"
+                                            onClick={() => toggleProfessional(item.professional)}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-2xl">{item.colors.icon}</span>
+                                                <div>
+                                                    <h3 className="text-base font-bold text-white">{item.professional}</h3>
+                                                    <p className="text-sm text-slate-400">{item.count} {item.count === 1 ? 'alerta' : 'alertas'}</p>
+                                                </div>
                                             </div>
-                                            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
-                                                <div className="bg-yellow-400 h-2.5 rounded-full" style={{ width: `${item.percentage}%` }}></div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex items-center justify-center w-8 h-8 bg-red-500 text-white font-bold rounded-full text-sm">
+                                                    {item.count}
+                                                </div>
+                                                <ChevronDownIcon
+                                                    className={`w-5 h-5 text-slate-400 transition-transform ${
+                                                        expandedProfessionals.has(item.professional) ? 'rotate-180' : ''
+                                                    }`}
+                                                />
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
+
+                                        {expandedProfessionals.has(item.professional) && (
+                                            <div className="mt-4 pt-4 border-t border-slate-700 space-y-3">
+                                                {item.tasks.map(alert => (
+                                                    <div key={alert.id_alerta || alert.id} className="bg-slate-700/50 p-4 rounded border-l-2 border-slate-600 text-sm space-y-2">
+                                                        <p className="text-slate-200 font-bold">{alert.alertaclinico || alert.description || 'Sem descrição'}</p>
+                                                        <div className="space-y-1 text-xs text-slate-400">
+                                                            <p>🏥 Leito {alert.bed_number || '?'} - {alert.patient_name || 'Paciente desconhecido'}</p>
+                                                            {alert.hora_criacao_formatado && <p>📅 Criado: {alert.hora_criacao_formatado}</p>}
+                                                            {alert.prazo_limite_formatado && <p>⏰ Prazo: {alert.prazo_limite_formatado}</p>}
+                                                            {alert.prazo_formatado && <p>⌛ Tempo: {alert.prazo_formatado}</p>}
+                                                            {alert.live_status && <p>Status: <span className={alert.live_status === 'no_prazo' ? 'text-blue-400' : 'text-red-400'}>{alert.live_status}</span></p>}
+                                                        </div>
+                                                        {(alert.justificativa || alert.justification) && (
+                                                            <div className="mt-3 p-3 bg-yellow-900/30 rounded border-l-2 border-yellow-500">
+                                                                <p className="text-yellow-300 text-xs font-semibold">💬 Justificativa:</p>
+                                                                <p className="text-slate-300 text-xs mt-1">{alert.justificativa || alert.justification}</p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
                             ) : (
-                                <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhum alerta hoje.</p>
+                                <p className="text-center text-slate-500 dark:text-slate-400 py-4">✅ Nenhum alerta em andamento!</p>
                             )}
                         </div>
                     </div>
