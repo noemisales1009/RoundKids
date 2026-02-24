@@ -33,8 +33,6 @@ const DiuresisHistory = lazy(() => import('./components/DiuresisHistory'));
 const FluidBalanceCalc = lazy(() => import('./components/FluidBalanceCalc'));
 const FluidBalanceHistory = lazy(() => import('./components/FluidBalanceHistory'));
 const LatestCalculationsCard = lazy(() => import('./components/LatestCalculationsCard'));
-const BalancoCumulativoPorPeriodo = lazy(() => import('./components/BalancoCumulativoPorPeriodo'));
-const BalancoCumulativoSimples = lazy(() => import('./components/BalancoCumulativoSimples'));
 const StatusComponent = lazy(() => import('./components/StatusComponent'));
 const ComorbidadeComponent = lazy(() => import('./components/ComorbidadeComponent'));
 const DestinoComponent = lazy(() => import('./components/DestinoComponent'));
@@ -3060,14 +3058,6 @@ const PatientDetailScreen: React.FC = () => {
                     patientId={patient.id.toString()}
                     onCalculationSaved={() => setCalculationsRefresh(prev => prev + 1)}
                 />
-            </Suspense>
-
-            <Suspense fallback={<LoadingSpinner />}>
-                <BalancoCumulativoPorPeriodo patientId={patient.id.toString()} />
-            </Suspense>
-
-            <Suspense fallback={<LoadingSpinner />}>
-                <BalancoCumulativoSimples patientId={patient.id.toString()} />
             </Suspense>
 
             {user?.access_level === 'adm' ? (
