@@ -568,21 +568,21 @@ const DashboardScreen: React.FC = () => {
         const fetchDashboardData = async () => {
             setLoading(true);
             try {
-                // Buscar dados de ambas as views
+                // Buscar dados de ambas as views - filtrando no Supabase
                 const { data: tasksData } = await supabase
                     .from('tasks_view_horario_br')
-                    .select('*');
+                    .select('*')
+                    .neq('status', 'concluído');
 
                 const { data: alertasData } = await supabase
                     .from('alertas_paciente_view_completa')
-                    .select('*');
+                    .select('*')
+                    .neq('status', 'resolvido');
 
                 // Combinar dados de ambas as views
                 const combined = [...(tasksData || []), ...(alertasData || [])];
                 
-                console.log('✅ Total de alertas carregados:', combined.length);
-                console.log('✅ Tasks:', tasksData?.length || 0);
-                console.log('✅ Alertas Paciente:', alertasData?.length || 0);
+                console.log('✅ Total carregado (sem concluídos/resolvidos):', combined.length);
 
                 setAllAlerts(combined);
 
@@ -630,14 +630,6 @@ const DashboardScreen: React.FC = () => {
         const grouped: Record<string, any[]> = {};
         
         allAlerts.forEach(alert => {
-            // Excluir alertas arquivados e concluídos
-            const isArchived = alert.archived_at || alert.arquivado || alert.is_archived;
-            const isConcluded = alert.live_status === 'concluido' || alert.status === 'concluido' || alert.concluded_at;
-            
-            if (isArchived || isConcluded) {
-                return;
-            }
-
             // Ambas as views têm coluna 'responsavel'
             const professional = alert.responsavel || 'Não informado';
             if (!grouped[professional]) {

@@ -24,9 +24,16 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
     const fetchAllAlerts = async () => {
         setLoading(true);
         try {
+            // Filtrar no Supabase: excluir concluídos (tasks) e resolvidos (alertas)
             const [tasksResult, alertsResult, patientsResult] = await Promise.all([
-                supabase.from('tasks_view_horario_br').select('*'),
-                supabase.from('alertas_paciente_view_completa').select('*'),
+                supabase
+                    .from('tasks_view_horario_br')
+                    .select('*')
+                    .neq('status', 'concluído'),
+                supabase
+                    .from('alertas_paciente_view_completa')
+                    .select('*')
+                    .neq('status', 'resolvido'),
                 supabase.from('patients').select('id, name, bed_number')
             ]);
 
@@ -81,14 +88,6 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
     // Filtrar alertas
     const filteredAlerts = useMemo(() => {
         const result = alerts.filter(alert => {
-            // Excluir concluídos e arquivados
-            const isArchived = alert.archived_at || alert.arquivado || alert.is_archived;
-            const isConcluded = alert.live_status === 'concluido' || alert.status === 'concluido' || alert.concluded_at;
-            
-            if (isArchived || isConcluded) {
-                return false;
-            }
-
             // Filtro por busca (nome ou leito)
             const matchesSearch = searchTerm === '' ||
                 alert.patient_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
