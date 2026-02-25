@@ -81,8 +81,11 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
     // Filtrar alertas
     const filteredAlerts = useMemo(() => {
         const result = alerts.filter(alert => {
-            // Excluir concluídos (verificar live_status) e arquivados
-            if (alert.live_status === 'concluido' || alert.archived_at) {
+            // Excluir concluídos e arquivados
+            const isArchived = alert.archived_at || alert.arquivado || alert.is_archived;
+            const isConcluded = alert.live_status === 'concluido' || alert.status === 'concluido' || alert.concluded_at;
+            
+            if (isArchived || isConcluded) {
                 return false;
             }
 
