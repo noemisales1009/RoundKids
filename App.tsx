@@ -683,7 +683,7 @@ const DashboardScreen: React.FC = () => {
                                 alertsByProfessional.map(item => (
                                     <div
                                         key={item.professional}
-                                        className={`border-l-4 ${item.colors.border} ${item.colors.bg} bg-slate-800 dark:bg-slate-800/50 p-4 rounded-lg transition`}
+                                        className={`border-l-4 ${item.colors.border} ${item.colors.bg} bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 p-4 rounded-lg transition`}
                                     >
                                         <div
                                             className="flex justify-between items-center cursor-pointer"
@@ -692,8 +692,8 @@ const DashboardScreen: React.FC = () => {
                                             <div className="flex items-center gap-3">
                                                 <span className="text-2xl">{item.colors.icon}</span>
                                                 <div>
-                                                    <h3 className="text-base font-bold text-white">{item.professional}</h3>
-                                                    <p className="text-sm text-slate-400">{item.count} {item.count === 1 ? 'alerta' : 'alertas'}</p>
+                                                    <h3 className="text-base font-bold text-slate-900 dark:text-white">{item.professional}</h3>
+                                                    <p className="text-sm text-slate-600 dark:text-slate-400">{item.count} {item.count === 1 ? 'alerta' : 'alertas'}</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-3">
@@ -701,7 +701,7 @@ const DashboardScreen: React.FC = () => {
                                                     {item.count}
                                                 </div>
                                                 <ChevronDownIcon
-                                                    className={`w-5 h-5 text-slate-400 transition-transform ${
+                                                    className={`w-5 h-5 text-slate-600 dark:text-slate-400 transition-transform ${
                                                         expandedProfessionals.has(item.professional) ? 'rotate-180' : ''
                                                     }`}
                                                 />
@@ -709,21 +709,21 @@ const DashboardScreen: React.FC = () => {
                                         </div>
 
                                         {expandedProfessionals.has(item.professional) && (
-                                            <div className="mt-4 pt-4 border-t border-slate-700 space-y-3">
+                                            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
                                                 {item.tasks.map(alert => (
-                                                    <div key={alert.id_alerta || alert.id} className="bg-slate-700/50 p-4 rounded border-l-2 border-slate-600 text-sm space-y-2">
-                                                        <p className="text-slate-200 font-bold">{alert.alertaclinico || alert.description || 'Sem descrição'}</p>
-                                                        <div className="space-y-1 text-xs text-slate-400">
+                                                    <div key={alert.id_alerta || alert.id} className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded border-l-2 border-slate-300 dark:border-slate-600 text-sm space-y-2">
+                                                        <p className="text-slate-900 dark:text-slate-200 font-bold">{alert.alertaclinico || alert.description || 'Sem descrição'}</p>
+                                                        <div className="space-y-1 text-xs text-slate-700 dark:text-slate-400">
                                                             <p>🏥 Leito {alert.bed_number || '?'} - {alert.patient_name || 'Paciente desconhecido'}</p>
                                                             {alert.hora_criacao_formatado && <p>📅 Criado: {alert.hora_criacao_formatado}</p>}
                                                             {alert.prazo_limite_formatado && <p>⏰ Prazo: {alert.prazo_limite_formatado}</p>}
                                                             {alert.prazo_formatado && <p>⌛ Tempo: {alert.prazo_formatado}</p>}
-                                                            {alert.live_status && <p>Status: <span className={alert.live_status === 'no_prazo' ? 'text-blue-400' : 'text-red-400'}>{alert.live_status}</span></p>}
+                                                            {alert.live_status && <p>Status: <span className={alert.live_status === 'no_prazo' ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}>{alert.live_status}</span></p>}
                                                         </div>
                                                         {(alert.justificativa || alert.justification) && (
-                                                            <div className="mt-3 p-3 bg-yellow-900/30 rounded border-l-2 border-yellow-500">
-                                                                <p className="text-yellow-300 text-xs font-semibold">💬 Justificativa:</p>
-                                                                <p className="text-slate-300 text-xs mt-1">{alert.justificativa || alert.justification}</p>
+                                                            <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded border-l-2 border-yellow-400 dark:border-yellow-500">
+                                                                <p className="text-yellow-700 dark:text-yellow-300 text-xs font-semibold">💬 Justificativa:</p>
+                                                                <p className="text-yellow-800 dark:text-slate-300 text-xs mt-1">{alert.justificativa || alert.justification}</p>
                                                             </div>
                                                         )}
                                                     </div>
