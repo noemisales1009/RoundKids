@@ -73,7 +73,9 @@ const EditSurgicalProcedureModal = lazy(() => import('./components/modals').then
 const ArchiveSurgicalProcedureModal = lazy(() => import('./components/modals').then(m => ({ default: m.ArchiveSurgicalProcedureModal })));
 
 import { SecondaryNavigation } from './components/SecondaryNavigation';
+import { NetworkBanner } from './components/NetworkBanner';
 import { supabase } from './supabaseClient';
+import { NetworkProvider } from './contexts/NetworkContext';
 import {
     TasksContext,
     PatientsContext,
@@ -5258,35 +5260,38 @@ const ChecklistRedirector: React.FC = () => {
 
 const App: React.FC = () => {
     return (
-        <HashRouter>
-            <NotificationProvider>
-                <ThemeProvider>
-                    <UserProvider>
-                        <PatientsProvider>
-                            <TasksProvider>
-                                <Routes>
-                                    <Route path="/" element={<LoginScreen />} />
-                                    <Route path="/" element={<AppLayout />}>
-                                        <Route path="dashboard" element={<DashboardScreen />} />
-                                        <Route path="patients" element={<PatientListScreen />} />
-                                        <Route path="patient/:patientId" element={<PatientDetailScreen />} />
-                                        <Route path="patient/:patientId/history" element={<PatientHistoryScreen />} />
-                                        <Route path="patient/:patientId/round/categories" element={<RoundCategoryListScreen />} />
-                                        <Route path="patient/:patientId/round/category/:categoryId" element={<ChecklistRedirector />} />
-                                        <Route path="patient/:patientId/round/category/:categoryId/question/:questionIndex" element={<ChecklistScreen />} />
-                                        <Route path="patient/:patientId/round/category/:categoryId/question/:questionIndex/create-alert" element={<CreateAlertScreen />} />
-                                        <Route path="patient/:patientId/create-alert" element={<CreateAlertScreen />} />
-                                        <Route path="status/:status" element={<TaskStatusScreen />} />
-                                        <Route path="history" element={<Suspense fallback={<LoadingSpinner />}><AlertsHistoryScreen useHeader={useHeader} /></Suspense>} />
-                                        <Route path="settings" element={<SettingsScreen />} />
-                                    </Route>
-                                </Routes>
-                            </TasksProvider>
-                        </PatientsProvider>
-                    </UserProvider>
-                </ThemeProvider>
-            </NotificationProvider>
-        </HashRouter>
+        <NetworkProvider>
+            <HashRouter>
+                <NotificationProvider>
+                    <ThemeProvider>
+                        <UserProvider>
+                            <PatientsProvider>
+                                <TasksProvider>
+                                    <NetworkBanner />
+                                    <Routes>
+                                        <Route path="/" element={<LoginScreen />} />
+                                        <Route path="/" element={<AppLayout />}>
+                                            <Route path="dashboard" element={<DashboardScreen />} />
+                                            <Route path="patients" element={<PatientListScreen />} />
+                                            <Route path="patient/:patientId" element={<PatientDetailScreen />} />
+                                            <Route path="patient/:patientId/history" element={<PatientHistoryScreen />} />
+                                            <Route path="patient/:patientId/round/categories" element={<RoundCategoryListScreen />} />
+                                            <Route path="patient/:patientId/round/category/:categoryId" element={<ChecklistRedirector />} />
+                                            <Route path="patient/:patientId/round/category/:categoryId/question/:questionIndex" element={<ChecklistScreen />} />
+                                            <Route path="patient/:patientId/round/category/:categoryId/question/:questionIndex/create-alert" element={<CreateAlertScreen />} />
+                                            <Route path="patient/:patientId/create-alert" element={<CreateAlertScreen />} />
+                                            <Route path="status/:status" element={<TaskStatusScreen />} />
+                                            <Route path="history" element={<Suspense fallback={<LoadingSpinner />}><AlertsHistoryScreen useHeader={useHeader} /></Suspense>} />
+                                            <Route path="settings" element={<SettingsScreen />} />
+                                        </Route>
+                                    </Routes>
+                                </TasksProvider>
+                            </PatientsProvider>
+                        </UserProvider>
+                    </ThemeProvider>
+                </NotificationProvider>
+            </HashRouter>
+        </NetworkProvider>
     );
 }
 
