@@ -628,6 +628,14 @@ const DashboardScreen: React.FC = () => {
         const grouped: Record<string, any[]> = {};
         
         allAlerts.forEach(alert => {
+            // Excluir alertas arquivados e concluídos
+            const isArchived = alert.archived_at || alert.arquivado || alert.is_archived;
+            const isConcluded = alert.live_status === 'concluido' || alert.status === 'concluido' || alert.concluded_at;
+            
+            if (isArchived || isConcluded) {
+                return;
+            }
+
             // Ambas as views têm coluna 'responsavel'
             const professional = alert.responsavel || 'Não informado';
             if (!grouped[professional]) {
