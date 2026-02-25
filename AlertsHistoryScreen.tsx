@@ -24,7 +24,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
     const fetchAllAlerts = async () => {
         setLoading(true);
         try {
-            // Filtrar no Supabase: excluir concluídos (tasks) e resolvidos (alertas)
+            // Filtrar no Supabase: excluir concluídos (tasks) e resolvidos/arquivados (alertas)
             const [tasksResult, alertsResult, patientsResult] = await Promise.all([
                 supabase
                     .from('tasks_view_horario_br')
@@ -33,7 +33,8 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                 supabase
                     .from('alertas_paciente_view_completa')
                     .select('*')
-                    .neq('status', 'resolvido'),
+                    .neq('status', 'resolvido')
+                    .is('archived_at', null),
                 supabase.from('patients').select('id, name, bed_number')
             ]);
 
@@ -123,6 +124,17 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                 sample: result[0]
             });
         }
+
+        // Ordenar por leito (menor para maior) e depois por data de criação
+        result.sort((a, b) => {
+            const bednumA = Number(a.bed_number) || 999;
+            const bednumB = Number(b.bed_number) || 999;
+            
+            if (bednumA !== bednumB) {
+                return bednumA - bednumB;
+            }
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
 
         return result;
     }, [alerts, searchTerm, selectedDate, selectedStatus, selectedProfessional]);

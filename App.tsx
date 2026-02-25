@@ -572,12 +572,14 @@ const DashboardScreen: React.FC = () => {
                 const { data: tasksData } = await supabase
                     .from('tasks_view_horario_br')
                     .select('*')
-                    .neq('status', 'concluído');
+                    .neq('status', 'concluído')
+                    .is('archived_at', null);
 
                 const { data: alertasData } = await supabase
                     .from('alertas_paciente_view_completa')
                     .select('*')
-                    .neq('status', 'resolvido');
+                    .neq('status', 'resolvido')
+                    .is('archived_at', null);
 
                 // Combinar dados de ambas as views
                 const combined = [...(tasksData || []), ...(alertasData || [])];
@@ -1127,11 +1129,15 @@ const PatientHistoryScreen: React.FC = () => {
                     supabase
                         .from('alertas_paciente_view_completa')
                         .select('*')
-                        .eq('patient_id', patientId),
+                        .eq('patient_id', patientId)
+                        .neq('status', 'resolvido')
+                        .is('archived_at', null),
                     supabase
                         .from('tasks_view_horario_br')
                         .select('*')
                         .eq('patient_id', patientId)
+                        .neq('status', 'concluído')
+                        .is('archived_at', null)
                 ]);
                 
                 // Combinar dados de ambas as views
@@ -3466,8 +3472,8 @@ const TaskStatusScreen: React.FC = () => {
         try {
             // Buscar de ambas as views e também os pacientes
             const [tasksResult, alertsResult, patientsResult] = await Promise.all([
-                supabase.from('tasks_view_horario_br').select('*'),
-                supabase.from('alertas_paciente_view_completa').select('*'),
+                supabase.from('tasks_view_horario_br').select('*').neq('status', 'concluído').is('archived_at', null),
+                supabase.from('alertas_paciente_view_completa').select('*').neq('status', 'resolvido').is('archived_at', null),
                 supabase.from('patients').select('id, name, bed_number')
             ]);
 
