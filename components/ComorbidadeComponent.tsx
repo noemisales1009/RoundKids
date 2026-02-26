@@ -112,14 +112,14 @@ const ComorbidadeComponent: React.FC<ComorbidadeComponentProps> = ({ patientId }
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Adicionar Comorbidade
             </label>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 value={currentInput}
                 onChange={(e) => setCurrentInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Digite uma comorbidade e clique em adicionar..."
-                className="flex-1 px-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-100"
+                className="flex-1 min-w-0 px-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-100"
               />
               <button
                 onClick={handleAddComorbidade}

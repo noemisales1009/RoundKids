@@ -142,7 +142,7 @@ export const AddAporteModal: React.FC<{
             />
           </div>
 
-          <div className="flex gap-2 pt-4">
+          <div className="flex flex-col sm:flex-row gap-2 pt-4">
             <button
               type="button"
               onClick={onClose}

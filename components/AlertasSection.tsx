@@ -510,7 +510,7 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                             />
                         </div>
 
-                        <div className="flex gap-3">
+                        <div className="flex flex-col sm:flex-row gap-3">
                             <button
                                 onClick={handleSaveJustification}
                                 className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition"
@@ -564,7 +564,7 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                             />
                         </div>
 
-                        <div className="flex gap-3">
+                        <div className="flex flex-col sm:flex-row gap-3">
                             <button
                                 onClick={handleArquivar}
                                 disabled={!archiveReason.trim()}

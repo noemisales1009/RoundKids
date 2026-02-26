@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview - Network Banner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-0.25rem); }
+        }
+        .animate-bounce {
+            animation: bounce 1s infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <!-- PREVIEW: Banner quando SEM INTERNET -->
+    <div class="w-full">
+        <div class="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white py-3 px-4 shadow-lg animate-pulse">
+            <div class="flex items-center justify-center gap-3 max-w-6xl mx-auto">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 bg-white rounded-full animate-bounce"></div>
+                    <span class="font-semibold text-sm sm:text-base">
+                        ⚠️ Sem conexão com a internet
+                    </span>
+                </div>
+                <span class="text-xs sm:text-sm opacity-90">
+                    Verificando conexão...
+                </span>
+            </div>
+        </div>
+
+        <!-- Conteúdo abaixo (com pt-16 para não ficar atrás do banner) -->
+        <div class="pt-20 p-8">
+            <div class="bg-white rounded-lg p-8 shadow-sm border border-slate-200">
+                <h1 class="text-2xl font-bold text-slate-900 mb-4">Dashboard</h1>
+                <p class="text-slate-600 mb-4">Quando a internet cair, o banner acima aparecerá:</p>
+                <ul class="space-y-2 text-slate-700">
+                    <li>✓ <strong>Posição:</strong> Fixo no topo da página</li>
+                    <li>✓ <strong>Cor:</strong> Vermelho vibrante (bg-red-600)</li>
+                    <li>✓ <strong>Animação:</strong> Pisca suavemente (pulse)</li>
+                    <li>✓ <strong>Ícone:</strong> Bolinha branca piscando (bounce)</li>
+                    <li>✓ <strong>Mensagem:</strong> "⚠️ Sem conexão com a internet"</li>
+                    <li>✓ <strong>Responsivo:</strong> Funciona em mobile e desktop</li>
+                </ul>
+            </div>
+
+            <div class="mt-8 bg-blue-50 rounded-lg p-8 border border-blue-200">
+                <h2 class="text-xl font-bold text-blue-900 mb-4">Como Funciona:</h2>
+                <div class="space-y-3 text-blue-800">
+                    <p><strong>1. Detecta automaticamente</strong> quando a internet cai</p>
+                    <p><strong>2. Mostra o banner</strong> em tempo real</p>
+                    <p><strong>3. Desaparece automaticamente</strong> quando a conexão volta</p>
+                    <p><strong>4. Fica sempre visível</strong> - não interfere com o uso do app</p>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-green-50 rounded-lg p-8 border border-green-200">
+                <h2 class="text-xl font-bold text-green-900 mb-4">✓ Implementado em:</h2>
+                <ul class="space-y-2 text-green-800">
+                    <li>📄 <code class="bg-white px-2 py-1 rounded">contexts/NetworkContext.tsx</code> - Gerencia o estado de conexão</li>
+                    <li>🎨 <code class="bg-white px-2 py-1 rounded">components/NetworkBanner.tsx</code> - Component do banner</li>
+                    <li>⚙️ <code class="bg-white px-2 py-1 rounded">App.tsx</code> - Integrado na raiz do app</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simular desconexão (descomente para testar)
+        // window.dispatchEvent(new Event('offline'));
+        
+        console.log("📡 Status de conexão:", navigator.onLine ? "✅ Online" : "❌ Offline");
+    </script>
+</body>
+</html>

@@ -39,6 +39,7 @@ const DestinoComponent = lazy(() => import('./components/DestinoComponent'));
 const ClinicalSituation24hCard = lazy(() => import('./components/ClinicalSituation24hCard').then(m => ({ default: m.ClinicalSituation24hCard })));
 const AportesCard = lazy(() => import('./components/AportesCard').then(m => ({ default: m.AportesCard })));
 const AlertsHistoryScreen = lazy(() => import('./AlertsHistoryScreen').then(m => ({ default: m.AlertsHistoryScreen })));
+const ArchivedPatientsScreen = lazy(() => import('./ArchivedPatientsScreen').then(m => ({ default: m.ArchivedPatientsScreen })));
 const PrecautionsCard = lazy(() => import('./components/PrecautionsCard').then(m => ({ default: m.PrecautionsCard })));
 const DiagnosticsResultsCard = lazy(() => import('./components/DiagnosticsResultsCard'));
 
@@ -110,6 +111,7 @@ const Sidebar: React.FC = () => {
         { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
         { path: '/patients', label: 'Leitos', icon: BedIcon },
         { path: '/history', label: 'Histórico Geral', icon: FileTextIcon },
+        { path: '/archived', label: 'Pacientes Arquivados', icon: ClipboardIcon },
         { path: '/settings', label: 'Ajustes', icon: SettingsIcon },
     ];
 
@@ -192,6 +194,7 @@ const BottomNav: React.FC = () => {
         { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
         { path: '/patients', label: 'Leitos', icon: BedIcon },
         { path: '/history', label: 'Histórico Geral', icon: FileTextIcon },
+        { path: '/archived', label: 'Arquivados', icon: ClipboardIcon },
         { path: '/settings', label: 'Ajustes', icon: SettingsIcon },
     ];
 
@@ -235,6 +238,7 @@ const useHeader = (title: string) => {
 const Header: React.FC<{ title: string; onMenuClick: () => void }> = ({ title, onMenuClick }) => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { user } = useContext(UserContext)!;
 
     const getBackPath = (): string | number => {
         const pathParts = location.pathname.split('/').filter(Boolean);
@@ -270,23 +274,51 @@ const Header: React.FC<{ title: string; onMenuClick: () => void }> = ({ title, o
     const backPath = getBackPath();
     const showBackButton = backPath !== -1 && location.pathname !== '/dashboard';
 
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        navigate('/');
+    };
+
     return (
         <header className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-3 sm:p-4 sticky top-0 z-10 flex items-center justify-between shrink-0">
-            <div className="flex items-center">
+            <div className="flex items-center gap-3">
                 <button
                     onClick={showBackButton ? () => (typeof backPath === 'string' ? navigate(backPath) : navigate(-1)) : onMenuClick}
-                    className="p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-200 transition mr-2 lg:hidden"
+                    className="p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-200 transition lg:hidden"
                 >
                     {showBackButton ? <BackArrowIcon className="w-5 h-5 sm:w-6 sm:h-6" /> : <MenuIcon className="w-5 h-5 sm:w-6 sm:h-6" />}
                 </button>
-                <div className="hidden lg:block mr-4">
+                <div className="hidden lg:flex lg:mr-4">
                     {showBackButton && (
                         <button onClick={() => typeof backPath === 'string' ? navigate(backPath) : navigate(-1)} className="p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-200 transition">
                             <BackArrowIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                         </button>
                     )}
                 </div>
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 truncate">{title}</h1>
+                {/* Logo "Round Kids" */}
+                <div className="flex items-center gap-2">
+                    <ClipboardIcon className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600 dark:text-blue-400" />
+                    <span className="font-bold text-slate-900 dark:text-slate-100 hidden sm:inline text-lg">Round Kids</span>
+                </div>
+                <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 truncate sm:hidden">{title}</h1>
+            </div>
+
+            {/* Right side: Avatar and Logout */}
+            <div className="flex items-center gap-3">
+                {user?.avatarUrl && (
+                    <img 
+                        src={user.avatarUrl} 
+                        alt="User avatar" 
+                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover bg-slate-200 dark:bg-slate-700"
+                    />
+                )}
+                <button
+                    onClick={handleLogout}
+                    className="p-2 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition"
+                    title="Sair"
+                >
+                    <LogOutIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                </button>
             </div>
         </header>
     );
@@ -320,7 +352,7 @@ const AppLayout: React.FC = () => {
 
                 <div className="flex flex-col flex-1 min-w-0">
                     <Header title={title} onMenuClick={() => setSidebarOpen(true)} />
-                    <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 p-4 md:p-6 lg:p-8 pb-28 lg:pb-8">
+                    <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 p-4 md:p-6 lg:p-8 pb-32 md:pb-32 lg:pb-8">
                         <div className="max-w-4xl mx-auto">
                             <Outlet />
                         </div>
@@ -5276,6 +5308,7 @@ const App: React.FC = () => {
                                             <Route path="patient/:patientId/create-alert" element={<CreateAlertScreen />} />
                                             <Route path="status/:status" element={<TaskStatusScreen />} />
                                             <Route path="history" element={<Suspense fallback={<LoadingSpinner />}><AlertsHistoryScreen useHeader={useHeader} /></Suspense>} />
+                                            <Route path="archived" element={<Suspense fallback={<LoadingSpinner />}><ArchivedPatientsScreen /></Suspense>} />
                                             <Route path="settings" element={<SettingsScreen />} />
                                         </Route>
                                     </Routes>

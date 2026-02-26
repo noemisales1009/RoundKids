@@ -825,7 +825,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
             />
 
             {/* Botões */}
-            <div className="flex gap-3 justify-end">
+            <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
               <button
                 onClick={() => {
                   setArchiveModalOpen(false);

@@ -33,8 +33,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                 supabase
                     .from('alertas_paciente_view_completa')
                     .select('*')
-                    .neq('status', 'resolvido')
-                    .is('archived_at', null),
+                    .neq('status', 'resolvido'),
                 supabase.from('patients').select('id, name, bed_number')
             ]);
 

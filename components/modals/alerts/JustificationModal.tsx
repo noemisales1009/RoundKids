@@ -20,7 +20,7 @@ export const JustificationModal: React.FC<{ alert: any, onClose: () => void, onS
                     placeholder="Digite a justificativa para o atraso..."
                     className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200 min-h-24"
                 />
-                <div className="flex gap-2 mt-4">
+                <div className="flex flex-col sm:flex-row gap-2 mt-4">
                     <button onClick={onClose} className="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-2 px-3 sm:px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition text-sm sm:text-base">Cancelar</button>
                     <button onClick={() => onSave(alert, justification)} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 sm:px-4 rounded-lg transition text-sm sm:text-base">Salvar</button>
                 </div>

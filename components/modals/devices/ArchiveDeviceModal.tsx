@@ -102,7 +102,7 @@ export const ArchiveDeviceModal: React.FC<ArchiveDeviceModalProps> = ({ device, 
                         </p>
                     </div>
 
-                    <div className="flex gap-2 pt-2">
+                    <div className="flex flex-col sm:flex-row gap-2 pt-2">
                         <button
                             type="button"
                             onClick={onClose}

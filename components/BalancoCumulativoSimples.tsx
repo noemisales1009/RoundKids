@@ -172,7 +172,11 @@ const BalancoCumulativoSimples: React.FC<Props> = ({ patientId }) => {
                   <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-3">
                     BH da Manhã do Dia Anterior ({data.periodo_label} atrás)
                   </p>
-                  <p className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+                  <p className={`text-3xl font-bold mb-2 ${
+                    data.bh_anterior > 0 ? 'text-blue-600 dark:text-blue-400' :
+                    data.bh_anterior < 0 ? 'text-green-600 dark:text-green-400' :
+                    'text-slate-800 dark:text-slate-100'
+                  }`}>
                     {data.bh_anterior > 0 ? '+' : ''}{data.bh_anterior.toFixed(2)}%
                   </p>
                   {data.timestamp_anterior && (
@@ -198,7 +202,11 @@ const BalancoCumulativoSimples: React.FC<Props> = ({ patientId }) => {
                   <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-3">
                     BH Calculado na Manhã Atual (últimas {data.periodo_label})
                   </p>
-                  <p className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+                  <p className={`text-3xl font-bold mb-2 ${
+                    data.bh_atual > 0 ? 'text-blue-600 dark:text-blue-400' :
+                    data.bh_atual < 0 ? 'text-green-600 dark:text-green-400' :
+                    'text-slate-800 dark:text-slate-100'
+                  }`}>
                     {data.bh_atual > 0 ? '+' : ''}{Math.abs(data.bh_atual).toFixed(2)}%
                   </p>
                   {data.timestamp_atual && (
@@ -216,12 +224,13 @@ const BalancoCumulativoSimples: React.FC<Props> = ({ patientId }) => {
                 {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
                 {/* RESULTADO FINAL */}
                 {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-                <div className="text-center p-4 rounded-lg bg-white dark:bg-slate-800 border-2" style={{
-                  borderColor: colors.value.includes('red') ? '#dc2626' : 
-                              colors.value.includes('orange') ? '#ea580c' :
-                              colors.value.includes('blue') ? '#2563eb' :
-                              colors.value.includes('green') ? '#16a34a' : '#94a3b8'
-                }}>
+                <div className={`text-center p-4 rounded-lg border-2 bg-white dark:bg-slate-800 ${
+                  colors.value.includes('red') ? 'border-red-600 dark:border-red-500' :
+                  colors.value.includes('orange') ? 'border-orange-600 dark:border-orange-500' :
+                  colors.value.includes('blue') ? 'border-blue-600 dark:border-blue-500' :
+                  colors.value.includes('green') ? 'border-green-600 dark:border-green-500' :
+                  'border-slate-400 dark:border-slate-500'
+                }`}>
                   <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-2 uppercase">
                     = Resultado
                   </p>
