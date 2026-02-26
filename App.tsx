@@ -572,14 +572,12 @@ const DashboardScreen: React.FC = () => {
                 const { data: tasksData } = await supabase
                     .from('tasks_view_horario_br')
                     .select('*')
-                    .neq('status', 'concluído')
-                    .is('archived_at', null);
+                    .neq('status', 'concluído');
 
                 const { data: alertasData } = await supabase
                     .from('alertas_paciente_view_completa')
                     .select('*')
-                    .neq('status', 'resolvido')
-                    .is('archived_at', null);
+                    .neq('status', 'resolvido');
 
                 // Combinar dados de ambas as views
                 const combined = [...(tasksData || []), ...(alertasData || [])];
@@ -1130,14 +1128,12 @@ const PatientHistoryScreen: React.FC = () => {
                         .from('alertas_paciente_view_completa')
                         .select('*')
                         .eq('patient_id', patientId)
-                        .neq('status', 'resolvido')
-                        .is('archived_at', null),
+                        .neq('status', 'resolvido'),
                     supabase
                         .from('tasks_view_horario_br')
                         .select('*')
                         .eq('patient_id', patientId)
                         .neq('status', 'concluído')
-                        .is('archived_at', null)
                 ]);
                 
                 // Combinar dados de ambas as views
@@ -3472,9 +3468,9 @@ const TaskStatusScreen: React.FC = () => {
         try {
             // Buscar de ambas as views e também os pacientes
             const [tasksResult, alertsResult, patientsResult] = await Promise.all([
-                supabase.from('tasks_view_horario_br').select('*').neq('status', 'concluído').is('archived_at', null),
-                supabase.from('alertas_paciente_view_completa').select('*').neq('status', 'resolvido').is('archived_at', null),
-                supabase.from('patients').select('id, name, bed_number')
+                supabase.from('tasks_view_horario_br').select('*').neq('status', 'concluído'),
+                supabase.from('alertas_paciente_view_completa').select('*').neq('status', 'resolvido'),
+                supabase.from('patients').select('id, name, bed_number').is('archived_at', null)
             ]);
 
             // Criar mapa de pacientes para lookup rápido
@@ -4148,7 +4144,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             categoriesRes,
             answersRes
         ] = await Promise.all([
-            supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc'),
+            supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc').is('archived_at', null),
             supabase.from('perguntas').select('*').order('ordem', { ascending: true }),
             supabase.from('pergunta_opcoes').select('*').order('ordem', { ascending: true }),
             supabase.from('categorias').select('*').order('ordem', { ascending: true }),
@@ -4190,7 +4186,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         // 🔄 Carregar dados detalhados EM BACKGROUND (não bloqueia renderização)
         setTimeout(() => {
             Promise.all([
-                supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc'),
+                supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc').is('archived_at', null),
                 supabase.from('dispositivos_pacientes').select('*'),
                 supabase.from('exames_pacientes').select('*'),
                 supabase.from('medicacoes_pacientes').select('*'),
