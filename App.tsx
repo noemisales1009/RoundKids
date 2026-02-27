@@ -28,6 +28,7 @@ const ConsciousnessCalculator = lazy(() => import('./components/ConsciousnessCal
 const VNICNAFCalculator = lazy(() => import('./components/VNICNAFCalculator'));
 const DiagnosticsSection = lazy(() => import('./components/DiagnosticsSection').then(m => ({ default: m.DiagnosticsSection })));
 const AlertasSection = lazy(() => import('./components/AlertasSection').then(m => ({ default: m.AlertasSection })));
+const CompletedAlertsSection = lazy(() => import('./components/CompletedAlertsSection').then(m => ({ default: m.CompletedAlertsSection })));
 const DiuresisCalc = lazy(() => import('./components/DiuresisCalc'));
 const DiuresisHistory = lazy(() => import('./components/DiuresisHistory'));
 const FluidBalanceCalc = lazy(() => import('./components/FluidBalanceCalc'));
@@ -3088,6 +3089,10 @@ const PatientDetailScreen: React.FC = () => {
 
             <Suspense fallback={<LoadingSpinner />}>
                 <AlertasSection patientId={patient.id.toString()} />
+            </Suspense>
+
+            <Suspense fallback={<LoadingSpinner />}>
+                <CompletedAlertsSection patientId={patient.id.toString()} />
             </Suspense>
 
             <Suspense fallback={<LoadingSpinner />}>
