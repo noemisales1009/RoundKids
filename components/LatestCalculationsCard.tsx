@@ -24,10 +24,12 @@ interface BalanceRecord {
 
 interface BalancoCumulativoRecord {
   patient_id: string;
-  bh_dia_anterior: number;
-  bh_dia_atual: number;
-  bh_cumulativo: number;
-  registros_hoje: number;
+  patient_name: string;
+  data_calculo: string;
+  bh_historico_antigo: number;
+  bh_ultimas_24h: number;
+  bh_cumulativo_total: number;
+  registros_ultimas_24h: number;
 }
 
 const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patientId, refreshTrigger }) => {
@@ -218,61 +220,61 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
             </div>
 
             {/* BH Cumulativo - Balanço acumulado */}
-            {balancoCumulativo && balancoCumulativo.registros_hoje > 0 ? (
+            {balancoCumulativo && balancoCumulativo.registros_ultimas_24h > 0 ? (
               <div className={`p-4 rounded-lg border ${
-                Math.abs(balancoCumulativo.bh_cumulativo) > 200
-                  ? balancoCumulativo.bh_cumulativo > 0
+                Math.abs(balancoCumulativo.bh_cumulativo_total) > 200
+                  ? balancoCumulativo.bh_cumulativo_total > 0
                     ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
                     : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
-                  : balancoCumulativo.bh_cumulativo > 0
+                  : balancoCumulativo.bh_cumulativo_total > 0
                   ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-                  : balancoCumulativo.bh_cumulativo < 0
+                  : balancoCumulativo.bh_cumulativo_total < 0
                   ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
                   : 'bg-slate-50 dark:bg-slate-900/20 border-slate-200 dark:border-slate-700'
               }`}>
                 <div className={`text-xs font-medium mb-2 ${
-                  Math.abs(balancoCumulativo.bh_cumulativo) > 200
-                    ? balancoCumulativo.bh_cumulativo > 0
+                  Math.abs(balancoCumulativo.bh_cumulativo_total) > 200
+                    ? balancoCumulativo.bh_cumulativo_total > 0
                       ? 'text-red-700 dark:text-red-400'
                       : 'text-orange-700 dark:text-orange-400'
-                    : balancoCumulativo.bh_cumulativo > 0
+                    : balancoCumulativo.bh_cumulativo_total > 0
                     ? 'text-blue-700 dark:text-blue-400'
-                    : balancoCumulativo.bh_cumulativo < 0
+                    : balancoCumulativo.bh_cumulativo_total < 0
                     ? 'text-green-700 dark:text-green-400'
                     : 'text-slate-700 dark:text-slate-400'
                 }`}>
                   BH CUMULATIVO
                 </div>
                 <div className={`text-2xl font-bold mb-2 ${
-                  Math.abs(balancoCumulativo.bh_cumulativo) > 200
-                    ? balancoCumulativo.bh_cumulativo > 0
+                  Math.abs(balancoCumulativo.bh_cumulativo_total) > 200
+                    ? balancoCumulativo.bh_cumulativo_total > 0
                       ? 'text-red-600 dark:text-red-400'
                       : 'text-orange-600 dark:text-orange-400'
-                    : balancoCumulativo.bh_cumulativo > 0
+                    : balancoCumulativo.bh_cumulativo_total > 0
                     ? 'text-blue-600 dark:text-blue-400'
-                    : balancoCumulativo.bh_cumulativo < 0
+                    : balancoCumulativo.bh_cumulativo_total < 0
                     ? 'text-green-600 dark:text-green-400'
                     : 'text-slate-600 dark:text-slate-400'
                 }`}>
-                  {balancoCumulativo.bh_cumulativo > 0 ? '+' : ''}{balancoCumulativo.bh_cumulativo.toFixed(2)}%
+                  {balancoCumulativo.bh_cumulativo_total > 0 ? '+' : ''}{balancoCumulativo.bh_cumulativo_total.toFixed(2)}%
                 </div>
                 <div className={`text-xs font-medium mb-2 ${
-                  Math.abs(balancoCumulativo.bh_cumulativo) > 200
-                    ? balancoCumulativo.bh_cumulativo > 0
+                  Math.abs(balancoCumulativo.bh_cumulativo_total) > 200
+                    ? balancoCumulativo.bh_cumulativo_total > 0
                       ? 'text-red-600 dark:text-red-400'
                       : 'text-orange-600 dark:text-orange-400'
-                    : balancoCumulativo.bh_cumulativo > 0
+                    : balancoCumulativo.bh_cumulativo_total > 0
                     ? 'text-blue-600 dark:text-blue-400'
-                    : balancoCumulativo.bh_cumulativo < 0
+                    : balancoCumulativo.bh_cumulativo_total < 0
                     ? 'text-green-600 dark:text-green-400'
                     : 'text-slate-600 dark:text-slate-400'
                 }`}>
-                  {Math.abs(balancoCumulativo.bh_cumulativo) > 200 
-                    ? balancoCumulativo.bh_cumulativo > 0 ? '⚠️ Retenção' : '⚠️ Perda'
-                    : balancoCumulativo.bh_cumulativo > 0 ? '💧 Ganho' : balancoCumulativo.bh_cumulativo < 0 ? '✓ Eliminação' : 'Neutro'}
+                  {Math.abs(balancoCumulativo.bh_cumulativo_total) > 200 
+                    ? balancoCumulativo.bh_cumulativo_total > 0 ? '⚠️ Retenção' : '⚠️ Perda'
+                    : balancoCumulativo.bh_cumulativo_total > 0 ? '💧 Ganho' : balancoCumulativo.bh_cumulativo_total < 0 ? '✓ Eliminação' : 'Neutro'}
                 </div>
                 <div className="text-xs text-slate-600 dark:text-slate-400">
-                  Ontem: {balancoCumulativo.bh_dia_anterior > 0 ? '+' : ''}{balancoCumulativo.bh_dia_anterior.toFixed(2)}% | Hoje: {balancoCumulativo.bh_dia_atual > 0 ? '+' : ''}{balancoCumulativo.bh_dia_atual.toFixed(2)}%
+                  Anterior: {balancoCumulativo.bh_historico_antigo > 0 ? '+' : ''}{balancoCumulativo.bh_historico_antigo.toFixed(2)}% | 24h: {balancoCumulativo.bh_ultimas_24h > 0 ? '+' : ''}{balancoCumulativo.bh_ultimas_24h.toFixed(2)}%
                 </div>
               </div>
             ) : null}

@@ -6,11 +6,11 @@ import { PatientsContext } from '../contexts';
 interface BalancoCumulativoData {
   patient_id: string;
   patient_name: string;
-  bh_dia_anterior: number;
-  bh_dia_atual: number;
-  bh_cumulativo: number;
-  registros_hoje: number;
   data_calculo: string;
+  bh_historico_antigo: number;
+  bh_ultimas_24h: number;
+  bh_cumulativo_total: number;
+  registros_ultimas_24h: number;
 }
 
 interface BalancoCumulativoCardProps {
@@ -65,7 +65,7 @@ const BalancoCumulativoCard: React.FC<BalancoCumulativoCardProps> = ({ patientId
   };
 
   // Não mostrar componente se não houver dados de 24 horas
-  if (!loading && (!data || data.registros_hoje === 0)) {
+  if (!loading && (!data || data.registros_ultimas_24h === 0)) {
     return null;
   }
 
@@ -87,96 +87,96 @@ const BalancoCumulativoCard: React.FC<BalancoCumulativoCardProps> = ({ patientId
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* BH Dia Anterior */}
+            {/* BH Histórico Antigo */}
             <div className="p-4 bg-slate-50 dark:bg-slate-900/20 rounded-lg border border-slate-200 dark:border-slate-700">
               <div className="text-xs font-medium text-slate-700 dark:text-slate-400 mb-2">
-                BH DIA ANTERIOR
+                BH HISTÓRICO
               </div>
               <div className={`text-2xl font-bold mb-2 ${
-                data.bh_dia_anterior > 0 
+                data.bh_historico_antigo > 0 
                   ? 'text-blue-600 dark:text-blue-400' 
-                  : data.bh_dia_anterior < 0
+                  : data.bh_historico_antigo < 0
                   ? 'text-green-600 dark:text-green-400'
                   : 'text-slate-600 dark:text-slate-400'
               }`}>
-                {data.bh_dia_anterior > 0 ? '+' : ''}{data.bh_dia_anterior.toFixed(2)}%
+                {data.bh_historico_antigo > 0 ? '+' : ''}{data.bh_historico_antigo.toFixed(2)}%
               </div>
               <div className="text-xs text-slate-600 dark:text-slate-400">
-                {data.bh_dia_anterior > 0 ? 'Ganho' : data.bh_dia_anterior < 0 ? 'Perda' : 'Neutro'}
+                {data.bh_historico_antigo > 0 ? 'Ganho' : data.bh_historico_antigo < 0 ? 'Perda' : 'Neutro'}
               </div>
             </div>
 
-            {/* BH Dia Atual */}
+            {/* BH Últimas 24h */}
             <div className="p-4 bg-slate-50 dark:bg-slate-900/20 rounded-lg border border-slate-200 dark:border-slate-700">
               <div className="text-xs font-medium text-slate-700 dark:text-slate-400 mb-2">
-                BH HOJE
+                BH ÚLTIMAS 24H
               </div>
               <div className={`text-2xl font-bold mb-2 ${
-                data.bh_dia_atual > 0 
+                data.bh_ultimas_24h > 0 
                   ? 'text-blue-600 dark:text-blue-400' 
-                  : data.bh_dia_atual < 0
+                  : data.bh_ultimas_24h < 0
                   ? 'text-green-600 dark:text-green-400'
                   : 'text-slate-600 dark:text-slate-400'
               }`}>
-                {data.bh_dia_atual > 0 ? '+' : ''}{data.bh_dia_atual.toFixed(2)}%
+                {data.bh_ultimas_24h > 0 ? '+' : ''}{data.bh_ultimas_24h.toFixed(2)}%
               </div>
               <div className="text-xs text-slate-600 dark:text-slate-400">
-                {data.registros_hoje} medição{data.registros_hoje !== 1 ? 'ões' : ''}
+                {data.registros_ultimas_24h} medição{data.registros_ultimas_24h !== 1 ? 'ões' : ''}
               </div>
             </div>
 
             {/* BH Cumulativo */}
             <div className={`p-4 rounded-lg border ${
-              Math.abs(data.bh_cumulativo) > 200
-                ? data.bh_cumulativo > 0
+              Math.abs(data.bh_cumulativo_total) > 200
+                ? data.bh_cumulativo_total > 0
                   ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
                   : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
-                : data.bh_cumulativo > 0
+                : data.bh_cumulativo_total > 0
                 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-                : data.bh_cumulativo < 0
+                : data.bh_cumulativo_total < 0
                 ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
                 : 'bg-slate-50 dark:bg-slate-900/20 border-slate-200 dark:border-slate-700'
             }`}>
               <div className={`text-xs font-medium mb-2 ${
-                Math.abs(data.bh_cumulativo) > 200
-                  ? data.bh_cumulativo > 0
+                Math.abs(data.bh_cumulativo_total) > 200
+                  ? data.bh_cumulativo_total > 0
                     ? 'text-red-700 dark:text-red-400'
                     : 'text-orange-700 dark:text-orange-400'
-                  : data.bh_cumulativo > 0
+                  : data.bh_cumulativo_total > 0
                   ? 'text-blue-700 dark:text-blue-400'
-                  : data.bh_cumulativo < 0
+                  : data.bh_cumulativo_total < 0
                   ? 'text-green-700 dark:text-green-400'
                   : 'text-slate-700 dark:text-slate-400'
               }`}>
                 BH CUMULATIVO
               </div>
               <div className={`text-2xl font-bold mb-2 ${
-                Math.abs(data.bh_cumulativo) > 200
-                  ? data.bh_cumulativo > 0
+                Math.abs(data.bh_cumulativo_total) > 200
+                  ? data.bh_cumulativo_total > 0
                     ? 'text-red-600 dark:text-red-400'
                     : 'text-orange-600 dark:text-orange-400'
-                  : data.bh_cumulativo > 0
+                  : data.bh_cumulativo_total > 0
                   ? 'text-blue-600 dark:text-blue-400'
-                  : data.bh_cumulativo < 0
+                  : data.bh_cumulativo_total < 0
                   ? 'text-green-600 dark:text-green-400'
                   : 'text-slate-600 dark:text-slate-400'
               }`}>
-                {data.bh_cumulativo > 0 ? '+' : ''}{data.bh_cumulativo.toFixed(2)}%
+                {data.bh_cumulativo_total > 0 ? '+' : ''}{data.bh_cumulativo_total.toFixed(2)}%
               </div>
               <div className={`text-xs font-medium mb-2 ${
-                Math.abs(data.bh_cumulativo) > 200
-                  ? data.bh_cumulativo > 0
+                Math.abs(data.bh_cumulativo_total) > 200
+                  ? data.bh_cumulativo_total > 0
                     ? 'text-red-600 dark:text-red-400'
                     : 'text-orange-600 dark:text-orange-400'
-                  : data.bh_cumulativo > 0
+                  : data.bh_cumulativo_total > 0
                   ? 'text-blue-600 dark:text-blue-400'
-                  : data.bh_cumulativo < 0
+                  : data.bh_cumulativo_total < 0
                   ? 'text-green-600 dark:text-green-400'
                   : 'text-slate-600 dark:text-slate-400'
               }`}>
-                {Math.abs(data.bh_cumulativo) > 200 
-                  ? data.bh_cumulativo > 0 ? '⚠️ Retenção' : '⚠️ Perda'
-                  : data.bh_cumulativo > 0 ? '💧 Ganho' : data.bh_cumulativo < 0 ? '✓ Eliminação' : 'Neutro'}
+                {Math.abs(data.bh_cumulativo_total) > 200 
+                  ? data.bh_cumulativo_total > 0 ? '⚠️ Retenção' : '⚠️ Perda'
+                  : data.bh_cumulativo_total > 0 ? '💧 Ganho' : data.bh_cumulativo_total < 0 ? '✓ Eliminação' : 'Neutro'}
               </div>
               <div className="text-xs text-slate-600 dark:text-slate-400">
                 Peso: {peso.toFixed(2)}kg
