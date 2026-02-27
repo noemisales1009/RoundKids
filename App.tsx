@@ -600,19 +600,25 @@ const DashboardScreen: React.FC = () => {
         const fetchDashboardData = async () => {
             setLoading(true);
             try {
-                // Buscar dados de ambas as views - filtrando no Supabase
-                const { data: tasksData } = await supabase
+                // Buscar dados de ambas as views
+                const tasksResult = await supabase
                     .from('tasks_view_horario_br')
-                    .select('*')
-                    .neq('status', 'concluído');
-
-                const { data: alertasData } = await supabase
+                    .select('*');
+                    
+                const alertasResult = await supabase
                     .from('alertas_paciente_view_completa')
-                    .select('*')
-                    .neq('status', 'resolvido');
+                    .select('*');
+
+                // Filtrar no frontend para remover status que contenham "concluído", "arquivado" ou "resolvido"
+                const tasksData = (tasksResult.data || []).filter(
+                    t => !t.status?.includes('concluído') && !t.status?.includes('arquivado')
+                );
+                const alertasData = (alertasResult.data || []).filter(
+                    a => !a.status?.includes('resolvido') && !a.status?.includes('arquivado')
+                );
 
                 // Combinar dados de ambas as views
-                const combined = [...(tasksData || []), ...(alertasData || [])];
+                const combined = [...tasksData, ...alertasData];
                 
                 console.log('✅ Total carregado (sem concluídos/resolvidos):', combined.length);
 
@@ -1159,19 +1165,25 @@ const PatientHistoryScreen: React.FC = () => {
                     supabase
                         .from('alertas_paciente_view_completa')
                         .select('*')
-                        .eq('patient_id', patientId)
-                        .neq('status', 'resolvido'),
+                        .eq('patient_id', patientId),
                     supabase
                         .from('tasks_view_horario_br')
                         .select('*')
                         .eq('patient_id', patientId)
-                        .neq('status', 'concluído')
                 ]);
                 
-                // Combinar dados de ambas as views
+                // Filtrar no frontend para remover status que contenham palavras-chave
+                const alertasFiltered = (alertasResult.data || []).filter(
+                    a => !a.status?.includes('resolvido') && !a.status?.includes('arquivado')
+                );
+                const tasksFiltered = (tasksResult.data || []).filter(
+                    t => !t.status?.includes('concluído') && !t.status?.includes('arquivado')
+                );
+                
+                // Combinar resultados filtrados
                 const allAlerts = [
-                    ...(alertasResult.data || []).map(a => ({ ...a, source: 'alertas_paciente' })),
-                    ...(tasksResult.data || []).map(t => ({ ...t, source: 'tasks' }))
+                    ...alertasFiltered.map(a => ({ ...a, source: 'alertas_paciente' })),
+                    ...tasksFiltered.map(t => ({ ...t, source: 'tasks' }))
                 ];
                 
                 if (!alertasResult.error && !tasksResult.error) {
@@ -3500,8 +3512,8 @@ const TaskStatusScreen: React.FC = () => {
         try {
             // Buscar de ambas as views e também os pacientes
             const [tasksResult, alertsResult, patientsResult] = await Promise.all([
-                supabase.from('tasks_view_horario_br').select('*').neq('status', 'concluído'),
-                supabase.from('alertas_paciente_view_completa').select('*').neq('status', 'resolvido'),
+                supabase.from('tasks_view_horario_br').select('*'),
+                supabase.from('alertas_paciente_view_completa').select('*'),
                 supabase.from('patients').select('id, name, bed_number').is('archived_at', null)
             ]);
 
@@ -3512,7 +3524,7 @@ const TaskStatusScreen: React.FC = () => {
             });
 
             // Combinar resultados e adicionar dados do paciente
-            const allAlerts = [
+            let allAlerts = [
                 ...(tasksResult.data || []).map(t => {
                     const patientInfo = t.patient_id ? patientsMap.get(t.patient_id) : null;
                     return {
@@ -3532,6 +3544,12 @@ const TaskStatusScreen: React.FC = () => {
                     };
                 })
             ];
+
+            // Filtrar para remover status resolvido/arquivado/concluído
+            allAlerts = allAlerts.filter(alert => {
+                const status = alert.status?.toLowerCase() || '';
+                return !status.includes('resolvido') && !status.includes('arquivado') && !status.includes('concluído');
+            });
 
             // Filtrar por live_status baseado no status da rota
             let filtered = allAlerts;

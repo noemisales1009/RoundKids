@@ -24,16 +24,14 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
     const fetchAllAlerts = async () => {
         setLoading(true);
         try {
-            // Filtrar no Supabase: excluir concluídos (tasks) e resolvidos/arquivados (alertas)
+            // Buscar dados sem filtro na query
             const [tasksResult, alertsResult, patientsResult] = await Promise.all([
                 supabase
                     .from('tasks_view_horario_br')
-                    .select('*')
-                    .neq('status', 'concluído'),
+                    .select('*'),
                 supabase
                     .from('alertas_paciente_view_completa')
-                    .select('*')
-                    .neq('status', 'resolvido'),
+                    .select('*'),
                 supabase.from('patients').select('id, name, bed_number')
             ]);
 
@@ -42,8 +40,16 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                 patientsMap.set(p.id, { name: p.name, bed_number: p.bed_number });
             });
 
+            // Filtrar no frontend para remover status resolvido/arquivado/concluído
+            const tasksFiltered = (tasksResult.data || []).filter(
+                t => !t.status?.includes('concluído') && !t.status?.includes('arquivado')
+            );
+            const alertsFiltered = (alertsResult.data || []).filter(
+                a => !a.status?.includes('resolvido') && !a.status?.includes('arquivado')
+            );
+
             const allAlerts = [
-                ...(tasksResult.data || []).map(t => {
+                ...tasksFiltered.map(t => {
                     const patientInfo = t.patient_id ? patientsMap.get(t.patient_id) : null;
                     return {
                         ...t,
@@ -52,7 +58,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                         bed_number: patientInfo?.bed_number || null
                     };
                 }),
-                ...(alertsResult.data || []).map(a => {
+                ...alertsFiltered.map(a => {
                     const patientInfo = a.patient_id ? patientsMap.get(a.patient_id) : null;
                     return {
                         ...a,
