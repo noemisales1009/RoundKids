@@ -161,37 +161,37 @@ export const CompletedAlertsSection: React.FC<{ patientId: string }> = ({ patien
     };
 
     return (
-        <div className="mt-6 bg-white dark:bg-slate-900 rounded-xl shadow-sm overflow-hidden">
+        <div className="mt-6 bg-white dark:bg-slate-800 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 overflow-hidden">
             {/* Header expansível */}
             <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                className="w-full flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 transition border-b border-green-200 dark:border-green-800"
             >
                 <div className="flex items-center gap-3">
-                    <span className="text-xl">✓</span>
-                    <h3 className="font-bold text-slate-800 dark:text-slate-200">Alertas Concluídos</h3>
+                    <span className="text-2xl">✓</span>
+                    <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100">Alertas Concluídos</h3>
                     {!loading && alertas.length > 0 && (
-                        <span className="bg-green-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                        <span className="bg-green-500 text-white text-xs font-bold rounded-full w-7 h-7 flex items-center justify-center shadow-md">
                             {alertas.length}
                         </span>
                     )}
                 </div>
-                <div className="text-slate-600 dark:text-slate-400">
+                <div className="text-green-600 dark:text-green-400">
                     {isExpanded ? (
-                        <ChevronUpIcon className="w-5 h-5" />
+                        <ChevronUpIcon className="w-6 h-6" />
                     ) : (
-                        <ChevronDownIcon className="w-5 h-5" />
+                        <ChevronDownIcon className="w-6 h-6" />
                     )}
                 </div>
             </button>
 
             {/* Conteúdo expansível */}
             {isExpanded && (
-                <div className="border-t border-slate-200 dark:border-slate-700 p-4">
+                <div className="border-t border-green-200 dark:border-green-800 bg-white dark:bg-slate-800 p-4">
                     {loading ? (
-                        <p className="text-center text-slate-500 dark:text-slate-400 py-4">Carregando alertas concluídos...</p>
+                        <p className="text-center text-slate-600 dark:text-slate-300 py-6 text-base font-medium">Carregando alertas concluídos...</p>
                     ) : alertas.length === 0 ? (
-                        <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhum alerta concluído</p>
+                        <p className="text-center text-slate-600 dark:text-slate-300 py-6 text-base">Nenhum alerta concluído</p>
                     ) : (
                         <div className="space-y-3">
                             {alertas.map((alerta) => (
@@ -201,29 +201,29 @@ export const CompletedAlertsSection: React.FC<{ patientId: string }> = ({ patien
                                 >
                                     <div className="flex justify-between items-start gap-4">
                                         <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <p className="font-semibold">{alerta.description}</p>
-                                                <span className="text-xs bg-white dark:bg-slate-800 px-2 py-0.5 rounded font-semibold opacity-70">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <p className="font-bold text-base text-slate-900 dark:text-slate-100">{alerta.description}</p>
+                                                <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded font-semibold">
                                                     {alerta.source === 'alertas' ? '🏥 Clínico' : '📋 Task'}
                                                 </span>
                                             </div>
-                                            <div className="text-xs opacity-75 space-y-1">
-                                                <p>📊 Status: {alerta.status}</p>
+                                            <div className="text-sm text-slate-700 dark:text-slate-300 space-y-1.5">
+                                                <p className="font-medium">📊 Status: <span className="text-slate-600 dark:text-slate-400">{alerta.status}</span></p>
                                                 {alerta.responsible && (
-                                                    <p>👤 Responsável: {alerta.responsible}</p>
+                                                    <p className="font-medium">👤 Responsável: <span className="text-slate-600 dark:text-slate-400">{alerta.responsible}</span></p>
                                                 )}
-                                                <p>📅 Criado: {formatDate(alerta.created_at)}</p>
+                                                <p className="font-medium">📅 Criado: <span className="text-slate-600 dark:text-slate-400">{formatDate(alerta.created_at)}</span></p>
                                                 {alerta.completed_by && (
-                                                    <p>✓ Concluído por: {alerta.completed_by}</p>
+                                                    <p className="font-medium text-green-700 dark:text-green-300">✓ Concluído por: <span className="text-green-600 dark:text-green-400">{alerta.completed_by}</span></p>
                                                 )}
                                             </div>
                                         </div>
                                         <button
                                             onClick={() => handleDeleteAlert(alerta.id)}
-                                            className="p-2 hover:bg-red-500/20 dark:hover:bg-red-500/30 rounded-lg transition text-red-600 dark:text-red-400"
+                                            className="p-2 hover:bg-red-600 dark:hover:bg-red-500 rounded-lg transition text-red-600 dark:text-red-400 hover:text-white dark:hover:text-white font-bold"
                                             title="Deletar alerta"
                                         >
-                                            <TrashIcon className="w-4 h-4" />
+                                            <TrashIcon className="w-5 h-5" />
                                         </button>
                                     </div>
                                 </div>
