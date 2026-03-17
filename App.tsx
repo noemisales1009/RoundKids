@@ -602,34 +602,36 @@ const DashboardScreen: React.FC = () => {
         const fetchDashboardData = async () => {
             setLoading(true);
             try {
-                // ✅ Buscar estatísticas da view dashboard_summary
-                const { data: summaryData, error: summaryError } = await supabase
-                    .from('dashboard_summary')
-                    .select('*')
-                    .single();
+                // ✅ Buscar os dados
+                const [
+                    { data: summaryData, error: summaryError },
+                    { data: tasksData },
+                    { data: alertasData }
+                ] = await Promise.all([
+                    supabase.from('dashboard_summary').select('*').single(),
+                    supabase.from('tasks_view_horario_br').select('*'),
+                    supabase.from('alertas_paciente_view_completa').select('*')
+                ]);
+
+                // ✅ FILTRAR: Apenas alertas NÃO-concluídos e NÃO-arquivados para "Alertas por Profissional"
+                const allAlertsFiltered = [
+                    ...(tasksData || []).filter(t => !['concluído', 'arquivado'].includes(t.live_status)),
+                    ...(alertasData || []).filter(a => !['concluído', 'arquivado', 'resolvido'].includes(a.live_status))
+                ];
+                setAllAlerts(allAlertsFiltered);
 
                 if (summaryError) {
-                    console.warn('Erro ao buscar dashboard_summary, usando views base:', summaryError);
-                    // Fallback: buscar das views base
-                    const tasksResult = await supabase
-                        .from('tasks_view_horario_br')
-                        .select('*');
-                        
-                    const alertasResult = await supabase
-                        .from('alertas_paciente_view_completa')
-                        .select('*');
-
-                    const combined = [...(tasksResult.data || []), ...(alertasResult.data || [])];
-                    setAllAlerts(combined);
-
+                    console.warn('Erro ao buscar dashboard_summary:', summaryError);
+                    // Fallback: calcular manualmente
+                    const allAlertsAll = [...(tasksData || []), ...(alertasData || [])];
                     setDashboardData({
-                        totalAlertas: combined.filter(a => a.live_status && !['concluído', 'arquivado'].includes(a.live_status)).length,
-                        totalNoPrazo: combined.filter(a => a.live_status === 'no_prazo').length,
-                        totalForaDoPrazo: combined.filter(a => ['fora_do_prazo', 'fora_do_prazo_com_justificativa'].includes(a.live_status)).length,
-                        totalConcluidos: combined.filter(a => ['concluído', 'arquivado'].includes(a.live_status)).length
+                        totalAlertas: allAlertsAll.filter(a => a.live_status && !['concluído', 'arquivado'].includes(a.live_status)).length,
+                        totalNoPrazo: allAlertsAll.filter(a => a.live_status === 'no_prazo').length,
+                        totalForaDoPrazo: allAlertsAll.filter(a => ['fora_do_prazo', 'fora_do_prazo_com_justificativa'].includes(a.live_status)).length,
+                        totalConcluidos: allAlertsAll.filter(a => ['concluído', 'arquivado'].includes(a.live_status)).length
                     });
                 } else {
-                    // ✅ Usar dados da view (mais correto)
+                    // ✅ Usar dados corretos da view
                     setDashboardData({
                         totalAlertas: summaryData?.totalAlertas || 0,
                         totalNoPrazo: summaryData?.totalNoPrazo || 0,
