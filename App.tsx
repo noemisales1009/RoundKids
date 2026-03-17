@@ -602,41 +602,44 @@ const DashboardScreen: React.FC = () => {
         const fetchDashboardData = async () => {
             setLoading(true);
             try {
-                // Buscar dados de ambas as views
-                const tasksResult = await supabase
-                    .from('tasks_view_horario_br')
-                    .select('*');
-                    
-                const alertasResult = await supabase
-                    .from('alertas_paciente_view_completa')
-                    .select('*');
+                // ✅ Buscar estatísticas da view dashboard_summary
+                const { data: summaryData, error: summaryError } = await supabase
+                    .from('dashboard_summary')
+                    .select('*')
+                    .single();
 
-                // Filtrar no frontend para remover status que contenham "concluído", "arquivado" ou "resolvido"
-                const tasksData = (tasksResult.data || []).filter(
-                    t => !t.status?.includes('concluído') && !t.status?.includes('arquivado')
-                );
-                const alertasData = (alertasResult.data || []).filter(
-                    a => !a.status?.includes('resolvido') && !a.status?.includes('arquivado')
-                );
+                if (summaryError) {
+                    console.warn('Erro ao buscar dashboard_summary, usando views base:', summaryError);
+                    // Fallback: buscar das views base
+                    const tasksResult = await supabase
+                        .from('tasks_view_horario_br')
+                        .select('*');
+                        
+                    const alertasResult = await supabase
+                        .from('alertas_paciente_view_completa')
+                        .select('*');
 
-                // Combinar dados de ambas as views
-                const combined = [...tasksData, ...alertasData];
-                
-                console.log('✅ Total carregado (sem concluídos/resolvidos):', combined.length);
+                    const combined = [...(tasksResult.data || []), ...(alertasResult.data || [])];
+                    setAllAlerts(combined);
 
-                setAllAlerts(combined);
+                    setDashboardData({
+                        totalAlertas: combined.filter(a => a.live_status && !['concluído', 'arquivado'].includes(a.live_status)).length,
+                        totalNoPrazo: combined.filter(a => a.live_status === 'no_prazo').length,
+                        totalForaDoPrazo: combined.filter(a => ['fora_do_prazo', 'fora_do_prazo_com_justificativa'].includes(a.live_status)).length,
+                        totalConcluidos: combined.filter(a => ['concluído', 'arquivado'].includes(a.live_status)).length
+                    });
+                } else {
+                    // ✅ Usar dados da view (mais correto)
+                    setDashboardData({
+                        totalAlertas: summaryData?.totalAlertas || 0,
+                        totalNoPrazo: summaryData?.totalNoPrazo || 0,
+                        totalForaDoPrazo: summaryData?.totalForaDoPrazo || 0,
+                        totalConcluidos: summaryData?.totalConcluidos || 0
+                    });
 
-                // Calcular estatísticas
-                const totalAlertas = combined.length;
-                const totalNoPrazo = combined.filter(a => a.live_status === 'no_prazo').length;
-                const totalForaDoPrazo = combined.filter(a => a.live_status === 'fora_do_prazo').length;
+                    console.log('✅ Dashboard data:', summaryData);
+                }
 
-                setDashboardData({
-                    totalAlertas,
-                    totalNoPrazo,
-                    totalForaDoPrazo,
-                    totalConcluidos: 0
-                });
             } catch (err) {
                 console.error('❌ Erro ao buscar dados:', err);
             } finally {
