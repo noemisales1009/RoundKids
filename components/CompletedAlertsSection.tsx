@@ -35,6 +35,8 @@ interface CompletedAlert {
     justificativa?: string | null;
     completed_at?: string;
     completed_by?: string;
+    tempo_visibilidade?: string; // Tempo restante de visibilidade (ex: "18h 45min")
+    status_conclusao?: string; // Hora de conclusão
 }
 
 export const CompletedAlertsSection: React.FC<{ patientId: string }> = ({ patientId }) => {
@@ -50,60 +52,32 @@ export const CompletedAlertsSection: React.FC<{ patientId: string }> = ({ patien
 
             setLoading(true);
             try {
-                // Buscar de ambas as views
-                const [tasksResult, alertasResult] = await Promise.all([
-                    supabase
-                        .from('tasks_view_horario_br')
-                        .select('*')
-                        .eq('patient_id', patientId),
-                    supabase
-                        .from('alertas_paciente_view_completa')
-                        .select('*')
-                        .eq('patient_id', patientId)
-                ]);
+                const { data, error } = await supabase
+                    .from('alertas_paciente_visibilidade_24h')
+                    .select('*')
+                    .eq('patient_id', patientId)
+                    .order('tempo_visibilidade', { ascending: true }); // Mostra os que vão expirar primeiro
 
                 const allAlertas: CompletedAlert[] = [];
 
-                // Adicionar tasks concluídas
-                if (tasksResult.data && Array.isArray(tasksResult.data)) {
-                    tasksResult.data.forEach((task: any) => {
-                        // Filtrar apenas concluídos/arquivados
-                        const status = (task.status || '').toLowerCase();
-                        if (status.includes('concluído') || status.includes('arquivado')) {
-                            allAlertas.push({
-                                id: task.id_alerta?.toString() || task.id,
-                                description: task.alertaclinico || task.description || task.descricao_limpa,
-                                priority: task.priority || 'média',
-                                status: task.status,
-                                created_at: task.created_at,
-                                source: 'tasks',
-                                completed_by: task.created_by_name || 'Sistema'
-                            });
-                        }
+                if (data && Array.isArray(data)) {
+                    data.forEach((item: any) => {
+                        allAlertas.push({
+                            id: item.id_alerta?.toString() || item.id,
+                            description: item.alertaclinico || item.description,
+                            priority: item.priority || 'média',
+                            status: item.status,
+                            created_at: item.created_at,
+                            source: item.tipo_origem || 'alertas',
+                            completed_by: item.created_by_name || 'Sistema',
+                            tempo_visibilidade: item.tempo_visibilidade
+                        });
                     });
                 }
 
-                // Adicionar alertas resolvidos/arquivados
-                if (alertasResult.data && Array.isArray(alertasResult.data)) {
-                    alertasResult.data.forEach((alert: any) => {
-                        // Filtrar apenas resolvidos/arquivados
-                        const status = (alert.status || '').toLowerCase();
-                        if (status.includes('resolvido') || status.includes('arquivado')) {
-                            allAlertas.push({
-                                id: alert.id_alerta?.toString() || alert.id,
-                                description: alert.alertaclinico || alert.description,
-                                priority: alert.priority || 'média',
-                                status: alert.status,
-                                created_at: alert.created_at,
-                                source: 'alertas',
-                                completed_by: alert.created_by_name || 'Sistema'
-                            });
-                        }
-                    });
+                if (error) {
+                    console.error('Erro ao buscar alertas:', error);
                 }
-
-                // Ordenar por data de criação (mais recentes primeiro)
-                allAlertas.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
                 setAlertas(allAlertas);
             } catch (err) {
@@ -216,15 +190,25 @@ export const CompletedAlertsSection: React.FC<{ patientId: string }> = ({ patien
                                                 {alerta.completed_by && (
                                                     <p className="font-medium text-green-700 dark:text-green-300">✓ Concluído por: <span className="text-green-600 dark:text-green-400">{alerta.completed_by}</span></p>
                                                 )}
+                                                
+                                                {/* Mostrar tempo de visibilidade se disponível */}
+                                                {alerta.tempo_visibilidade && (
+                                                    <div className={`flex items-center gap-2 mt-2 p-2 rounded font-semibold ${
+                                                        alerta.tempo_visibilidade === 'Expirado'
+                                                            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                                                            : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                                                    }`}>
+                                                        <span>⏱️</span>
+                                                        <span>
+                                                            {alerta.tempo_visibilidade === 'Expirado' 
+                                                                ? 'Visibilidade expirada' 
+                                                                : `Visível por: ${alerta.tempo_visibilidade}`
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
-                                        <button
-                                            onClick={() => handleDeleteAlert(alerta.id)}
-                                            className="p-2 hover:bg-red-600 dark:hover:bg-red-500 rounded-lg transition text-red-600 dark:text-red-400 hover:text-white dark:hover:text-white font-bold"
-                                            title="Deletar alerta"
-                                        >
-                                            <TrashIcon className="w-5 h-5" />
-                                        </button>
                                     </div>
                                 </div>
                             ))}

@@ -24,13 +24,13 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
     const fetchAllAlerts = async () => {
         setLoading(true);
         try {
-            // Buscar dados sem filtro na query
+            // Buscar dados da view com visibilidade 24h
             const [tasksResult, alertsResult, patientsResult] = await Promise.all([
                 supabase
                     .from('tasks_view_horario_br')
                     .select('*'),
                 supabase
-                    .from('alertas_paciente_view_completa')
+                    .from('alertas_paciente_visibilidade_24h')
                     .select('*'),
                 supabase.from('patients').select('id, name, bed_number')
             ]);
@@ -40,13 +40,13 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                 patientsMap.set(p.id, { name: p.name, bed_number: p.bed_number });
             });
 
-            // Filtrar no frontend para remover status resolvido/arquivado/concluído
+            // Filtrar no frontend para remover status resolvido/arquivado/concluído das tasks
             const tasksFiltered = (tasksResult.data || []).filter(
                 t => !t.status?.includes('concluído') && !t.status?.includes('arquivado')
             );
-            const alertsFiltered = (alertsResult.data || []).filter(
-                a => !a.status?.includes('resolvido') && !a.status?.includes('arquivado')
-            );
+            
+            // Alertas já vêm filtrados da view com visibilidade de 24h
+            const alertsFiltered = alertsResult.data || [];
 
             const allAlerts = [
                 ...tasksFiltered.map(t => {
@@ -327,6 +327,23 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                                     <p>Prazo Limite: {alert.prazo_limite_formatado || 'N/A'}</p>
                                     <p>Status: <span className="font-semibold">{alert.live_status?.replace('_', ' ')}</span></p>
                                     <p>Criado em: {new Date(alert.created_at).toLocaleString('pt-BR')}</p>
+                                    
+                                    {/* Mostrar tempo de visibilidade se está concluído */}
+                                    {(alert.status === 'concluido' || alert.status === 'Concluído' || alert.status === 'resolvido' || alert.status === 'Resolvido') && alert.tempo_visibilidade && (
+                                        <div className={`flex items-center gap-2 mt-2 p-2 rounded font-semibold ${
+                                            alert.tempo_visibilidade === 'Expirado'
+                                                ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                                                : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                                        }`}>
+                                            <span>⏱️</span>
+                                            <span>
+                                                {alert.tempo_visibilidade === 'Expirado' 
+                                                    ? 'Visibilidade expirada' 
+                                                    : `Visível por: ${alert.tempo_visibilidade}`
+                                                }
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Justificativa */}
