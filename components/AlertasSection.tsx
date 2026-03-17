@@ -189,7 +189,11 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                 // Para alertas clínicos, atualiza status para 'resolvido'
                 const { error } = await supabase
                     .from('alertas_paciente')
-                    .update({ status: 'resolvido' })
+                    .update({ 
+                        status: 'resolvido',
+                        concluded_at: new Date().toISOString(),
+                        concluded_by: userId
+                    })
                     .eq('id', alertId);
 
                 if (error) {
@@ -200,7 +204,11 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                 // Para tasks, atualiza status para 'concluído'
                 const { error } = await supabase
                     .from('tasks')
-                    .update({ status: 'concluído' })
+                    .update({ 
+                        status: 'concluído',
+                        concluded_at: new Date().toISOString(),
+                        concluded_by: userId
+                    })
                     .eq('id', alertId);
 
                 if (error) {

@@ -7,19 +7,21 @@
 DROP VIEW IF EXISTS public.alertas_paciente_visibilidade_24h;
 DROP FUNCTION IF EXISTS tempo_restante_visibilidade(text, timestamp with time zone, timestamp with time zone);
 
--- 2. FUNCTION - Retorna TEXT legível
+-- 2. FUNCTION CORRIGIDA - Retorna TEXT legível
 CREATE OR REPLACE FUNCTION tempo_restante_visibilidade(
   p_status text, 
-  p_deadline timestamp with time zone,
-  p_hora_conclusao timestamp with time zone
+  p_deadline timestamp without time zone,
+  p_hora_conclusao timestamp without time zone
 ) RETURNS text AS $$
 DECLARE
-  agora_br timestamp with time zone;
+  agora_br timestamp without time zone;
+  momento_expirar timestamp without time zone;
   intervalo interval;
   total_minutos int;
 BEGIN
   agora_br := NOW() AT TIME ZONE 'America/Sao_Paulo';
 
+  -- SE NÃO ESTÁ CONCLUÍDO: Mostra quanto tempo falta para o prazo (deadline)
   IF p_status NOT ILIKE 'concluido' AND p_status NOT ILIKE 'Concluído' AND p_status NOT ILIKE 'resolvido%' THEN
     IF p_deadline IS NULL THEN RETURN 'Sem prazo'; END IF;
     intervalo := p_deadline - agora_br;
@@ -28,9 +30,14 @@ BEGIN
     RETURN (total_minutos / 60) || 'h ' || (total_minutos % 60) || 'min p/ vencer';
   END IF;
 
+  -- SE ESTÁ CONCLUÍDO: Deve ficar 24h visível a partir da conclusão
   IF p_hora_conclusao IS NOT NULL THEN
-    intervalo := interval '24 hours' - (agora_br - p_hora_conclusao);
+    -- A lógica correta: O alerta morre 24h depois de ser concluído
+    momento_expirar := p_hora_conclusao + interval '24 hours';
+    intervalo := momento_expirar - agora_br;
+    
     total_minutos := (EXTRACT(EPOCH FROM intervalo) / 60)::int;
+    
     IF total_minutos <= 0 THEN RETURN 'Expirando...'; END IF;
     RETURN (total_minutos / 60) || 'h ' || (total_minutos % 60) || 'min visível';
   END IF;
@@ -39,29 +46,27 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
--- 3. FUNCTION - Retorna INT em minutos (para ordenação)
+-- 3. FUNCTION CORRIGIDA - Retorna INT (Ordenação)
 CREATE OR REPLACE FUNCTION tempo_minutos_total(
   p_status text, 
-  p_deadline timestamp with time zone,
-  p_hora_conclusao timestamp with time zone
+  p_deadline timestamp without time zone,
+  p_hora_conclusao timestamp without time zone
 ) RETURNS int AS $$
 DECLARE
-  agora_br timestamp with time zone;
-  intervalo interval;
+  agora_br timestamp without time zone;
   total_minutos int;
 BEGIN
   agora_br := NOW() AT TIME ZONE 'America/Sao_Paulo';
 
   IF p_status NOT ILIKE 'concluido' AND p_status NOT ILIKE 'Concluído' AND p_status NOT ILIKE 'resolvido%' THEN
     IF p_deadline IS NULL THEN RETURN 999999; END IF;
-    intervalo := p_deadline - agora_br;
-    total_minutos := (EXTRACT(EPOCH FROM intervalo) / 60)::int;
+    total_minutos := (EXTRACT(EPOCH FROM (p_deadline - agora_br)) / 60)::int;
     RETURN CASE WHEN total_minutos <= 0 THEN -1 ELSE total_minutos END;
   END IF;
 
   IF p_hora_conclusao IS NOT NULL THEN
-    intervalo := interval '24 hours' - (agora_br - p_hora_conclusao);
-    total_minutos := (EXTRACT(EPOCH FROM intervalo) / 60)::int;
+    -- Calcula minutos restantes até completar 24h da conclusão
+    total_minutos := (EXTRACT(EPOCH FROM ((p_hora_conclusao + interval '24 hours') - agora_br)) / 60)::int;
     RETURN CASE WHEN total_minutos <= 0 THEN -1 ELSE total_minutos END;
   END IF;
 

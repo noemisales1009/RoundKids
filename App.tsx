@@ -3601,12 +3601,16 @@ const TaskStatusScreen: React.FC = () => {
         if (!window.confirm('Tem certeza que deseja marcar como concluído?')) return;
 
         try {
+            const { data: { user } } = await supabase.auth.getUser();
+            const userId = user?.id;
             const table = alert.source === 'tasks' ? 'tasks' : 'alertas_paciente';
             const { error } = await supabase
                 .from(table)
                 .update({
                     status: 'concluido',
-                    updated_at: new Date().toISOString()
+                    updated_at: new Date().toISOString(),
+                    concluded_at: new Date().toISOString(),
+                    concluded_by: userId
                 })
                 .eq('id', alert.id_alerta);
 
@@ -5007,17 +5011,34 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         // Simple heuristic: if taskId is string and long, it's likely UUID from new table
         const isUuid = typeof taskId === 'string' && taskId.length > 30;
 
-        if (isUuid) {
-            const dbStatus = status === 'concluido' ? 'Concluido' : 'Pendente';
-            const { error } = await supabase.from('alertas_paciente')
-                .update({ status: dbStatus })
-                .eq('id', taskId);
-            if (!error) fetchTasks();
-        } else {
-            const { error } = await supabase.from('tasks')
-                .update({ status })
-                .eq('id', taskId);
-            if (!error) fetchTasks();
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            const userId = user?.id;
+
+            // Preparar objeto de atualização
+            const updateData: any = { status };
+            
+            // Se mudando para concluído, salvar concluded_at e concluded_by
+            if (status === 'concluido') {
+                updateData.concluded_at = new Date().toISOString();
+                updateData.concluded_by = userId;
+            }
+
+            if (isUuid) {
+                const dbStatus = status === 'concluido' ? 'concluido' : status;
+                updateData.status = dbStatus;
+                const { error } = await supabase.from('alertas_paciente')
+                    .update(updateData)
+                    .eq('id', taskId);
+                if (!error) fetchTasks();
+            } else {
+                const { error } = await supabase.from('tasks')
+                    .update(updateData)
+                    .eq('id', taskId);
+                if (!error) fetchTasks();
+            }
+        } catch (error) {
+            console.error('Erro ao atualizar status:', error);
         }
     };
 
