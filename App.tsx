@@ -2867,7 +2867,12 @@ const PatientDetailScreen: React.FC = () => {
                                             </div>
                                         </div>
                                     ))}
-                                    <button onClick={() => setAddMedicationModalOpen(true)} className="w-full mt-2 text-center bg-blue-50 dark:bg-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-semibold py-2.5 rounded-lg transition">Cadastrar Medicação</button>
+                                    <button onClick={() => {
+                                        console.log('🔘 Botão "Cadastrar Medicação" clicado');
+                                        console.log('  - isAddMedicationModalOpen ANTES:', isAddMedicationModalOpen);
+                                        setAddMedicationModalOpen(true);
+                                        console.log('  - isAddMedicationModalOpen DEPOIS:', true);
+                                    }} className="w-full mt-2 text-center bg-blue-50 dark:bg-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-semibold py-2.5 rounded-lg transition">Cadastrar Medicação</button>
                                 </>
                             )}
                             {/* Surgical Tab Content */}
@@ -3170,7 +3175,15 @@ const PatientDetailScreen: React.FC = () => {
                     onSuccess={() => window.location.reload()}
                 />
             )}
-            {isAddMedicationModalOpen && <AddMedicationModal patientId={patient.id} onClose={() => setAddMedicationModalOpen(false)} />}
+            {isAddMedicationModalOpen && (
+                <>
+                    {console.log('🎯 Renderizando AddMedicationModal com patientId:', patient.id)}
+                    <AddMedicationModal patientId={patient.id} onClose={() => {
+                        console.log('❌ Modal de medicação fechado');
+                        setAddMedicationModalOpen(false);
+                    }} />
+                </>
+            )}
             {editingMedication && <EditMedicationModal medication={editingMedication} patientId={patient.id} onClose={() => setEditingMedication(null)} />}
             {editingMedicationEndDate && <EditMedicationEndDateModal medication={editingMedicationEndDate} patientId={patient.id} onClose={() => setEditingMedicationEndDate(null)} />}
             {archiveMedicationModal && (
@@ -4026,6 +4039,14 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         // ✅ NORMALIZAR DADOS - Se houver erro na query, retorna array vazio
         const safeData = (res: any) => (res?.data?.length ? res.data : []);
 
+        console.log('🔍 DEBUG: Verificando respostas das queries');
+        console.log('  - devicesRes:', devicesRes?.error, 'data:', devicesRes?.data?.length);
+        console.log('  - examsRes:', examsRes?.error, 'data:', examsRes?.data?.length);
+        console.log('  - medsRes:', medsRes?.error, 'data:', medsRes?.data?.length);
+        if (medsRes?.data && medsRes.data.length > 0) {
+            console.log('  - Primeira medicação raw:', medsRes.data[0]);
+        }
+
         const devicesMap = safeData(devicesRes).reduce((acc: any, d: any) => {
             if (!acc[d.paciente_id]) acc[d.paciente_id] = [];
             acc[d.paciente_id].push({
@@ -4054,10 +4075,14 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 
         const medsMap = safeData(medsRes).reduce((acc: any, m: any) => {
             if (!acc[m.paciente_id]) acc[m.paciente_id] = [];
+            // ✅ CORRIGIDO: Se unidade_medida é NULL, usar apenas dosagem_valor
+            const dosage = m.unidade_medida 
+                ? `${m.dosagem_valor} ${m.unidade_medida}`
+                : m.dosagem_valor;
             acc[m.paciente_id].push({
                 id: m.id,
                 name: m.nome_medicacao,
-                dosage: `${m.dosagem_valor} ${m.unidade_medida}`,
+                dosage: dosage,
                 startDate: m.data_inicio,
                 endDate: m.data_fim,
                 isArchived: m.is_archived,
@@ -4065,6 +4090,10 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             });
             return acc;
         }, {});
+        
+        console.log('💊 Medicações raw do banco:', safeData(medsRes));
+        console.log('💊 Chaves do medsMap:', Object.keys(medsMap));
+        console.log('💊 medsMap completo:', medsMap);
 
         const surgsMap = safeData(surgsRes).reduce((acc: any, s: any) => {
             if (!acc[s.paciente_id]) acc[s.paciente_id] = [];
@@ -4165,36 +4194,46 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             return acc;
         }, {});
 
-        const mappedPatients: Patient[] = patientsData.map((p: any) => ({
-            id: p.id,
-            name: p.name,
-            bedNumber: p.bed_number,
-            motherName: p.mother_name || '-',
-            dob: p.dob,
-            ctd: p.diagnosis || 'Estável',
-            peso: p.peso,
-            sc: p.sc,
-            status: p.status || 'estavel',
-            comorbidade: p.comorbidade || undefined,
-            admissionDate: p.dt_internacao || undefined,
-            devices: devicesMap[p.id] || [],
-            exams: examsMap[p.id] || [],
-            medications: medsMap[p.id] || [],
-            surgicalProcedures: surgsMap[p.id] || [],
-            scaleScores: scalesMap[p.id] || [],
-            cultures: culturesMap[p.id] || [],
-            diets: dietsMap[p.id] || [],
-            precautions: precautionsMap[p.id] || [],
-            diurese: diuresisMap[p.id] || [],
-            balanco_hidrico: balanceMap[p.id] || []
-        }));
+        const mappedPatients: Patient[] = patientsData.map((p: any) => {
+            const pacienteMeds = medsMap[p.id] || [];
+            if (pacienteMeds.length > 0) {
+                console.log(`✅ Paciente ${p.name} (ID: ${p.id}) encontrado no medsMap com ${pacienteMeds.length} medicações`);
+            }
+            
+            return {
+                id: p.id,
+                name: p.name,
+                bedNumber: p.bed_number,
+                motherName: p.mother_name || '-',
+                dob: p.dob,
+                ctd: p.diagnosis || 'Estável',
+                peso: p.peso,
+                sc: p.sc,
+                status: p.status || 'estavel',
+                comorbidade: p.comorbidade || undefined,
+                admissionDate: p.dt_internacao || undefined,
+                devices: devicesMap[p.id] || [],
+                exams: examsMap[p.id] || [],
+                medications: pacienteMeds,
+                surgicalProcedures: surgsMap[p.id] || [],
+                scaleScores: scalesMap[p.id] || [],
+                cultures: culturesMap[p.id] || [],
+                diets: dietsMap[p.id] || [],
+                precautions: precautionsMap[p.id] || [],
+                diurese: diuresisMap[p.id] || [],
+                balanco_hidrico: balanceMap[p.id] || []
+            };
+        });
         
-        // Debug: Mostrar escalas de cada paciente
+        // Debug: Mostrar medicações carregadas
+        let medicacoesPorPaciente = 0;
         mappedPatients.forEach(p => {
-            if (p.scaleScores.length > 0) {
-                console.log(`📊 Paciente ${p.name} tem ${p.scaleScores.length} escalas:`, p.scaleScores);
+            if (p.medications.length > 0) {
+                medicacoesPorPaciente += p.medications.length;
+                console.log(`✅ Paciente ${p.name} (ID: ${p.id}) tem ${p.medications.length} medicações:`, p.medications);
             }
         });
+        console.log(`📊 Total de medicações carregadas: ${medicacoesPorPaciente}`);
 
         setPatients(mappedPatients);
         console.log('✅ Detalhes dos pacientes carregados em', Date.now());
@@ -4475,11 +4514,15 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         if (!error) fetchPatients();
     };
 
-    const addMedicationToPatient = async (patientId: number | string, medication: Omit<Medication, 'id'>, userId?: string) => {
-        console.log('🔍 addMedicationToPatient - userId recebido:', userId);
-        const parts = medication.dosage.split(' ');
-        const valor = parts[0] || '';
-        const unidade = parts.slice(1).join(' ') || '';
+    const addMedicationToPatient = async (patientId: number | string, medication: any, userId?: string) => {
+        console.log('🔍 addMedicationToPatient chamada');
+        console.log('  - patientId:', patientId, 'tipo:', typeof patientId);
+        console.log('  - medication:', medication);
+        console.log('  - userId:', userId, 'tipo:', typeof userId);
+        
+        // Novo formato com dosageValue e unidade já separados
+        const valor = medication.dosageValue || '';
+        const unidade = medication.unidade || null;
 
         const payload = {
             paciente_id: patientId,
@@ -4490,17 +4533,72 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             observacao: medication.observacao || null,
             criado_por_id: userId || null
         };
-        console.log('📦 Payload para Supabase (medicação):', payload);
+        
+        console.log('📦 Payload ANTES de enviar:', JSON.stringify(payload, null, 2));
         
         const { data, error } = await supabase.from('medicacoes_pacientes').insert([payload]);
         
+        console.log('📨 Resposta do Supabase:');
+        console.log('  - data:', data);
+        console.log('  - error:', error);
+        
         if (error) {
             console.error('❌ Erro ao inserir medicação:', error);
+            console.error('❌ Código do erro:', error.code);
+            console.error('❌ Mensagem completa:', error.message);
+            console.error('❌ Detalhes:', error.details);
         } else {
-            console.log('✅ Medicação inserida com sucesso:', data);
+            console.log('✅ Medicação inserida com sucesso!');
+            
+            // ✅ ATUALIZAR IMEDIATAMENTE sem aguardar completamente
+            // Buscar apenas medicações desse paciente
+            const { data: novasMeds, error: erroMeds } = await supabase
+                .from('medicacoes_pacientes')
+                .select('*')
+                .eq('paciente_id', patientId);
+            
+            if (!erroMeds && novasMeds) {
+                console.log('💊 Medicações atualizadas do paciente', patientId, ':', novasMeds);
+                
+                // Atualizar o state dos pacientes com as novas medicações
+                setPatients(prev => prev.map(p => {
+                    if (p.id === patientId) {
+                        // Processar as medicações novas
+                        const medsProcessadas = (novasMeds || []).map((m: any) => ({
+                            id: m.id,
+                            name: m.nome_medicacao,
+                            dosage: m.unidade_medida 
+                                ? `${m.dosagem_valor} ${m.unidade_medida}`
+                                : m.dosagem_valor,
+                            startDate: m.data_inicio,
+                            endDate: m.data_fim,
+                            isArchived: m.is_archived,
+                            observacao: m.observacao
+                        }));
+                        
+                        console.log('📝 Retornando paciente atualizado:', {
+                            ...p,
+                            medications: medsProcessadas
+                        });
+                        
+                        return {
+                            ...p,
+                            medications: medsProcessadas
+                        };
+                    }
+                    return p;
+                }));
+            }
         }
         
-        if (!error) fetchPatients();
+        if (!error) {
+            // Ainda assim chamar fetchPatients para sincronizar tudo
+            // mas depois de um pequeno delay para não sobrescrever a atualização acima
+            setTimeout(() => {
+                console.log('🔄 Chamando fetchPatients para sincronizar completamente...');
+                fetchPatients();
+            }, 1000);
+        }
     };
 
     const addSurgicalProcedureToPatient = async (patientId: number | string, procedure: Omit<SurgicalProcedure, 'id'>, userId?: string) => {
