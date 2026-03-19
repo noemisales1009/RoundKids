@@ -65,18 +65,66 @@ export const ArchivedPatientsScreen: React.FC = () => {
 
   const handleReactivate = async (patientId: string) => {
     try {
-      const { error } = await supabase
+      console.log('🔄 Reativando paciente e todas as planilhas relacionadas:', patientId);
+      
+      // 1️⃣ Reativar o paciente
+      const { error: patientError } = await supabase
         .from('patients')
         .update({ archived_at: null, motivo_arquivamento: null })
         .eq('id', patientId);
 
-      if (error) throw error;
+      if (patientError) throw patientError;
+      console.log('✅ Paciente reativado');
 
-      showMessage('success', 'Paciente reativado com sucesso!');
+      // 2️⃣ Restaurar todas as planilhas relacionadas (desarquivar)
+      const tables = [
+        'medicacoes_pacientes',
+        'dispositivos_pacientes',
+        'exames_pacientes',
+        'procedimentos_pacientes',
+        'culturas_pacientes',
+        'dietas_pacientes',
+        'precautions',
+        'diurese',
+        'balanco_hidrico',
+        'scale_scores',
+        'clinical_situations_24h'
+      ];
+
+      for (const table of tables) {
+        let updateQuery = supabase
+          .from(table)
+          .update({ is_archived: false })
+          .eq('paciente_id', patientId)
+          .eq('is_archived', true);
+
+        const { error: tableError } = await updateQuery;
+
+        if (tableError) {
+          console.warn(`⚠️ Erro ao restaurar ${table}:`, tableError.message);
+        } else {
+          console.log(`✅ ${table} restaurada`);
+        }
+      }
+
+      // 3️⃣ Restaurar diagnósticos (usa campo 'arquivado' ao invés de 'is_archived')
+      const { error: diagError } = await supabase
+        .from('paciente_diagnosticos')
+        .update({ arquivado: false })
+        .eq('patient_id', patientId)
+        .eq('arquivado', true);
+
+      if (diagError) {
+        console.warn(`⚠️ Erro ao restaurar paciente_diagnosticos:`, diagError.message);
+      } else {
+        console.log(`✅ paciente_diagnosticos restaurada`);
+      }
+
+      showMessage('success', '🎉 Paciente e todas as planilhas restauradas com sucesso!');
       fetchArchivedPatients();
       setConfirmModal({ isOpen: false, action: 'reactivate' });
     } catch (error) {
-      console.error('Erro ao reativar paciente:', error);
+      console.error('❌ Erro ao reativar paciente:', error);
       showMessage('error', 'Erro ao reativar paciente');
     }
   };
