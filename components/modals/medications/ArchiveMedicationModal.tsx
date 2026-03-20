@@ -94,17 +94,17 @@ export const ArchiveMedicationModal: React.FC<ArchiveMedicationModalProps> = ({ 
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                             Motivo do arquivamento <span className="text-red-500">*</span>
                         </label>
-                        <textarea
+                        <select
                             value={archiveReason}
                             onChange={(e) => setArchiveReason(e.target.value)}
-                            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 min-h-25"
-                            placeholder="Descreva o motivo do arquivamento..."
+                            className="w-full px-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
                             disabled={isSubmitting}
                             required
-                        />
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                            Exemplo: Medicação suspensa por ordem médica, fim do tratamento, etc.
-                        </p>
+                        >
+                            <option value="">Selecione o motivo...</option>
+                            <option value="Erro">Erro</option>
+                            <option value="Concluído">Concluído</option>
+                        </select>
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-2 pt-2">
