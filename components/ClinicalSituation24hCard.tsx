@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
+import { sanitizeText } from '../lib/sanitize';
 
 interface ClinicalSituation24hCardProps {
   patientId: number | string;
@@ -58,7 +59,7 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
   }, [patientId]);
 
   const handleSave = async () => {
-    const finalText = text.trim();
+    const finalText = sanitizeText(text, 5000);
     if (!finalText) {
       setError('Digite um texto antes de salvar.');
       return;

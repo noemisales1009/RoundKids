@@ -24,14 +24,16 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
     const fetchAllAlerts = async () => {
         setLoading(true);
         try {
-            // Buscar dados da view com visibilidade 24h
+            // Buscar alertas ativos (não arquivados, não concluídos)
             const [tasksResult, alertsResult, patientsResult] = await Promise.all([
                 supabase
                     .from('tasks_view_horario_br')
-                    .select('*'),
+                    .select('*')
+                    .not('live_status', 'in', '("concluído","arquivado")'),
                 supabase
-                    .from('alertas_paciente_visibilidade_24h')
-                    .select('*'),
+                    .from('alertas_paciente_view_completa')
+                    .select('*')
+                    .not('live_status', 'in', '("concluído","arquivado")'),
                 supabase.from('patients').select('id, name, bed_number')
             ]);
 
@@ -40,12 +42,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                 patientsMap.set(p.id, { name: p.name, bed_number: p.bed_number });
             });
 
-            // Filtrar no frontend para remover status resolvido/arquivado/concluído das tasks
-            const tasksFiltered = (tasksResult.data || []).filter(
-                t => !t.status?.includes('concluído') && !t.status?.includes('arquivado')
-            );
-            
-            // Alertas já vêm filtrados da view com visibilidade de 24h
+            const tasksFiltered = tasksResult.data || [];
             const alertsFiltered = alertsResult.data || [];
 
             const allAlerts = [
@@ -170,7 +167,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                 <div class="info">
                     <p><strong>Data de Geração:</strong> ${new Date().toLocaleString('pt-BR')}</p>
                     <p><strong>Total de Alertas:</strong> ${filteredAlerts.length}</p>
-                    ${selectedDate ? `<p><strong>Filtrado por Data:</strong> ${new Date(selectedDate).toLocaleDateString('pt-BR')}</p>` : ''}
+                    ${selectedDate ? `<p><strong>Filtrado por Data:</strong> ${selectedDate.split('-').reverse().join('/')}</p>` : ''}
                     ${selectedStatus !== 'todos' ? `<p><strong>Filtrado por Status:</strong> ${selectedStatus.replace('_', ' ')}</p>` : ''}
                 </div>
                 <table>
@@ -324,7 +321,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                                 {/* Informações */}
                                 <div className="mt-2 text-sm text-slate-600 dark:text-slate-400 space-y-1">
                                     <p>Responsável: {alert.responsavel}</p>
-                                    <p>Prazo Limite: {alert.prazo_limite_formatado || 'N/A'}</p>
+                                    <p>Prazo Limite: {alert.prazo_limite_formatado || (alert.deadline ? new Date(alert.deadline).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A')}</p>
                                     <p>Status: <span className="font-semibold">{alert.live_status?.replace('_', ' ')}</span></p>
                                     <p>Criado em: {new Date(alert.created_at).toLocaleString('pt-BR')}</p>
                                     

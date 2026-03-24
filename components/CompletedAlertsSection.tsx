@@ -69,7 +69,7 @@ export const CompletedAlertsSection: React.FC<{ patientId: string }> = ({ patien
                             status: item.status,
                             created_at: item.created_at,
                             source: item.tipo_origem || 'alertas',
-                            completed_by: item.created_by_name || 'Sistema',
+                            completed_by: item.concluded_by_name || 'Sistema',
                             tempo_visibilidade: item.tempo_visibilidade
                         });
                     });

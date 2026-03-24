@@ -1,5 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { sanitizeTextOrNull } from '../lib/sanitize';
 import { ThemeContext } from '../contexts';
 import { ChevronRightIcon, SaveIcon } from './icons';
 
@@ -128,7 +129,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           arquivado: true,
           archived_by: userId,
           archived_at: new Date().toISOString(),
-          motivo_arquivamento: archiveReason || null
+          motivo_arquivamento: sanitizeTextOrNull(archiveReason)
         })
         .eq('patient_id', patientId)
         .eq('opcao_id', optionToArchive)

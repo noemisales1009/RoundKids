@@ -78,6 +78,7 @@ const ArchiveSurgicalProcedureModal = lazy(() => import('./components/modals').t
 import { SecondaryNavigation } from './components/SecondaryNavigation';
 import { NetworkBanner } from './components/NetworkBanner';
 import { supabase } from './supabaseClient';
+import { sanitizeText, sanitizeTextOrNull, sanitizePayload } from './lib/sanitize';
 import { NetworkProvider } from './contexts/NetworkContext';
 import {
     TasksContext,
@@ -415,6 +416,13 @@ const LoginScreen: React.FC = () => {
     const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     const validatePassword = (password: string) => password.length >= 6;
 
+    // ✅ SEGURANÇA: Domínios permitidos para criação automática de usuário
+    const ALLOWED_EMAIL_DOMAINS = ['roundikids.com', 'hospital.com.br'];
+    const isAllowedDomain = (email: string) => {
+        const domain = email.split('@')[1]?.toLowerCase();
+        return ALLOWED_EMAIL_DOMAINS.includes(domain);
+    };
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -481,20 +489,28 @@ const LoginScreen: React.FC = () => {
                         .maybeSingle();
                     
                     if (!existingUser) {
-                        // Se não existe, criar agora
+                        // Validar domínio antes de criar usuário automaticamente
+                        if (!isAllowedDomain(userEmail)) {
+                            console.warn('⚠️ [LOGIN] Domínio não autorizado para criação automática:', userEmail);
+                            await supabase.auth.signOut();
+                            alert('Seu domínio de email não está autorizado. Contate o administrador.');
+                            setLoading(false);
+                            return;
+                        }
+
                         const userName = session.user.user_metadata?.name || userEmail.split('@')[0];
-                        
+
                         console.log('🔵 [LOGIN] Usuário não existe no banco, criando...');
-                        
+
                         await supabase.from('users').insert({
                             id: userId,
                             email: userEmail,
                             name: userName,
-                            role: 'Médica',
-                            access_level: 'geral'
+                            role: 'pendente',
+                            access_level: 'restrito'
                         });
-                        
-                        console.log('✅ [LOGIN] Usuário criado no banco');
+
+                        console.log('✅ [LOGIN] Usuário criado no banco (pendente aprovação)');
                     } else {
                         console.log('✅ [LOGIN] Usuário já existe no banco:', existingUser.name);
                     }
@@ -4292,19 +4308,21 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         console.log('✅ Leitos carregados rapidamente:', basicPatients.length);
 
         // 🔄 Carregar dados detalhados EM BACKGROUND (não bloqueia renderização)
+        // Filtra apenas dados de pacientes ativos para evitar carregar dados desnecessários
+        const activePatientIds = basicPatients.map(p => p.id);
         setTimeout(() => {
             Promise.all([
                 supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc').is('archived_at', null),
-                supabase.from('dispositivos_pacientes').select('*'),
-                supabase.from('exames_pacientes').select('*'),
-                supabase.from('medicacoes_pacientes').select('*'),
-                supabase.from('procedimentos_pacientes').select('*'),
-                supabase.from('scale_scores').select('*'),
-                supabase.from('culturas_pacientes').select('*'),
-                supabase.from('dietas_pacientes').select('*'),
-                supabase.from('precautions').select('*'),
-                supabase.from('diurese').select('*'),
-                supabase.from('balanco_hidrico').select('*')
+                supabase.from('dispositivos_pacientes').select('*').in('paciente_id', activePatientIds).is('is_archived', null),
+                supabase.from('exames_pacientes').select('*').in('paciente_id', activePatientIds).is('is_archived', null),
+                supabase.from('medicacoes_pacientes').select('*').in('paciente_id', activePatientIds).is('is_archived', null),
+                supabase.from('procedimentos_pacientes').select('*').in('paciente_id', activePatientIds).is('is_archived', null),
+                supabase.from('scale_scores').select('*').in('patient_id', activePatientIds),
+                supabase.from('culturas_pacientes').select('*').in('paciente_id', activePatientIds).is('is_archived', null),
+                supabase.from('dietas_pacientes').select('*').in('paciente_id', activePatientIds).is('is_archived', null),
+                supabase.from('precautions').select('*').in('patient_id', activePatientIds),
+                supabase.from('diurese').select('*').in('patient_id', activePatientIds).order('created_at', { ascending: false }).limit(100),
+                supabase.from('balanco_hidrico').select('*').in('patient_id', activePatientIds).order('created_at', { ascending: false }).limit(100)
             ]).then(([
                 patientsFullRes,
                 devicesRes,
@@ -4472,10 +4490,10 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             console.log('🔍 addDeviceToPatient - userId recebido:', userId);
             const { data, error } = await supabase.from('dispositivos_pacientes').insert([{
                 paciente_id: patientId,
-                tipo_dispositivo: device.name,
-                localizacao: device.location,
+                tipo_dispositivo: sanitizeText(device.name),
+                localizacao: sanitizeText(device.location),
                 data_insercao: device.startDate,
-                observacao: device.observacao || null,
+                observacao: sanitizeTextOrNull(device.observacao),
                 criado_por_id: userId || null
             }]);
             
@@ -4497,9 +4515,9 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         console.log('🔍 addExamToPatient - userId recebido:', userId);
         const payload = {
             paciente_id: patientId,
-            nome_exame: exam.name,
+            nome_exame: sanitizeText(exam.name),
             data_exame: exam.date,
-            observacao: exam.observation,
+            observacao: sanitizeTextOrNull(exam.observation),
             criado_por_id: userId || null
         };
         console.log('📦 Payload para Supabase:', payload);
@@ -4526,11 +4544,11 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 
         const payload = {
             paciente_id: patientId,
-            nome_medicacao: medication.name,
-            dosagem_valor: valor,
-            unidade_medida: unidade,
+            nome_medicacao: sanitizeText(medication.name),
+            dosagem_valor: sanitizeText(valor),
+            unidade_medida: sanitizeTextOrNull(unidade),
             data_inicio: medication.startDate,
-            observacao: medication.observacao || null,
+            observacao: sanitizeTextOrNull(medication.observacao),
             criado_por_id: userId || null
         };
         
@@ -4606,10 +4624,10 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         
         const payload = {
             paciente_id: patientId,
-            nome_procedimento: procedure.name,
+            nome_procedimento: sanitizeText(procedure.name),
             data_procedimento: procedure.date,
-            nome_cirurgiao: procedure.surgeon,
-            notas: procedure.notes,
+            nome_cirurgiao: sanitizeText(procedure.surgeon),
+            notas: sanitizeTextOrNull(procedure.notes),
             criado_por_id: userId || null
         };
         console.log('📦 Payload para Supabase (procedimento):', payload);
@@ -4688,9 +4706,9 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     const updateExamInPatient = async (patientId: number | string, examData: Exam) => {
         const { error } = await supabase.from('exames_pacientes')
             .update({
-                nome_exame: examData.name,
+                nome_exame: sanitizeText(examData.name),
                 data_exame: examData.date,
-                observacao: examData.observation
+                observacao: sanitizeTextOrNull(examData.observation)
             })
             .eq('id', examData.id);
         if (!error) fetchPatients();
@@ -4706,11 +4724,11 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     const updateDeviceInPatient = async (patientId: number | string, deviceData: Device) => {
         const { error } = await supabase.from('dispositivos_pacientes')
             .update({
-                tipo_dispositivo: deviceData.name,
-                localizacao: deviceData.location,
+                tipo_dispositivo: sanitizeText(deviceData.name),
+                localizacao: sanitizeText(deviceData.location),
                 data_insercao: deviceData.startDate,
                 data_remocao: deviceData.removalDate || null,
-                observacao: deviceData.observacao || null
+                observacao: sanitizeTextOrNull(deviceData.observacao)
             })
             .eq('id', deviceData.id);
         if (!error) fetchPatients();
@@ -4723,12 +4741,12 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 
         const { error } = await supabase.from('medicacoes_pacientes')
             .update({
-                nome_medicacao: medicationData.name,
-                dosagem_valor: valor,
-                unidade_medida: unidade,
+                nome_medicacao: sanitizeText(medicationData.name),
+                dosagem_valor: sanitizeText(valor),
+                unidade_medida: sanitizeText(unidade),
                 data_inicio: medicationData.startDate,
                 data_fim: medicationData.endDate || null,
-                observacao: medicationData.observacao || null
+                observacao: sanitizeTextOrNull(medicationData.observacao)
             })
             .eq('id', medicationData.id);
         if (!error) fetchPatients();
@@ -4737,10 +4755,10 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     const updateSurgicalProcedureInPatient = async (patientId: number | string, procedureData: SurgicalProcedure) => {
         const { error } = await supabase.from('procedimentos_pacientes')
             .update({
-                nome_procedimento: procedureData.name,
+                nome_procedimento: sanitizeText(procedureData.name),
                 data_procedimento: procedureData.date,
-                nome_cirurgiao: procedureData.surgeon,
-                notas: procedureData.notes
+                nome_cirurgiao: sanitizeText(procedureData.surgeon),
+                notas: sanitizeTextOrNull(procedureData.notes)
             })
             .eq('id', procedureData.id);
         if (!error) fetchPatients();
@@ -4771,10 +4789,10 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         
         const payload = {
             paciente_id: patientId,
-            local: culture.site,
-            microorganismo: culture.microorganism,
+            local: sanitizeText(culture.site),
+            microorganismo: sanitizeText(culture.microorganism),
             data_coleta: culture.collectionDate,
-            observacao: culture.observation || null,
+            observacao: sanitizeTextOrNull(culture.observation),
             criado_por_id: userId || null
         };
         console.log('📦 Payload para Supabase (cultura):', payload);
@@ -4800,10 +4818,10 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     const updateCultureInPatient = async (patientId: number | string, cultureData: Culture) => {
         const { error } = await supabase.from('culturas_pacientes')
             .update({
-                local: cultureData.site,
-                microorganismo: cultureData.microorganism,
+                local: sanitizeText(cultureData.site),
+                microorganismo: sanitizeText(cultureData.microorganism),
                 data_coleta: cultureData.collectionDate,
-                observacao: cultureData.observation || null
+                observacao: sanitizeTextOrNull(cultureData.observation)
             })
             .eq('id', cultureData.id);
         if (!error) fetchPatients();
@@ -4815,7 +4833,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         
         const payload = {
             paciente_id: patientId,
-            tipo: diet.type,
+            tipo: sanitizeText(diet.type),
             data_inicio: diet.data_inicio,
             data_remocao: diet.data_remocao || null,
             volume: diet.volume || null,
@@ -4824,8 +4842,8 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             pt: diet.pt || null,
             pt_g_dia: diet.pt_g_dia || null,
             th: diet.th || null,
-            observacao: diet.observacao || null,
-            criado_por_id: userId || null  // 🟢 Capturar o ID de quem está criando
+            observacao: sanitizeTextOrNull(diet.observacao),
+            criado_por_id: userId || null
         };
         
         console.log('📦 Payload para Supabase (dieta):', payload);
@@ -4864,7 +4882,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         // vet_at e pt_at são calculados automaticamente pelo banco (GENERATED ALWAYS AS)
         const { error } = await supabase.from('dietas_pacientes')
             .update({
-                tipo: dietData.type,
+                tipo: sanitizeText(dietData.type),
                 data_inicio: dietData.data_inicio,
                 data_remocao: dietData.data_remocao || null,
                 volume: dietData.volume || null,
@@ -4873,7 +4891,7 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
                 pt: dietData.pt || null,
                 pt_g_dia: dietData.pt_g_dia || null,
                 th: dietData.th || null,
-                observacao: dietData.observacao || null
+                observacao: sanitizeTextOrNull(dietData.observacao)
             })
             .eq('id', dietData.id);
         if (!error) fetchPatients();
@@ -5152,12 +5170,12 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         const { error } = await supabase.from('tasks').insert([{
             patient_id: taskData.patientId,
             category_id: taskData.categoryId,
-            description: taskData.description,
-            responsible: taskData.responsible,
+            description: sanitizeText(taskData.description),
+            responsible: sanitizeText(taskData.responsible),
             deadline: taskData.deadline,
             status: 'alerta',
-            patient_name: taskData.patientName,
-            category: taskData.categoryName,
+            patient_name: sanitizeText(taskData.patientName),
+            category: sanitizeText(taskData.categoryName),
             time_label: taskData.timeLabel,
             options: taskData.options,
             created_by: userId
@@ -5171,8 +5189,8 @@ const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         
         const { error } = await supabase.from('alertas_paciente').insert([{
             patient_id: data.patientId,
-            alerta_descricao: data.description,
-            responsavel: data.responsible,
+            alerta_descricao: sanitizeText(data.description),
+            responsavel: sanitizeText(data.responsible),
             hora_selecionada: data.timeLabel,
             status: 'Pendente',
             created_at: new Date().toISOString(),
@@ -5377,10 +5395,10 @@ const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         if (session?.user) {
             await supabase.from('users').upsert({
                 id: session.user.id,
-                name: newUser.name,
-                role: newUser.title, // Mapping title to role
-                foto: newUser.avatarUrl, // Mapping avatarUrl to foto
-                sector: newUser.sector, // Mapping sector
+                name: sanitizeText(newUser.name, 100),
+                role: sanitizeText(newUser.title, 100),
+                foto: newUser.avatarUrl,
+                sector: sanitizeText(newUser.sector || '', 100),
                 email: session.user.email,
                 updated_at: new Date().toISOString()
             });
