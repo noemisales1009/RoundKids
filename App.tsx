@@ -4313,13 +4313,13 @@ const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         setTimeout(() => {
             Promise.all([
                 supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc').is('archived_at', null),
-                supabase.from('dispositivos_pacientes').select('*').in('paciente_id', activePatientIds).is('is_archived', null),
-                supabase.from('exames_pacientes').select('*').in('paciente_id', activePatientIds).is('is_archived', null),
-                supabase.from('medicacoes_pacientes').select('*').in('paciente_id', activePatientIds).is('is_archived', null),
-                supabase.from('procedimentos_pacientes').select('*').in('paciente_id', activePatientIds).is('is_archived', null),
+                supabase.from('dispositivos_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
+                supabase.from('exames_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
+                supabase.from('medicacoes_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
+                supabase.from('procedimentos_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
                 supabase.from('scale_scores').select('*').in('patient_id', activePatientIds),
-                supabase.from('culturas_pacientes').select('*').in('paciente_id', activePatientIds).is('is_archived', null),
-                supabase.from('dietas_pacientes').select('*').in('paciente_id', activePatientIds).is('is_archived', null),
+                supabase.from('culturas_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
+                supabase.from('dietas_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
                 supabase.from('precautions').select('*').in('patient_id', activePatientIds),
                 supabase.from('diurese').select('*').in('patient_id', activePatientIds).order('created_at', { ascending: false }).limit(100),
                 supabase.from('balanco_hidrico').select('*').in('patient_id', activePatientIds).order('created_at', { ascending: false }).limit(100)
