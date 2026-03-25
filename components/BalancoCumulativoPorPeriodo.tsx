@@ -19,7 +19,7 @@ interface BalancoCumulativoPorPeriodoProps {
   patientId: string | number;
 }
 
-const PERIODOS = [24, 18, 6, 4, 2];
+const PERIODOS = [24, 18, 12, 6, 4, 2];
 
 const BalancoCumulativoPorPeriodo: React.FC<BalancoCumulativoPorPeriodoProps> = ({ patientId }) => {
   const { patients } = useContext(PatientsContext)!;
