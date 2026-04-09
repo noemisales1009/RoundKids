@@ -41,6 +41,7 @@ const SOSPDCalculator = lazy(() => import('../components/SOSPDCalculator'));
 const ConsciousnessCalculator = lazy(() => import('../components/ConsciousnessCalculator'));
 const VNICNAFCalculator = lazy(() => import('../components/VNICNAFCalculator'));
 const RespiratoryCalculator = lazy(() => import('../components/RespiratoryCalculator').then(m => ({ default: m.RespiratoryCalculator })));
+const PhoenixSepsisCalculator = lazy(() => import('../components/PhoenixSepsisCalculator'));
 const DiagnosticsSection = lazy(() => import('../components/DiagnosticsSection').then(m => ({ default: m.DiagnosticsSection })));
 const AlertasSection = lazy(() => import('../components/AlertasSection').then(m => ({ default: m.AlertasSection })));
 const CompletedAlertsSection = lazy(() => import('../components/CompletedAlertsSection').then(m => ({ default: m.CompletedAlertsSection })));
@@ -693,6 +694,9 @@ const PatientDetailScreen: React.FC = () => {
                                 <button onClick={() => setScaleView('consciousness')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Avaliação de Consciência">
                                     <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Avaliação Consciência (CRS-R/FOUR/JFK)</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
+                                <button onClick={() => setScaleView('phoenix-sepsis')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Critérios de Sepse de Phoenix">
+                                    <div className="flex items-center gap-3"><ShieldIcon className="w-5 h-5 text-red-600 dark:text-red-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Critérios de Sepse de Phoenix (2024)</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                </button>
                             </div>
                         )}
                         {scaleView === 'comfort-b' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><ComfortBCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
@@ -708,6 +712,7 @@ const PatientDetailScreen: React.FC = () => {
                         {scaleView === 'sos-pd' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><SOSPDCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
                         {scaleView === 'consciousness' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><ConsciousnessCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
                         {scaleView === 'respiratory' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><RespiratoryCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></Suspense></div></div>)}
+                        {scaleView === 'phoenix-sepsis' && (<div className='bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><PhoenixSepsisCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></Suspense></div></div>)}
                     </div>
                 )}
             </div>
