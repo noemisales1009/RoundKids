@@ -23,10 +23,6 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
     const { showNotification } = useContext(NotificationContext)!;
     const { user } = useContext(UserContext)!;
     
-    console.log('🚀 AddMedicationModal RENDERIZADO');
-    console.log('  - patientId:', patientId, 'tipo:', typeof patientId);
-    console.log('  - addMedicationToPatient:', typeof addMedicationToPatient);
-    console.log('  - user:', user?.id);
     
     // State
     const [categorias, setCategorias] = useState<string[]>([]);
@@ -70,7 +66,6 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                 categoriasUnicas.sort((a, b) => a.ordem - b.ordem);
                 setCategorias(categoriasUnicas.map(c => c.categoria));
                 
-                console.log('📂 Categorias carregadas em ordem:', categoriasUnicas);
             } catch (err) {
                 console.error('Erro ao buscar categorias:', err);
             } finally {
@@ -155,10 +150,6 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
             dosageValueFinal = finalMedicationName;
         }
 
-        console.log('👤 User ID:', user.id);
-        console.log('💊 Medicamento:', finalMedicationName);
-        console.log('📊 Dosagem Valor:', dosageValueFinal);
-        console.log('⚖️ Unidade:', unidade);
         
         addMedicationToPatient(
             patientId, 

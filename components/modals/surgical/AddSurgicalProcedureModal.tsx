@@ -29,7 +29,6 @@ export const AddSurgicalProcedureModal: React.FC<{ patientId: number | string; o
             return;
         }
         
-        console.log('👤 User ID no AddSurgicalProcedureModal:', user.id);
         addSurgicalProcedureToPatient(patientId, { name, date, surgeon, notes }, user.id);
         showNotification({ message: 'Procedimento cirúrgico cadastrado!', type: 'success' });
         onClose();

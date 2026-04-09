@@ -19,6 +19,9 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
     const [selectedDate, setSelectedDate] = useState('');
     const [selectedStatus, setSelectedStatus] = useState('todos');
     const [selectedProfessional, setSelectedProfessional] = useState('todos');
+    const [selectedPatients, setSelectedPatients] = useState<string[]>([]);
+    const [patientDropdownOpen, setPatientDropdownOpen] = useState(false);
+    const patientDropdownRef = React.useRef<HTMLDivElement>(null);
 
     // Buscar todos os alertas
     const fetchAllAlerts = async () => {
@@ -72,7 +75,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
             setAlerts(allAlerts);
         } catch (error) {
             console.error('Erro ao buscar alertas:', error);
-            showNotification('Erro ao carregar histórico', 'error');
+            showNotification({ message: 'Erro ao carregar histórico', type: 'error' });
         } finally {
             setLoading(false);
         }
@@ -87,6 +90,38 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
         const uniqueProfessionals = [...new Set(alerts.map(a => a.responsavel).filter(Boolean))];
         return uniqueProfessionals.sort();
     }, [alerts]);
+
+    // Gerar lista de pacientes únicos (nome + leito)
+    const uniquePatients = useMemo(() => {
+        const patientMap = new Map<string, { name: string; bed_number: string | null }>();
+        alerts.forEach(a => {
+            if (a.patient_name && !patientMap.has(a.patient_name)) {
+                patientMap.set(a.patient_name, { name: a.patient_name, bed_number: a.bed_number });
+            }
+        });
+        return [...patientMap.values()].sort((a, b) => {
+            const bedA = Number(a.bed_number) || 999;
+            const bedB = Number(b.bed_number) || 999;
+            return bedA - bedB;
+        });
+    }, [alerts]);
+
+    // Fechar dropdown ao clicar fora
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (patientDropdownRef.current && !patientDropdownRef.current.contains(e.target as Node)) {
+                setPatientDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const togglePatient = (name: string) => {
+        setSelectedPatients(prev =>
+            prev.includes(name) ? prev.filter(p => p !== name) : [...prev, name]
+        );
+    };
 
     // Filtrar alertas
     const filteredAlerts = useMemo(() => {
@@ -111,11 +146,15 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
             const matchesProfessional = selectedProfessional === 'todos' ||
                 alert.responsavel === selectedProfessional;
 
-            return matchesSearch && matchesDate && matchesStatus && matchesProfessional;
+            // Filtro por pacientes selecionados
+            const matchesPatients = selectedPatients.length === 0 ||
+                selectedPatients.includes(alert.patient_name);
+
+            return matchesSearch && matchesDate && matchesStatus && matchesProfessional && matchesPatients;
         });
 
         // Log de debug
-        if (searchTerm || selectedDate || selectedStatus !== 'todos' || selectedProfessional !== 'todos') {
+        if (searchTerm || selectedDate || selectedStatus !== 'todos' || selectedProfessional !== 'todos' || selectedPatients.length > 0) {
             console.log('🔍 Filtros aplicados:', {
                 searchTerm,
                 selectedDate,
@@ -139,7 +178,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
         });
 
         return result;
-    }, [alerts, searchTerm, selectedDate, selectedStatus, selectedProfessional]);
+    }, [alerts, searchTerm, selectedDate, selectedStatus, selectedProfessional, selectedPatients]);
 
     // Gerar PDF
     const handleGeneratePDF = () => {
@@ -176,10 +215,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                             <th>Paciente</th>
                             <th>Leito</th>
                             <th>Alerta</th>
-                            <th>Responsável</th>
-                            <th>Prazo Limite</th>
                             <th>Status</th>
-                            <th>Justificativa</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -188,10 +224,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                                 <td>${alert.patient_name || 'N/A'}</td>
                                 <td>${alert.bed_number || 'N/A'}</td>
                                 <td>${alert.alertaclinico || 'N/A'}</td>
-                                <td>${alert.responsavel || 'N/A'}</td>
-                                <td>${alert.prazo_limite_formatado || 'N/A'}</td>
                                 <td><span class="status-badge status-${alert.live_status}">${alert.live_status?.replace('_', ' ') || 'N/A'}</span></td>
-                                <td>${alert.justificativa || '-'}</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -209,7 +242,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                 printWindow.print();
             }, 500);
         } else {
-            showNotification('Por favor, habilite pop-ups para gerar o PDF.', 'error');
+            showNotification({ message: 'Por favor, habilite pop-ups para gerar o PDF.', type: 'error' });
         }
     };
 
@@ -280,6 +313,80 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                     </button>
                 </div>
 
+                {/* Filtro multi-paciente */}
+                <div className="mt-3 relative" ref={patientDropdownRef}>
+                    <div
+                        onClick={() => setPatientDropdownOpen(!patientDropdownOpen)}
+                        className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg cursor-pointer flex items-center justify-between text-slate-800 dark:text-slate-200 hover:border-blue-400 transition"
+                    >
+                        <span className={selectedPatients.length === 0 ? 'text-slate-400' : ''}>
+                            {selectedPatients.length === 0
+                                ? 'Filtrar por pacientes...'
+                                : `${selectedPatients.length} paciente${selectedPatients.length > 1 ? 's' : ''} selecionado${selectedPatients.length > 1 ? 's' : ''}`
+                            }
+                        </span>
+                        <div className="flex items-center gap-2">
+                            {selectedPatients.length > 0 && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setSelectedPatients([]); }}
+                                    className="text-slate-400 hover:text-red-500 transition"
+                                    title="Limpar seleção"
+                                >
+                                    <CloseIcon className="w-4 h-4" />
+                                </button>
+                            )}
+                            <svg className={`w-4 h-4 text-slate-400 transition-transform ${patientDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    {patientDropdownOpen && (
+                        <div className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg shadow-lg">
+                            {uniquePatients.length === 0 ? (
+                                <div className="px-4 py-3 text-sm text-slate-400">Nenhum paciente encontrado</div>
+                            ) : (
+                                uniquePatients.map(patient => (
+                                    <label
+                                        key={patient.name}
+                                        className="flex items-center gap-3 px-4 py-2 hover:bg-blue-50 dark:hover:bg-slate-700 cursor-pointer transition"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedPatients.includes(patient.name)}
+                                            onChange={() => togglePatient(patient.name)}
+                                            className="w-4 h-4 rounded border-slate-300 text-blue-500 focus:ring-blue-500"
+                                        />
+                                        <span className="text-sm text-slate-700 dark:text-slate-200">
+                                            {patient.bed_number ? `Leito ${patient.bed_number} — ` : ''}{patient.name}
+                                        </span>
+                                    </label>
+                                ))
+                            )}
+                        </div>
+                    )}
+
+                    {/* Tags dos pacientes selecionados */}
+                    {selectedPatients.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                            {selectedPatients.map(name => (
+                                <span
+                                    key={name}
+                                    className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full"
+                                >
+                                    {name}
+                                    <button
+                                        onClick={() => togglePatient(name)}
+                                        className="hover:text-red-500 transition"
+                                    >
+                                        <CloseIcon className="w-3 h-3" />
+                                    </button>
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
                 {/* Contador */}
                 <div className="mt-4 text-sm text-slate-600 dark:text-slate-400">
                     Mostrando <strong>{filteredAlerts.length}</strong> de <strong>{alerts.length}</strong> alertas
@@ -320,10 +427,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
 
                                 {/* Informações */}
                                 <div className="mt-2 text-sm text-slate-600 dark:text-slate-400 space-y-1">
-                                    <p>Responsável: {alert.responsavel}</p>
-                                    <p>Prazo Limite: {alert.prazo_limite_formatado || (alert.deadline ? new Date(alert.deadline).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A')}</p>
                                     <p>Status: <span className="font-semibold">{alert.live_status?.replace('_', ' ')}</span></p>
-                                    <p>Criado em: {new Date(alert.created_at).toLocaleString('pt-BR')}</p>
                                     
                                     {/* Mostrar tempo de visibilidade se está concluído */}
                                     {(alert.status === 'concluido' || alert.status === 'Concluído' || alert.status === 'resolvido' || alert.status === 'Resolvido') && alert.tempo_visibilidade && (
@@ -343,12 +447,6 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                                     )}
                                 </div>
 
-                                {/* Justificativa */}
-                                {alert.justificativa && (
-                                    <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs italic text-blue-600 dark:text-blue-400">
-                                        <strong>Justificativa:</strong> {alert.justificativa}
-                                    </div>
-                                )}
                             </div>
                         );
                     })

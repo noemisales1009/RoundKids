@@ -123,14 +123,14 @@ export const CompletedAlertsSection: React.FC<{ patientId: string }> = ({ patien
 
             if (!error) {
                 setAlertas(alertas.filter(a => a.id !== alertId));
-                showNotification('Alerta deletado com sucesso', 'success');
+                showNotification({ message: 'Alerta deletado com sucesso', type: 'success' });
             } else {
                 console.error('Erro ao deletar:', error);
-                showNotification('Erro ao deletar alerta', 'error');
+                showNotification({ message: 'Erro ao deletar alerta', type: 'error' });
             }
         } catch (err) {
             console.error('Erro ao deletar alerta:', err);
-            showNotification('Erro ao deletar alerta', 'error');
+            showNotification({ message: 'Erro ao deletar alerta', type: 'error' });
         }
     };
 

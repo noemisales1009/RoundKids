@@ -43,9 +43,8 @@ const BalancoCumulativoPorPeriodo: React.FC<BalancoCumulativoPorPeriodoProps> = 
         );
 
         if (error) {
-          console.error('❌ Erro ao buscar BH por período:', error);
+          console.error('Erro ao buscar BH por período:', error);
         } else if (resultData && resultData.length > 0) {
-          console.log('✅ BH Período encontrado:', resultData[0]);
           setData(resultData[0]);
         }
       } catch (err) {

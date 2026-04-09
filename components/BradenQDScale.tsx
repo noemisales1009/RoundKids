@@ -100,13 +100,13 @@ const BackIcon = () => (
 // Componente de Card de Pergunta (Otimizado com forwardRef para scroll)
 const QuestionCard = forwardRef<HTMLDivElement, { item: any, valor: number | null, onChange: (val: number | null) => void, opcoes: any[] }>(({ item, valor, onChange, opcoes }, ref) => {
   return (
-    <div ref={ref} className="bg-slate-800 p-5 rounded-xl shadow-lg border border-slate-700 transition-all duration-300 hover:border-slate-600">
+    <div ref={ref} className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 transition-all duration-300 hover:border-slate-400 dark:hover:border-slate-600">
       <div className="flex justify-between items-start mb-3">
         <div>
-          <label className="block text-base font-semibold text-gray-100">
+          <label className="block text-base font-semibold text-slate-800 dark:text-gray-100">
             {item.label}
           </label>
-          <p className="text-xs text-gray-400 mt-1">{item.desc}</p>
+          <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">{item.desc}</p>
         </div>
         {valor !== null && <CheckIcon />}
       </div>
@@ -114,7 +114,7 @@ const QuestionCard = forwardRef<HTMLDivElement, { item: any, valor: number | nul
       <select
         value={valor === null ? '' : valor}
         onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))}
-        className="w-full bg-slate-900 border border-slate-600 text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors"
+        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-colors"
       >
         <option value="">Selecione uma opção...</option>
         {opcoes.map((opt) => (
@@ -226,21 +226,21 @@ export const BradenQDScale: React.FC<BradenQDScaleProps> = ({ onSaveScore }) => 
   // 1. TELA LISTA (Dashboard)
   if (tela === 'lista') {
     return (
-      <div className="w-full max-w-md mx-auto p-4 bg-slate-900 min-h-[600px] text-gray-100 font-sans rounded-xl shadow-2xl border border-slate-800">
-        <div className="bg-slate-800 p-6 rounded-xl shadow-inner mb-6 text-center border border-slate-700">
-          <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Última Avaliação</h2>
+      <div className="w-full max-w-md mx-auto p-4 bg-slate-50 dark:bg-slate-900 min-h-[600px] text-slate-800 dark:text-gray-100 font-sans rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800">
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-inner mb-6 text-center border border-slate-200 dark:border-slate-700">
+          <h2 className="text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest mb-2">Última Avaliação</h2>
           
           {ultimoResultado ? (
             <>
-              <div className="text-5xl font-extrabold text-white mb-1">{ultimoResultado.total}</div>
-              <p className="text-xs text-gray-400 mb-4">{ultimoResultado.escalaNome}</p>
+              <div className="text-5xl font-extrabold text-slate-900 dark:text-white mb-1">{ultimoResultado.total}</div>
+              <p className="text-xs text-slate-500 dark:text-gray-400 mb-4">{ultimoResultado.escalaNome}</p>
               <div className={`inline-flex items-center px-4 py-2 rounded-full ${ultimoResultado.interpretacao.bg} bg-opacity-20 border ${ultimoResultado.interpretacao.cor.replace('text', 'border')}`}>
                 <span className="text-xl mr-2">{ultimoResultado.interpretacao.icone}</span>
                 <span className={`font-bold ${ultimoResultado.interpretacao.cor}`}>{ultimoResultado.interpretacao.texto}</span>
               </div>
             </>
           ) : (
-            <div className="text-gray-500 py-4 italic">Nenhuma avaliação registrada hoje.</div>
+            <div className="text-slate-400 dark:text-gray-500 py-4 italic">Nenhuma avaliação registrada hoje.</div>
           )}
         </div>
 
@@ -258,11 +258,11 @@ export const BradenQDScale: React.FC<BradenQDScaleProps> = ({ onSaveScore }) => 
 
           <button 
             onClick={() => { setEscalaAtiva('bradenQD'); iniciarNovaAvaliacao(); }}
-            className="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all transform hover:scale-[1.02] flex items-center justify-between group border border-slate-600"
+            className="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-800 dark:text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all transform hover:scale-[1.02] flex items-center justify-between group border border-slate-200 dark:border-slate-600"
           >
             <div className="text-left">
               <span className="block">Nova Braden QD</span>
-              <span className="text-xs font-normal text-gray-300 opacity-80">Ampliada (UTI Ped/Neo)</span>
+              <span className="text-xs font-normal text-slate-500 dark:text-gray-300 opacity-80">Ampliada (UTI Ped/Neo)</span>
             </div>
             <svg className="w-6 h-6 text-gray-300 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
           </button>
@@ -274,16 +274,16 @@ export const BradenQDScale: React.FC<BradenQDScaleProps> = ({ onSaveScore }) => 
   // 2. TELA FORMULÁRIO
   if (tela === 'form') {
     return (
-      <div className="w-full max-w-md mx-auto p-4 bg-slate-900 min-h-[600px] text-gray-100 rounded-xl shadow-2xl border border-slate-800 flex flex-col">
-        
+      <div className="w-full max-w-md mx-auto p-4 bg-slate-50 dark:bg-slate-900 min-h-[600px] text-slate-800 dark:text-gray-100 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col">
+
         {/* Header */}
-        <div className="flex items-center mb-6 pb-4 border-b border-slate-800">
-          <button onClick={() => setTela('lista')} className="mr-4 p-2 hover:bg-slate-800 rounded-full transition-colors text-gray-400 hover:text-white">
+        <div className="flex items-center mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
+          <button onClick={() => setTela('lista')} className="mr-4 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white">
             <BackIcon />
           </button>
           <div>
-            <h2 className="text-lg font-bold text-white leading-tight">{configAtual.titulo}</h2>
-            <p className="text-xs text-gray-500">{configAtual.descricao}</p>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">{configAtual.titulo}</h2>
+            <p className="text-xs text-slate-500 dark:text-gray-500">{configAtual.descricao}</p>
           </div>
         </div>
 
@@ -302,9 +302,9 @@ export const BradenQDScale: React.FC<BradenQDScaleProps> = ({ onSaveScore }) => 
         </div>
 
         {/* Footer Fixo */}
-        <div className="sticky bottom-0 left-0 right-0 pt-4 bg-gradient-to-t from-slate-900 to-transparent">
+        <div className="sticky bottom-0 left-0 right-0 pt-4 bg-gradient-to-t from-slate-50 dark:from-slate-900 to-transparent">
           {erro && (
-            <div className="mb-3 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded-lg text-red-200 text-xs text-center animate-pulse">
+            <div className="mb-3 p-3 bg-red-50 dark:bg-red-500 dark:bg-opacity-20 border border-red-300 dark:border-red-500 rounded-lg text-red-600 dark:text-red-200 text-xs text-center animate-pulse">
               {erro}
             </div>
           )}
@@ -322,22 +322,22 @@ export const BradenQDScale: React.FC<BradenQDScaleProps> = ({ onSaveScore }) => 
   // 3. TELA RESULTADO
   if (tela === 'resultado' && ultimoResultado) {
     return (
-      <div className="w-full max-w-md mx-auto p-4 bg-slate-900 min-h-[600px] text-gray-100 rounded-xl shadow-2xl border border-slate-800 flex flex-col">
+      <div className="w-full max-w-md mx-auto p-4 bg-slate-50 dark:bg-slate-900 min-h-[600px] text-slate-800 dark:text-gray-100 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col">
         <div className="flex items-center mb-6">
-          <button onClick={() => setTela('form')} className="mr-4 p-2 hover:bg-slate-800 rounded-full transition-colors text-gray-400 hover:text-white">
+          <button onClick={() => setTela('form')} className="mr-4 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white">
             <BackIcon />
           </button>
-          <h2 className="text-xl font-bold text-white">Resultado</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Resultado</h2>
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center -mt-10">
-          <div className="w-40 h-40 rounded-full bg-slate-800 border-4 border-slate-700 flex items-center justify-center mb-6 shadow-2xl relative">
+          <div className="w-40 h-40 rounded-full bg-white dark:bg-slate-800 border-4 border-slate-200 dark:border-slate-700 flex items-center justify-center mb-6 shadow-2xl relative">
             <div className="text-center">
-              <span className="block text-6xl font-black text-white">{ultimoResultado.total}</span>
-              <span className="text-xs text-gray-400 font-medium">PONTOS</span>
+              <span className="block text-6xl font-black text-slate-900 dark:text-white">{ultimoResultado.total}</span>
+              <span className="text-xs text-slate-500 dark:text-gray-400 font-medium">PONTOS</span>
             </div>
             {/* Badge flutuante com ícone */}
-            <div className="absolute -bottom-2 bg-slate-900 rounded-full p-2 border border-slate-700 shadow-lg text-2xl">
+            <div className="absolute -bottom-2 bg-white dark:bg-slate-900 rounded-full p-2 border border-slate-200 dark:border-slate-700 shadow-lg text-2xl">
               {ultimoResultado.interpretacao.icone}
             </div>
           </div>
@@ -346,24 +346,24 @@ export const BradenQDScale: React.FC<BradenQDScaleProps> = ({ onSaveScore }) => 
             <h3 className={`text-2xl font-bold ${ultimoResultado.interpretacao.cor} mb-1`}>
               {ultimoResultado.interpretacao.texto}
             </h3>
-            <p className="text-sm text-gray-400 opacity-80">Classificação de Risco</p>
+            <p className="text-sm text-slate-500 dark:text-gray-400 opacity-80">Classificação de Risco</p>
           </div>
 
           {/* Detalhes da Interpretação (Regras) */}
-          <div className="w-full bg-slate-800 rounded-xl p-5 text-sm text-gray-400 border border-slate-700">
-            <h4 className="font-bold text-gray-200 mb-3 border-b border-slate-700 pb-2">Critérios ({ultimoResultado.escalaNome})</h4>
+          <div className="w-full bg-white dark:bg-slate-800 rounded-xl p-5 text-sm text-slate-500 dark:text-gray-400 border border-slate-200 dark:border-slate-700">
+            <h4 className="font-bold text-slate-700 dark:text-gray-200 mb-3 border-b border-slate-200 dark:border-slate-700 pb-2">Critérios ({ultimoResultado.escalaNome})</h4>
             <ul className="space-y-2">
               {escalaAtiva === 'bradenQ' ? (
                 <>
-                  <li className="flex justify-between"><span>Alto Risco:</span> <span className="font-mono text-white">≤ 16</span></li>
-                  <li className="flex justify-between"><span>Risco Moderado:</span> <span className="font-mono text-white">17 – 20</span></li>
-                  <li className="flex justify-between"><span>Baixo Risco:</span> <span className="font-mono text-white">&gt; 20</span></li>
+                  <li className="flex justify-between"><span>Alto Risco:</span> <span className="font-mono text-slate-900 dark:text-white">≤ 16</span></li>
+                  <li className="flex justify-between"><span>Risco Moderado:</span> <span className="font-mono text-slate-900 dark:text-white">17 – 20</span></li>
+                  <li className="flex justify-between"><span>Baixo Risco:</span> <span className="font-mono text-slate-900 dark:text-white">&gt; 20</span></li>
                 </>
               ) : (
                 <>
-                  <li className="flex justify-between"><span>Alto Risco:</span> <span className="font-mono text-white">≤ 18</span></li>
-                  <li className="flex justify-between"><span>Risco Moderado:</span> <span className="font-mono text-white">19 – 22</span></li>
-                  <li className="flex justify-between"><span>Baixo Risco:</span> <span className="font-mono text-white">&gt; 22</span></li>
+                  <li className="flex justify-between"><span>Alto Risco:</span> <span className="font-mono text-slate-900 dark:text-white">≤ 18</span></li>
+                  <li className="flex justify-between"><span>Risco Moderado:</span> <span className="font-mono text-slate-900 dark:text-white">19 – 22</span></li>
+                  <li className="flex justify-between"><span>Baixo Risco:</span> <span className="font-mono text-slate-900 dark:text-white">&gt; 22</span></li>
                 </>
               )}
             </ul>

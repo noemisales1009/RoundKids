@@ -22,10 +22,8 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId, onCalculationSav
   useEffect(() => {
     const patient = patients.find(p => p.id.toString() === patientId.toString());
     if (patient?.peso) {
-      console.log('Peso encontrado do context:', patient.peso);
       setWeight(patient.peso.toString());
     } else {
-      console.log('Peso não encontrado para paciente:', patientId);
     }
   }, [patientId, patients]);
 

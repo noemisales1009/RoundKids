@@ -35,7 +35,6 @@ const BalancoCumulativoCard: React.FC<BalancoCumulativoCardProps> = ({ patientId
           .single();
 
         if (!err && balanceData) {
-          console.log('✅ BH Cumulativo encontrado:', balanceData);
           setData(balanceData);
         }
       } catch (err) {

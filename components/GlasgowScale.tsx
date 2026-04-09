@@ -179,11 +179,11 @@ interface DropdownGlasgowProps {
 
 // --- Componente de Dropdown Reutilizável ---
 const DropdownGlasgow = forwardRef<HTMLDivElement, DropdownGlasgowProps>(({ label, id, valor, onOpcaoChange, opcoes }, ref) => (
-  <div ref={ref} className="bg-slate-800 p-4 rounded-lg shadow-lg transition-all duration-300">
+  <div ref={ref} className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg transition-all duration-300">
     <div className="flex justify-between items-center mb-2">
       <label
         htmlFor={id}
-        className="block text-sm font-medium text-gray-300"
+        className="block text-sm font-medium text-slate-600 dark:text-gray-300"
       >
         {label}
       </label>
@@ -193,7 +193,7 @@ const DropdownGlasgow = forwardRef<HTMLDivElement, DropdownGlasgowProps>(({ labe
       id={id}
       value={valor === null ? '' : valor}
       onChange={(e) => onOpcaoChange(e.target.value === '' ? null : Number(e.target.value))}
-      className="w-full bg-slate-700 border border-slate-600 text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
     >
       <option value="">Selecione...</option>
       {opcoes.map((opt) => (
@@ -308,23 +308,23 @@ export const GlasgowScale: React.FC<GlasgowScaleProps> = ({ onSaveScore }) => {
 
   // --- Renderização ---
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 bg-slate-900 text-gray-300 rounded-lg min-h-screen">
+    <div className="w-full max-w-2xl mx-auto p-4 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-gray-300 rounded-lg min-h-screen">
       
       {/* --- TELA 1: LISTA (Principal) --- */}
       {telaAtiva === 'lista' && (
         <div className="flex flex-col space-y-4">
-          <div className="bg-slate-800 p-6 rounded-lg shadow-lg text-center">
-            <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg text-center">
+            <h2 className="text-sm font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-4">
               ÚLTIMA AVALIAÇÃO GLASGOW (PEDIÁTRICA)
             </h2>
             <div className="flex items-baseline justify-center space-x-1">
-              <span className="text-6xl font-bold text-white">
+              <span className="text-6xl font-bold text-slate-900 dark:text-white">
                 {ultimaPontuacao.total}
               </span>
             </div>
             
             <div className="mt-6 grid grid-cols-1 gap-3">
-              <div className={`bg-slate-700 p-4 rounded-lg ${ultimaInterpretacao.cor} font-medium`}>
+              <div className={`bg-slate-100 dark:bg-slate-700 p-4 rounded-lg ${ultimaInterpretacao.cor} font-medium`}>
                 <div className="flex items-center justify-center">
                   {ultimaInterpretacao.icone}
                   <span>{ultimaInterpretacao.texto}</span>
@@ -352,20 +352,20 @@ export const GlasgowScale: React.FC<GlasgowScaleProps> = ({ onSaveScore }) => {
           <div className="flex items-center space-x-4 mb-2">
             <button
               onClick={() => setTelaAtiva('lista')}
-              className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-slate-700"
+              className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
             >
               <IconeVoltar />
             </button>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
               Nova Avaliação Glasgow
             </h2>
           </div>
 
           {/* Seletor de Faixa Etária */}
-          <div ref={refFaixaEtaria} className="bg-slate-800 p-4 rounded-lg shadow-lg">
+          <div ref={refFaixaEtaria} className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg">
             <label
               htmlFor="faixaEtaria"
-              className="block text-sm font-medium text-gray-300 mb-2"
+              className="block text-sm font-medium text-slate-600 dark:text-gray-300 mb-2"
             >
               1. Selecione a Faixa Etária
             </label>
@@ -373,7 +373,7 @@ export const GlasgowScale: React.FC<GlasgowScaleProps> = ({ onSaveScore }) => {
               id="faixaEtaria"
               value={faixaEtaria}
               onChange={(e) => handleTrocaFaixaEtaria(e.target.value as EscalaGlasgowKey)}
-              className="w-full bg-slate-700 border border-slate-600 text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
             >
               {(Object.keys(escalasGlasgowOpcoes) as EscalaGlasgowKey[]).map((key) => (
                 <option key={key} value={key}>
@@ -411,7 +411,7 @@ export const GlasgowScale: React.FC<GlasgowScaleProps> = ({ onSaveScore }) => {
           
           {/* Mensagem de Erro */}
           {erroForm && (
-            <div className="text-red-400 text-sm p-3 bg-slate-700 rounded-lg text-center">
+            <div className="text-red-600 dark:text-red-400 text-sm p-3 bg-red-50 dark:bg-slate-700 rounded-lg text-center">
               {erroForm}
             </div>
           )}
@@ -432,11 +432,11 @@ export const GlasgowScale: React.FC<GlasgowScaleProps> = ({ onSaveScore }) => {
           <div className="flex items-center space-x-4 mb-2">
             <button
               onClick={() => setTelaAtiva('form')} // Volta para o formulário
-              className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-slate-700"
+              className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
             >
               <IconeVoltar />
             </button>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
               Resultado da Avaliação
             </h2>
           </div>
@@ -444,7 +444,7 @@ export const GlasgowScale: React.FC<GlasgowScaleProps> = ({ onSaveScore }) => {
           {/* Pontuação Total */}
           <div className="text-center my-8">
             <div className="flex items-baseline justify-center space-x-2">
-              <span className="text-8xl font-bold text-white">
+              <span className="text-8xl font-bold text-slate-900 dark:text-white">
                 {pontuacaoTotalCalculada}
               </span>
             </div>
@@ -452,14 +452,14 @@ export const GlasgowScale: React.FC<GlasgowScaleProps> = ({ onSaveScore }) => {
 
           {/* Card de Interpretação de Risco */}
           <div className="grid grid-cols-1 gap-4">
-            <div className={`bg-slate-800 p-5 rounded-lg shadow-lg text-lg ${interpretacaoAtual.cor} font-semibold text-center`}>
+            <div className={`bg-white dark:bg-slate-800 p-5 rounded-lg shadow-lg text-lg ${interpretacaoAtual.cor} font-semibold text-center`}>
               <div className="flex items-center justify-center">
                 {interpretacaoAtual.icone}
                 <span>{interpretacaoAtual.texto}</span>
               </div>
             </div>
             {/* Card de detalhe da interpretação */}
-            <div className="bg-slate-800 p-4 rounded-lg text-sm text-gray-400">
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-lg text-sm text-slate-500 dark:text-gray-400">
               {interpretacaoAtual.texto.includes('Coma Grave') && 'Interpretação: Coma grave. Indicação de via aérea definitiva.'}
               {interpretacaoAtual.texto.includes('Extremamente Grave') && 'Interpretação: Risco de dano neurológico extenso. Avaliar via aérea definitiva.'}
               {interpretacaoAtual.texto.includes('Moderado') && 'Interpretação: Rebaixamento moderado do nível de consciência.'}

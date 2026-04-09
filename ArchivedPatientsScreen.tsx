@@ -65,7 +65,6 @@ export const ArchivedPatientsScreen: React.FC = () => {
 
   const handleReactivate = async (patientId: string) => {
     try {
-      console.log('🔄 Reativando paciente e todas as planilhas relacionadas:', patientId);
       
       // 1️⃣ Reativar o paciente
       const { error: patientError } = await supabase
@@ -74,7 +73,6 @@ export const ArchivedPatientsScreen: React.FC = () => {
         .eq('id', patientId);
 
       if (patientError) throw patientError;
-      console.log('✅ Paciente reativado');
 
       // 2️⃣ Restaurar todas as planilhas relacionadas (desarquivar)
       const tables = [
@@ -101,9 +99,7 @@ export const ArchivedPatientsScreen: React.FC = () => {
         const { error: tableError } = await updateQuery;
 
         if (tableError) {
-          console.warn(`⚠️ Erro ao restaurar ${table}:`, tableError.message);
         } else {
-          console.log(`✅ ${table} restaurada`);
         }
       }
 
@@ -115,9 +111,7 @@ export const ArchivedPatientsScreen: React.FC = () => {
         .eq('arquivado', true);
 
       if (diagError) {
-        console.warn(`⚠️ Erro ao restaurar paciente_diagnosticos:`, diagError.message);
       } else {
-        console.log(`✅ paciente_diagnosticos restaurada`);
       }
 
       showMessage('success', '🎉 Paciente e todas as planilhas restauradas com sucesso!');

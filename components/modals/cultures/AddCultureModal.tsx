@@ -27,7 +27,6 @@ export const AddCultureModal: React.FC<{ patientId: number | string; onClose: ()
             return;
         }
         
-        console.log('👤 User ID no AddCultureModal:', user.id);
         addCultureToPatient(patientId, { site: finalSite, microorganism: finalMicroorganism, collectionDate, observation: observation || undefined }, user.id);
         showNotification({ message: 'Cultura cadastrada com sucesso!', type: 'success' });
         onClose();

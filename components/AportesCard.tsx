@@ -41,7 +41,6 @@ export const AportesCard: React.FC<AportesCardProps> = ({ patientId, userId, acc
       if (error) throw error;
       setAportes(data || []);
     } catch (error) {
-      console.warn('Erro ao buscar aportes:', error);
     } finally {
       setLoading(false);
     }

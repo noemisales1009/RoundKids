@@ -176,13 +176,13 @@ export default function VNICNAFCalculator({ patientId }: VNICNAFCalculatorProps)
     <div className="space-y-4">
       {tela === 'intro' && (
         <div className="space-y-4 animate-in fade-in duration-500">
-          <div className="p-8 rounded-2xl border border-slate-700 bg-slate-800 space-y-6">
+          <div className="p-8 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 space-y-6">
             <div>
-              <h2 className="text-2xl font-bold text-white mb-2">{VNICNAF_CONFIG.titulo}</h2>
-              <p className="text-sm text-slate-400">{VNICNAF_CONFIG.nomeCompleto}</p>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{VNICNAF_CONFIG.titulo}</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{VNICNAF_CONFIG.nomeCompleto}</p>
             </div>
 
-            <div className="p-4 rounded-lg bg-slate-900/50 border border-slate-700 text-[12px] text-slate-400 space-y-3">
+            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-[12px] text-slate-500 dark:text-slate-400 space-y-3">
               <div className="font-bold text-green-400 mb-2">Interpretação:</div>
               <div className="space-y-2">
                 <div className="flex justify-between">
@@ -218,15 +218,15 @@ export default function VNICNAFCalculator({ patientId }: VNICNAFCalculatorProps)
           <div className="flex justify-between items-end mb-4">
             <div>
               <span className="text-[10px] font-bold text-cyan-400 uppercase">{VNICNAF_CONFIG.titulo}</span>
-              <p className="text-xs text-slate-400 mt-1">{respondidosCount}/{totalItens} Itens</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{respondidosCount}/{totalItens} Itens</p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-400">Score:</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Score:</span>
               <span className="text-3xl font-bold text-cyan-400">{pontuacaoTotal}</span>
             </div>
           </div>
           
-          <div className="h-1 w-full bg-slate-700 rounded-full overflow-hidden mb-6">
+          <div className="h-1 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-6">
             <div className="h-full bg-cyan-500 transition-all duration-500" style={{ width: `${progresso}%` }} />
           </div>
 
@@ -251,7 +251,7 @@ export default function VNICNAFCalculator({ patientId }: VNICNAFCalculatorProps)
             className={`w-full py-4 rounded-lg font-bold transition-all mt-6
               ${respondidosCount === totalItens
                 ? 'bg-cyan-600 text-white hover:bg-cyan-700 active:scale-95'
-                : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                : 'bg-slate-200 dark:bg-slate-700 text-slate-500 cursor-not-allowed'
               }`}
           >
             Ver Resultado
@@ -268,7 +268,7 @@ export default function VNICNAFCalculator({ patientId }: VNICNAFCalculatorProps)
             <div className={`text-2xl font-bold ${interpretacao.cor}`}>
               {interpretacao.texto}
             </div>
-            <div className="pt-4 border-t border-slate-600 text-sm text-slate-300">
+            <div className="pt-4 border-t border-slate-300 dark:border-slate-600 text-sm text-slate-600 dark:text-slate-300">
               <p className="font-semibold mb-2">Indicação Clínica:</p>
               <p>{interpretacao.indicacao}</p>
             </div>
@@ -287,7 +287,7 @@ export default function VNICNAFCalculator({ patientId }: VNICNAFCalculatorProps)
                 setTela('intro');
                 setRespostas({});
               }}
-              className="w-full py-4 border-2 border-slate-700 text-slate-300 font-bold rounded-lg hover:border-slate-600 transition-all"
+              className="w-full py-4 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-lg hover:border-slate-300 dark:hover:border-slate-600 transition-all"
             >
               Nova Avaliação
             </button>
@@ -304,12 +304,12 @@ function SelectDropdown({ id, label, desc, opcoes, valor, onSelect }: any) {
   return (
     <div
       id={id}
-      className={`p-5 rounded-lg border border-slate-700 bg-slate-800/50 space-y-3 transition-all ${isSelected ? 'border-green-500' : ''}`}
+      className={`p-5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 space-y-3 transition-all ${isSelected ? 'border-green-500' : ''}`}
     >
       <div className="flex justify-between items-start gap-3">
         <div>
-          <h3 className="font-bold text-white text-sm">{label}</h3>
-          <p className="text-xs text-slate-400 mt-2">{desc}</p>
+          <h3 className="font-bold text-slate-900 dark:text-white text-sm">{label}</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">{desc}</p>
         </div>
         {isSelected && <div className="text-green-400 text-sm font-bold">✓</div>}
       </div>
@@ -318,7 +318,7 @@ function SelectDropdown({ id, label, desc, opcoes, valor, onSelect }: any) {
         <select
           value={valor ?? ''}
           onChange={(e) => onSelect(Number(e.target.value))}
-          className="w-full p-3 rounded text-sm font-medium bg-slate-700 border border-slate-600 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none appearance-none pr-10"
+          className="w-full p-3 rounded text-sm font-medium bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none appearance-none pr-10"
         >
           <option value="">Selecione...</option>
           {opcoes.map((opt: any) => (
@@ -327,7 +327,7 @@ function SelectDropdown({ id, label, desc, opcoes, valor, onSelect }: any) {
             </option>
           ))}
         </select>
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-sm">▼</div>
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 pointer-events-none text-sm">▼</div>
       </div>
     </div>
   );

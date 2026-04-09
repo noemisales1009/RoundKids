@@ -73,7 +73,7 @@ const BalanceCumulativeCalc: React.FC<BalanceCumulativeCalcProps> = ({
       }
     } catch (error) {
       console.error('Erro ao buscar dados:', error);
-      showNotification('Erro ao carregar dados de balanço', 'error');
+      showNotification({ message: 'Erro ao carregar dados de balanço', type: 'error' });
     } finally {
       setLoading(false);
     }

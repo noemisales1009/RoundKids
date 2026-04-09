@@ -33,7 +33,6 @@ const BalanceCumulativeCard: React.FC<BalanceCumulativeCardProps> = ({
   const fetchLatestCumulativeData = async () => {
     try {
       setLoading(true);
-      console.log('🔍 Buscando BH Cumulativo para patient_id:', patientId);
       
       // Tenta do vw_resumo_balanco
       const { data: balanceData, error } = await supabase
@@ -44,10 +43,8 @@ const BalanceCumulativeCard: React.FC<BalanceCumulativeCardProps> = ({
         .limit(1);
 
       if (error) {
-        console.warn('⚠️ Erro na view vw_resumo_balanco:', error);
       } else if (balanceData && balanceData.length > 0) {
         const latest = balanceData[0];
-        console.log('✅ Dados encontrados:', latest);
         setData({
           bh_dia_anterior: latest.bh_dia_anterior || null,
           bh_do_dia: latest.bh_do_dia || 0,
@@ -59,7 +56,6 @@ const BalanceCumulativeCard: React.FC<BalanceCumulativeCardProps> = ({
       }
 
       // Fallback: buscar direto da tabela balanco_hidrico
-      console.log('📚 Tentando fallback - buscar de balanco_hidrico');
       const { data: directData, error: directError } = await supabase
         .from('balanco_hidrico')
         .select('*')
@@ -68,7 +64,7 @@ const BalanceCumulativeCard: React.FC<BalanceCumulativeCardProps> = ({
         .limit(1);
 
       if (directError) {
-        console.error('❌ Erro na tabela balanco_hidrico:', directError);
+        console.error('Erro na tabela balanco_hidrico:', directError);
         setData(null);
       } else if (directData && directData.length > 0) {
         const latest = directData[0];
@@ -79,15 +75,14 @@ const BalanceCumulativeCard: React.FC<BalanceCumulativeCardProps> = ({
           dia: latest.data_registro,
         });
       } else {
-        console.log('❌ Nenhum dado encontrado');
         setData(null);
       }
 
       setLoading(false);
     } catch (error) {
-      console.error('❌ Erro ao buscar BH Cumulativo:', error);
+      console.error('Erro ao buscar BH Cumulativo:', error);
       if (notificationContext) {
-        notificationContext.showNotification('Erro ao carregar BH Cumulativo', 'error');
+        notificationContext.showNotification({ message: 'Erro ao carregar BH Cumulativo', type: 'error' });
       }
       setData(null);
       setLoading(false);

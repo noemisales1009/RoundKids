@@ -26,7 +26,6 @@ export const AddDeviceModal: React.FC<{ patientId: number | string; onClose: () 
         e.preventDefault();
         const finalType = type === 'Outros' ? customType : type;
         
-        console.log('🔍 DEBUG AddDeviceModal:', { patientId, finalType, location, startDate, observacao });
         
         // ✅ VALIDAÇÃO COM FEEDBACK
         if (!finalType) {
@@ -50,14 +49,11 @@ export const AddDeviceModal: React.FC<{ patientId: number | string; onClose: () 
 
         setIsLoading(true);
         try {
-            console.log('📤 Enviando para addDeviceToPatient...');
-            console.log('👤 User ID:', user.id);
             const result = await addDeviceToPatient(patientId, { name: finalType, location, startDate, observacao }, user.id);
-            console.log('✅ Resposta:', result);
             showNotification({ message: 'Dispositivo cadastrado com sucesso!', type: 'success' });
             onClose();
         } catch (error) {
-            console.error('❌ Erro completo:', error);
+            console.error('Erro completo:', error);
             showNotification({ message: `Erro ao cadastrar: ${error instanceof Error ? error.message : 'Desconhecido'}`, type: 'error' });
         } finally {
             setIsLoading(false);

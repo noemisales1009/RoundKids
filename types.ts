@@ -102,6 +102,8 @@ export interface Patient {
   cultures: Culture[];
   diets: Diet[];
   precautions: Precaution[];
+  diurese?: any[];
+  balanco_hidrico?: any[];
 }
 
 export interface Category {
@@ -178,7 +180,7 @@ export interface TasksContextType {
   updateTaskJustification: (taskId: number | string, justification: string) => void;
   updateTaskStatus: (taskId: number | string, status: TaskStatus) => void;
   addTask: (taskData: Omit<Task, 'id' | 'status' | 'justification'>) => void;
-  addPatientAlert: (data: { patientId: string | number; description: string; responsible: string; timeLabel: string }) => Promise<void>;
+  addPatientAlert: (data: { patientId: string | number; description: string; responsible: string; timeLabel: string }) => Promise<boolean>;
 }
 
 export interface PatientsContextType {
@@ -207,7 +209,7 @@ export interface PatientsContextType {
   deleteCultureFromPatient: (patientId: number | string, cultureId: number | string) => void;
   updateCultureInPatient: (patientId: number | string, cultureData: Culture) => void;
   addDietToPatient: (patientId: number | string, diet: Omit<Diet, 'id'>) => void;
-  deleteDietFromPatient: (patientId: number | string, dietId: number | string) => void;
+  deleteDietFromPatient: (patientId: number | string, dietId: number | string, userId?: string) => void;
   updateDietInPatient: (patientId: number | string, dietData: Diet) => void;
   addPrecautionToPatient: (patientId: number | string, precaution: Omit<Precaution, 'id'>) => void;
   deletePrecautionFromPatient: (patientId: number | string, precautionId: number | string) => void;

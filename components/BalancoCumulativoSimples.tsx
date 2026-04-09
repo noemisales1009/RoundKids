@@ -42,9 +42,8 @@ const BalancoCumulativoSimples: React.FC<Props> = ({ patientId }) => {
         );
 
         if (error) {
-          console.error('❌ Erro ao buscar BH:', error);
+          console.error('Erro ao buscar BH:', error);
         } else if (resultData && resultData.length > 0) {
-          console.log('✅ BH encontrado:', resultData[0]);
           setData(resultData[0]);
         }
       } catch (err) {

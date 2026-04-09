@@ -66,7 +66,6 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
         const fetchAlertas = async () => {
             try {
                 setLoading(true);
-                console.log('Buscando alertas para paciente:', patientId);
                 
                 // Buscar de ambas as views (igual ao PatientHistoryScreen)
                 const [tasksResult, alertasResult] = await Promise.all([
@@ -82,14 +81,11 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                         .is('archived_at', null) // Filtrar apenas não arquivados
                 ]);
 
-                console.log('tasksResult:', tasksResult);
-                console.log('alertasResult:', alertasResult);
 
                 const allAlertas: Alert[] = [];
 
                 // Adicionar tasks como alertas
                 if (tasksResult.data && Array.isArray(tasksResult.data)) {
-                    console.log(`Encontrados ${tasksResult.data.length} tasks`);
                     tasksResult.data.forEach((task: any) => {
                         if (task && task.id_alerta) {
                             allAlertas.push({
@@ -112,7 +108,6 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
 
                 // Adicionar alertas clínicos
                 if (alertasResult.data && Array.isArray(alertasResult.data)) {
-                    console.log(`Encontrados ${alertasResult.data.length} alertas clínicos`);
                     alertasResult.data.forEach((alert: any) => {
                         if (alert && alert.id_alerta) {
                             allAlertas.push({
@@ -140,12 +135,9 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                                       status.includes('arquivado') ||
                                       status.includes('resolvido') ||
                                       status.includes('concluido');
-                    console.log(`Alerta ${a.id} - status: "${a.status}" - incluído: ${!isInactive}`);
                     return !isInactive;
                 });
 
-                console.log('Todos os alertas encontrados:', allAlertas);
-                console.log('Total de alertas ATIVOS:', activeAlertas.length, activeAlertas);
                 setAlertas(activeAlertas);
             } catch (err) {
                 console.error('Erro ao buscar alertas:', err);

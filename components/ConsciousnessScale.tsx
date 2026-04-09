@@ -133,7 +133,8 @@ const QuestionCard: React.FC<{
 // ==========================================
 
 export const ConsciousnessScale: React.FC<ScaleProps> = ({ onSaveScore }) => {
-  const { isDark } = useContext(ThemeContext)!;
+  const { theme } = useContext(ThemeContext) || { theme: 'dark' };
+  const isDark = theme === 'dark';
   const [tela, setTela] = useState<'intro' | 'form' | 'resultado'>('intro');
   const [escalaAtiva, setEscalaAtiva] = useState<'four_score' | null>(null);
   const [respostas, setRespostas] = useState<{ [key: string]: number | string }>({});

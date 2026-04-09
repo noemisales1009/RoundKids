@@ -128,11 +128,11 @@ const IconeVoltar = () => (
 
 // --- Componente de Dropdown Reutilizável ---
 const DropdownComfortB = forwardRef<HTMLDivElement, { label: string, id: string, valor: number | null, onOpcaoChange: (v: number | null) => void, opcoes: {texto: string, valor: number}[] }>(({ label, id, valor, onOpcaoChange, opcoes }, ref) => (
-  <div ref={ref} className="bg-slate-800 p-4 rounded-lg shadow-lg transition-all duration-300">
+  <div ref={ref} className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg transition-all duration-300">
     <div className="flex justify-between items-center mb-2">
       <label
         htmlFor={id}
-        className="block text-sm font-medium text-gray-300"
+        className="block text-sm font-medium text-slate-600 dark:text-gray-300"
       >
         {label}
       </label>
@@ -142,7 +142,7 @@ const DropdownComfortB = forwardRef<HTMLDivElement, { label: string, id: string,
       id={id}
       value={valor === null ? '' : valor}
       onChange={(e) => onOpcaoChange(e.target.value === '' ? null : Number(e.target.value))}
-      className="w-full bg-slate-700 border border-slate-600 text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
     >
       <option value="">Selecione...</option>
       {opcoes.map((opt) => (
@@ -269,23 +269,23 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
 
   // --- Renderização ---
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 bg-slate-900 text-gray-300 rounded-lg min-h-[600px]">
+    <div className="w-full max-w-2xl mx-auto p-4 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-gray-300 rounded-lg min-h-[600px]">
       
       {/* --- TELA 1: LISTA (Principal) --- */}
       {telaAtiva === 'lista' && (
         <div className="flex flex-col space-y-4">
-          <div className="bg-slate-800 p-6 rounded-lg shadow-lg text-center">
-            <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg text-center">
+            <h2 className="text-sm font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-4">
               ÚLTIMA AVALIAÇÃO COMFORT-B
             </h2>
             <div className="flex items-baseline justify-center space-x-1">
-              <span className="text-6xl font-bold text-white">
+              <span className="text-6xl font-bold text-slate-900 dark:text-white">
                 {ultimaPontuacao.total}
               </span>
             </div>
             
             <div className="mt-6 grid grid-cols-1 gap-3">
-              <div className={`bg-slate-700 p-4 rounded-lg ${ultimaInterpretacao.cor} font-medium`}>
+              <div className={`bg-slate-100 dark:bg-slate-700 p-4 rounded-lg ${ultimaInterpretacao.cor} font-medium`}>
                 {/* --- MODIFICADO: Adiciona ícone --- */}
                 <div className="flex items-center justify-center">
                   {ultimaInterpretacao.icone}
@@ -314,17 +314,17 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
           <div className="flex items-center space-x-4 mb-2">
             <button
               onClick={() => setTelaAtiva('lista')}
-              className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-slate-700"
+              className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
             >
               <IconeVoltar />
             </button>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
               Nova Avaliação COMFORT-B
             </h2>
           </div>
 
           {/* Toggle Intubado */}
-          <div className="bg-slate-800 p-4 rounded-lg shadow-lg flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg flex items-center justify-between">
             <label htmlFor="intubadoToggle" className="text-sm font-medium text-gray-300">
               O paciente está INTUBADO?
             </label>
@@ -332,7 +332,7 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
               id="intubadoToggle"
               onClick={handleToggleIntubado}
               className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${
-                isIntubado ? 'bg-blue-600' : 'bg-slate-700'
+                isIntubado ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'
               }`}
             >
               <span
@@ -409,7 +409,7 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
           
           {/* Mensagem de Erro */}
           {erroForm && (
-            <div className="text-red-400 text-sm p-3 bg-slate-700 rounded-lg text-center">
+            <div className="text-red-600 dark:text-red-400 text-sm p-3 bg-red-50 dark:bg-slate-700 rounded-lg text-center">
               {erroForm}
             </div>
           )}
@@ -430,11 +430,11 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
           <div className="flex items-center space-x-4 mb-2">
             <button
               onClick={() => setTelaAtiva('form')} // Volta para o formulário
-              className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-slate-700"
+              className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
             >
               <IconeVoltar />
             </button>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
               Resultado da Avaliação
             </h2>
           </div>
@@ -442,7 +442,7 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
           {/* Pontuação Total */}
           <div className="text-center my-8">
             <div className="flex items-baseline justify-center space-x-2">
-              <span className="text-8xl font-bold text-white">
+              <span className="text-8xl font-bold text-slate-900 dark:text-white">
                 {pontuacaoTotalCalculada}
               </span>
             </div>
@@ -450,7 +450,7 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
 
           {/* Card de Interpretação de Risco */}
           <div className="grid grid-cols-1 gap-4">
-            <div className={`bg-slate-800 p-5 rounded-lg shadow-lg text-lg ${interpretacaoAtual.cor} font-semibold text-center`}>
+            <div className={`bg-white dark:bg-slate-800 p-5 rounded-lg shadow-lg text-lg ${interpretacaoAtual.cor} font-semibold text-center`}>
               {/* --- MODIFICADO: Adiciona ícone --- */}
               <div className="flex items-center justify-center">
                 {interpretacaoAtual.icone}

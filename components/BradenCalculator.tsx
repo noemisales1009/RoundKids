@@ -106,13 +106,13 @@ const BradenQuestionCard = ({ item, valor, onChange }: any) => {
       id={item.id} 
       className={`p-4 rounded-xl shadow-md mb-3 transition-all duration-300
       ${isSelected 
-        ? 'bg-indigo-900/30 border border-indigo-600' 
-        : 'bg-slate-800 border border-slate-700 hover:border-slate-600'}
+        ? 'bg-indigo-100 dark:bg-indigo-900/30 border border-indigo-400 dark:border-indigo-600'
+        : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'}
     `}>
       <div className="mb-4 flex justify-between items-start">
         <div>
-          <label className="block text-base font-bold text-gray-100">{item.label}</label>
-          <p className="text-sm text-gray-400 mt-1">{item.desc}</p> 
+          <label className="block text-base font-bold text-slate-800 dark:text-gray-100">{item.label}</label>
+          <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">{item.desc}</p> 
         </div>
         {isSelected && <CheckIcon />}
       </div>
@@ -121,7 +121,7 @@ const BradenQuestionCard = ({ item, valor, onChange }: any) => {
         <select
           value={valor === undefined || valor === null ? '' : valor}
           onChange={(e) => onChange(parseInt(e.target.value))}
-          className="w-full bg-slate-900 border border-slate-700 text-gray-100 p-3 pr-12 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+          className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-gray-100 p-3 pr-12 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
         >
           <option value="" disabled>
             Selecione: 1 a {item.pontos.length}
@@ -132,7 +132,7 @@ const BradenQuestionCard = ({ item, valor, onChange }: any) => {
             </option>
           ))}
         </select>
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500 dark:text-gray-400">
           <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
         </div>
       </div>

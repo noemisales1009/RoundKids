@@ -169,11 +169,11 @@ interface DropdownFSSProps {
 
 // --- Componente de Dropdown Reutilizável ---
 const DropdownFSS = forwardRef<HTMLDivElement, DropdownFSSProps>(({ label, id, valor, onOpcaoChange, opcoes }, ref) => (
-  <div ref={ref} className="bg-linear-to-br from-slate-800 to-slate-700 p-4 rounded-xl shadow-lg transition-all duration-300 border border-slate-600 hover:border-blue-500/50">
+  <div ref={ref} className="bg-linear-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-700 p-4 rounded-xl shadow-lg transition-all duration-300 border border-slate-200 dark:border-slate-600 hover:border-blue-500/50">
     <div className="flex justify-between items-center mb-3">
       <label
         htmlFor={id}
-        className="block text-sm font-semibold text-gray-200"
+        className="block text-sm font-semibold text-slate-600 dark:text-gray-200"
       >
         {label}
       </label>
@@ -183,11 +183,11 @@ const DropdownFSS = forwardRef<HTMLDivElement, DropdownFSSProps>(({ label, id, v
       id={id}
       value={valor === null ? '' : valor}
       onChange={(e) => onOpcaoChange(e.target.value === '' ? null : Number(e.target.value))}
-      className="w-full bg-slate-900 border border-slate-500 text-gray-100 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-colors hover:border-slate-400"
+      className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-500 text-slate-900 dark:text-gray-100 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-colors hover:border-slate-400"
     >
-      <option value="" className="text-gray-400">Selecione uma opção...</option>
+      <option value="" className="text-slate-500 dark:text-gray-400">Selecione uma opção...</option>
       {opcoes.map((opt) => (
-        <option key={opt.texto} value={opt.valor} className="bg-slate-800 text-gray-100">
+        <option key={opt.texto} value={opt.valor} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-gray-100">
           {opt.texto}
         </option>
       ))}
@@ -302,20 +302,20 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
 
   // --- Renderização ---
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 bg-slate-900 text-gray-300 rounded-lg min-h-screen">
+    <div className="w-full max-w-2xl mx-auto p-4 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-gray-300 rounded-lg min-h-screen">
       
       {/* --- TELA 1: LISTA (Principal) --- */}
       {telaAtiva === 'lista' && (
         <div className="flex flex-col space-y-4">
-          <div className="bg-linear-to-br from-slate-800 to-slate-700 p-6 rounded-xl shadow-lg text-center border border-slate-600">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4 letter-spacing-1">
+          <div className="bg-linear-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-700 p-6 rounded-xl shadow-lg text-center border border-slate-200 dark:border-slate-600">
+            <h2 className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-widest mb-4 letter-spacing-1">
               Última Avaliação FSS
             </h2>
             <div className="flex items-baseline justify-center space-x-1 mb-6">
-              <span className="text-6xl font-bold text-white">
+              <span className="text-6xl font-bold text-slate-900 dark:text-white">
                 {ultimaPontuacao.total}
               </span>
-              <span className="text-gray-400 text-xl">/30</span>
+              <span className="text-slate-500 dark:text-gray-400 text-xl">/30</span>
             </div>
             
             <div className={`p-4 rounded-lg border ${ultimaInterpretacao.borderCor} ${ultimaInterpretacao.bgCor}`}>
@@ -342,14 +342,14 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
       {telaAtiva === 'form' && (
         <div className="flex flex-col space-y-4">
           {/* Cabeçalho do Formulário */}
-          <div className="flex items-center space-x-4 mb-2 pb-4 border-b border-slate-600">
+          <div className="flex items-center space-x-4 mb-2 pb-4 border-b border-slate-200 dark:border-slate-600">
             <button
               onClick={() => setTelaAtiva('lista')}
-              className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-slate-700 transition-colors"
+              className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
             >
               <IconeVoltar />
             </button>
-            <h2 className="text-2xl font-semibold text-white">
+            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
               Nova Avaliação FSS
             </h2>
           </div>
@@ -406,20 +406,20 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
           
           {/* Mensagem de Erro */}
           {erroForm && (
-            <div className="text-red-300 text-sm p-4 bg-red-900/30 border border-red-500/50 rounded-lg text-center">
+            <div className="text-red-600 dark:text-red-300 text-sm p-4 bg-red-50 dark:bg-red-900/30 border border-red-300 dark:border-red-500/50 rounded-lg text-center">
               ⚠️ {erroForm}
             </div>
           )}
 
           {/* Barra de Progresso */}
-          <div className="bg-slate-800 p-3 rounded-lg border border-slate-600 mt-2">
+          <div className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-600 mt-2">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-xs text-gray-400 font-medium">Progresso</span>
-              <span className="text-sm text-gray-300 font-semibold">
+              <span className="text-xs text-slate-500 dark:text-gray-400 font-medium">Progresso</span>
+              <span className="text-sm text-slate-600 dark:text-gray-300 font-semibold">
                 {[pontuacaoMental, pontuacaoSensorial, pontuacaoComunicacao, pontuacaoMotor, pontuacaoAlimentacao, pontuacaoRespiratorio].filter(v => v !== null).length}/6
               </span>
             </div>
-            <div className="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+            <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
               <div 
                 className="bg-linear-to-r from-blue-500 to-blue-600 h-full transition-all duration-300"
                 style={{ width: `${([pontuacaoMental, pontuacaoSensorial, pontuacaoComunicacao, pontuacaoMotor, pontuacaoAlimentacao, pontuacaoRespiratorio].filter(v => v !== null).length / 6) * 100}%` }}
@@ -440,26 +440,26 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
       {telaAtiva === 'resultado' && (
         <div className="flex flex-col space-y-6">
           {/* Cabeçalho do Resultado */}
-          <div className="flex items-center space-x-4 mb-2 pb-4 border-b border-slate-600">
+          <div className="flex items-center space-x-4 mb-2 pb-4 border-b border-slate-200 dark:border-slate-600">
             <button
               onClick={() => setTelaAtiva('form')} // Volta para o formulário
-              className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-slate-700 transition-colors"
+              className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
             >
               <IconeVoltar />
             </button>
-            <h2 className="text-2xl font-semibold text-white">
+            <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
               Resultado da Avaliação
             </h2>
           </div>
           
           {/* Pontuação Total em Destaque */}
           <div className="text-center my-6">
-            <p className="text-gray-400 text-sm mb-2">Pontuação Total</p>
+            <p className="text-slate-500 dark:text-gray-400 text-sm mb-2">Pontuação Total</p>
             <div className="flex items-baseline justify-center space-x-2">
-              <span className="text-8xl font-black text-white">
+              <span className="text-8xl font-black text-slate-900 dark:text-white">
                 {pontuacaoTotalCalculada}
               </span>
-              <span className="text-3xl text-gray-500">/30</span>
+              <span className="text-3xl text-slate-400 dark:text-gray-500">/30</span>
             </div>
           </div>
 
@@ -472,9 +472,9 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
           </div>
 
           {/* Detalhes da Interpretação */}
-          <div className="bg-slate-800 p-4 rounded-lg border border-slate-600 space-y-2">
-            <h3 className="text-sm font-semibold text-gray-300 uppercase">Recomendações:</h3>
-            <ul className="text-sm text-gray-400 space-y-1">
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-600 space-y-2">
+            <h3 className="text-sm font-semibold text-slate-600 dark:text-gray-300 uppercase">Recomendações:</h3>
+            <ul className="text-sm text-slate-500 dark:text-gray-400 space-y-1">
               {pontuacaoTotalCalculada <= 7 && (
                 <>
                   <li>✓ Funcionalidade preservada</li>
@@ -517,7 +517,7 @@ export const FSSScale: React.FC<FSSScaleProps> = ({ onSaveScore }) => {
 
           <button
             onClick={() => setTelaAtiva('form')}
-            className="w-full bg-slate-700 hover:bg-slate-600 text-gray-200 font-semibold py-3 rounded-lg transition-colors border border-slate-600"
+            className="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-gray-200 font-semibold py-3 rounded-lg transition-colors border border-slate-200 dark:border-slate-600"
           >
             ← Voltar ao Formulário
           </button>

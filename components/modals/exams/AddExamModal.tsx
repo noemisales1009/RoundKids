@@ -28,7 +28,6 @@ export const AddExamModal: React.FC<{ patientId: number | string; onClose: () =>
             return;
         }
         
-        console.log('👤 User ID no AddExamModal:', user.id);
         addExamToPatient(patientId, { name, date, result: 'Pendente', observation }, user.id);
         showNotification({ message: 'Exame cadastrado com sucesso!', type: 'success' });
         onClose();

@@ -24,6 +24,8 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
     // State para o formulário
     const [selectedCategoria, setSelectedCategoria] = useState('');
     const [selectedMedicamento, setSelectedMedicamento] = useState('');
+    const [customMedicamento, setCustomMedicamento] = useState('');
+    const [customUnidade, setCustomUnidade] = useState('');
     const [dosageValue, setDosageValue] = useState('');
     const [startDate, setStartDate] = useState(medication.startDate);
     const [observacao, setObservacao] = useState(medication.observacao || '');
@@ -130,16 +132,16 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
 
     // Dados do medicamento selecionado
     const selectedMedData = medicamentos.find(m => m.id.toString() === selectedMedicamento);
-    const temUnidadeDose = selectedMedData?.unidade_dose_principal !== null;
-    const unidadeFinal = selectedMedData?.unidade_dose_principal;
+    const isOther = selectedMedicamento === 'outro';
+    const temUnidadeDose = selectedMedData?.unidade_dose_principal !== null || (isOther && customUnidade);
+    const unidadeFinal = isOther ? customUnidade : selectedMedData?.unidade_dose_principal;
+    const finalMedicationName = isOther ? customMedicamento : selectedMedData?.nome || medication.name;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
-        const finalMedicationName = selectedMedData?.nome || medication.name;
-        
+
         if (!finalMedicationName) {
-            showNotification({ message: 'Selecione um medicamento', type: 'error' });
+            showNotification({ message: 'Selecione ou digite um medicamento', type: 'error' });
             return;
         }
 
@@ -158,13 +160,13 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
         } else {
             dosageFormatted = finalMedicationName;
         }
-        
-        updateMedicationInPatient(patientId, { 
-            ...medication, 
-            name: finalMedicationName, 
-            dosage: dosageFormatted, 
-            startDate, 
-            observacao 
+
+        updateMedicationInPatient(patientId, {
+            ...medication,
+            name: finalMedicationName,
+            dosage: dosageFormatted,
+            startDate,
+            observacao
         });
         showNotification({ message: 'Medicação atualizada com sucesso!', type: 'success' });
         onClose();
@@ -224,8 +226,46 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                                         {med.unidade_dose_principal ? ` (${med.unidade_dose_principal})` : ' (sem unidade)'}
                                     </option>
                                 ))}
+                                <option value="outro">Outro (digitar medicamento)</option>
                             </select>
                         </div>
+                    )}
+
+                    {/* Campo: Digitar medicamento customizado */}
+                    {isOther && (
+                        <>
+                            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md p-3 mb-4">
+                                <p className="text-sm text-amber-800 dark:text-amber-200">
+                                    Medicamento Customizado - Preencha o nome e opcionalmente a unidade
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                    Nome da Medicação <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={customMedicamento}
+                                    onChange={e => setCustomMedicamento(e.target.value)}
+                                    placeholder="Ex: Epinefrina, Salbutamol spray..."
+                                    className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                    Unidade de Dosagem <span className="text-gray-400 font-normal">(opcional)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={customUnidade}
+                                    onChange={e => setCustomUnidade(e.target.value)}
+                                    placeholder="Ex: mg/kg/dia, ug/h, UI/ml..."
+                                    className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+                                />
+                            </div>
+                        </>
                     )}
 
                     {/* Dosagem (apenas se medicamento tem unidade) */}
@@ -249,7 +289,7 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                     )}
 
                     {/* Mensagem: Medicação sem unidade */}
-                    {selectedMedicamento && !temUnidadeDose && (
+                    {selectedMedicamento && !temUnidadeDose && !isOther && (
                         <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-md p-3">
                             <p className="text-sm text-blue-800 dark:text-blue-200">
                                 ℹ️ <strong>{selectedMedData?.nome}</strong> não requer dosagem com unidade (ex: spray, solução)

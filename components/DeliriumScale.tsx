@@ -94,11 +94,11 @@ interface DropdownCAMProps {
 // --- Componente de Dropdown/Toggle Reutilizável ---
 // Usado para os 4 critérios (Presente/Ausente, Anormal/Normal)
 const DropdownCAM = forwardRef<HTMLDivElement, DropdownCAMProps>(({ label, id, valor, onOpcaoChange, opcoes, descricao }, ref) => (
-  <div ref={ref} className="bg-slate-800 p-4 rounded-lg shadow-lg transition-all duration-300">
+  <div ref={ref} className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg transition-all duration-300">
     <div className="flex justify-between items-center mb-2">
       <label
         htmlFor={id}
-        className="block text-sm font-medium text-gray-300"
+        className="block text-sm font-medium text-slate-600 dark:text-gray-300"
       >
         {label}
       </label>
@@ -106,13 +106,13 @@ const DropdownCAM = forwardRef<HTMLDivElement, DropdownCAMProps>(({ label, id, v
     </div>
     
     {/* Descrição da Característica */}
-    <p className="text-xs text-gray-400 mb-3">{descricao}</p>
+    <p className="text-xs text-slate-500 dark:text-gray-400 mb-3">{descricao}</p>
     
     <select
       id={id}
       value={valor === null ? '' : String(valor)} // Valor agora é true/false
       onChange={(e) => onOpcaoChange(e.target.value === '' ? null : e.target.value === 'true')} // Converte string "true"/"false" para boolean
-      className="w-full bg-slate-700 border border-slate-600 text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
     >
       <option value="">Selecione...</option>
       {opcoes.map((opt) => (
@@ -213,17 +213,17 @@ export const DeliriumScale: React.FC<DeliriumScaleProps> = ({ onSaveScore }) => 
 
   // --- Renderização ---
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 bg-slate-900 text-gray-300 rounded-lg min-h-[600px]">
+    <div className="w-full max-w-2xl mx-auto p-4 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-gray-300 rounded-lg min-h-[600px]">
       
       {/* --- TELA 1: LISTA (Principal) --- */}
       {telaAtiva === 'lista' && (
         <div className="flex flex-col space-y-4">
-          <div className="bg-slate-800 p-6 rounded-lg shadow-lg text-center">
-            <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg text-center">
+            <h2 className="text-sm font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-4">
               ÚLTIMA AVALIAÇÃO pCAM/psCAM-ICU
             </h2>
             <div className={`mt-6 grid grid-cols-1 gap-3`}>
-              <div className={`bg-slate-700 p-4 rounded-lg ${ultimaInterpretacao.cor} font-bold text-xl`}>
+              <div className={`bg-slate-100 dark:bg-slate-700 p-4 rounded-lg ${ultimaInterpretacao.cor} font-bold text-xl`}>
                 {/* --- MODIFICADO: Adiciona ícone --- */}
                 <div className="flex items-center justify-center">
                   {ultimaInterpretacao.icone}
@@ -252,20 +252,20 @@ export const DeliriumScale: React.FC<DeliriumScaleProps> = ({ onSaveScore }) => 
           <div className="flex items-center space-x-4 mb-2">
             <button
               onClick={() => setTelaAtiva('lista')}
-              className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-slate-700"
+              className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
             >
               <IconeVoltar />
             </button>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
               Nova Avaliação de Delirium
             </h2>
           </div>
 
           {/* Seletor de Escala (Idade) */}
-          <div ref={refEscala} className="bg-slate-800 p-4 rounded-lg shadow-lg">
+          <div ref={refEscala} className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg">
             <label
               htmlFor="escala"
-              className="block text-sm font-medium text-gray-300 mb-2"
+              className="block text-sm font-medium text-slate-600 dark:text-gray-300 mb-2"
             >
               Selecione a Escala (por idade)
             </label>
@@ -280,7 +280,7 @@ export const DeliriumScale: React.FC<DeliriumScaleProps> = ({ onSaveScore }) => 
                 // Rola para o próximo item
                 setTimeout(() => refCarac1.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
               }}
-              className="w-full bg-slate-700 border border-slate-600 text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
             >
               <option value="psCAM">{escalaCAMOpcoes.psCAM.nome}</option>
               <option value="pCAM">{escalaCAMOpcoes.pCAM.nome}</option>
@@ -339,7 +339,7 @@ export const DeliriumScale: React.FC<DeliriumScaleProps> = ({ onSaveScore }) => 
           
           {/* Mensagem de Erro */}
           {erroForm && (
-            <div className="text-red-400 text-sm p-3 bg-slate-700 rounded-lg text-center">
+            <div className="text-red-600 dark:text-red-400 text-sm p-3 bg-red-50 dark:bg-slate-700 rounded-lg text-center">
               {erroForm}
             </div>
           )}
@@ -360,11 +360,11 @@ export const DeliriumScale: React.FC<DeliriumScaleProps> = ({ onSaveScore }) => 
           <div className="flex items-center space-x-4 mb-2">
             <button
               onClick={() => setTelaAtiva('form')} // Volta para o formulário
-              className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-slate-700"
+              className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
             >
               <IconeVoltar />
             </button>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
               Resultado da Avaliação
             </h2>
           </div>
@@ -382,8 +382,8 @@ export const DeliriumScale: React.FC<DeliriumScaleProps> = ({ onSaveScore }) => 
 
           {/* Card de Interpretação */}
           <div className="grid grid-cols-1 gap-4">
-            <div className="bg-slate-800 p-5 rounded-lg shadow-lg text-sm text-gray-400">
-              <h3 className="font-semibold text-white mb-2">Critérios para Delirium POSITIVO:</h3>
+            <div className="bg-white dark:bg-slate-800 p-5 rounded-lg shadow-lg text-sm text-slate-500 dark:text-gray-400">
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Critérios para Delirium POSITIVO:</h3>
               <ul className="list-disc list-inside space-y-1">
                 <li>Característica 1 (Alteração Aguda) = **Presente**</li>
                 <li>**E**</li>

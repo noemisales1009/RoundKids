@@ -39,7 +39,7 @@ const BalanceHydricResume: React.FC<BalanceHydricResumeProps> = ({ patientId }) 
       setData(balanceData || []);
     } catch (error) {
       console.error('Erro ao buscar balanço hídrico:', error);
-      showNotification('Erro ao carregar balanço hídrico', 'error');
+      showNotification({ message: 'Erro ao carregar balanço hídrico', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -154,7 +154,7 @@ const BalanceHydricResume: React.FC<BalanceHydricResumeProps> = ({ patientId }) 
           )}
 
           {/* Comparação com Dias Anteriores */}
-          {latestData?.bh_dia_anterior !== null && (
+          {latestData && latestData.bh_dia_anterior !== null && (
             <div className="border border-gray-300 rounded-lg p-4">
               <h4 className="font-semibold text-gray-800 mb-3">Dia Anterior</h4>
               <div className="grid grid-cols-2 gap-3">
@@ -175,7 +175,7 @@ const BalanceHydricResume: React.FC<BalanceHydricResumeProps> = ({ patientId }) 
           )}
 
           {/* BH Cumulativo */}
-          {latestData?.bh_cumulativo !== null && (
+          {latestData && latestData.bh_cumulativo !== null && (
             <div className="border-2 border-green-200 rounded-lg p-4 bg-green-50">
               <h4 className="font-semibold text-gray-800 mb-2">Balanço Hídrico Cumulativo</h4>
               <p className="text-sm text-gray-600 mb-2">

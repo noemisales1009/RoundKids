@@ -1,0 +1,702 @@
+{
+  "name": "RoundKids - Bot Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["message"],
+        "additionalFields": {}
+      },
+      "id": "94521067-1879-4000-afa9-f8034389939e",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [-1200, 1024],
+      "webhookId": "f07b9d07-0589-49d1-be30-84e8eb9cd555",
+      "credentials": {
+        "telegramApi": {
+          "id": "2t3oDhC3mBjgxhqv",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const msg = $input.first().json.message;\nreturn [{\n  json: {\n    chat_id: msg.chat.id,\n    text: msg.text || '',\n    username: msg.from.username || '',\n    first_name: msg.from.first_name || '',\n    message_id: msg.message_id,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "254f5611-68a0-48db-958e-f28ff01210e1",
+      "name": "Extrair Mensagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-992, 1024]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://ouybwkjapejgpuuujwgy.supabase.co/rest/v1/rpc/buffer_message",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"p_chat_id\": {{ $('Extrair Mensagem').item.json.chat_id }}, \"p_text\": {{ JSON.stringify($('Extrair Mensagem').item.json.text) }} }",
+        "options": {}
+      },
+      "id": "c5f613c3-aff5-4612-8500-2515f3b8087d",
+      "name": "Acumular Mensagem",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-768, 1024]
+    },
+    {
+      "parameters": {
+        "amount": 8
+      },
+      "id": "062d16c9-d325-4fb7-b4d1-0378a8237217",
+      "name": "Esperar 8s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [-544, 1024],
+      "webhookId": "1ad45e80-af58-42c0-ab95-adb95a599ad6"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://ouybwkjapejgpuuujwgy.supabase.co/rest/v1/rpc/get_and_lock_buffer",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"p_chat_id\": {{ $('Extrair Mensagem').item.json.chat_id }}, \"p_seconds\": 8}",
+        "options": {}
+      },
+      "id": "9104f355-93ec-40eb-bf4f-db86eaec0a4a",
+      "name": "Verificar Buffer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-320, 1024]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-has-msgs",
+              "leftValue": "={{ $json.combined_text }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "01e77a21-81e6-4b2e-9ab1-9bccb2f90b04",
+      "name": "Tem Mensagens?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-112, 1024]
+    },
+    {
+      "parameters": {
+        "jsCode": "const buffer = $('Verificar Buffer').first().json;\nreturn [{\n  json: {\n    chat_id: $('Extrair Mensagem').first().json.chat_id,\n    text: buffer.combined_text,\n    username: $('Extrair Mensagem').first().json.username,\n    first_name: $('Extrair Mensagem').first().json.first_name\n  }\n}];"
+      },
+      "id": "7dd27196-b86b-42af-980a-0ec0e6f79c47",
+      "name": "Combinar Mensagens",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [112, 1024]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "telegram_users",
+        "limit": 1,
+        "filterType": "string",
+        "filterString": "telegram_chat_id=eq.{{ $json.chat_id }}&is_active=eq.true"
+      },
+      "id": "8f9859be-0f65-4c84-9269-9ebacc7640dd",
+      "name": "Verificar Usuario",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [336, 1024],
+      "credentials": {
+        "supabaseApi": {
+          "id": "13fzGTtAnxtag1Iq",
+          "name": "Supabase CucaDigital"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-auth",
+              "leftValue": "={{ $json.user_id }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f1ab375e-2369-416d-9935-588ec52d4fb3",
+      "name": "Autorizado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [560, 1024]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Combinar Mensagens').item.json.chat_id }}",
+        "text": "Voce nao esta autorizado a usar este bot.\nSolicite acesso ao administrador do RoundKids.",
+        "additionalFields": {}
+      },
+      "id": "bb17cebe-585e-45ff-8b73-da9813a303b1",
+      "name": "Nao Autorizado",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [768, 1232],
+      "webhookId": "77c30f9e-ee59-43d1-b434-4fe568621c9f",
+      "credentials": {
+        "telegramApi": {
+          "id": "2t3oDhC3mBjgxhqv",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "telegram_sessions",
+        "limit": 20,
+        "filterType": "string",
+        "filterString": "telegram_chat_id=eq.{{ $('Combinar Mensagens').item.json.chat_id }}&expires_at=gte.{{ new Date().toISOString() }}&order=created_at.desc"
+      },
+      "id": "d7d8835c-363b-40f8-a8ca-816c7cb60221",
+      "name": "Carregar Memoria",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [768, 832],
+      "credentials": {
+        "supabaseApi": {
+          "id": "13fzGTtAnxtag1Iq",
+          "name": "Supabase CucaDigital"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $('Carregar Memoria').all().map(i => i.json);\nconst userMsg = $('Combinar Mensagens').first().json.text;\nconst chat_id = $('Combinar Mensagens').first().json.chat_id;\nconst user_id = $('Verificar Usuario').first().json.user_id || '';\n\nconst lastWithPending = allItems.find(h => h.pending_action);\nconst pendingAction = lastWithPending?.pending_action || null;\nconst lastPatientId = allItems.find(h => h.patient_id)?.patient_id || null;\nconst lastPatientName = allItems.find(h => h.patient_name)?.patient_name || null;\n\nconst history = allItems\n  .reverse()\n  .filter(h => h.role && h.content)\n  .map(h => ({ role: h.role, content: h.content }));\n\nhistory.push({ role: 'user', content: userMsg });\n\nreturn [{\n  json: {\n    history, chat_id, user_id, userMsg,\n    pendingAction, lastPatientId, lastPatientName\n  }\n}];"
+      },
+      "id": "d891ada2-4df0-49dd-be14-e5a3c6bbb4f8",
+      "name": "Montar Contexto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [992, 832]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ctx = $input.first().json;\nconst userMsg = ctx.userMsg.toLowerCase().trim();\nconst pending = ctx.pendingAction;\n\nif (pending) {\n  if (['sim', 'confirmar', 'ok', 'confirma', 's'].includes(userMsg)) {\n    return [{ json: { ...ctx, intent: 'confirm' } }];\n  }\n  if (['nao', 'cancelar', 'cancela', 'n'].includes(userMsg)) {\n    return [{ json: { ...ctx, intent: 'cancel' } }];\n  }\n}\n\nreturn [{ json: { ...ctx, intent: 'process' } }];"
+      },
+      "id": "01bd6e99-6e09-463d-b22c-6f9c46fb1360",
+      "name": "Verificar Pendencia",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1216, 832]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "conditions": [
+                  { "leftValue": "={{ $json.intent }}", "rightValue": "confirm", "operator": { "type": "string", "operation": "equals" } }
+                ]
+              },
+              "renameOutput": "Confirmar"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  { "leftValue": "={{ $json.intent }}", "rightValue": "cancel", "operator": { "type": "string", "operation": "equals" } }
+                ]
+              },
+              "renameOutput": "Cancelar"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  { "leftValue": "={{ $json.intent }}", "rightValue": "process", "operator": { "type": "string", "operation": "equals" } }
+                ]
+              },
+              "renameOutput": "Processar"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "42012ebd-acf1-44d9-bd7f-35886cf22d22",
+      "name": "Qual Intencao?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [1440, 832]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://ouybwkjapejgpuuujwgy.supabase.co/rest/v1/{{ $json.pendingAction.table }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.pendingAction.data) }}",
+        "options": {}
+      },
+      "id": "d3ec3593-4a70-4a62-afbe-4ab8c59e16aa",
+      "name": "Supabase - Cadastrar",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1648, 624]
+    },
+    {
+      "parameters": {
+        "jsCode": "const pending = $('Verificar Pendencia').first().json.pendingAction;\nconst result = $input.first().json;\nlet text = result.error\n  ? 'Erro ao cadastrar: ' + result.error\n  : 'Registrado com sucesso!\\n\\n' + (pending.confirmMessage || 'Dados salvos.');\nreturn [{ json: { responseText: text, pendingAction: null } }];"
+      },
+      "id": "e6439e39-598b-4af4-89b1-26b304d2e809",
+      "name": "Sucesso Cadastro",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1872, 624]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { responseText: 'Cadastro cancelado.', pendingAction: null } }];"
+      },
+      "id": "61ee335f-cfaa-4025-a4f1-9dbb1491bff6",
+      "name": "Cancelar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1648, 832]
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=Voce e o assistente clinico do RoundKids, sistema de round neonatal/pediatrico.\n\nREGRAS:\n1. Responda CLARO, DIRETO e CURTO.\n2. Formate para Telegram: *negrito*, _italico_.\n3. Portugues brasileiro sempre.\n4. NUNCA invente dados.\n5. Use as tools para buscar e cadastrar dados.\n6. Para CADASTROS: mostre preview e peca confirmacao. Responda com o campo pending_action preenchido.\n7. Use emojis para facilitar leitura clinica.\n8. O medico pode digitar de forma picotada - as mensagens ja chegam agrupadas.\n\nPACIENTE EM CONTEXTO: {{ $json.lastPatientName || 'Nenhum' }} (ID: {{ $json.lastPatientId || 'N/A' }})\nUSUARIO ID: {{ $json.user_id }}\n\nFLUXO DE CONSULTA:\n1. Use search_patient para encontrar paciente por nome/leito\n2. Use get_patient_summary para pegar todos os dados\n3. Formate a resposta de forma clara e objetiva\n\nFLUXO DE CADASTRO:\n1. Interprete o que o medico quer cadastrar\n2. Monte os dados completos\n3. Mostre preview formatado\n4. Peca: 'Responda *sim* para confirmar ou *nao* para cancelar'\n\nTABELAS PARA INSERT:\n- balanco_hidrico: patient_id, peso, volume, data_registro, created_by\n- medicacoes_pacientes: paciente_id, nome_medicacao, dosagem_valor, unidade_medida, data_inicio, observacao, criado_por_id\n- dispositivos_pacientes: paciente_id, tipo_dispositivo, localizacao, data_insercao, observacao, criado_por_id\n- exames_pacientes: paciente_id, nome_exame, data_exame, observacao, criado_por_id\n- alertas_paciente: patient_id, alerta_descricao, responsavel, hora_selecionada, status, created_at, created_by\n- tasks: patient_id, description, responsible, deadline, created_by\n- culturas_pacientes: paciente_id, local, microorganismo, data_coleta, observacao, criado_por_id\n- dietas_pacientes: paciente_id, tipo, data_inicio, volume, vet, vet_pleno, pt, pt_g_dia, th, observacao, criado_por_id\n- procedimentos_pacientes: paciente_id, nome_procedimento, data_procedimento, nome_cirurgiao, notas, criado_por_id\n- diurese: patient_id, volume, peso, horas\n- clinical_situations_24h: patient_id, situacao_texto, created_by\n- precautions: patient_id, tipo_precaucao, data_inicio, data_fim"
+        }
+      },
+      "id": "0016f40b-ae34-45cc-a37c-56a27d047a48",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [1648, 1024]
+    },
+    {
+      "parameters": {
+        "options": {
+          "model": "anthropic/claude-sonnet-4",
+          "maxTokens": 3000,
+          "temperature": 0.3
+        }
+      },
+      "id": "68f44800-ae5b-4482-9954-34d51894bd2f",
+      "name": "OpenRouter Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [1456, 1344],
+      "credentials": {
+        "openRouterApi": {
+          "id": "CcdA7zd7VrqpKtLI",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "id": "bda6603a-0f92-447c-b03c-16a5dbd7491e",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [1648, 1360]
+    },
+    {
+      "parameters": {
+        "name": "search_patient",
+        "description": "Busca pacientes ativos por nome ou numero do leito. Use quando o medico mencionar um paciente.",
+        "method": "POST",
+        "url": "=https://ouybwkjapejgpuuujwgy.supabase.co/rest/v1/rpc/search_patient",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"p_search\": \"{search_term}\"}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "search_term", "description": "Nome do paciente ou numero do leito", "type": "string" }
+          ]
+        }
+      },
+      "id": "e6bd9cad-0248-4a36-b504-a974cf047e41",
+      "name": "Tool - Buscar Paciente",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [1856, 1392]
+    },
+    {
+      "parameters": {
+        "name": "get_patient_summary",
+        "description": "Retorna TODOS os dados clinicos do paciente: basicos, comorbidades, diagnosticos, dispositivos, exames, medicacoes, cirurgicos, culturas, dietas, alertas, tasks, precaucoes, escalas, situacao 24h, balanco hidrico, diurese.",
+        "method": "POST",
+        "url": "=https://ouybwkjapejgpuuujwgy.supabase.co/rest/v1/rpc/get_patient_summary",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"p_patient_id\": \"{patient_id}\"}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "patient_id", "description": "UUID do paciente", "type": "string" }
+          ]
+        }
+      },
+      "id": "37f3f416-ebea-44c2-ad05-4ba1dcbe6cfd",
+      "name": "Tool - Resumo Paciente",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2016, 1360]
+    },
+    {
+      "parameters": {
+        "name": "get_balanco_cumulativo",
+        "description": "Calcula BH cumulativo por periodo (2h, 4h, 6h, 12h, 18h, 24h). Retorna BH anterior, atual e cumulativo desde internacao.",
+        "method": "POST",
+        "url": "=https://ouybwkjapejgpuuujwgy.supabase.co/rest/v1/rpc/get_balanco_cumulativo",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"p_patient_id\": \"{patient_id}\", \"p_hours\": {hours}}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "patient_id", "description": "UUID do paciente", "type": "string" },
+            { "name": "hours", "description": "Periodo em horas: 2, 4, 6, 12, 18 ou 24", "type": "number" }
+          ]
+        }
+      },
+      "id": "8a8cd97b-234e-4c32-abb0-1a9e8f7ed7f7",
+      "name": "Tool - BH Cumulativo",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2256, 1376]
+    },
+    {
+      "parameters": {
+        "name": "insert_record",
+        "description": "Insere registro em qualquer tabela do Supabase. SOMENTE use apos o medico confirmar com 'sim'. Tabelas: balanco_hidrico, medicacoes_pacientes, dispositivos_pacientes, exames_pacientes, alertas_paciente, tasks, culturas_pacientes, dietas_pacientes, procedimentos_pacientes, diurese, clinical_situations_24h, precautions.",
+        "method": "POST",
+        "url": "=https://ouybwkjapejgpuuujwgy.supabase.co/rest/v1/{table_name}",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={record_json}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "table_name", "description": "Nome da tabela", "type": "string" },
+            { "name": "record_json", "description": "JSON com campos do registro", "type": "string" }
+          ]
+        }
+      },
+      "id": "e06d36f3-ac4c-4b18-bf78-dbb28efc4a50",
+      "name": "Tool - Cadastrar",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2448, 1376]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst responseText = item.output || item.text || item.response || 'Sem resposta.';\nconst ctx = $('Verificar Pendencia').first().json;\n\nreturn [{\n  json: {\n    responseText,\n    patientId: ctx.lastPatientId,\n    patientName: ctx.lastPatientName,\n    pendingAction: null\n  }\n}];"
+      },
+      "id": "ef4a41df-1b9d-4176-b99e-1507759c0cea",
+      "name": "Extrair Resposta AI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1968, 1024]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst ctx = $('Verificar Pendencia').first().json;\nconst chat_id = $('Combinar Mensagens').first().json.chat_id;\nconst userMsg = $('Combinar Mensagens').first().json.text;\n\nreturn [{\n  json: {\n    chat_id,\n    userMsg,\n    responseText: item.responseText || 'Sem resposta.',\n    patientId: item.patientId || ctx.lastPatientId || null,\n    patientName: item.patientName || ctx.lastPatientName || null,\n    pendingAction: item.pendingAction || null\n  }\n}];"
+      },
+      "id": "726bf5d7-4cdc-4efe-9309-2c45bae110a9",
+      "name": "Unificar Respostas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2096, 832]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.responseText }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "7a7b354c-db8d-4255-9639-878117e0e222",
+      "name": "Telegram - Responder",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [2320, 832],
+      "webhookId": "9e4c3a7c-7725-46c4-8a69-e195f5bff51a",
+      "credentials": {
+        "telegramApi": {
+          "id": "2t3oDhC3mBjgxhqv",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "telegram_sessions",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldName": "telegram_chat_id", "fieldValue": "={{ $json.chat_id }}" },
+            { "fieldName": "role", "fieldValue": "user" },
+            { "fieldName": "content", "fieldValue": "={{ $json.userMsg }}" },
+            { "fieldName": "patient_id", "fieldValue": "={{ $json.patientId }}" },
+            { "fieldName": "patient_name", "fieldValue": "={{ $json.patientName }}" }
+          ]
+        }
+      },
+      "id": "12162f2f-a0ef-41c2-8526-245dedff6647",
+      "name": "Salvar Msg Usuario",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [2528, 736],
+      "credentials": {
+        "supabaseApi": {
+          "id": "13fzGTtAnxtag1Iq",
+          "name": "Supabase CucaDigital"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "telegram_sessions",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldName": "telegram_chat_id", "fieldValue": "={{ $('Unificar Respostas').item.json.chat_id }}" },
+            { "fieldName": "role", "fieldValue": "assistant" },
+            { "fieldName": "content", "fieldValue": "={{ $('Unificar Respostas').item.json.responseText }}" },
+            { "fieldName": "patient_id", "fieldValue": "={{ $('Unificar Respostas').item.json.patientId }}" },
+            { "fieldName": "patient_name", "fieldValue": "={{ $('Unificar Respostas').item.json.patientName }}" },
+            { "fieldName": "pending_action", "fieldValue": "={{ $('Unificar Respostas').item.json.pendingAction ? JSON.stringify($('Unificar Respostas').item.json.pendingAction) : null }}" }
+          ]
+        }
+      },
+      "id": "f6d6ccae-c48d-4b71-a8f1-d9824f4f2f85",
+      "name": "Salvar Msg Bot",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [2528, 928],
+      "credentials": {
+        "supabaseApi": {
+          "id": "13fzGTtAnxtag1Iq",
+          "name": "Supabase CucaDigital"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [{ "node": "Extrair Mensagem", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extrair Mensagem": {
+      "main": [
+        [{ "node": "Acumular Mensagem", "type": "main", "index": 0 }]
+      ]
+    },
+    "Acumular Mensagem": {
+      "main": [
+        [{ "node": "Esperar 8s", "type": "main", "index": 0 }]
+      ]
+    },
+    "Esperar 8s": {
+      "main": [
+        [{ "node": "Verificar Buffer", "type": "main", "index": 0 }]
+      ]
+    },
+    "Verificar Buffer": {
+      "main": [
+        [{ "node": "Tem Mensagens?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Tem Mensagens?": {
+      "main": [
+        [{ "node": "Combinar Mensagens", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Combinar Mensagens": {
+      "main": [
+        [{ "node": "Verificar Usuario", "type": "main", "index": 0 }]
+      ]
+    },
+    "Verificar Usuario": {
+      "main": [
+        [{ "node": "Autorizado?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Autorizado?": {
+      "main": [
+        [{ "node": "Carregar Memoria", "type": "main", "index": 0 }],
+        [{ "node": "Nao Autorizado", "type": "main", "index": 0 }]
+      ]
+    },
+    "Carregar Memoria": {
+      "main": [
+        [{ "node": "Montar Contexto", "type": "main", "index": 0 }]
+      ]
+    },
+    "Montar Contexto": {
+      "main": [
+        [{ "node": "Verificar Pendencia", "type": "main", "index": 0 }]
+      ]
+    },
+    "Verificar Pendencia": {
+      "main": [
+        [{ "node": "Qual Intencao?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Qual Intencao?": {
+      "main": [
+        [{ "node": "Supabase - Cadastrar", "type": "main", "index": 0 }],
+        [{ "node": "Cancelar", "type": "main", "index": 0 }],
+        [{ "node": "AI Agent", "type": "main", "index": 0 }]
+      ]
+    },
+    "Supabase - Cadastrar": {
+      "main": [
+        [{ "node": "Sucesso Cadastro", "type": "main", "index": 0 }]
+      ]
+    },
+    "Sucesso Cadastro": {
+      "main": [
+        [{ "node": "Unificar Respostas", "type": "main", "index": 0 }]
+      ]
+    },
+    "Cancelar": {
+      "main": [
+        [{ "node": "Unificar Respostas", "type": "main", "index": 0 }]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [{ "node": "Extrair Resposta AI", "type": "main", "index": 0 }]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [{ "node": "AI Agent", "type": "ai_languageModel", "index": 0 }]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [{ "node": "AI Agent", "type": "ai_memory", "index": 0 }]
+      ]
+    },
+    "Tool - Buscar Paciente": {
+      "ai_tool": [
+        [{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]
+      ]
+    },
+    "Tool - Resumo Paciente": {
+      "ai_tool": [
+        [{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]
+      ]
+    },
+    "Tool - BH Cumulativo": {
+      "ai_tool": [
+        [{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]
+      ]
+    },
+    "Tool - Cadastrar": {
+      "ai_tool": [
+        [{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]
+      ]
+    },
+    "Extrair Resposta AI": {
+      "main": [
+        [{ "node": "Unificar Respostas", "type": "main", "index": 0 }]
+      ]
+    },
+    "Unificar Respostas": {
+      "main": [
+        [{ "node": "Telegram - Responder", "type": "main", "index": 0 }]
+      ]
+    },
+    "Telegram - Responder": {
+      "main": [
+        [
+          { "node": "Salvar Msg Usuario", "type": "main", "index": 0 },
+          { "node": "Salvar Msg Bot", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fbee26d630ea1e0155c22df6d9e4d068276acd5e4d16770960b6b7e204cd15b9"
+  }
+}

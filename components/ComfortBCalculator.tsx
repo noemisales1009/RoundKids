@@ -158,7 +158,7 @@ export default function ComfortBCalculator({ patientId }: ComfortBCalculatorProp
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => setTela('intro')}
-          className="p-2 rounded-full hover:bg-slate-700/50"
+          className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700/50"
         >
           <ChevronLeftIcon size={20} />
         </button>
@@ -167,9 +167,9 @@ export default function ComfortBCalculator({ patientId }: ComfortBCalculatorProp
 
       {tela === 'intro' && (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="p-6 rounded-3xl border border-slate-800 bg-slate-900">
-            <h3 className="text-lg font-bold mb-1">Nova Avaliação</h3>
-            <p className="text-sm text-slate-400 mb-6 font-medium">Selecione a condição respiratória:</p>
+          <div className="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Nova Avaliação</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 font-medium">Selecione a condição respiratória:</p>
 
             <div className="grid grid-cols-2 gap-3 mb-6">
               <button
@@ -177,7 +177,7 @@ export default function ComfortBCalculator({ patientId }: ComfortBCalculatorProp
                 className={`p-4 rounded-2xl border-2 transition-all text-xs font-bold ${
                   !pacienteIntubado
                     ? 'border-blue-500 bg-blue-500/10 text-blue-400'
-                    : 'border-transparent bg-slate-700/50 text-slate-400'
+                    : 'border-transparent bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400'
                 }`}
               >
                 Não Intubado
@@ -187,7 +187,7 @@ export default function ComfortBCalculator({ patientId }: ComfortBCalculatorProp
                 className={`p-4 rounded-2xl border-2 transition-all text-xs font-bold ${
                   pacienteIntubado
                     ? 'border-blue-500 bg-blue-500/10 text-blue-400'
-                    : 'border-transparent bg-slate-700/50 text-slate-400'
+                    : 'border-transparent bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400'
                 }`}
               >
                 Intubado
@@ -216,7 +216,7 @@ export default function ComfortBCalculator({ patientId }: ComfortBCalculatorProp
             <span className="text-sm font-black text-blue-400">Score: {pontuacaoTotal}</span>
           </div>
 
-          <div className="h-1 w-full bg-slate-700 rounded-full overflow-hidden mb-6">
+          <div className="h-1 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-6">
             <div className="h-full bg-blue-500 transition-all" style={{ width: `${progresso}%` }} />
           </div>
 
@@ -262,7 +262,7 @@ export default function ComfortBCalculator({ patientId }: ComfortBCalculatorProp
               className={`w-full py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 ${
                 respondidosCount === totalEsperado
                   ? 'bg-blue-600 text-white hover:bg-blue-500'
-                  : 'bg-slate-700/50 text-slate-500 cursor-not-allowed'
+                  : 'bg-slate-200 dark:bg-slate-700/50 text-slate-400 dark:text-slate-500 cursor-not-allowed'
               }`}
             >
               ✓ Finalizar Avaliação
@@ -274,8 +274,8 @@ export default function ComfortBCalculator({ patientId }: ComfortBCalculatorProp
       {tela === 'resultado' && interpretacao && (
         <div className="space-y-6 animate-in zoom-in-95 duration-500 text-center">
           <div className={`p-8 rounded-[40px] border-2 ${interpretacao.border} ${interpretacao.bg}`}>
-            <div className="inline-flex items-center justify-center w-28 h-28 rounded-full bg-slate-800 mb-6 shadow-xl border-4 border-slate-700">
-              <span className="text-5xl font-black text-slate-100">{pontuacaoTotal}</span>
+            <div className="inline-flex items-center justify-center w-28 h-28 rounded-full bg-slate-100 dark:bg-slate-800 mb-6 shadow-xl border-4 border-slate-200 dark:border-slate-700">
+              <span className="text-5xl font-black text-slate-800 dark:text-slate-100">{pontuacaoTotal}</span>
             </div>
             <h2 className={`text-xl font-black mb-1 tracking-tight uppercase ${interpretacao.cor}`}>
               {interpretacao.texto}
@@ -289,7 +289,7 @@ export default function ComfortBCalculator({ patientId }: ComfortBCalculatorProp
               disabled={isSaving || saveStatus === 'success'}
               className={`w-full py-4 text-white font-black rounded-2xl transition-all flex items-center justify-center gap-2 ${
                 isSaving || saveStatus === 'success'
-                  ? 'bg-slate-700 cursor-not-allowed'
+                  ? 'bg-slate-300 dark:bg-slate-700 cursor-not-allowed'
                   : 'bg-blue-600 hover:bg-blue-500'
               }`}
             >
@@ -300,7 +300,7 @@ export default function ComfortBCalculator({ patientId }: ComfortBCalculatorProp
                 setTela('intro');
                 setRespostas({});
               }}
-              className="w-full py-4 rounded-2xl font-bold border-2 border-slate-800 text-slate-400 hover:border-slate-700"
+              className="w-full py-4 rounded-2xl font-bold border-2 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700"
             >
               Voltar
             </button>
@@ -323,13 +323,13 @@ const SelectDominio: React.FC<SelectDominioProps> = ({ dominio, valor, onSelect 
 
   return (
     <div
-      className={`p-5 rounded-3xl border-2 transition-all bg-slate-900/40 border-slate-800 ${
+      className={`p-5 rounded-3xl border-2 transition-all bg-white dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 ${
         isSelected ? 'border-green-500/40' : ''
       }`}
     >
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
-          <h3 className="text-sm font-black text-slate-100">{dominio.label}</h3>
+          <h3 className="text-sm font-black text-slate-800 dark:text-slate-100">{dominio.label}</h3>
           {dominio.extra && (
             <p className="text-[10px] text-blue-400 font-bold italic mt-0.5">{dominio.extra}</p>
           )}
@@ -345,7 +345,7 @@ const SelectDominio: React.FC<SelectDominioProps> = ({ dominio, valor, onSelect 
         <select
           value={valor || ''}
           onChange={(e) => onSelect(Number(e.target.value))}
-          className="w-full p-4 rounded-2xl appearance-none text-xs font-bold border-2 bg-slate-950 border-slate-800 text-slate-200 outline-none focus:border-blue-500 transition-all cursor-pointer"
+          className="w-full p-4 rounded-2xl appearance-none text-xs font-bold border-2 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500 transition-all cursor-pointer"
         >
           <option value="" disabled>
             Selecione uma opção...

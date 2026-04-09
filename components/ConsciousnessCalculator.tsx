@@ -141,10 +141,10 @@ export default function ConsciousnessCalculator({ patientId }: ConsciousnessCalc
     <div className="space-y-4">
       {tela === 'intro' && (
         <div className="space-y-4 animate-in fade-in duration-500">
-          <div className="p-8 rounded-2xl border border-slate-700 bg-slate-800 space-y-6">
+          <div className="p-8 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 space-y-6">
             <div>
-              <h2 className="text-2xl font-bold text-white mb-2">Avaliação de Consciência</h2>
-              <p className="text-sm text-slate-400">Selecione a escala desejada:</p>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Avaliação de Consciência</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Selecione a escala desejada:</p>
             </div>
 
             <div className="space-y-3">
@@ -156,10 +156,10 @@ export default function ConsciousnessCalculator({ patientId }: ConsciousnessCalc
                     setRespostas({});
                     setTela('form');
                   }}
-                  className="w-full p-4 rounded-lg border-2 border-slate-700 bg-slate-900/50 hover:border-blue-500 hover:bg-blue-500/10 transition-all text-left"
+                  className="w-full p-4 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 hover:border-blue-500 hover:bg-blue-500/10 transition-all text-left"
                 >
-                  <h3 className="font-bold text-white">{conf.titulo}</h3>
-                  <p className="text-xs text-slate-400 mt-1">{conf.nomeCompleto}</p>
+                  <h3 className="font-bold text-slate-900 dark:text-white">{conf.titulo}</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{conf.nomeCompleto}</p>
                 </button>
               ))}
             </div>
@@ -172,15 +172,15 @@ export default function ConsciousnessCalculator({ patientId }: ConsciousnessCalc
           <div className="flex justify-between items-end mb-4">
             <div>
               <span className="text-[10px] font-bold text-blue-400 uppercase">{configAtual.titulo}</span>
-              <p className="text-xs text-slate-400 mt-1">{respondidosCount}/{totalItens} Itens</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{respondidosCount}/{totalItens} Itens</p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-400">Score:</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Score:</span>
               <span className="text-3xl font-bold text-blue-400">{pontuacaoTotal}</span>
             </div>
           </div>
           
-          <div className="h-1 w-full bg-slate-700 rounded-full overflow-hidden mb-6">
+          <div className="h-1 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-6">
             <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${progresso}%` }} />
           </div>
 
@@ -204,7 +204,7 @@ export default function ConsciousnessCalculator({ patientId }: ConsciousnessCalc
             className={`w-full py-4 rounded-lg font-bold transition-all mt-6
               ${respondidosCount === totalItens
                 ? 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
-                : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                : 'bg-slate-200 dark:bg-slate-700 text-slate-500 cursor-not-allowed'
               }`}
           >
             Ver Resultado
@@ -221,7 +221,7 @@ export default function ConsciousnessCalculator({ patientId }: ConsciousnessCalc
             <div className={`text-2xl font-bold ${interpretacao.cor}`}>
               {interpretacao.texto}
             </div>
-            {interpretacao.note && <p className="text-sm text-slate-300">{interpretacao.note}</p>}
+            {interpretacao.note && <p className="text-sm text-slate-600 dark:text-slate-300">{interpretacao.note}</p>}
           </div>
 
           <div className="space-y-3">
@@ -237,7 +237,7 @@ export default function ConsciousnessCalculator({ patientId }: ConsciousnessCalc
                 setTela('intro');
                 setRespostas({});
               }}
-              className="w-full py-4 border-2 border-slate-700 text-slate-300 font-bold rounded-lg hover:border-slate-600 transition-all"
+              className="w-full py-4 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-lg hover:border-slate-300 dark:hover:border-slate-600 transition-all"
             >
               Nova Avaliação
             </button>
@@ -254,10 +254,10 @@ function SelectDropdown({ id, label, opcoes, valor, onSelect }: any) {
   return (
     <div
       id={id}
-      className={`p-5 rounded-lg border border-slate-700 bg-slate-800/50 space-y-3 transition-all ${isSelected ? 'border-green-500' : ''}`}
+      className={`p-5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 space-y-3 transition-all ${isSelected ? 'border-green-500' : ''}`}
     >
       <div className="flex justify-between items-start gap-3">
-        <h3 className="font-bold text-white text-sm">{label}</h3>
+        <h3 className="font-bold text-slate-900 dark:text-white text-sm">{label}</h3>
         {isSelected && <div className="text-green-400 text-sm font-bold">✓</div>}
       </div>
       
@@ -265,7 +265,7 @@ function SelectDropdown({ id, label, opcoes, valor, onSelect }: any) {
         <select
           value={valor ?? ''}
           onChange={(e) => onSelect(Number(e.target.value))}
-          className="w-full p-3 rounded text-sm font-medium bg-slate-700 border border-slate-600 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none appearance-none pr-10"
+          className="w-full p-3 rounded text-sm font-medium bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none appearance-none pr-10"
         >
           <option value="">Selecione...</option>
           {opcoes.map((opt: any) => (
@@ -274,7 +274,7 @@ function SelectDropdown({ id, label, opcoes, valor, onSelect }: any) {
             </option>
           ))}
         </select>
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-sm">▼</div>
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 pointer-events-none text-sm">▼</div>
       </div>
     </div>
   );

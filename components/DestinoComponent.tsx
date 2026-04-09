@@ -21,7 +21,6 @@ const DestinoComponent: React.FC<DestinoComponentProps> = ({ patientId }) => {
           .single();
 
         if (error) {
-          console.warn('⚠️ Campo local_transferencia pode não existir na tabela patients:', error.message);
           return;
         }
 
@@ -29,7 +28,6 @@ const DestinoComponent: React.FC<DestinoComponentProps> = ({ patientId }) => {
           setLocalTransferencia(data.local_transferencia);
         }
       } catch (err) {
-        console.warn('Campo local_transferencia não disponível');
       }
     };
 

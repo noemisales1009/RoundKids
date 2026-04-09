@@ -42,7 +42,6 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
     setLoading(true);
     try {
       const patientIdStr = String(patientId);
-      console.log('Buscando cálculos para paciente:', patientIdStr);
       
       const [diuresisResult, balanceResult, balancoCumulativoResult] = await Promise.all([
         supabase
@@ -64,12 +63,9 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
           .single(),
       ]);
 
-      console.log('Diurese:', diuresisResult);
-      console.log('Balanço Hídrico:', balanceResult);
 
       if (diuresisResult.data && diuresisResult.data.length > 0) {
         const data = diuresisResult.data[0];
-        console.log('Diurese encontrada:', data);
         setLatestDiuresis({
           id: data.id,
           created_at: data.data_registro || new Date().toISOString(),
@@ -78,12 +74,10 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
           horas: parseInt(data.horas)
         });
       } else {
-        console.log('Nenhuma diurese encontrada');
       }
 
       if (balanceResult.data && balanceResult.data.length > 0) {
         const data = balanceResult.data[0];
-        console.log('Balanço encontrado:', data);
         setLatestBalance({
           id: data.id,
           created_at: data.data_registro || data.created_at || new Date().toISOString(),
@@ -91,14 +85,11 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
           volume: parseFloat(data.volume)
         });
       } else {
-        console.log('Nenhum balanço encontrado');
       }
 
       if (balancoCumulativoResult.data) {
-        console.log('BH Cumulativo encontrado:', balancoCumulativoResult.data);
         setBalancoCumulativo(balancoCumulativoResult.data);
       } else {
-        console.log('Nenhum BH Cumulativo encontrado');
       }
     } catch (error) {
       console.error('Erro ao buscar últimos cálculos:', error);

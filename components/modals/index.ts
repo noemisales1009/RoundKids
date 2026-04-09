@@ -1,3 +1,6 @@
+// Generic reusable modals
+export { ArchiveModal } from './ArchiveModal';
+
 // Patient modals
 export { EditPatientInfoModal } from './patient';
 

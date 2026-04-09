@@ -116,7 +116,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     if (!optionToArchive) return;
     
     try {
-      console.log('🗑️ Arquivando diagnóstico:', { patientId, optionToArchive, reason: archiveReason });
       
       // Obter o ID do usuário logado
       const { data: { session } } = await supabase.auth.getSession();
@@ -136,7 +135,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         .eq('arquivado', false);
 
       if (error) {
-        console.error('❌ Erro detalhado ao arquivar diagnóstico:', {
+        console.error('Erro detalhado ao arquivar diagnóstico:', {
           error,
           message: error.message,
           details: error.details,
@@ -147,7 +146,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         return;
       }
 
-      console.log('✅ Diagnóstico removido com sucesso!');
 
       // Atualizar a lista de diagnósticos removendo o arquivado
       setDiagnostics(prev => prev.filter(d => d.opcao_id !== optionToArchive));
@@ -181,7 +179,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       // Mensagem de sucesso
       alert('✅ Diagnóstico removido com sucesso!');
     } catch (error) {
-      console.error('❌ Erro ao arquivar diagnóstico (catch):', error);
+      console.error('Erro ao arquivar diagnóstico (catch):', error);
       alert(`Erro ao arquivar diagnóstico: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   };
