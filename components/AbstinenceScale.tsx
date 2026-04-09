@@ -85,7 +85,7 @@ const QuestionCard: React.FC<{
   isDark: boolean;
   colorKey: string;
 }> = ({ item, valor, onChange, isDark, colorKey }) => {
-  const isSelected = valor !== '' && valor !== undefined && valor !== null && valor > 0;
+  const isSelected = valor !== '' && valor !== undefined && valor !== null && Number(valor) > 0;
   const colors = colorConfig[colorKey as keyof typeof colorConfig];
 
   return (

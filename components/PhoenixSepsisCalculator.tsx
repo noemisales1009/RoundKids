@@ -30,52 +30,21 @@ const sistemasConfig = {
   cardiovascular: {
     id: 'cardiovascular',
     label: 'Sistema Cardiovascular',
-    tipo: 'multipla_soma',
-    categorias: [
-      {
-        id: 'dva',
-        label: 'Drogas Vasoativas (DVA)',
-        opcoes: [
-          { valor: 0, texto: 'Sem DVA' },
-          { valor: 1, texto: '1 DVA' },
-          { valor: 2, texto: '\u2265 2 DVA' },
-        ],
-      },
-      {
-        id: 'lactato',
-        label: 'Lactato',
-        opcoes: [
-          { valor: 0, texto: '< 45 mg/dL ou < 5 mmol/L' },
-          { valor: 1, texto: '45\u201398 mg/dL ou 5\u201310,9 mmol/L' },
-          { valor: 2, texto: '\u2265 99 mg/dL ou \u2265 10,9 mmol/L' },
-        ],
-      },
-      {
-        id: 'pam',
-        label: 'Press\u00e3o Arterial M\u00e9dia (PAM)',
-        opcoes: [
-          { valor: 0, texto: 'PAM normal para a idade' },
-          { valor: 1, texto: 'PAM baixa para a idade' },
-          { valor: 2, texto: 'PAM muito baixa para a idade' },
-        ],
-      },
+    tipo: 'selecao_unica',
+    opcoes: [
+      { valor: 0, texto: '0 pontos: Sem drogas vasoativas (DVA), lactato < 45 mg/dL ou 5 mmol/L, press\u00e3o arterial m\u00e9dia (PAM) normal para a idade' },
+      { valor: 1, texto: '1 ponto para cada (at\u00e9 3 pontos): 1 DVA | lactato 45\u201398 mg/dL ou 5\u201310,9 mmol/L | PAM baixa para a idade' },
+      { valor: 2, texto: '2 pontos para cada (at\u00e9 6 pontos): \u2265 2 DVA | lactato \u2265 99 mg/dL ou 10,9 mmol/L | PAM muito baixa para a idade' },
     ],
   },
   coagulacao: {
     id: 'coagulacao',
     label: 'Sistema de Coagula\u00e7\u00e3o',
-    tipo: 'multipla_checkbox',
-    baseline: {
-      texto: 'Plaquetas \u2265 100.000/\u00b5L, INR \u2264 1,3, D\u00edmero D \u2264 2 mg/L, Fibrinog\u00eanio \u2265 100 mg/dL',
-      valor: 0,
-    },
-    criterios: [
-      { id: 'plaquetas', texto: 'Plaquetas \u2264 100.000/\u00b5L' },
-      { id: 'inr', texto: 'INR > 1,3' },
-      { id: 'dimero', texto: 'D\u00edmero D > 2 mg/L' },
-      { id: 'fibrinogenio', texto: 'Fibrinog\u00eanio < 100 mg/dL' },
+    tipo: 'selecao_unica',
+    opcoes: [
+      { valor: 0, texto: '0 pontos: Plaquetas \u2265 100.000/\u00b5L, INR \u2264 1,3, D\u00edmero D \u2264 2 mg/L, Fibrinog\u00eanio \u2265 100 mg/dL' },
+      { valor: 1, texto: '1 ponto para cada (m\u00e1ximo 2 pontos): Plaquetas \u2264 100.000/\u00b5L | INR > 1,3 | D\u00edmero D > 2 mg/L | Fibrinog\u00eanio < 100 mg/dL' },
     ],
-    maxPontos: 2,
   },
 };
 
@@ -91,27 +60,21 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
 
   const [respiratorio, setRespiratorio] = useState<number | null>(null);
   const [neurologico, setNeurologico] = useState<number | null>(null);
-  const [cardiovascular, setCardiovascular] = useState<Record<string, number>>({});
-  const [coagulacao, setCoagulacao] = useState<Record<string, boolean>>({});
+  const [cardiovascular, setCardiovascular] = useState<number | null>(null);
+  const [coagulacao, setCoagulacao] = useState<number | null>(null); 
 
   const scoreRespiratorio = respiratorio ?? 0;
   const scoreNeurologico = neurologico ?? 0;
 
-  const scoreCardiovascular = useMemo(() => {
-    return Object.values(cardiovascular).reduce((acc, val) => acc + val, 0);
-  }, [cardiovascular]);
-
-  const scoreCoagulacao = useMemo(() => {
-    const checked = Object.values(coagulacao).filter(Boolean).length;
-    return Math.min(checked, 2);
-  }, [coagulacao]);
+  const scoreCardiovascular = cardiovascular ?? 0;
+  const scoreCoagulacao = coagulacao ?? 0;
 
   const scoreTotal = useMemo(() => {
     return scoreRespiratorio + scoreNeurologico + scoreCardiovascular + scoreCoagulacao;
   }, [scoreRespiratorio, scoreNeurologico, scoreCardiovascular, scoreCoagulacao]);
 
   const todosPreenchidos = respiratorio !== null && neurologico !== null
-    && Object.keys(cardiovascular).length === 3;
+    && cardiovascular !== null && coagulacao !== null;
 
   const classificacao = useMemo(() => {
     if (!todosPreenchidos) return null;
@@ -150,10 +113,10 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
     let total = 0;
     if (respiratorio !== null) total++;
     if (neurologico !== null) total++;
-    if (Object.keys(cardiovascular).length === 3) total++;
-    total++;
+    if (cardiovascular !== null) total++;
+    if (coagulacao !== null) total++;
     return (total / 4) * 100;
-  }, [respiratorio, neurologico, cardiovascular]);
+  }, [respiratorio, neurologico, cardiovascular, coagulacao]);
 
   const saveToSupabase = async () => {
     if (!classificacao) return;
@@ -182,8 +145,8 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
     setInfeccao(null);
     setRespiratorio(null);
     setNeurologico(null);
-    setCardiovascular({});
-    setCoagulacao({});
+    setCardiovascular(null);
+    setCoagulacao(null);
     setTela('infeccao');
   };
 
@@ -299,68 +262,41 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
             </select>
           </div>
 
-          <div className={`p-4 rounded-xl shadow-sm transition-all border-l-4 ${Object.keys(cardiovascular).length === 3 ? 'bg-slate-100 dark:bg-slate-700 border-rose-500' : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}>
-            <label className="block text-sm font-bold text-slate-800 dark:text-gray-100 mb-1">
+          <div className={`p-4 rounded-xl shadow-sm transition-all border-l-4 ${cardiovascular !== null ? 'bg-slate-100 dark:bg-slate-700 border-rose-500' : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}>
+            <label className="block text-sm font-bold text-slate-800 dark:text-gray-100 mb-2">
               {cardioConfig.label}
             </label>
-            <p className="text-[10px] text-slate-400 dark:text-gray-500 mb-3 uppercase tracking-wider font-semibold">
-              {"Pontua\u00e7\u00f5es se somam (at\u00e9 6 pontos)"}
-            </p>
-            <div className="space-y-3">
-              {cardioConfig.categorias.map((cat) => (
-                <div key={cat.id}>
-                  <label className="block text-xs font-semibold text-slate-600 dark:text-gray-300 mb-1">{cat.label}</label>
-                  <select
-                    value={cardiovascular[cat.id] === undefined ? '' : cardiovascular[cat.id]}
-                    onChange={(e) => setCardiovascular(prev => ({ ...prev, [cat.id]: parseInt(e.target.value) }))}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
-                  >
-                    <option value="" disabled>Escolha...</option>
-                    {cat.opcoes.map((op) => (
-                      <option key={op.valor} value={op.valor}>{op.valor} pt{op.valor !== 1 ? 's' : ''} {'\u2014'} {op.texto}</option>
-                    ))}
-                  </select>
-                </div>
+            <select
+              value={cardiovascular === null ? '' : cardiovascular}
+              onChange={(e) => setCardiovascular(parseInt(e.target.value))}
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
+            >
+              <option value="" disabled>{"Escolha uma op\u00e7\u00e3o..."}</option>
+              {(cardioConfig as any).opcoes.map((op: any) => (
+                <option key={op.valor} value={op.valor}>{op.texto}</option>
               ))}
-            </div>
-            {Object.keys(cardiovascular).length === 3 && (
-              <div className="mt-2 text-right text-xs font-bold text-rose-600 dark:text-rose-400">
-                Subtotal Cardiovascular: {scoreCardiovascular} pt{scoreCardiovascular !== 1 ? 's' : ''}
-              </div>
-            )}
+            </select>
           </div>
 
-          <div className={`p-4 rounded-xl shadow-sm transition-all border-l-4 ${scoreCoagulacao > 0 ? 'bg-slate-100 dark:bg-slate-700 border-rose-500' : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}>
-            <label className="block text-sm font-bold text-slate-800 dark:text-gray-100 mb-1">
+          <div className={`p-4 rounded-xl shadow-sm transition-all border-l-4 ${coagulacao !== null ? 'bg-slate-100 dark:bg-slate-700 border-rose-500' : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}>
+            <label className="block text-sm font-bold text-slate-800 dark:text-gray-100 mb-2">
               {coagConfig.label}
             </label>
-            <p className="text-[10px] text-slate-400 dark:text-gray-500 mb-1 uppercase tracking-wider font-semibold">
-              Normal: {coagConfig.baseline.texto}
-            </p>
-            <p className="text-[10px] text-rose-500 dark:text-rose-400 mb-3 font-semibold">
-              {"1 ponto para cada crit\u00e9rio alterado (m\u00e1ximo 2 pontos)"}
-            </p>
-            <div className="space-y-2">
-              {coagConfig.criterios.map((crit) => (
-                <label key={crit.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-600 cursor-pointer transition">
-                  <input
-                    type="checkbox"
-                    checked={coagulacao[crit.id] || false}
-                    onChange={(e) => setCoagulacao(prev => ({ ...prev, [crit.id]: e.target.checked }))}
-                    className="w-4 h-4 rounded border-slate-300 text-rose-500 focus:ring-rose-500"
-                  />
-                  <span className="text-sm text-slate-700 dark:text-gray-200">{crit.texto}</span>
-                </label>
+            <select
+              value={coagulacao === null ? '' : coagulacao}
+              onChange={(e) => setCoagulacao(parseInt(e.target.value))}
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
+            >
+              <option value="" disabled>{"Escolha uma op\u00e7\u00e3o..."}</option>
+              {(coagConfig as any).opcoes.map((op: any) => (
+                <option key={op.valor} value={op.valor}>{op.texto}</option>
               ))}
-            </div>
-            <div className="mt-2 text-right text-xs font-bold text-rose-600 dark:text-rose-400">
-              {"Subtotal Coagula\u00e7\u00e3o"}: {scoreCoagulacao} pt{scoreCoagulacao !== 1 ? 's' : ''} {Object.values(coagulacao).filter(Boolean).length > 2 ? '(limitado a 2)' : ''}
-            </div>
+            </select>
           </div>
         </div>
 
         <div className="mt-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-          <div className="grid grid-cols-4 gap-2 text-center text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-gray-400">
+          <div className="grid grid-cols-4 gap-2 text-center text-xs uppercase tracking-wider font-bold text-slate-500 dark:text-gray-400">
             <div>
               <span className="block text-lg text-slate-800 dark:text-gray-100">{respiratorio ?? '-'}</span>
               Resp.
@@ -370,7 +306,7 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
               Neuro.
             </div>
             <div>
-              <span className="block text-lg text-slate-800 dark:text-gray-100">{Object.keys(cardiovascular).length === 3 ? scoreCardiovascular : '-'}</span>
+              <span className="block text-lg text-slate-800 dark:text-gray-100">{cardiovascular !== null ? scoreCardiovascular : '-'}</span>
               Cardio.
             </div>
             <div>
@@ -404,11 +340,11 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
   if (tela === 'resultado' && classificacao) {
     return (
       <div className="w-full bg-slate-50 dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 text-center animate-in zoom-in-95 duration-300 transition-colors">
-        <p className="text-slate-500 dark:text-gray-500 text-[10px] mb-4 uppercase tracking-[0.2em] font-bold">{"Classifica\u00e7\u00e3o Final"}</p>
+        <p className="text-slate-500 dark:text-gray-500 text-xs mb-4 uppercase tracking-[0.2em] font-bold">{"Classifica\u00e7\u00e3o Final"}</p>
 
         <div className={`w-28 h-28 mx-auto rounded-full flex flex-col items-center justify-center mb-6 border-8 border-white dark:border-slate-800 shadow-xl ${classificacao.bg}`}>
           <span className="text-5xl font-black text-white">{scoreTotal}</span>
-          <span className="text-[10px] text-white/80 uppercase font-bold">pontos</span>
+          <span className="text-xs text-white/80 uppercase font-bold">pontos</span>
         </div>
 
         <h2 className={`text-3xl font-black ${classificacao.cor} mb-2`}>{classificacao.titulo}</h2>
@@ -423,13 +359,13 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
           ].map((s) => (
             <div key={s.label} className="bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
               <span className="block text-lg font-black text-slate-800 dark:text-gray-100">{s.score}</span>
-              <span className="text-[9px] text-slate-400 uppercase font-bold">{s.label}</span>
+              <span className="text-xs text-slate-400 uppercase font-bold">{s.label}</span>
             </div>
           ))}
         </div>
 
         <div className="bg-white dark:bg-slate-800/80 p-5 rounded-3xl mb-10 border border-slate-200 dark:border-slate-700 shadow-lg">
-          <p className="text-[10px] text-slate-400 dark:text-gray-400 mb-2 uppercase font-bold tracking-widest italic underline decoration-rose-500/50">{"Conduta Cl\u00ednica Recomendada"}</p>
+          <p className="text-xs text-slate-600 dark:text-gray-300 mb-2 uppercase font-bold tracking-widest">{"Conduta Cl\u00ednica Recomendada"}</p>
           <p className="text-slate-800 dark:text-gray-100 font-bold text-lg leading-tight">{classificacao.conduta}</p>
         </div>
 
