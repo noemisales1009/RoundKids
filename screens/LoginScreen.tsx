@@ -109,10 +109,10 @@ export const LoginScreen: React.FC = () => {
     };
 
     return (
-        <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-950">
+        <div className="flex flex-col items-center justify-center h-screen bg-slate-50 dark:bg-slate-950">
             <div className="p-6 sm:p-8 bg-white dark:bg-slate-900 rounded-xl shadow-lg max-w-sm w-full m-4">
                 <div className="text-center mb-8">
-                    <ClipboardIcon className="w-12 h-12 sm:w-16 sm:h-16 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
+                    <img src="/logo.png" alt="Round Kids" className="w-48 h-48 sm:w-64 sm:h-64 object-contain mx-auto -mb-8 sm:-mb-12" />
                     <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-200">Bem-vindo de volta!</h1>
                     <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Faça login para continuar.</p>
                 </div>
@@ -161,6 +161,9 @@ export const LoginScreen: React.FC = () => {
                     </button>
                 </form>
             </div>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-4 text-center px-4">
+                Acesso restrito a profissionais autorizados
+            </p>
         </div>
     );
 };

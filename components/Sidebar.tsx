@@ -26,9 +26,8 @@ export const Sidebar: React.FC = () => {
 
     return (
         <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center space-x-2">
-                <ClipboardIcon className="w-8 h-8 text-blue-600" />
-                <span className="text-xl font-bold text-slate-800 dark:text-slate-200">Round Juju</span>
+            <div className="px-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-start h-32">
+                <img src="/logo.png" alt="Round Kids" className="h-[120px] w-auto object-contain" />
             </div>
             <nav className="flex-1 px-4 py-4 space-y-2">
                 {navItems.map(item => (

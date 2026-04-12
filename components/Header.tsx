@@ -63,7 +63,7 @@ export const Header: React.FC<{ title: string; onMenuClick: () => void }> = ({ t
     };
 
     return (
-        <header className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-3 sm:p-4 sticky top-0 z-10 flex items-center justify-between shrink-0">
+        <header className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-3 sm:px-4 sticky top-0 z-10 flex items-center justify-between shrink-0 h-32">
             <div className="flex items-center gap-3">
                 <button
                     onClick={showBackButton ? () => (typeof backPath === 'string' ? navigate(backPath) : navigate(-1)) : onMenuClick}
@@ -79,9 +79,8 @@ export const Header: React.FC<{ title: string; onMenuClick: () => void }> = ({ t
                     )}
                 </div>
                 {/* Logo "Round Kids" */}
-                <div className="flex items-center gap-2">
-                    <ClipboardIcon className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600 dark:text-blue-400" />
-                    <span className="font-bold text-slate-900 dark:text-slate-100 hidden sm:inline text-lg">Round Kids</span>
+                <div className="flex items-center">
+                    <img src="/logo.png" alt="Round Kids" className="h-20 w-auto object-contain" />
                 </div>
                 <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 truncate sm:hidden">{title}</h1>
             </div>
