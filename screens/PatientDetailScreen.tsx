@@ -3,7 +3,7 @@ import React, { useState, useContext, useEffect, lazy, Suspense } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Device, Exam, Medication, SurgicalProcedure, Culture, Diet } from '../types';
 import { formatDateToBRL } from '../constants';
-import { BackArrowIcon, WarningIcon, PencilIcon, ClipboardIcon, FileTextIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, BrainIcon, ShieldIcon, BeakerIcon, LungsIcon, DumbbellIcon, CloseIcon, ScalpelIcon, ChevronRightIcon } from '../components/icons';
+import { BackArrowIcon, WarningIcon, PencilIcon, ClipboardIcon, FileTextIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, BrainIcon, ShieldIcon, BeakerIcon, LungsIcon, DumbbellIcon, CloseIcon, ScalpelIcon, ChevronRightIcon, CalculatorIcon } from '../components/icons';
 import { PatientDetailSkeleton } from '../components/SkeletonLoader';
 import { ArchiveModal } from '../components/modals/ArchiveModal';
 import { SecondaryNavigation } from '../components/SecondaryNavigation';
@@ -42,6 +42,7 @@ const ConsciousnessCalculator = lazy(() => import('../components/ConsciousnessCa
 const VNICNAFCalculator = lazy(() => import('../components/VNICNAFCalculator'));
 const RespiratoryCalculator = lazy(() => import('../components/RespiratoryCalculator').then(m => ({ default: m.RespiratoryCalculator })));
 const PhoenixSepsisCalculator = lazy(() => import('../components/PhoenixSepsisCalculator'));
+const NPTCalculator = lazy(() => import('../npt/NPTWrapper'));
 const DiagnosticsSection = lazy(() => import('../components/DiagnosticsSection').then(m => ({ default: m.DiagnosticsSection })));
 const AlertasSection = lazy(() => import('../components/AlertasSection').then(m => ({ default: m.AlertasSection })));
 const CompletedAlertsSection = lazy(() => import('../components/CompletedAlertsSection').then(m => ({ default: m.CompletedAlertsSection })));
@@ -88,7 +89,7 @@ const PatientDetailScreen: React.FC = () => {
 
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
-    const [mainTab, setMainTab] = useState<'data' | 'scales'>('data');
+    const [mainTab, setMainTab] = useState<'data' | 'npt' | 'scales'>('data');
     const [dataTab, setDataTab] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'diagnostics'>('devices');
     const [isAddDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
     const [editingDevice, setEditingDevice] = useState<Device | null>(null);
@@ -116,7 +117,7 @@ const PatientDetailScreen: React.FC = () => {
     const [isEndDateModalOpen, setEndDateModalOpen] = useState<number | string | null>(null);
     const [isEditInfoModalOpen, setEditInfoModalOpen] = useState(false);
     const [isCreateAlertModalOpen, setCreateAlertModalOpen] = useState(false);
-    const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'vni-cnaf' | 'fss' | 'abstinencia' | 'sos-pd' | 'consciousness' | 'respiratory'>('list');
+    const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'vni-cnaf' | 'fss' | 'abstinencia' | 'sos-pd' | 'consciousness' | 'respiratory' | 'phoenix-sepsis'>('list');
     const [calculationsRefresh, setCalculationsRefresh] = useState(0);
 
     const { showNotification } = useContext(NotificationContext)!;
@@ -323,6 +324,16 @@ const PatientDetailScreen: React.FC = () => {
                         >
                             <ClipboardIcon className="w-6 h-6" />
                             Dados Clínicos
+                        </button>
+                        <button
+                            onClick={() => setMainTab('npt')}
+                            className={`flex-1 py-4 px-1 text-center font-bold flex items-center justify-center gap-2 transition-colors duration-200 text-lg ${mainTab === 'npt'
+                                ? 'text-blue-600 dark:text-blue-400'
+                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                                }`}
+                        >
+                            <BeakerIcon className="w-6 h-6" />
+                            Calculadora NPT
                         </button>
                         <button
                             onClick={() => setMainTab('scales')}
@@ -648,6 +659,21 @@ const PatientDetailScreen: React.FC = () => {
                             )}
                         </div>
                     </>
+                )}
+
+                {mainTab === 'npt' && patient && (
+                    <div className="p-4">
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <NPTCalculator
+                                initialPatient={{
+                                    id: patient.id.toString(),
+                                    name: patient.name,
+                                    dob: patient.dob,
+                                    peso: patient.peso ?? null,
+                                }}
+                            />
+                        </Suspense>
+                    </div>
                 )}
 
                 {mainTab === 'scales' && (

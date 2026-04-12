@@ -17,10 +17,51 @@ interface ConfirmModal {
   patientName?: string;
 }
 
+const formatDateToBRL = (dateString?: string | null) => {
+  if (!dateString) return '—';
+  try {
+    return new Date(dateString).toLocaleDateString('pt-BR');
+  } catch {
+    return '—';
+  }
+};
+
+const formatDateTimeToBRL = (dateString?: string | null) => {
+  if (!dateString) return '—';
+  try {
+    const d = new Date(dateString);
+    return `${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+  } catch {
+    return '—';
+  }
+};
+
+const escapeHtml = (value: any) => {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
+const renderList = <T,>(title: string, items: T[] | null | undefined, itemRenderer: (item: T) => string) => {
+  if (!items || items.length === 0) return '';
+  return `
+    <h2>${title}</h2>
+    <ul>
+      ${items.map(item => `<li>${itemRenderer(item)}</li>`).join('')}
+    </ul>
+  `;
+};
+
 export const ArchivedPatientsScreen: React.FC = () => {
   const [patients, setPatients] = useState<ArchivedPatient[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [generatingPdf, setGeneratingPdf] = useState(false);
   const [confirmModal, setConfirmModal] = useState<ConfirmModal>({
     isOpen: false,
     action: 'reactivate'
@@ -41,7 +82,7 @@ export const ArchivedPatientsScreen: React.FC = () => {
         .order('archived_at', { ascending: false }) as any;
 
       if (error) throw error;
-      
+
       setPatients((data || []).map((p: any) => ({
         id: p.id,
         name: p.name,
@@ -65,7 +106,7 @@ export const ArchivedPatientsScreen: React.FC = () => {
 
   const handleReactivate = async (patientId: string) => {
     try {
-      
+
       // 1️⃣ Reativar o paciente
       const { error: patientError } = await supabase
         .from('patients')
@@ -125,7 +166,6 @@ export const ArchivedPatientsScreen: React.FC = () => {
 
   const handleDelete = async (patientId: string) => {
     try {
-      // Deletar o paciente (as chaves estrangeiras vão cuidar do resto)
       const { error } = await supabase
         .from('patients')
         .delete()
@@ -137,11 +177,277 @@ export const ArchivedPatientsScreen: React.FC = () => {
       }
 
       showMessage('success', 'Paciente deletado permanentemente!');
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        next.delete(patientId);
+        return next;
+      });
       fetchArchivedPatients();
       setConfirmModal({ isOpen: false, action: 'delete' });
     } catch (error: any) {
       console.error('Erro ao deletar paciente:', error);
       showMessage('error', `Erro ao deletar: ${error.message || 'Erro desconhecido'}`);
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredPatients.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredPatients.map(p => p.id)));
+    }
+  };
+
+  const fetchPatientFullData = async (patientId: string) => {
+    // Busca tudo em paralelo
+    const [
+      patientRes,
+      devicesRes,
+      medicationsRes,
+      examsRes,
+      proceduresRes,
+      culturesRes,
+      dietsRes,
+      diureseRes,
+      balanceRes,
+      scalesRes,
+      alertsClinicosRes,
+      tasksRes,
+      completedAlertsRes,
+      diagnosticsRes,
+    ] = await Promise.all([
+      supabase.from('patients').select('*').eq('id', patientId).single(),
+      supabase.from('dispositivos_pacientes').select('*').eq('paciente_id', patientId).order('data_inicio', { ascending: false }),
+      supabase.from('medicacoes_pacientes').select('*').eq('paciente_id', patientId).order('data_inicio', { ascending: false }),
+      supabase.from('exames_pacientes').select('*').eq('paciente_id', patientId).order('data', { ascending: false }),
+      supabase.from('procedimentos_pacientes').select('*').eq('paciente_id', patientId).order('data', { ascending: false }),
+      supabase.from('culturas_pacientes').select('*').eq('paciente_id', patientId).order('data_coleta', { ascending: false }),
+      supabase.from('dietas_pacientes').select('*').eq('paciente_id', patientId).order('data_inicio', { ascending: false }),
+      supabase.from('diurese').select('*').eq('patient_id', patientId).order('data_registro', { ascending: false }),
+      supabase.from('balanco_hidrico').select('*').eq('patient_id', patientId).order('data_registro', { ascending: false }),
+      supabase.from('scale_scores').select('*').eq('paciente_id', patientId).order('created_at', { ascending: false }),
+      supabase.from('alertas_paciente_view_completa').select('*').eq('patient_id', patientId).order('created_at', { ascending: false }),
+      supabase.from('tasks_view_horario_br').select('*').eq('patient_id', patientId).order('created_at', { ascending: false }),
+      supabase.from('alertas_paciente_visibilidade_24h').select('*').eq('patient_id', patientId).order('created_at', { ascending: false }),
+      supabase.from('paciente_diagnosticos').select('*').eq('patient_id', patientId),
+    ]);
+
+    return {
+      patient: patientRes.data,
+      devices: devicesRes.data || [],
+      medications: medicationsRes.data || [],
+      exams: examsRes.data || [],
+      procedures: proceduresRes.data || [],
+      cultures: culturesRes.data || [],
+      diets: dietsRes.data || [],
+      diurese: diureseRes.data || [],
+      balance: balanceRes.data || [],
+      scales: scalesRes.data || [],
+      alertsClinicos: alertsClinicosRes.data || [],
+      tasks: tasksRes.data || [],
+      completedAlerts: completedAlertsRes.data || [],
+      diagnostics: diagnosticsRes.data || [],
+    };
+  };
+
+  const buildPatientHtml = (data: Awaited<ReturnType<typeof fetchPatientFullData>>) => {
+    const p = data.patient || {};
+
+    const infoTable = `
+      <h2>Dados do Paciente</h2>
+      <table>
+        <tr><th>Nome</th><td>${escapeHtml(p.name)}</td></tr>
+        <tr><th>Leito</th><td>${escapeHtml(p.bed_number)}</td></tr>
+        <tr><th>Nascimento</th><td>${formatDateToBRL(p.dob)}</td></tr>
+        <tr><th>Nome da Mãe</th><td>${escapeHtml(p.mother_name)}</td></tr>
+        <tr><th>Diagnóstico</th><td>${escapeHtml(p.diagnosis)}</td></tr>
+        <tr><th>Peso</th><td>${escapeHtml(p.peso)} kg</td></tr>
+        <tr><th>Data de Internação</th><td>${formatDateToBRL(p.dt_internacao)}</td></tr>
+        <tr><th>Arquivado em</th><td>${formatDateToBRL(p.archived_at)}</td></tr>
+        <tr><th>Motivo do Arquivamento</th><td>${escapeHtml(p.motivo_arquivamento || 'Sem motivo')}</td></tr>
+      </table>
+    `;
+
+    const diagnosticsHtml = renderList('Diagnósticos', data.diagnostics, (d: any) => `
+      <strong>${escapeHtml(d.diagnostico || d.nome || '—')}</strong>
+      ${d.data_diagnostico ? `<br>Data: ${formatDateToBRL(d.data_diagnostico)}` : ''}
+      ${d.observacao ? `<br><em>Obs: ${escapeHtml(d.observacao)}</em>` : ''}
+      ${d.arquivado ? `<br><span style="color:#b00">Arquivado</span>` : ''}
+    `);
+
+    const devicesHtml = renderList('Dispositivos', data.devices, (d: any) => `
+      <strong>${escapeHtml(d.nome || d.tipo)} ${d.localizacao ? `(${escapeHtml(d.localizacao)})` : ''}</strong>
+      ${d.data_inicio ? `<br>Início: ${formatDateToBRL(d.data_inicio)}` : ''}
+      ${d.data_remocao ? `<br>Retirada: ${formatDateToBRL(d.data_remocao)}` : ''}
+      ${d.observacao ? `<br><em>Obs: ${escapeHtml(d.observacao)}</em>` : ''}
+      ${d.is_archived ? `<br><span style="color:#b00">Arquivado</span>` : ''}
+    `);
+
+    const medicationsHtml = renderList('Medicações', data.medications, (m: any) => `
+      <strong>${escapeHtml(m.nome)} ${m.dosagem ? `(${escapeHtml(m.dosagem)})` : ''}</strong>
+      ${m.data_inicio ? `<br>Início: ${formatDateToBRL(m.data_inicio)}` : ''}
+      ${m.data_fim ? `<br>Fim: ${formatDateToBRL(m.data_fim)}` : ''}
+      ${m.observacao ? `<br><em>Obs: ${escapeHtml(m.observacao)}</em>` : ''}
+      ${m.is_archived ? `<br><span style="color:#b00">Arquivado</span>` : ''}
+    `);
+
+    const examsHtml = renderList('Exames', data.exams, (e: any) => `
+      <strong>${escapeHtml(e.nome)}</strong>
+      ${e.data ? `<br>Data: ${formatDateToBRL(e.data)}` : ''}
+      ${e.resultado ? `<br>Resultado: ${escapeHtml(e.resultado)}` : ''}
+      ${e.observacao ? `<br><em>Obs: ${escapeHtml(e.observacao)}</em>` : ''}
+      ${e.is_archived ? `<br><span style="color:#b00">Arquivado</span>` : ''}
+    `);
+
+    const proceduresHtml = renderList('Procedimentos Cirúrgicos', data.procedures, (pr: any) => `
+      <strong>${escapeHtml(pr.nome)}</strong>
+      ${pr.cirurgiao ? ` - Dr(a): ${escapeHtml(pr.cirurgiao)}` : ''}
+      ${pr.data ? `<br>Data: ${formatDateToBRL(pr.data)}` : ''}
+      ${pr.observacao ? `<br><em>Obs: ${escapeHtml(pr.observacao)}</em>` : ''}
+      ${pr.is_archived ? `<br><span style="color:#b00">Arquivado</span>` : ''}
+    `);
+
+    const culturesHtml = renderList('Culturas', data.cultures, (c: any) => `
+      <strong>${escapeHtml(c.tipo || c.nome)}</strong>
+      ${c.data_coleta ? `<br>Coleta: ${formatDateToBRL(c.data_coleta)}` : ''}
+      ${c.resultado ? `<br>Resultado: ${escapeHtml(c.resultado)}` : ''}
+      ${c.observacao ? `<br><em>Obs: ${escapeHtml(c.observacao)}</em>` : ''}
+      ${c.is_archived ? `<br><span style="color:#b00">Arquivado</span>` : ''}
+    `);
+
+    const dietsHtml = renderList('Dietas', data.diets, (d: any) => `
+      <strong>${escapeHtml(d.tipo || d.type)}</strong>
+      ${d.data_inicio ? `<br>Início: ${formatDateToBRL(d.data_inicio)}` : ''}
+      ${d.volume ? `<br>Volume: ${escapeHtml(d.volume)} mL` : ''}
+      ${d.vet ? `<br>VET: ${escapeHtml(d.vet)} kcal/dia` : ''}
+      ${d.pt ? `<br>Proteína (PT): ${escapeHtml(d.pt)} g/dia` : ''}
+      ${d.th ? `<br>Taxa Hídrica (TH): ${escapeHtml(d.th)} ml/m²/dia` : ''}
+      ${d.data_remocao ? `<br>Retirada: ${formatDateToBRL(d.data_remocao)}` : ''}
+      ${d.observacao ? `<br><em>Obs: ${escapeHtml(d.observacao)}</em>` : ''}
+      ${d.is_archived ? `<br><span style="color:#b00">Arquivado</span>` : ''}
+    `);
+
+    const diureseHtml = renderList('Diurese', data.diurese, (d: any) => `
+      <strong>Resultado: ${escapeHtml(d.resultado ?? 'N/A')} mL/kg/h</strong>
+      <br>Peso: ${escapeHtml(d.peso)}kg | Volume: ${escapeHtml(d.volume)}mL | Período: ${escapeHtml(d.horas)}h
+      ${d.data_registro ? `<br>Data: ${formatDateToBRL(d.data_registro)}` : ''}
+    `);
+
+    const balanceHtml = renderList('Balanço Hídrico', data.balance, (b: any) => `
+      <strong>Resultado: ${escapeHtml(b.resultado ?? 'N/A')}%</strong>
+      <br>Peso: ${escapeHtml(b.peso)}kg | Volume: ${b.volume > 0 ? '+' : ''}${escapeHtml(b.volume)}mL
+      ${b.data_registro ? `<br>Data: ${formatDateToBRL(b.data_registro)}` : ''}
+    `);
+
+    const scalesHtml = renderList('Avaliações de Escalas', data.scales, (s: any) => `
+      <strong>${escapeHtml(s.scale_name)}</strong> - Pontuação: ${escapeHtml(s.score)}
+      ${s.interpretation ? ` (${escapeHtml(s.interpretation)})` : ''}
+      ${s.created_at ? `<br>Data e Hora: ${formatDateTimeToBRL(s.created_at)}` : ''}
+    `);
+
+    const renderAlertItem = (a: any) => `
+      <strong>${escapeHtml(a.alertaclinico || a.description || a.descricao_limpa || a.titulo || 'Alerta')}</strong>
+      ${a.category ? `<br>Categoria: ${escapeHtml(a.category)}` : ''}
+      ${a.priority ? `<br>Prioridade: ${escapeHtml(a.priority)}` : ''}
+      ${a.status ? `<br>Status: ${escapeHtml(a.status)}` : ''}
+      ${a.responsible ? `<br>Responsável: ${escapeHtml(a.responsible)}` : ''}
+      ${a.created_by_name ? `<br>Criado por: ${escapeHtml(a.created_by_name)}` : ''}
+      ${a.created_at ? `<br>Criado em: ${formatDateTimeToBRL(a.created_at)}` : ''}
+      ${a.prazo_formatado ? `<br>Prazo: ${escapeHtml(a.prazo_formatado)}` : (a.prazo ? `<br>Prazo: ${formatDateTimeToBRL(a.prazo)}` : '')}
+      ${a.concluded_at ? `<br>Concluído em: ${formatDateTimeToBRL(a.concluded_at)}` : ''}
+      ${a.concluded_by_name ? `<br>Concluído por: ${escapeHtml(a.concluded_by_name)}` : ''}
+      ${a.justificativa ? `<br><em>Justificativa: ${escapeHtml(a.justificativa)}</em>` : ''}
+    `;
+
+    const alertsClinicosHtml = renderList('Alertas do Paciente (Clínicos)', data.alertsClinicos, renderAlertItem);
+    const tasksHtml = renderList('Tasks / Checklist', data.tasks, renderAlertItem);
+    const completedAlertsHtml = renderList('Alertas Concluídos', data.completedAlerts, renderAlertItem);
+
+    return `
+      <section class="patient-section">
+        <h1>Relatório do Paciente: ${escapeHtml(p.name)}</h1>
+        ${infoTable}
+        ${diagnosticsHtml}
+        ${devicesHtml}
+        ${medicationsHtml}
+        ${examsHtml}
+        ${proceduresHtml}
+        ${culturesHtml}
+        ${dietsHtml}
+        ${diureseHtml}
+        ${balanceHtml}
+        ${scalesHtml}
+        ${alertsClinicosHtml}
+        ${tasksHtml}
+        ${completedAlertsHtml}
+      </section>
+    `;
+  };
+
+  const handleGeneratePdfForSelected = async () => {
+    if (selectedIds.size === 0) return;
+    setGeneratingPdf(true);
+    try {
+      const ids = Array.from(selectedIds);
+      const allData = await Promise.all(ids.map(id => fetchPatientFullData(id)));
+      const sections = allData.map(d => buildPatientHtml(d)).join('<div class="page-break"></div>');
+
+      const htmlContent = `
+        <html>
+          <head>
+            <title>Relatório de Pacientes Arquivados</title>
+            <style>
+              body { font-family: sans-serif; margin: 20px; color: #333; }
+              h1 { color: #00796b; font-size: 22px; border-bottom: 3px solid #00796b; padding-bottom: 8px; }
+              h2 { color: #00796b; font-size: 17px; margin-top: 22px; border-bottom: 1px solid #e0f2f1; padding-bottom: 5px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+              td, th { border: 1px solid #ccc; padding: 8px; text-align: left; font-size: 13px; }
+              th { background-color: #e0f2f1; width: 30%; }
+              ul { list-style-type: none; padding-left: 0; }
+              li { background-color: #f7f7f7; border: 1px solid #eee; padding: 10px; margin-bottom: 6px; border-radius: 4px; font-size: 13px; line-height: 1.5; }
+              .patient-section { margin-bottom: 40px; }
+              .page-break { page-break-after: always; }
+              @media print {
+                .page-break { page-break-after: always; }
+              }
+            </style>
+          </head>
+          <body>
+            ${sections}
+          </body>
+        </html>
+      `;
+
+      const pdfWindow = window.open('', '_blank');
+      if (pdfWindow) {
+        pdfWindow.document.write(htmlContent);
+        pdfWindow.document.close();
+        // Aguardar renderização antes de imprimir
+        pdfWindow.onload = () => {
+          pdfWindow.focus();
+          pdfWindow.print();
+        };
+        // Fallback caso onload não dispare
+        setTimeout(() => {
+          try { pdfWindow.focus(); pdfWindow.print(); } catch {}
+        }, 500);
+      } else {
+        showMessage('error', 'Pop-up bloqueado. Permita pop-ups para gerar o PDF.');
+      }
+    } catch (error: any) {
+      console.error('Erro ao gerar PDF:', error);
+      showMessage('error', `Erro ao gerar PDF: ${error.message || 'Erro desconhecido'}`);
+    } finally {
+      setGeneratingPdf(false);
     }
   };
 
@@ -164,6 +470,8 @@ export const ArchivedPatientsScreen: React.FC = () => {
       </div>
     );
   }
+
+  const allSelected = filteredPatients.length > 0 && selectedIds.size === filteredPatients.length;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6">
@@ -212,12 +520,32 @@ export const ArchivedPatientsScreen: React.FC = () => {
             <p className="text-2xl font-bold text-blue-600">{filteredPatients.length}</p>
           </div>
           <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
-            <p className="text-sm text-slate-600 dark:text-slate-400">Filtro Ativo</p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">
-              {searchTerm ? '🔍' : '—'}
-            </p>
+            <p className="text-sm text-slate-600 dark:text-slate-400">Selecionados</p>
+            <p className="text-2xl font-bold text-green-600">{selectedIds.size}</p>
           </div>
         </div>
+
+        {/* Action bar */}
+        {selectedIds.size > 0 && (
+          <div className="mb-4 flex flex-wrap items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <span className="text-sm text-blue-800 dark:text-blue-200 font-medium">
+              {selectedIds.size} paciente(s) selecionado(s)
+            </span>
+            <button
+              onClick={handleGeneratePdfForSelected}
+              disabled={generatingPdf}
+              className="ml-auto inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition"
+            >
+              {generatingPdf ? '⏳ Gerando...' : '📄 Gerar PDF dos Selecionados'}
+            </button>
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="px-3 py-2 bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition"
+            >
+              Limpar seleção
+            </button>
+          </div>
+        )}
 
         {/* Table */}
         {filteredPatients.length > 0 ? (
@@ -226,6 +554,15 @@ export const ArchivedPatientsScreen: React.FC = () => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-slate-100 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600">
+                    <th className="px-4 py-4 text-center">
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        onChange={toggleSelectAll}
+                        className="w-4 h-4 cursor-pointer"
+                        title="Selecionar todos"
+                      />
+                    </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900 dark:text-white">
                       Nome
                     </th>
@@ -256,6 +593,14 @@ export const ArchivedPatientsScreen: React.FC = () => {
                           : 'bg-slate-50 dark:bg-slate-700/50'
                       } hover:bg-slate-100 dark:hover:bg-slate-700 transition`}
                     >
+                      <td className="px-4 py-4 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(patient.id)}
+                          onChange={() => toggleSelect(patient.id)}
+                          className="w-4 h-4 cursor-pointer"
+                        />
+                      </td>
                       <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">
                         {patient.name}
                       </td>

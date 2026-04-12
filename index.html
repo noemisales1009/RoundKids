@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Round Juju</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
       tailwind.config = {
         darkMode: "class",
@@ -69,6 +71,9 @@
       .animate-notification-in {
           animation: notificationSlideIn 0.3s ease-out forwards;
       }
+
+      /* NPT Calculator: hide PDF template off-screen */
+      .report-container-offscreen { position: absolute; left: -9999px; top: 0; }
     </style>
      <script>
       // Prevents flash of light theme if dark is selected

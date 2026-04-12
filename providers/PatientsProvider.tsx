@@ -280,8 +280,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 supabase.from('culturas_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
                 supabase.from('dietas_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
                 supabase.from('precautions').select('*').in('patient_id', activePatientIds),
-                supabase.from('diurese').select('*').in('patient_id', activePatientIds).order('created_at', { ascending: false }).limit(100),
-                supabase.from('balanco_hidrico').select('*').in('patient_id', activePatientIds).order('created_at', { ascending: false }).limit(100)
+                supabase.from('diurese').select('*').in('patient_id', activePatientIds).order('data_registro', { ascending: false }).limit(100),
+                supabase.from('balanco_hidrico').select('*').in('patient_id', activePatientIds).order('data_registro', { ascending: false }).limit(100)
             ]).then(([
                 patientsFullRes,
                 devicesRes,
