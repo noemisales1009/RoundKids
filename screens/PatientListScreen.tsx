@@ -8,7 +8,7 @@ import { LoadingIndicator } from '../components/LoadingIndicator';
 
 const PatientListScreen: React.FC = () => {
     useHeader('Leitos');
-    const { patients, questions, checklistAnswers } = useContext(PatientsContext)!;
+    const { patients } = useContext(PatientsContext)!;
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(true);
 
@@ -27,27 +27,6 @@ const PatientListScreen: React.FC = () => {
             )
             .sort((a, b) => a.bedNumber - b.bedNumber);
     }, [patients, searchTerm]);
-
-    const calculateProgress = (patientId: number | string) => {
-        if (!questions || questions.length === 0) return 0;
-
-        // Get all unique categories from questions
-        const categoryIds = Array.from(new Set(questions.map(q => q.categoryId)));
-        if (categoryIds.length === 0) return 0;
-
-        const patientAnswers = checklistAnswers[patientId?.toString()] || {};
-
-        let completedCategories = 0;
-        categoryIds.forEach(catId => {
-            const questionsForCat = questions.filter(q => q.categoryId === catId);
-            if (questionsForCat.length === 0) return;
-
-            const allAnswered = questionsForCat.every(q => patientAnswers[q.id] !== undefined);
-            if (allAnswered) completedCategories++;
-        });
-
-        return (completedCategories / categoryIds.length) * 100;
-    };
 
     return (
         <div className="space-y-4">
@@ -75,7 +54,6 @@ const PatientListScreen: React.FC = () => {
             ) : (
                 <div className="space-y-3">
                     {filteredPatients.map(patient => {
-                    const progress = calculateProgress(patient.id);
                     const statusColors = {
                         'estavel': { border: 'border-green-500', bg: 'bg-green-50 dark:bg-green-900/20', text: 'text-green-700 dark:text-green-400' },
                         'instavel': { border: 'border-yellow-500', bg: 'bg-yellow-50 dark:bg-yellow-900/20', text: 'text-yellow-700 dark:text-yellow-400' },
@@ -100,12 +78,6 @@ const PatientListScreen: React.FC = () => {
                                         )}
                                     </div>
                                     <p className="text-sm text-slate-500 dark:text-slate-400">Nasc: {new Date(patient.dob).toLocaleDateString('pt-BR')}</p>
-                                    <div className="mt-2 flex items-center gap-2">
-                                        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
-                                            <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${progress}%` }}></div>
-                                        </div>
-                                        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{Math.round(progress)}%</span>
-                                    </div>
                                 </div>
                                 <ChevronRightIcon className="w-6 h-6 text-slate-400 dark:text-slate-500" />
                             </div>

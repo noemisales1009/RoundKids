@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { NavLink } from 'react-router-dom';
 import { DashboardIcon, BedIcon, FileTextIcon, ClipboardIcon, SettingsIcon } from './icons';
+import { UserContext } from '../contexts';
 
 export const BottomNav: React.FC = () => {
+    const { user } = useContext(UserContext)!;
+    const isAdmin = user?.access_level === 'adm';
     const navItems = [
         { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
         { path: '/patients', label: 'Leitos', icon: BedIcon },
         { path: '/history', label: 'Histórico Geral', icon: FileTextIcon },
-        { path: '/archived', label: 'Arquivados', icon: ClipboardIcon },
+        ...(isAdmin ? [{ path: '/archived', label: 'Arquivados', icon: ClipboardIcon }] : []),
         { path: '/settings', label: 'Ajustes', icon: SettingsIcon },
     ];
 

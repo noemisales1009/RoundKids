@@ -1,6 +1,7 @@
 import React, { useEffect, lazy, Suspense } from 'react';
 import { HashRouter, Routes, Route, useParams } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { AdminRoute } from './components/AdminRoute';
 import { AppLayout } from './components/AppLayout';
 import { NetworkBanner } from './components/NetworkBanner';
 import { NetworkProvider } from './contexts/NetworkContext';
@@ -77,7 +78,7 @@ const App: React.FC = () => {
                                             <Route path="patient/:patientId/create-alert" element={<ErrorBoundary><CreateAlertScreen /></ErrorBoundary>} />
                                             <Route path="status/:status" element={<ErrorBoundary><TaskStatusScreen /></ErrorBoundary>} />
                                             <Route path="history" element={<ErrorBoundary><Suspense fallback={<LoadingSpinner />}><AlertsHistoryScreen useHeader={useHeader} /></Suspense></ErrorBoundary>} />
-                                            <Route path="archived" element={<ErrorBoundary><Suspense fallback={<LoadingSpinner />}><ArchivedPatientsScreen /></Suspense></ErrorBoundary>} />
+                                            <Route path="archived" element={<ErrorBoundary><AdminRoute><Suspense fallback={<LoadingSpinner />}><ArchivedPatientsScreen /></Suspense></AdminRoute></ErrorBoundary>} />
                                             <Route path="settings" element={<ErrorBoundary><SettingsScreen /></ErrorBoundary>} />
                                         </Route>
                                     </Routes>

@@ -60,13 +60,17 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
 
   const [respiratorio, setRespiratorio] = useState<number | null>(null);
   const [neurologico, setNeurologico] = useState<number | null>(null);
-  const [cardiovascular, setCardiovascular] = useState<number | null>(null);
-  const [coagulacao, setCoagulacao] = useState<number | null>(null); 
+  // Cardiovascular agora tem 3 campos independentes (DVA, lactato, PAM) — somados, max 6
+  const [cardioDVA, setCardioDVA] = useState<number | null>(null);
+  const [cardioLactato, setCardioLactato] = useState<number | null>(null);
+  const [cardioPAM, setCardioPAM] = useState<number | null>(null);
+  const [coagulacao, setCoagulacao] = useState<number | null>(null);
 
   const scoreRespiratorio = respiratorio ?? 0;
   const scoreNeurologico = neurologico ?? 0;
 
-  const scoreCardiovascular = cardiovascular ?? 0;
+  const cardiovascularPreenchido = cardioDVA !== null && cardioLactato !== null && cardioPAM !== null;
+  const scoreCardiovascular = (cardioDVA ?? 0) + (cardioLactato ?? 0) + (cardioPAM ?? 0);
   const scoreCoagulacao = coagulacao ?? 0;
 
   const scoreTotal = useMemo(() => {
@@ -74,7 +78,7 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
   }, [scoreRespiratorio, scoreNeurologico, scoreCardiovascular, scoreCoagulacao]);
 
   const todosPreenchidos = respiratorio !== null && neurologico !== null
-    && cardiovascular !== null && coagulacao !== null;
+    && cardiovascularPreenchido && coagulacao !== null;
 
   const classificacao = useMemo(() => {
     if (!todosPreenchidos) return null;
@@ -113,10 +117,10 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
     let total = 0;
     if (respiratorio !== null) total++;
     if (neurologico !== null) total++;
-    if (cardiovascular !== null) total++;
+    if (cardiovascularPreenchido) total++;
     if (coagulacao !== null) total++;
     return (total / 4) * 100;
-  }, [respiratorio, neurologico, cardiovascular, coagulacao]);
+  }, [respiratorio, neurologico, cardiovascularPreenchido, coagulacao]);
 
   const saveToSupabase = async () => {
     if (!classificacao) return;
@@ -145,7 +149,9 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
     setInfeccao(null);
     setRespiratorio(null);
     setNeurologico(null);
-    setCardiovascular(null);
+    setCardioDVA(null);
+    setCardioLactato(null);
+    setCardioPAM(null);
     setCoagulacao(null);
     setTela('infeccao');
   };
@@ -262,20 +268,61 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
             </select>
           </div>
 
-          <div className={`p-4 rounded-xl shadow-sm transition-all border-l-4 ${cardiovascular !== null ? 'bg-slate-100 dark:bg-slate-700 border-rose-500' : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}>
-            <label className="block text-sm font-bold text-slate-800 dark:text-gray-100 mb-2">
-              {cardioConfig.label}
+          <div className={`p-4 rounded-xl shadow-sm transition-all border-l-4 ${cardiovascularPreenchido ? 'bg-slate-100 dark:bg-slate-700 border-rose-500' : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}>
+            <label className="block text-sm font-bold text-slate-800 dark:text-gray-100 mb-3">
+              {cardioConfig.label} <span className="text-xs font-normal text-slate-500 dark:text-gray-400">(avalie os 3 itens — pontos se somam, máx 6)</span>
             </label>
-            <select
-              value={cardiovascular === null ? '' : cardiovascular}
-              onChange={(e) => setCardiovascular(parseInt(e.target.value))}
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
-            >
-              <option value="" disabled>{"Escolha uma op\u00e7\u00e3o..."}</option>
-              {(cardioConfig as any).opcoes.map((op: any) => (
-                <option key={op.valor} value={op.valor}>{op.texto}</option>
-              ))}
-            </select>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-200 mb-1">Drogas vasoativas (DVA)</label>
+                <select
+                  value={cardioDVA === null ? '' : cardioDVA}
+                  onChange={(e) => setCardioDVA(parseInt(e.target.value))}
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
+                >
+                  <option value="" disabled>Escolha uma opção...</option>
+                  <option value={0}>0 pts — Sem DVA</option>
+                  <option value={1}>1 pt — 1 DVA</option>
+                  <option value={2}>2 pts — ≥ 2 DVA</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-200 mb-1">Lactato</label>
+                <select
+                  value={cardioLactato === null ? '' : cardioLactato}
+                  onChange={(e) => setCardioLactato(parseInt(e.target.value))}
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
+                >
+                  <option value="" disabled>Escolha uma opção...</option>
+                  <option value={0}>0 pts — {"< 45 mg/dL ou < 5 mmol/L"}</option>
+                  <option value={1}>1 pt — 45–98 mg/dL ou 5–10,9 mmol/L</option>
+                  <option value={2}>2 pts — ≥ 99 mg/dL ou ≥ 10,9 mmol/L</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-200 mb-1">Pressão arterial média (PAM)</label>
+                <select
+                  value={cardioPAM === null ? '' : cardioPAM}
+                  onChange={(e) => setCardioPAM(parseInt(e.target.value))}
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
+                >
+                  <option value="" disabled>Escolha uma opção...</option>
+                  <option value={0}>0 pts — Normal para a idade</option>
+                  <option value={1}>1 pt — Baixa para a idade</option>
+                  <option value={2}>2 pts — Muito baixa para a idade</option>
+                </select>
+              </div>
+
+              {cardiovascularPreenchido && (
+                <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 text-right">
+                  <span className="text-xs text-slate-500 dark:text-gray-400 uppercase font-bold">Subtotal: </span>
+                  <span className="text-sm font-black text-rose-600 dark:text-rose-400">{scoreCardiovascular} pontos</span>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className={`p-4 rounded-xl shadow-sm transition-all border-l-4 ${coagulacao !== null ? 'bg-slate-100 dark:bg-slate-700 border-rose-500' : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}>
@@ -306,7 +353,7 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
               Neuro.
             </div>
             <div>
-              <span className="block text-lg text-slate-800 dark:text-gray-100">{cardiovascular !== null ? scoreCardiovascular : '-'}</span>
+              <span className="block text-lg text-slate-800 dark:text-gray-100">{cardiovascularPreenchido ? scoreCardiovascular : '-'}</span>
               Cardio.
             </div>
             <div>

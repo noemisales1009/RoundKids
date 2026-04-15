@@ -8,11 +8,12 @@ import { supabase } from '../supabaseClient';
 export const Sidebar: React.FC = () => {
     const navigate = useNavigate();
     const { user, isLoading } = useContext(UserContext)!;
+    const isAdmin = user?.access_level === 'adm';
     const navItems = [
         { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
         { path: '/patients', label: 'Leitos', icon: BedIcon },
         { path: '/history', label: 'Histórico Geral', icon: FileTextIcon },
-        { path: '/archived', label: 'Pacientes Arquivados', icon: ClipboardIcon },
+        ...(isAdmin ? [{ path: '/archived', label: 'Pacientes Arquivados', icon: ClipboardIcon }] : []),
         { path: '/settings', label: 'Ajustes', icon: SettingsIcon },
     ];
 
