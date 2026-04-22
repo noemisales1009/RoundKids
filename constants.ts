@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Patient, Category, Question, Device, Exam, Medication, Alert, Task, User, SurgicalProcedure } from './types';
-import { 
-    AppleIcon, 
+import {
+    AppleIcon,
     DropletIcon,
     HeartPulseIcon,
     BeakerIcon,
@@ -15,11 +15,13 @@ import {
     UsersIcon,
     HomeIcon,
     ScalpelIcon,
-    UserIcon
+    UserIcon,
+    createMaterialIcon
 } from './components/icons';
 
 // Map string names from Database to React Components
 export const ICON_MAP: Record<string, React.FC<{className?: string}>> = {
+    // Legacy SVG icon names
     'AppleIcon': AppleIcon,
     'DropletIcon': DropletIcon,
     'HeartPulseIcon': HeartPulseIcon,
@@ -33,7 +35,21 @@ export const ICON_MAP: Record<string, React.FC<{className?: string}>> = {
     'UsersIcon': UsersIcon,
     'HomeIcon': HomeIcon,
     'ScalpelIcon': ScalpelIcon,
-    'UserIcon': UserIcon
+    'UserIcon': UserIcon,
+    // Material Symbols (nomes vindos do banco)
+    'restaurant': createMaterialIcon('restaurant'),
+    'water_drop': createMaterialIcon('water_drop'),
+    'monitor_heart': createMaterialIcon('monitor_heart'),
+    'bloodtype': createMaterialIcon('bloodtype'),
+    'science': createMaterialIcon('science'),
+    'content_cut': createMaterialIcon('content_cut'),
+    'psychology': createMaterialIcon('psychology'),
+    'lungs': LungsIcon,
+    'accessibility_new': createMaterialIcon('accessibility_new'),
+    'warning': createMaterialIcon('warning'),
+    'local_pharmacy': createMaterialIcon('local_pharmacy'),
+    'family_restroom': createMaterialIcon('family_restroom'),
+    'exit_to_app': createMaterialIcon('exit_to_app'),
 };
 
 // Remove static sample data - load from database instead
@@ -489,6 +505,6 @@ export const getTodayDateString = (): string => {
 export function getDiagnosisOptionLabel(questionId: number, optionId: string): string {
   const question = QUESTIONS.find(q => q.id === questionId);
   if (!question) return optionId;
-  const option = question.alertOptions.find(opt => opt.id === optionId);
+  const option = question.alertOptions?.find(opt => opt.id === optionId);
   return option ? option.label : optionId;
 }
