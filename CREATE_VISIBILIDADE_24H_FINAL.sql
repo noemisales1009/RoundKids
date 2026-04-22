@@ -28,7 +28,7 @@ BEGIN
     RETURN TRUE; 
   END IF;
 
-  RETURN (NOW() AT TIME ZONE 'America/Sao_Paulo' - p_hora_conclusao) < interval '24 hours';
+  RETURN (NOW() AT TIME ZONE 'America/Sao_Paulo' - p_hora_conclusao) < interval '8 hours';
 END;
 $$ LANGUAGE plpgsql STABLE;
 
@@ -47,12 +47,12 @@ BEGIN
 
   tempo_decorrido := NOW() AT TIME ZONE 'America/Sao_Paulo' - p_hora_conclusao;
 
-  IF tempo_decorrido >= interval '24 hours' THEN
+  IF tempo_decorrido >= interval '8 hours' THEN
     RETURN 'Expirado';
   END IF;
 
-  RETURN EXTRACT(HOUR FROM (interval '24 hours' - tempo_decorrido))::integer || 'h ' || 
-         EXTRACT(MINUTE FROM (interval '24 hours' - tempo_decorrido))::integer || 'min visível';
+  RETURN EXTRACT(HOUR FROM (interval '8 hours' - tempo_decorrido))::integer || 'h ' ||
+         EXTRACT(MINUTE FROM (interval '8 hours' - tempo_decorrido))::integer || 'min visível';
 END;
 $$ LANGUAGE plpgsql STABLE;
 
