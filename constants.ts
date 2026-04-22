@@ -308,19 +308,24 @@ export const ALERTS: Alert[] = [];
 export const TASKS: Task[] = [];
 
 export const RESPONSIBLES: string[] = [
-    'Médico', 
-    'Enfermeiro', 
-    'Fisioterapeuta', 
-    'Farmacêutico', 
+    'Médico',
+    'Enfermeiro',
+    'Fisioterapeuta',
+    'Farmacêutico',
     'Nutricionista',
     'Odontólogo',
     'Psicólogo',
     'Fonoaudiólogo',
     'Serviço Social',
     'Terapeuta Ocupacional',
-    'Médico / Enfermeiro', 
+    'Médico / Enfermeiro',
     'Médico / Fisioterapeuta',
-    'Médico / Nutricionista'
+    'Médico / Nutricionista',
+    'Médico / Enfermeiro / Fisioterapeuta',
+    'Médico / Enfermeiro / Nutricionista',
+    'Médico / Odontólogo / Enfermeiro',
+    'Médico / Serviço Social / Enfermeiro',
+    'Médico / Psicólogo / Enfermeiro'
 ] as const;
 
 // Lazy generate alert deadlines
