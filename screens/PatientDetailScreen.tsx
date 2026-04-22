@@ -371,7 +371,7 @@ const PatientDetailScreen: React.FC = () => {
                                     {!isDetailLoading && patient.devices.filter(d => !d.isArchived).length === 0 && (
                                         <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhum dispositivo cadastrado.</p>
                                     )}
-                                    {patient.devices.filter(device => !device.isArchived).map(device => (
+                                    {patient.devices.filter(device => !device.isArchived).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).map(device => (
                                         <div key={device.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
@@ -418,7 +418,7 @@ const PatientDetailScreen: React.FC = () => {
                                     {!isDetailLoading && patient.exams.filter(e => !e.isArchived).length === 0 && (
                                         <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhum exame cadastrado.</p>
                                     )}
-                                    {patient.exams.filter(exam => !exam.isArchived).map(exam => (
+                                    {patient.exams.filter(exam => !exam.isArchived).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(exam => (
                                         <div key={exam.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
@@ -455,7 +455,7 @@ const PatientDetailScreen: React.FC = () => {
                                     {!isDetailLoading && patient.medications.filter(m => !m.isArchived).length === 0 && (
                                         <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhuma medicação cadastrada.</p>
                                     )}
-                                    {patient.medications.filter(medication => !medication.isArchived).map(medication => (
+                                    {patient.medications.filter(medication => !medication.isArchived).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).map(medication => (
                                         <div key={medication.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
@@ -504,7 +504,7 @@ const PatientDetailScreen: React.FC = () => {
                                     {!isDetailLoading && patient.surgicalProcedures.filter(p => !p.isArchived).length === 0 && (
                                         <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhum procedimento cadastrado.</p>
                                     )}
-                                    {patient.surgicalProcedures.filter(procedure => !procedure.isArchived).map(procedure => (
+                                    {patient.surgicalProcedures.filter(procedure => !procedure.isArchived).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(procedure => (
                                         <div key={procedure.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
@@ -542,7 +542,7 @@ const PatientDetailScreen: React.FC = () => {
                                     {!isDetailLoading && patient.cultures.filter(c => !c.isArchived).length === 0 && (
                                         <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhuma cultura cadastrada.</p>
                                     )}
-                                    {patient.cultures.filter(culture => !culture.isArchived).map(culture => (
+                                    {patient.cultures.filter(culture => !culture.isArchived).sort((a, b) => new Date(b.collectionDate).getTime() - new Date(a.collectionDate).getTime()).map(culture => (
                                         <div key={culture.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
@@ -583,7 +583,7 @@ const PatientDetailScreen: React.FC = () => {
                                     {!isDetailLoading && patient.diets.filter(d => !d.isArchived).length === 0 && (
                                         <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhuma dieta cadastrada.</p>
                                     )}
-                                    {patient.diets.filter(diet => !diet.isArchived).map(diet => (
+                                    {patient.diets.filter(diet => !diet.isArchived).sort((a, b) => new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime()).map(diet => (
                                         <div key={diet.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
@@ -659,11 +659,7 @@ const PatientDetailScreen: React.FC = () => {
                             )}
 
                             {dataTab === 'aportes' && (
-                                <AportesCard
-                                    patientId={patient.id}
-                                    userId={user?.id}
-                                    accessLevel={user?.access_level}
-                                />
+                                <AportesCard patientId={patient.id} />
                             )}
                         </div>
                     </>
