@@ -84,7 +84,7 @@ const QuestionCard: React.FC<{
   isDark: boolean;
   colorKey: string;
 }> = ({ item, valor, onChange, isDark, colorKey }) => {
-  const isSelected = valor !== '' && valor !== undefined && valor !== null && valor > 0;
+  const isSelected = valor !== '' && valor !== undefined && valor !== null && Number(valor) > 0;
   const colors = colorConfig[colorKey as keyof typeof colorConfig];
 
   return (
@@ -137,7 +137,7 @@ export const ConsciousnessScale: React.FC<ScaleProps> = ({ onSaveScore }) => {
   const isDark = theme === 'dark';
   const [tela, setTela] = useState<'intro' | 'form' | 'resultado'>('intro');
   const [escalaAtiva, setEscalaAtiva] = useState<'four_score' | null>(null);
-  const [respostas, setRespostas] = useState<{ [key: string]: number | string }>({});
+  const [respostas, setRespostas] = useState<{ [key: string]: number }>({});
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<null | 'success' | 'error'>(null);
 
@@ -147,7 +147,7 @@ export const ConsciousnessScale: React.FC<ScaleProps> = ({ onSaveScore }) => {
   // Cálculo de progresso
   const totalItens = configAtual ? configAtual.dominios.length : 0;
   const itensRespondidos = configAtual
-    ? configAtual.dominios.filter((item) => respostas[item.id] !== '' && respostas[item.id] !== undefined).length
+    ? configAtual.dominios.filter((item) => respostas[item.id] !== undefined).length
     : 0;
   const progresso = totalItens > 0 ? (itensRespondidos / totalItens) * 100 : 0;
 

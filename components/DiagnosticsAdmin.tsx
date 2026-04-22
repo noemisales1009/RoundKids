@@ -20,7 +20,8 @@ interface DiagnosticOption {
 }
 
 export const DiagnosticsAdmin: React.FC = () => {
-  const { isDark } = useContext(ThemeContext) || { isDark: false };
+  const { theme } = useContext(ThemeContext) || { theme: 'light' as const };
+  const isDark = theme === 'dark';
 
   const [questions, setQuestions] = useState<DiagnosticQuestion[]>([]);
   const [options, setOptions] = useState<DiagnosticOption[]>([]);

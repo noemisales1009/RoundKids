@@ -339,7 +339,7 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
 
     // Configuração da escala atual
     const configAtual = escalaAtiva ? escalasConfig[escalaAtiva] : null;
-    const corClasses = configAtual ? escalasConfig[escalaAtiva!].cores : {};
+    const corClasses = configAtual ? escalasConfig[escalaAtiva!].cores : { bg: '', hover: '', text: '', bgProgress: '', bgBase: '', hoverBase: '', border: '' };
     
     // Classes dinâmicas baseadas no tema
     const bgDinamic = theme === 'light' ? 'bg-gray-50' : 'bg-slate-950';

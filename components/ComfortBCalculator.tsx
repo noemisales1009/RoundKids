@@ -160,7 +160,7 @@ export default function ComfortBCalculator({ patientId }: ComfortBCalculatorProp
           onClick={() => setTela('intro')}
           className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700/50"
         >
-          <ChevronLeftIcon size={20} />
+          <ChevronLeftIcon className="w-5 h-5" />
         </button>
         <h2 className="text-xl font-bold">COMFORT-B</h2>
       </div>

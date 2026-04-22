@@ -139,7 +139,7 @@ export default function AbstinenciaCalculator({ patientId }: AbstinenciaCalculat
           onClick={() => setTela('intro')}
           className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700/50"
         >
-          <ChevronLeftIcon size={20} />
+          <ChevronLeftIcon className="w-5 h-5" />
         </button>
         <h2 className="text-xl font-bold">Avaliação de Abstinência</h2>
       </div>
