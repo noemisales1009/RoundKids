@@ -121,7 +121,7 @@ const DashboardScreen: React.FC = () => {
 
         allAlerts.forEach(alert => {
             // Ambas as views têm coluna 'responsavel'
-            const professional = alert.responsavel || 'Não informado';
+            const professional = alert.responsavel || alert.responsible || 'Não informado';
             if (!grouped[professional]) {
                 grouped[professional] = [];
             }
