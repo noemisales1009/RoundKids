@@ -3,7 +3,7 @@ import React, { useState, useContext, useEffect, useRef, lazy, Suspense } from '
 import { Link, useParams } from 'react-router-dom';
 import { Device, Exam, Medication, SurgicalProcedure, Culture, Diet } from '../types';
 import { formatDateToBRL } from '../constants';
-import { BackArrowIcon, WarningIcon, PencilIcon, ClipboardIcon, FileTextIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, BrainIcon, ShieldIcon, BeakerIcon, LungsIcon, DumbbellIcon, CloseIcon, ScalpelIcon, ChevronRightIcon, CalculatorIcon } from '../components/icons';
+import { BackArrowIcon, WarningIcon, PencilIcon, ClipboardIcon, FileTextIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, BrainIcon, ShieldIcon, BeakerIcon, LungsIcon, DumbbellIcon, CloseIcon, ScalpelIcon, ChevronRightIcon, CalculatorIcon, ChevronDownIcon } from '../components/icons';
 import { PatientDetailSkeleton } from '../components/SkeletonLoader';
 import { ArchiveModal } from '../components/modals/ArchiveModal';
 import { SecondaryNavigation } from '../components/SecondaryNavigation';
@@ -89,7 +89,7 @@ const PatientDetailScreen: React.FC = () => {
 
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
-    const [mainTab, setMainTab] = useState<'npt' | 'scales'>('npt');
+    const [mainTab, setMainTab] = useState<'npt' | 'scales' | null>(null);
     const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | null>(null);
     const [isAddDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
     const [editingDevice, setEditingDevice] = useState<Device | null>(null);
@@ -337,21 +337,23 @@ const PatientDetailScreen: React.FC = () => {
 
             {/* NPT + Escalas */}
             <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm">
-                <div className="border-b border-slate-200 dark:border-slate-800">
+                <div className={mainTab ? 'border-b border-slate-200 dark:border-slate-800' : ''}>
                     <nav className="flex justify-around">
                         <button
-                            onClick={() => setMainTab('npt')}
+                            onClick={() => setMainTab(mainTab === 'npt' ? null : 'npt')}
                             className={`flex-1 py-4 px-1 text-center font-bold flex items-center justify-center gap-2 transition-colors duration-200 text-lg ${mainTab === 'npt' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                         >
                             <BeakerIcon className="w-6 h-6" />
                             Calculadora NPT
+                            <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${mainTab === 'npt' ? 'rotate-180' : ''}`} />
                         </button>
                         <button
-                            onClick={() => setMainTab('scales')}
+                            onClick={() => setMainTab(mainTab === 'scales' ? null : 'scales')}
                             className={`flex-1 py-4 px-1 text-center font-bold flex items-center justify-center gap-2 transition-colors duration-200 text-lg ${mainTab === 'scales' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                         >
                             <BarChartIcon className="w-6 h-6" />
                             Escalas
+                            <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${mainTab === 'scales' ? 'rotate-180' : ''}`} />
                         </button>
                     </nav>
                 </div>
