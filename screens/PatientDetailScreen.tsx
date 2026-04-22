@@ -271,30 +271,30 @@ const PatientDetailScreen: React.FC = () => {
                     </div>
 
                     {/* Grid de informações */}
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div className="bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
                             <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Idade</p>
-                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{formatAge(patient.dob)}</p>
+                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 break-words">{formatAge(patient.dob)}</p>
                         </div>
                         <div className="bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
                             <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Mãe</p>
-                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{patient.motherName || '-'}</p>
+                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 break-words">{patient.motherName || '-'}</p>
                         </div>
                         <div className="bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
                             <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Peso</p>
-                            <p className={`text-sm font-semibold ${patient.peso ? 'text-slate-700 dark:text-slate-200' : 'text-orange-500 italic'}`}>
+                            <p className={`text-sm font-semibold break-words ${patient.peso ? 'text-slate-700 dark:text-slate-200' : 'text-orange-500 italic'}`}>
                                 {patient.peso ? `${patient.peso} kg` : 'Não informado'}
                             </p>
                         </div>
                         <div className="bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
                             <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">SC</p>
-                            <p className={`text-sm font-semibold ${patient.sc ? 'text-slate-700 dark:text-slate-200' : 'text-orange-500 italic'}`}>
+                            <p className={`text-sm font-semibold break-words ${patient.sc ? 'text-slate-700 dark:text-slate-200' : 'text-orange-500 italic'}`}>
                                 {patient.sc ? `${patient.sc} m²` : 'Não informado'}
                             </p>
                         </div>
-                        <div className="col-span-2 bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
+                        <div className="sm:col-span-2 bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
                             <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Internação</p>
-                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 break-words">
                                 {patient.admissionDate
                                     ? <>{formatDateToBRL(patient.admissionDate)} <span className="text-blue-500 dark:text-blue-400 font-bold">· {calculateDays(patient.admissionDate)} {calculateDays(patient.admissionDate) === 1 ? 'dia' : 'dias'}</span></>
                                     : <span className="text-orange-500 italic font-normal">Não informado</span>}
