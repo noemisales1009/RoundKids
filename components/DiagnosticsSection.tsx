@@ -382,7 +382,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           <div>
             <button
               onClick={() => setExpandedGroup(expandedGroup === 'principal' ? null : 'principal')}
-              className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-lg font-bold transition-all text-sm sm:text-base ${
+              className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-lg font-bold transition-all text-sm sm:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'} ${
                 expandedGroup === 'principal'
                   ? `${isDark ? 'bg-blue-900/40' : 'bg-blue-50'} border-2 ${isDark ? 'border-blue-500' : 'border-blue-300'}`
                   : `${isDark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-slate-50 hover:bg-slate-100'} border-2 ${isDark ? 'border-slate-700' : 'border-slate-200'}`
@@ -580,7 +580,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           <div>
             <button
               onClick={() => setExpandedGroup(expandedGroup === 'secundario' ? null : 'secundario')}
-              className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-lg font-bold transition-all text-sm sm:text-base ${
+              className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-lg font-bold transition-all text-sm sm:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'} ${
                 expandedGroup === 'secundario'
                   ? `${isDark ? 'bg-purple-900/40' : 'bg-purple-50'} border-2 ${isDark ? 'border-purple-500' : 'border-purple-300'}`
                   : `${isDark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-slate-50 hover:bg-slate-100'} border-2 ${isDark ? 'border-slate-700' : 'border-slate-200'}`

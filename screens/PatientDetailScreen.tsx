@@ -246,28 +246,61 @@ const PatientDetailScreen: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm relative">
-                <button
-                    onClick={() => setEditInfoModalOpen(true)}
-                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-blue-500 transition bg-slate-50 dark:bg-slate-800 rounded-full"
-                    aria-label="Editar Informações do Paciente"
-                >
-                    <PencilIcon className="w-5 h-5" />
-                </button>
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200 pr-10">{patient.name}</h2>
-                <div className="flex flex-col gap-1 text-slate-500 dark:text-slate-400 mt-3">
-                    <span className="font-medium">Idade: <span className="font-normal">{formatAge(patient.dob)}</span></span>
-                    <span className="font-medium">Mãe: <span className="font-normal">{patient.motherName}</span></span>
-                    <span className="font-medium">
-                        Data de admissão:{' '}
-                        <span className="font-normal">
-                            {patient.admissionDate
-                                ? `${formatDateToBRL(patient.admissionDate)} (${calculateDays(patient.admissionDate)} ${calculateDays(patient.admissionDate) === 1 ? 'dia' : 'dias'} internado)`
-                                : <span className="text-orange-500 italic">Não informado</span>}
-                        </span>
-                    </span>
-                    <span className="font-medium">SC: <span className="font-normal">{patient.sc ? patient.sc : <span className="text-orange-500 italic">Não informado</span>}</span></span>
-                    <span className="font-medium">Peso: <span className="font-normal">{patient.peso ? `${patient.peso} kg` : <span className="text-orange-500 italic">Não informado</span>}</span></span>
+            {/* Card do Paciente */}
+            <div className="rounded-2xl shadow-lg overflow-hidden border border-blue-500/20 dark:border-blue-400/20">
+                {/* Barra de gradiente no topo */}
+                <div className="h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+                <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 relative">
+                    <button
+                        onClick={() => setEditInfoModalOpen(true)}
+                        className="absolute top-4 right-4 p-2 text-slate-400 hover:text-blue-500 transition bg-slate-100 dark:bg-slate-800 rounded-full"
+                        aria-label="Editar Informações do Paciente"
+                    >
+                        <PencilIcon className="w-4 h-4" />
+                    </button>
+
+                    {/* Nome + leito */}
+                    <div className="flex items-center gap-3 pr-10 mb-4">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md">
+                            <span className="text-white font-bold text-lg">{patient.name.charAt(0).toUpperCase()}</span>
+                        </div>
+                        <div>
+                            <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white leading-tight">{patient.name}</h2>
+                            <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Leito {patient.bedNumber}</span>
+                        </div>
+                    </div>
+
+                    {/* Grid de informações */}
+                    <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
+                            <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Idade</p>
+                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{formatAge(patient.dob)}</p>
+                        </div>
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
+                            <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Mãe</p>
+                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{patient.motherName || '-'}</p>
+                        </div>
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
+                            <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Peso</p>
+                            <p className={`text-sm font-semibold ${patient.peso ? 'text-slate-700 dark:text-slate-200' : 'text-orange-500 italic'}`}>
+                                {patient.peso ? `${patient.peso} kg` : 'Não informado'}
+                            </p>
+                        </div>
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
+                            <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">SC</p>
+                            <p className={`text-sm font-semibold ${patient.sc ? 'text-slate-700 dark:text-slate-200' : 'text-orange-500 italic'}`}>
+                                {patient.sc ? `${patient.sc} m²` : 'Não informado'}
+                            </p>
+                        </div>
+                        <div className="col-span-2 bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
+                            <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Internação</p>
+                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                {patient.admissionDate
+                                    ? <>{formatDateToBRL(patient.admissionDate)} <span className="text-blue-500 dark:text-blue-400 font-bold">· {calculateDays(patient.admissionDate)} {calculateDays(patient.admissionDate) === 1 ? 'dia' : 'dias'}</span></>
+                                    : <span className="text-orange-500 italic font-normal">Não informado</span>}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
