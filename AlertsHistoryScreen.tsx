@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { supabase } from './supabaseClient';
 import { Link } from 'react-router-dom';
 import { FileTextIcon, CloseIcon } from './components/icons';
+import { RESPONSIBLES } from './constants';
 
 import { NotificationContext } from './contexts';
 
@@ -85,10 +86,11 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
         fetchAllAlerts();
     }, []);
 
-    // Gerar lista de profissionais únicos
+    // Gerar lista de profissionais: usa a lista completa de RESPONSIBLES + quaisquer outros que existam nos alertas
     const professionals = useMemo(() => {
-        const uniqueProfessionals = [...new Set(alerts.map(a => a.responsavel).filter(Boolean))];
-        return uniqueProfessionals.sort();
+        const fromAlerts = alerts.map(a => a.responsavel).filter(Boolean);
+        const combined = new Set<string>([...RESPONSIBLES, ...fromAlerts]);
+        return Array.from(combined).sort();
     }, [alerts]);
 
     // Gerar lista de pacientes únicos (nome + leito)

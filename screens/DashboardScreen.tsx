@@ -23,16 +23,26 @@ const DashboardScreen: React.FC = () => {
     const [loading, setLoading] = useState(true);
 
     const professionalColorMap: Record<string, { border: string; icon: string; bg: string }> = {
-        'Enfermeiro': { border: 'border-blue-400', icon: '👩‍⚕️', bg: 'bg-blue-900/30' },
-        'Farmacêutico': { border: 'border-orange-400', icon: '💊', bg: 'bg-orange-900/30' },
-        'Fisioterapeuta': { border: 'border-green-400', icon: '🏃', bg: 'bg-green-900/30' },
-        'Médico': { border: 'border-red-400', icon: '👨‍⚕️', bg: 'bg-red-900/30' },
-        'Médico / Enfermeiro': { border: 'border-purple-400', icon: '👥', bg: 'bg-purple-900/30' },
-        'Médico / Fisioterapeuta': { border: 'border-indigo-400', icon: '👥', bg: 'bg-indigo-900/30' },
-        'Nutricionista': { border: 'border-amber-400', icon: '🍎', bg: 'bg-amber-900/30' },
-        'Odontólogo': { border: 'border-cyan-400', icon: '🦷', bg: 'bg-cyan-900/30' },
-        'Psicólogo': { border: 'border-pink-400', icon: '🧠', bg: 'bg-pink-900/30' },
-        'Fonoaudiólogo': { border: 'border-fuchsia-400', icon: '🗣️', bg: 'bg-fuchsia-900/30' },
+        'Enfermeiro': { border: 'border-blue-400', icon: '👩‍⚕️', bg: 'bg-blue-50 dark:bg-blue-900/30' },
+        'Farmacêutico': { border: 'border-orange-400', icon: '💊', bg: 'bg-orange-50 dark:bg-orange-900/30' },
+        'Fisioterapeuta': { border: 'border-green-400', icon: '🏃', bg: 'bg-green-50 dark:bg-green-900/30' },
+        'Médico': { border: 'border-red-400', icon: '👨‍⚕️', bg: 'bg-red-50 dark:bg-red-900/30' },
+        'Nutricionista': { border: 'border-amber-400', icon: '🍎', bg: 'bg-amber-50 dark:bg-amber-900/30' },
+        'Odontólogo': { border: 'border-cyan-400', icon: '🦷', bg: 'bg-cyan-50 dark:bg-cyan-900/30' },
+        'Psicólogo': { border: 'border-pink-400', icon: '🧠', bg: 'bg-pink-50 dark:bg-pink-900/30' },
+        'Fonoaudiólogo': { border: 'border-fuchsia-400', icon: '🗣️', bg: 'bg-fuchsia-50 dark:bg-fuchsia-900/30' },
+        'Serviço Social': { border: 'border-teal-400', icon: '🤝', bg: 'bg-teal-50 dark:bg-teal-900/30' },
+        'Terapeuta Ocupacional': { border: 'border-lime-400', icon: '🖐️', bg: 'bg-lime-50 dark:bg-lime-900/30' },
+        // Combinações com 2 profissionais
+        'Médico / Enfermeiro': { border: 'border-purple-400', icon: '👥', bg: 'bg-purple-50 dark:bg-purple-900/30' },
+        'Médico / Fisioterapeuta': { border: 'border-indigo-400', icon: '👥', bg: 'bg-indigo-50 dark:bg-indigo-900/30' },
+        'Médico / Nutricionista': { border: 'border-yellow-400', icon: '👥', bg: 'bg-yellow-50 dark:bg-yellow-900/30' },
+        // Combinações multidisciplinares (3 profissionais)
+        'Médico / Enfermeiro / Fisioterapeuta': { border: 'border-violet-400', icon: '👨‍⚕️👩‍⚕️🏃', bg: 'bg-violet-50 dark:bg-violet-900/30' },
+        'Médico / Enfermeiro / Nutricionista': { border: 'border-rose-400', icon: '👨‍⚕️👩‍⚕️🍎', bg: 'bg-rose-50 dark:bg-rose-900/30' },
+        'Médico / Odontólogo / Enfermeiro': { border: 'border-sky-400', icon: '👨‍⚕️🦷👩‍⚕️', bg: 'bg-sky-50 dark:bg-sky-900/30' },
+        'Médico / Serviço Social / Enfermeiro': { border: 'border-emerald-400', icon: '👨‍⚕️🤝👩‍⚕️', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
+        'Médico / Psicólogo / Enfermeiro': { border: 'border-pink-500', icon: '👨‍⚕️🧠👩‍⚕️', bg: 'bg-pink-100 dark:bg-pink-900/40' },
     };
 
     // Buscar dados do Supabase ao montar o componente
@@ -128,7 +138,7 @@ const DashboardScreen: React.FC = () => {
                 colors: professionalColorMap[professional] || {
                     border: 'border-gray-400',
                     icon: '👤',
-                    bg: 'bg-gray-900/30'
+                    bg: 'bg-gray-50 dark:bg-gray-900/30'
                 }
             }))
             .sort((a, b) => b.count - a.count);
@@ -167,7 +177,7 @@ const DashboardScreen: React.FC = () => {
                                 alertsByProfessional.map(item => (
                                     <div
                                         key={item.professional}
-                                        className={`border-l-4 ${item.colors.border} ${item.colors.bg} bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 p-4 rounded-lg transition`}
+                                        className={`border-l-4 ${item.colors.border} ${item.colors.bg} hover:brightness-95 dark:hover:brightness-110 p-4 rounded-lg transition`}
                                     >
                                         <div
                                             className="flex justify-between items-center cursor-pointer"
