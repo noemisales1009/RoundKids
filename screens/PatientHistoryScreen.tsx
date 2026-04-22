@@ -102,6 +102,10 @@ const PatientHistoryScreen: React.FC = () => {
 
     useHeader(patient ? `Histórico: ${patient.name}` : 'Histórico do Paciente');
 
+    React.useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
     // Buscar diagnósticos do Supabase
     React.useEffect(() => {
         const fetchDiagnostics = async () => {
