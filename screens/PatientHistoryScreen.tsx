@@ -16,7 +16,8 @@ import {
     BellIcon,
     CheckCircleIcon,
     AppleIcon,
-    BeakerIcon
+    BeakerIcon,
+    ChevronDownIcon
 } from '../components/icons';
 
 const formatHistoryDate = (dateString: string) => {
@@ -70,6 +71,7 @@ const PatientHistoryScreen: React.FC = () => {
     const [dataInicio, setDataInicio] = React.useState<string>('');
     const [dataFinal, setDataFinal] = React.useState<string>('');
     const [selectedCategories, setSelectedCategories] = React.useState<Set<string>>(new Set());
+    const [filtersOpen, setFiltersOpen] = React.useState<boolean>(true);
 
     const eventCategories = {
         'Dispositivos': 'Dispositivo',
@@ -1426,70 +1428,205 @@ const PatientHistoryScreen: React.FC = () => {
         setSelectedCategories(new Set());
     };
 
+    const mainCategories = ['Dispositivos', 'Medicações', 'Exames', 'Cirúrgico', 'Escalas', 'Diagnósticos', 'Culturas', 'Diurese', 'Balanço Hídrico', 'Dietas', 'Alertas', 'Comorbidades', 'Completações', 'Justificativas', 'Situação Clínica 24h', 'Aportes'];
+    const archiveCategories = ['Arquivamentos', 'Arquivamentos Dispositivos', 'Arquivamentos Exames', 'Arquivamentos Medicações', 'Arquivamentos Procedimentos', 'Arquivamentos Culturas', 'Arquivamentos Dietas', 'Arquivamentos Diagnósticos'];
+
+    const categoryIcons: Record<string, React.FC<{ className?: string }>> = {
+        'Dispositivos': CpuIcon,
+        'Medicações': PillIcon,
+        'Exames': FileTextIcon,
+        'Cirúrgico': ScalpelIcon,
+        'Escalas': BarChartIcon,
+        'Diagnósticos': ClipboardIcon,
+        'Culturas': BeakerIcon,
+        'Diurese': DropletIcon,
+        'Balanço Hídrico': DropletIcon,
+        'Dietas': AppleIcon,
+        'Alertas': BellIcon,
+        'Comorbidades': HeartPulseIcon,
+        'Completações': CheckCircleIcon,
+        'Justificativas': ClipboardIcon,
+        'Situação Clínica 24h': HeartPulseIcon,
+        'Aportes': DropletIcon,
+        'Arquivamentos': BellIcon,
+        'Arquivamentos Dispositivos': CpuIcon,
+        'Arquivamentos Exames': FileTextIcon,
+        'Arquivamentos Medicações': PillIcon,
+        'Arquivamentos Procedimentos': ScalpelIcon,
+        'Arquivamentos Culturas': BeakerIcon,
+        'Arquivamentos Dietas': AppleIcon,
+        'Arquivamentos Diagnósticos': ClipboardIcon,
+    };
+
+    const applyDateShortcut = (days: number) => {
+        const today = new Date();
+        const end = today.toISOString().split('T')[0];
+        if (days === 0) {
+            setDataInicio(end);
+            setDataFinal(end);
+        } else {
+            const start = new Date(today);
+            start.setDate(today.getDate() - days);
+            setDataInicio(start.toISOString().split('T')[0]);
+            setDataFinal(end);
+        }
+    };
+
+    const selectAllCategories = () => {
+        setSelectedCategories(new Set(Object.keys(eventCategories)));
+    };
+
+    const activeFilterCount = (dataInicio || dataFinal ? 1 : 0) + (selectedCategories.size > 0 ? 1 : 0);
+
     const displayedHistory = filteredHistory();
 
     return (
         <div className="space-y-4">
             {/* Filtros */}
             <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm space-y-4">
-                <h3 className="font-semibold text-slate-800 dark:text-slate-200">Filtros</h3>
-
-                {/* Data Início e Final */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data Inicial</label>
-                        <input
-                            type="date"
-                            value={dataInicio}
-                            onChange={(e) => setDataInicio(e.target.value)}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
-                        />
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-slate-800 dark:text-slate-200">Filtros</h3>
+                        {activeFilterCount > 0 && (
+                            <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full">
+                                {activeFilterCount} ativo{activeFilterCount !== 1 ? 's' : ''}
+                            </span>
+                        )}
                     </div>
-                    <div>
-                        <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data Final</label>
-                        <input
-                            type="date"
-                            value={dataFinal}
-                            onChange={(e) => setDataFinal(e.target.value)}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
-                        />
-                    </div>
+                    <button
+                        onClick={() => setFiltersOpen(prev => !prev)}
+                        className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-500 dark:text-slate-400"
+                        aria-label="Expandir/Recolher filtros"
+                    >
+                        <ChevronDownIcon className={`w-5 h-5 transition-transform duration-200 ${filtersOpen ? '' : '-rotate-90'}`} />
+                    </button>
                 </div>
 
-                {/* Filtro por Categoria */}
-                <div>
-                    <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Categorias</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                        {Object.keys(eventCategories).map(category => (
-                            <label key={category} className="flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-300 text-xs sm:text-sm">
+                {filtersOpen && (
+                    <>
+                        {/* Atalhos de data */}
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Atalho:</span>
+                            {[{ label: 'Hoje', days: 0 }, { label: 'Últimos 7 dias', days: 7 }, { label: 'Últimos 30 dias', days: 30 }].map(({ label, days }) => (
+                                <button
+                                    key={label}
+                                    onClick={() => applyDateShortcut(days)}
+                                    className="px-3 py-1 text-xs bg-slate-100 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-slate-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300 rounded-full transition"
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Data Início e Final */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data Inicial</label>
                                 <input
-                                    type="checkbox"
-                                    checked={selectedCategories.has(category)}
-                                    onChange={() => toggleCategory(category)}
-                                    className="rounded focus:ring-blue-500"
+                                    type="date"
+                                    value={dataInicio}
+                                    onChange={(e) => setDataInicio(e.target.value)}
+                                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                                 />
-                                <span className="truncate">{category}</span>
-                            </label>
-                        ))}
-                    </div>
-                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data Final</label>
+                                <input
+                                    type="date"
+                                    value={dataFinal}
+                                    onChange={(e) => setDataFinal(e.target.value)}
+                                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                />
+                            </div>
+                        </div>
 
-                {/* Botões de Ação */}
-                <div className="flex gap-2 justify-between flex-wrap">
-                    <button
-                        onClick={clearFilters}
-                        className="px-4 py-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold rounded-lg transition text-sm"
-                    >
-                        Limpar Filtros
-                    </button>
-                    <button
-                        onClick={handleGeneratePdf}
-                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
-                    >
-                        <FileTextIcon className="w-5 h-5" />
-                        Gerar PDF
-                    </button>
-                </div>
+                        {/* Filtro por Categoria */}
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Categorias</label>
+                                <div className="flex items-center gap-2 text-xs">
+                                    <button onClick={selectAllCategories} className="text-blue-600 dark:text-blue-400 hover:underline">Selecionar tudo</button>
+                                    <span className="text-slate-300 dark:text-slate-600">|</span>
+                                    <button onClick={() => setSelectedCategories(new Set())} className="text-slate-500 dark:text-slate-400 hover:underline">Limpar</button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2">Principais</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {mainCategories.map(category => {
+                                        const active = selectedCategories.has(category);
+                                        const Icon = categoryIcons[category];
+                                        return (
+                                            <button
+                                                key={category}
+                                                onClick={() => toggleCategory(category)}
+                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 active:scale-95 ${
+                                                    active
+                                                        ? 'bg-blue-500 border-blue-500 text-white shadow-md scale-105'
+                                                        : 'bg-transparent border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 hover:scale-105'
+                                                }`}
+                                            >
+                                                {Icon && <Icon className="w-3 h-3 shrink-0" />}
+                                                {category}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div>
+                                <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2">Arquivamentos</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {archiveCategories.map(category => {
+                                        const active = selectedCategories.has(category);
+                                        const Icon = categoryIcons[category];
+                                        return (
+                                            <button
+                                                key={category}
+                                                onClick={() => toggleCategory(category)}
+                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 active:scale-95 ${
+                                                    active
+                                                        ? 'bg-amber-500 border-amber-500 text-white shadow-md scale-105'
+                                                        : 'bg-transparent border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:border-amber-400 hover:text-amber-600 dark:hover:text-amber-400 hover:scale-105'
+                                                }`}
+                                            >
+                                                {Icon && <Icon className="w-3 h-3 shrink-0" />}
+                                                {category}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {selectedCategories.size > 0 && (
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    <span className="font-medium text-slate-700 dark:text-slate-300">Filtros ativos:</span>{' '}
+                                    {Array.from(selectedCategories).join(', ')}{' · '}
+                                    <button onClick={() => setSelectedCategories(new Set())} className="text-blue-600 dark:text-blue-400 hover:underline">Limpar</button>
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Botões de Ação */}
+                        <div className="flex gap-2 justify-between flex-wrap">
+                            <button
+                                onClick={clearFilters}
+                                className="px-4 py-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold rounded-lg transition text-sm"
+                            >
+                                Limpar Filtros
+                            </button>
+                            <button
+                                onClick={handleGeneratePdf}
+                                className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
+                            >
+                                <FileTextIcon className="w-5 h-5" />
+                                Gerar PDF
+                            </button>
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Histórico Filtrado */}
