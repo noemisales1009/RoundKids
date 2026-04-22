@@ -58,7 +58,7 @@ const ComorbidadeComponent: React.FC<ComorbidadeComponentProps> = ({ patientId }
     await saveToDatabase(newComorbidades);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleAddComorbidade();
     }
@@ -83,25 +83,26 @@ const ComorbidadeComponent: React.FC<ComorbidadeComponentProps> = ({ patientId }
         <ChevronRightIcon className={`w-5 h-5 text-slate-400 transition transform ${isExpanded ? 'rotate-90' : ''}`} />
       </button>
 
-      {/* Comorbidades sempre visíveis */}
+      {/* Comorbidades sempre visíveis — chips */}
       {comorbidades.length > 0 && (
         <div className="px-4 py-3 border-t border-slate-200 dark:border-slate-700">
-          <ul className="space-y-2 ml-4">
+          <div className="flex flex-wrap gap-2">
             {comorbidades.map((comorbidade, index) => (
-              <li key={index} className="flex items-start gap-2 text-slate-700 dark:text-slate-300">
-                <span className="text-blue-600 dark:text-blue-400 font-bold mt-0.5">•</span>
-                <div className="flex-1 flex items-center gap-2">
-                  <span className="text-slate-800 dark:text-slate-200">{comorbidade}</span>
-                  <button
-                    onClick={() => handleRemoveComorbidade(index)}
-                    className="text-red-500 hover:text-red-700 font-bold text-sm transition ml-2"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </li>
+              <span
+                key={index}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border border-blue-400 dark:border-blue-500 text-slate-700 dark:text-slate-200 bg-transparent"
+              >
+                {comorbidade}
+                <button
+                  onClick={() => handleRemoveComorbidade(index)}
+                  className="text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors leading-none"
+                  title="Remover"
+                >
+                  <CloseIcon className="w-3 h-3" />
+                </button>
+              </span>
             ))}
-          </ul>
+          </div>
         </div>
       )}
 
@@ -117,7 +118,7 @@ const ComorbidadeComponent: React.FC<ComorbidadeComponentProps> = ({ patientId }
                 type="text"
                 value={currentInput}
                 onChange={(e) => setCurrentInput(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
                 placeholder="Digite uma comorbidade e clique em adicionar..."
                 className="flex-1 min-w-0 px-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-100"
               />
