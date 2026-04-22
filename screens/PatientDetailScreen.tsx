@@ -89,8 +89,8 @@ const PatientDetailScreen: React.FC = () => {
 
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
-    const [mainTab, setMainTab] = useState<'data' | 'npt' | 'scales'>('data');
-    const [dataTab, setDataTab] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'diagnostics'>('devices');
+    const [mainTab, setMainTab] = useState<'npt' | 'scales'>('npt');
+    const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | null>(null);
     const [isAddDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
     const [editingDevice, setEditingDevice] = useState<Device | null>(null);
     const [editingDeviceRemovalDate, setEditingDeviceRemovalDate] = useState<Device | null>(null);
@@ -243,15 +243,6 @@ const PatientDetailScreen: React.FC = () => {
         patient.exams.length === 0 && patient.surgicalProcedures.length === 0 &&
         (patient.scaleScores?.length || 0) === 0 && patient.cultures.length === 0 && patient.diets.length === 0;
 
-    const dataTabs = [
-        { id: 'devices', label: 'Dispositivos', icon: CpuIcon },
-        { id: 'exams', label: 'Exames', icon: FileTextIcon },
-        { id: 'medications', label: 'Medicações', icon: PillIcon },
-        { id: 'surgical', label: 'Cirúrgico', icon: ScalpelIcon },
-        { id: 'cultures', label: 'Culturas', icon: BeakerIcon },
-        { id: 'diets', label: 'Dietas', icon: AppleIcon },
-        { id: 'aportes', label: 'Aportes', icon: DropletIcon },
-    ];
 
     return (
         <div className="space-y-6">
@@ -317,353 +308,53 @@ const PatientDetailScreen: React.FC = () => {
                 </div>
             </Link>
 
-            {/* ... Tabs and Content ... */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm">
+            {/* Category Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {([
+                    { id: 'medications' as const, label: 'Medicações', icon: PillIcon, count: patient.medications.filter(m => !m.isArchived).length, gradient: 'from-blue-500 to-blue-700' },
+                    { id: 'devices' as const, label: 'Dispositivos', icon: CpuIcon, count: patient.devices.filter(d => !d.isArchived).length, gradient: 'from-green-500 to-emerald-700' },
+                    { id: 'cultures' as const, label: 'Culturas', icon: BeakerIcon, count: patient.cultures.filter(c => !c.isArchived).length, gradient: 'from-purple-500 to-violet-700' },
+                    { id: 'surgical' as const, label: 'Cirúrgico', icon: ScalpelIcon, count: patient.surgicalProcedures.filter(p => !p.isArchived).length, gradient: 'from-orange-500 to-red-600' },
+                    { id: 'exams' as const, label: 'Exames', icon: FileTextIcon, count: patient.exams.filter(e => !e.isArchived).length, gradient: 'from-teal-400 to-cyan-600' },
+                    { id: 'diets' as const, label: 'Dietas', icon: AppleIcon, count: patient.diets.filter(d => !d.isArchived).length, gradient: 'from-amber-400 to-orange-500' },
+                    { id: 'aportes' as const, label: 'Aportes', icon: DropletIcon, count: null, gradient: 'from-sky-400 to-blue-500' },
+                ] as const).map(({ id, label, icon: Icon, count, gradient }) => (
+                    <button
+                        key={id}
+                        onClick={() => setOpenCategoryModal(id)}
+                        className={`relative bg-gradient-to-br ${gradient} rounded-xl p-4 text-white text-left shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200`}
+                    >
+                        {count !== null && count > 0 && (
+                            <span className="absolute top-2 right-2 bg-white/30 backdrop-blur-sm text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full">
+                                {count}
+                            </span>
+                        )}
+                        <Icon className="w-7 h-7 mb-2 opacity-90" />
+                        <p className="font-bold text-sm leading-tight">{label}</p>
+                    </button>
+                ))}
+            </div>
 
-                {/* Main Tabs */}
+            {/* NPT + Escalas */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm">
                 <div className="border-b border-slate-200 dark:border-slate-800">
                     <nav className="flex justify-around">
                         <button
-                            onClick={() => setMainTab('data')}
-                            className={`flex-1 py-4 px-1 text-center font-bold flex items-center justify-center gap-2 transition-colors duration-200 text-lg ${mainTab === 'data'
-                                ? 'text-blue-600 dark:text-blue-400'
-                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                                }`}
-                        >
-                            <ClipboardIcon className="w-6 h-6" />
-                            Dados Clínicos
-                        </button>
-                        <button
                             onClick={() => setMainTab('npt')}
-                            className={`flex-1 py-4 px-1 text-center font-bold flex items-center justify-center gap-2 transition-colors duration-200 text-lg ${mainTab === 'npt'
-                                ? 'text-blue-600 dark:text-blue-400'
-                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                                }`}
+                            className={`flex-1 py-4 px-1 text-center font-bold flex items-center justify-center gap-2 transition-colors duration-200 text-lg ${mainTab === 'npt' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                         >
                             <BeakerIcon className="w-6 h-6" />
                             Calculadora NPT
                         </button>
                         <button
                             onClick={() => setMainTab('scales')}
-                            className={`flex-1 py-4 px-1 text-center font-bold flex items-center justify-center gap-2 transition-colors duration-200 text-lg ${mainTab === 'scales'
-                                ? 'text-blue-600 dark:text-blue-400'
-                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                                }`}
+                            className={`flex-1 py-4 px-1 text-center font-bold flex items-center justify-center gap-2 transition-colors duration-200 text-lg ${mainTab === 'scales' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                         >
                             <BarChartIcon className="w-6 h-6" />
                             Escalas
                         </button>
                     </nav>
                 </div>
-
-                {mainTab === 'data' && (
-                    <>
-                        <SecondaryNavigation
-                            tabs={dataTabs}
-                            activeTabId={dataTab}
-                            onTabChange={(tabId) => setDataTab(tabId as any)}
-                        />
-                        <div className="p-4 space-y-3">
-                            {/* Devices Tab Content */}
-                            {dataTab === 'devices' && (
-                                <>
-                                    {isDetailLoading && <PatientDetailSkeleton />}
-                                    {!isDetailLoading && patient.devices.filter(d => !d.isArchived).length === 0 && (
-                                        <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhum dispositivo cadastrado.</p>
-                                    )}
-                                    {patient.devices.filter(device => !device.isArchived).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).map(device => (
-                                        <div key={device.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex items-start gap-3">
-                                                    <CpuIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
-                                                    <div>
-                                                        <p className="font-bold text-slate-800 dark:text-slate-200">{device.name} - {device.location}</p>
-                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(device.startDate)}</p>
-                                                        {device.removalDate ? (
-                                                            <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Retirada: {formatDateToBRL(device.removalDate)}</p>
-                                                        ) : (
-                                                            <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(device.startDate)}</p>
-                                                        )}
-                                                        {device.observacao && (
-                                                            <p className="text-sm text-slate-600 dark:text-slate-400 italic mt-1.5 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded">
-                                                                💬 {device.observacao}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2 shrink-0 ml-2">
-                                                    {!device.removalDate && <button onClick={() => setRemovalModalOpen(device.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Retirada</button>}
-                                                    <button onClick={() => device.removalDate ? setEditingDeviceRemovalDate(device) : setEditingDevice(device)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar dispositivo">
-                                                        <PencilIcon className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setArchiveDeviceModal(device)}
-                                                        className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"
-                                                        title="Arquivar dispositivo"
-                                                        aria-label="Arquivar dispositivo"
-                                                    >
-                                                        <CloseIcon className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <button onClick={() => setAddDeviceModalOpen(true)} className="w-full mt-2 text-center bg-blue-50 dark:bg-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-semibold py-2.5 rounded-lg transition">Cadastrar Dispositivo</button>
-                                </>
-                            )}
-                            {/* Exams Tab Content */}
-                            {dataTab === 'exams' && (
-                                <>
-                                    {isDetailLoading && <PatientDetailSkeleton />}
-                                    {!isDetailLoading && patient.exams.filter(e => !e.isArchived).length === 0 && (
-                                        <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhum exame cadastrado.</p>
-                                    )}
-                                    {patient.exams.filter(exam => !exam.isArchived).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(exam => (
-                                        <div key={exam.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex items-start gap-3">
-                                                    <FileTextIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
-                                                    <div>
-                                                        <p className="font-bold text-slate-800 dark:text-slate-200">{exam.name}</p>
-                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(exam.date)}</p>
-                                                        {exam.observation && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 italic">Obs: {exam.observation}</p>}
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-1 shrink-0 ml-2">
-                                                    <button onClick={() => setEditingExam(exam)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar exame">
-                                                        <PencilIcon className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setArchiveExamModal(exam)}
-                                                        className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"
-                                                        title="Arquivar exame"
-                                                        aria-label="Arquivar exame"
-                                                    >
-                                                        <CloseIcon className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <button onClick={() => setAddExamModalOpen(true)} className="w-full mt-2 text-center bg-blue-50 dark:bg-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-semibold py-2.5 rounded-lg transition">Cadastrar Exame</button>
-                                </>
-                            )}
-                            {/* Medications Tab Content */}
-                            {dataTab === 'medications' && (
-                                <>
-                                    {isDetailLoading && <PatientDetailSkeleton />}
-                                    {!isDetailLoading && patient.medications.filter(m => !m.isArchived).length === 0 && (
-                                        <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhuma medicação cadastrada.</p>
-                                    )}
-                                    {patient.medications.filter(medication => !medication.isArchived).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).map(medication => (
-                                        <div key={medication.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex items-start gap-3">
-                                                    <PillIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
-                                                    <div>
-                                                        <p className="font-bold text-slate-800 dark:text-slate-200 wrap-break-word">{medication.name} - {medication.dosage}</p>
-                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(medication.startDate)}</p>
-                                                        {medication.endDate ? (
-                                                            <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Fim: {formatDateToBRL(medication.endDate)}</p>
-                                                        ) : (
-                                                            <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(medication.startDate)}</p>
-                                                        )}
-                                                        {medication.observacao && (
-                                                            <p className="text-sm text-slate-600 dark:text-slate-400 italic mt-1.5 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded">
-                                                                💬 {medication.observacao}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2 shrink-0 ml-2">
-                                                    {!medication.endDate && <button onClick={() => setEndDateModalOpen(medication.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Fim</button>}
-                                                    <button onClick={() => medication.endDate ? setEditingMedicationEndDate(medication) : setEditingMedication(medication)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar medicação">
-                                                        <PencilIcon className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setArchiveMedicationModal(medication)}
-                                                        className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"
-                                                        title="Arquivar medicação"
-                                                        aria-label="Arquivar medicação"
-                                                    >
-                                                        <CloseIcon className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <button onClick={() => {
-                                        setAddMedicationModalOpen(true);
-                                    }} className="w-full mt-2 text-center bg-blue-50 dark:bg-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-semibold py-2.5 rounded-lg transition">Cadastrar Medicação</button>
-                                </>
-                            )}
-                            {/* Surgical Tab Content */}
-                            {dataTab === 'surgical' && (
-                                <>
-                                    {isDetailLoading && <PatientDetailSkeleton />}
-                                    {!isDetailLoading && patient.surgicalProcedures.filter(p => !p.isArchived).length === 0 && (
-                                        <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhum procedimento cadastrado.</p>
-                                    )}
-                                    {patient.surgicalProcedures.filter(procedure => !procedure.isArchived).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(procedure => (
-                                        <div key={procedure.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex items-start gap-3">
-                                                    <ScalpelIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
-                                                    <div>
-                                                        <p className="font-bold text-slate-800 dark:text-slate-200">{procedure.name}</p>
-                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(procedure.date)} - Dr(a): {procedure.surgeon}</p>
-                                                        <p className="text-sm text-blue-600 dark:text-blue-400 font-semibold mt-1">Dia Pós-Operatório: +{calculateDays(procedure.date)} dias</p>
-                                                        {procedure.notes && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 italic">Obs: {procedure.notes}</p>}
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-1 shrink-0 ml-2">
-                                                    <button onClick={() => setEditingSurgicalProcedure(procedure)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar cirurgia">
-                                                        <PencilIcon className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setArchiveSurgicalModal(procedure)}
-                                                        className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"
-                                                        title="Arquivar procedimento"
-                                                        aria-label="Arquivar cirurgia"
-                                                    >
-                                                        <CloseIcon className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <button onClick={() => setAddSurgicalModalOpen(true)} className="w-full mt-2 text-center bg-blue-50 dark:bg-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-semibold py-2.5 rounded-lg transition">Cadastrar Cirurgia</button>
-                                </>
-                            )}
-                            {/* Cultures Tab Content */}
-                            {dataTab === 'cultures' && (
-                                <>
-                                    {isDetailLoading && <PatientDetailSkeleton />}
-                                    {!isDetailLoading && patient.cultures.filter(c => !c.isArchived).length === 0 && (
-                                        <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhuma cultura cadastrada.</p>
-                                    )}
-                                    {patient.cultures.filter(culture => !culture.isArchived).sort((a, b) => new Date(b.collectionDate).getTime() - new Date(a.collectionDate).getTime()).map(culture => (
-                                        <div key={culture.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex items-start gap-3">
-                                                    <BeakerIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
-                                                    <div>
-                                                        <p className="font-bold text-slate-800 dark:text-slate-200">{culture.site}</p>
-                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Microorganismo: {culture.microorganism}</p>
-                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(culture.collectionDate)}</p>
-                                                        {culture.observation && (
-                                                            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 font-medium">Observação: {culture.observation}</p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-1 shrink-0 ml-2">
-                                                    <button onClick={() => setEditingCulture(culture)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label="Editar cultura">
-                                                        <PencilIcon className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setArchiveCultureModal(culture)}
-                                                        className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"
-                                                        title="Arquivar cultura"
-                                                        aria-label="Arquivar cultura"
-                                                    >
-                                                        <CloseIcon className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <button onClick={() => setAddCultureModalOpen(true)} className="w-full mt-2 text-center bg-blue-50 dark:bg-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-semibold py-2.5 rounded-lg transition">Cadastrar Cultura</button>
-                                </>
-                            )}
-
-                            {/* Diets Tab Content */}
-                            {dataTab === 'diets' && (
-                                <>
-                                    {isDetailLoading && <PatientDetailSkeleton />}
-                                    {!isDetailLoading && patient.diets.filter(d => !d.isArchived).length === 0 && (
-                                        <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhuma dieta cadastrada.</p>
-                                    )}
-                                    {patient.diets.filter(diet => !diet.isArchived).sort((a, b) => new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime()).map(diet => (
-                                        <div key={diet.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex items-start gap-3">
-                                                    <AppleIcon className="w-5 h-5 text-green-600 dark:text-green-400 mt-1 shrink-0" />
-                                                    <div>
-                                                        <p className="font-bold text-slate-800 dark:text-slate-200">{diet.type}</p>
-                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(diet.data_inicio)}</p>
-                                                        {diet.data_remocao ? (
-                                                            <p className="text-sm bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded mt-1 font-medium">Retirada: {formatDateToBRL(diet.data_remocao)}</p>
-                                                        ) : (
-                                                            <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(diet.data_inicio)}</p>
-                                                        )}
-
-                                                        {/* Parâmetros Nutricionais */}
-                                                        {diet.volume && (
-                                                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Volume: {diet.volume} ml</p>
-                                                        )}
-                                                        {diet.vet && (
-                                                            <p className="text-sm text-slate-500 dark:text-slate-400">VET: {diet.vet} kcal/dia</p>
-                                                        )}
-                                                        {diet.vet_pleno && (
-                                                            <p className="text-sm text-slate-500 dark:text-slate-400">VET Pleno: {diet.vet_pleno} kcal/dia</p>
-                                                        )}
-                                                        {diet.pt && (
-                                                            <p className="text-sm text-slate-500 dark:text-slate-400">Proteína (PT): {diet.pt} g/dia</p>
-                                                        )}
-                                                        {diet.pt_g_dia && (
-                                                            <p className="text-sm text-slate-500 dark:text-slate-400">PT Plena: {diet.pt_g_dia} g/dia</p>
-                                                        )}
-                                                        {diet.th && (
-                                                            <p className="text-sm text-slate-500 dark:text-slate-400">Taxa Hídrica (TH): {diet.th} ml/m²/dia</p>
-                                                        )}
-
-                                                        {/* Cálculos Automáticos */}
-                                                        {(diet.vet_at || diet.pt_at) && (
-                                                            <div className="mt-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2">
-                                                                <p className="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1">📊 Cálculos Automáticos</p>
-                                                                {diet.vet_at && diet.vet && diet.vet_pleno && (
-                                                                    <div className="space-y-0.5">
-                                                                        <p className="text-sm font-bold text-blue-900 dark:text-blue-200">VET AT: {diet.vet_at.toFixed(1)}%</p>
-                                                                        <p className="text-xs text-blue-600 dark:text-blue-400">{diet.vet} kcal/dia de {diet.vet_pleno} kcal/dia</p>
-                                                                    </div>
-                                                                )}
-                                                                {diet.pt_at && diet.pt && diet.pt_g_dia && (
-                                                                    <div className="space-y-0.5 mt-1">
-                                                                        <p className="text-sm font-bold text-blue-900 dark:text-blue-200">PT AT: {diet.pt_at.toFixed(1)}%</p>
-                                                                        <p className="text-xs text-blue-600 dark:text-blue-400">{diet.pt} g/dia de {diet.pt_g_dia} g/dia</p>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                        {diet.observacao && (
-                                                            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 font-medium">Observação: {diet.observacao}</p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2 shrink-0 ml-2">
-                                                    {!diet.data_remocao && (
-                                                        <button onClick={() => setDietRemovalModalOpen(diet.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Retirada</button>
-                                                    )}
-                                                    <button onClick={() => diet.data_remocao ? setEditingDietRemovalDate(diet) : setEditingDiet(diet)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition" aria-label={diet.data_remocao ? "Editar data de retirada" : "Editar dieta"}>
-                                                        <PencilIcon className="w-4 h-4" />
-                                                    </button>
-                                                    <button onClick={() => setArchiveDietModal(diet)} className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition" aria-label="Arquivar dieta">
-                                                        <CloseIcon className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <button onClick={() => setAddDietModalOpen(true)} className="w-full mt-2 text-center bg-blue-50 dark:bg-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-semibold py-2.5 rounded-lg transition">Cadastrar Dieta</button>
-                                </>
-                            )}
-
-                            {dataTab === 'aportes' && (
-                                <AportesCard patientId={patient.id} />
-                            )}
-                        </div>
-                    </>
-                )}
 
                 {mainTab === 'npt' && patient && (
                     <div className="p-4">
@@ -802,6 +493,194 @@ const PatientDetailScreen: React.FC = () => {
             </button>
 
             <DestinoComponent patientId={patient.id.toString()} />
+
+            {/* Category Modal */}
+            {openCategoryModal && (() => {
+                const modalConfig: Record<string, { label: string; icon: React.FC<{ className?: string }>; gradient: string }> = {
+                    medications: { label: 'Medicações', icon: PillIcon, gradient: 'from-blue-500 to-blue-700' },
+                    devices: { label: 'Dispositivos', icon: CpuIcon, gradient: 'from-green-500 to-emerald-700' },
+                    cultures: { label: 'Culturas', icon: BeakerIcon, gradient: 'from-purple-500 to-violet-700' },
+                    surgical: { label: 'Cirúrgico', icon: ScalpelIcon, gradient: 'from-orange-500 to-red-600' },
+                    exams: { label: 'Exames', icon: FileTextIcon, gradient: 'from-teal-400 to-cyan-600' },
+                    diets: { label: 'Dietas', icon: AppleIcon, gradient: 'from-amber-400 to-orange-500' },
+                    aportes: { label: 'Aportes', icon: DropletIcon, gradient: 'from-sky-400 to-blue-500' },
+                };
+                const config = modalConfig[openCategoryModal];
+                const ModalIcon = config.icon;
+                return (
+                    <div className="fixed inset-0 z-[25] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setOpenCategoryModal(null)}>
+                        <div className="bg-white dark:bg-slate-900 w-full sm:max-w-2xl max-h-[85vh] rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+                            <div className={`bg-gradient-to-r ${config.gradient} px-4 py-4 flex items-center justify-between shrink-0`}>
+                                <div className="flex items-center gap-3">
+                                    <ModalIcon className="w-6 h-6 text-white" />
+                                    <h2 className="text-lg font-bold text-white">{config.label}</h2>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {openCategoryModal === 'devices' && <button onClick={() => { setOpenCategoryModal(null); setAddDeviceModalOpen(true); }} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
+                                    {openCategoryModal === 'exams' && <button onClick={() => { setOpenCategoryModal(null); setAddExamModalOpen(true); }} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
+                                    {openCategoryModal === 'medications' && <button onClick={() => { setOpenCategoryModal(null); setAddMedicationModalOpen(true); }} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
+                                    {openCategoryModal === 'surgical' && <button onClick={() => { setOpenCategoryModal(null); setAddSurgicalModalOpen(true); }} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
+                                    {openCategoryModal === 'cultures' && <button onClick={() => { setOpenCategoryModal(null); setAddCultureModalOpen(true); }} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
+                                    {openCategoryModal === 'diets' && <button onClick={() => { setOpenCategoryModal(null); setAddDietModalOpen(true); }} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
+                                    <button onClick={() => setOpenCategoryModal(null)} className="text-white/80 hover:text-white transition p-1">
+                                        <CloseIcon className="w-6 h-6" />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                                {openCategoryModal === 'devices' && (<>
+                                    {patient.devices.filter(d => !d.isArchived).length === 0 && <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhum dispositivo cadastrado.</p>}
+                                    {patient.devices.filter(d => !d.isArchived).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).map(device => (
+                                        <div key={device.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex items-start gap-3">
+                                                    <CpuIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
+                                                    <div>
+                                                        <p className="font-bold text-slate-800 dark:text-slate-200">{device.name} - {device.location}</p>
+                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(device.startDate)}</p>
+                                                        {device.removalDate ? <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Retirada: {formatDateToBRL(device.removalDate)}</p> : <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(device.startDate)}</p>}
+                                                        {device.observacao && <p className="text-sm text-slate-600 dark:text-slate-400 italic mt-1.5 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded">💬 {device.observacao}</p>}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2 shrink-0 ml-2">
+                                                    {!device.removalDate && <button onClick={() => setRemovalModalOpen(device.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Retirada</button>}
+                                                    <button onClick={() => device.removalDate ? setEditingDeviceRemovalDate(device) : setEditingDevice(device)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
+                                                    <button onClick={() => setArchiveDeviceModal(device)} className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"><CloseIcon className="w-4 h-4" /></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </>)}
+                                {openCategoryModal === 'exams' && (<>
+                                    {patient.exams.filter(e => !e.isArchived).length === 0 && <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhum exame cadastrado.</p>}
+                                    {patient.exams.filter(e => !e.isArchived).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(exam => (
+                                        <div key={exam.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex items-start gap-3">
+                                                    <FileTextIcon className="w-5 h-5 text-teal-600 dark:text-teal-400 mt-1 shrink-0" />
+                                                    <div>
+                                                        <p className="font-bold text-slate-800 dark:text-slate-200">{exam.name}</p>
+                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(exam.date)}</p>
+                                                        {exam.observation && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 italic">Obs: {exam.observation}</p>}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-1 shrink-0 ml-2">
+                                                    <button onClick={() => setEditingExam(exam)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
+                                                    <button onClick={() => setArchiveExamModal(exam)} className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"><CloseIcon className="w-4 h-4" /></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </>)}
+                                {openCategoryModal === 'medications' && (<>
+                                    {patient.medications.filter(m => !m.isArchived).length === 0 && <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhuma medicação cadastrada.</p>}
+                                    {patient.medications.filter(m => !m.isArchived).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).map(medication => (
+                                        <div key={medication.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex items-start gap-3">
+                                                    <PillIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
+                                                    <div>
+                                                        <p className="font-bold text-slate-800 dark:text-slate-200 wrap-break-word">{medication.name} - {medication.dosage}</p>
+                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(medication.startDate)}</p>
+                                                        {medication.endDate ? <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Fim: {formatDateToBRL(medication.endDate)}</p> : <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(medication.startDate)}</p>}
+                                                        {medication.observacao && <p className="text-sm text-slate-600 dark:text-slate-400 italic mt-1.5 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded">💬 {medication.observacao}</p>}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2 shrink-0 ml-2">
+                                                    {!medication.endDate && <button onClick={() => setEndDateModalOpen(medication.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Fim</button>}
+                                                    <button onClick={() => medication.endDate ? setEditingMedicationEndDate(medication) : setEditingMedication(medication)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
+                                                    <button onClick={() => setArchiveMedicationModal(medication)} className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"><CloseIcon className="w-4 h-4" /></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </>)}
+                                {openCategoryModal === 'surgical' && (<>
+                                    {patient.surgicalProcedures.filter(p => !p.isArchived).length === 0 && <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhum procedimento cadastrado.</p>}
+                                    {patient.surgicalProcedures.filter(p => !p.isArchived).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(procedure => (
+                                        <div key={procedure.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex items-start gap-3">
+                                                    <ScalpelIcon className="w-5 h-5 text-orange-600 dark:text-orange-400 mt-1 shrink-0" />
+                                                    <div>
+                                                        <p className="font-bold text-slate-800 dark:text-slate-200">{procedure.name}</p>
+                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(procedure.date)} - Dr(a): {procedure.surgeon}</p>
+                                                        <p className="text-sm text-blue-600 dark:text-blue-400 font-semibold mt-1">Dia Pós-Operatório: +{calculateDays(procedure.date)} dias</p>
+                                                        {procedure.notes && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 italic">Obs: {procedure.notes}</p>}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-1 shrink-0 ml-2">
+                                                    <button onClick={() => setEditingSurgicalProcedure(procedure)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
+                                                    <button onClick={() => setArchiveSurgicalModal(procedure)} className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"><CloseIcon className="w-4 h-4" /></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </>)}
+                                {openCategoryModal === 'cultures' && (<>
+                                    {patient.cultures.filter(c => !c.isArchived).length === 0 && <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhuma cultura cadastrada.</p>}
+                                    {patient.cultures.filter(c => !c.isArchived).sort((a, b) => new Date(b.collectionDate).getTime() - new Date(a.collectionDate).getTime()).map(culture => (
+                                        <div key={culture.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex items-start gap-3">
+                                                    <BeakerIcon className="w-5 h-5 text-purple-600 dark:text-purple-400 mt-1 shrink-0" />
+                                                    <div>
+                                                        <p className="font-bold text-slate-800 dark:text-slate-200">{culture.site}</p>
+                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Microorganismo: {culture.microorganism}</p>
+                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(culture.collectionDate)}</p>
+                                                        {culture.observation && <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 font-medium">Observação: {culture.observation}</p>}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-1 shrink-0 ml-2">
+                                                    <button onClick={() => setEditingCulture(culture)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
+                                                    <button onClick={() => setArchiveCultureModal(culture)} className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"><CloseIcon className="w-4 h-4" /></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </>)}
+                                {openCategoryModal === 'diets' && (<>
+                                    {patient.diets.filter(d => !d.isArchived).length === 0 && <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhuma dieta cadastrada.</p>}
+                                    {patient.diets.filter(d => !d.isArchived).sort((a, b) => new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime()).map(diet => (
+                                        <div key={diet.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex items-start gap-3">
+                                                    <AppleIcon className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-1 shrink-0" />
+                                                    <div>
+                                                        <p className="font-bold text-slate-800 dark:text-slate-200">{diet.type}</p>
+                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(diet.data_inicio)}</p>
+                                                        {diet.data_remocao ? <p className="text-sm bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded mt-1 font-medium">Retirada: {formatDateToBRL(diet.data_remocao)}</p> : <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(diet.data_inicio)}</p>}
+                                                        {diet.volume && <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Volume: {diet.volume} ml</p>}
+                                                        {diet.vet && <p className="text-sm text-slate-500 dark:text-slate-400">VET: {diet.vet} kcal/dia</p>}
+                                                        {diet.vet_pleno && <p className="text-sm text-slate-500 dark:text-slate-400">VET Pleno: {diet.vet_pleno} kcal/dia</p>}
+                                                        {diet.pt && <p className="text-sm text-slate-500 dark:text-slate-400">Proteína (PT): {diet.pt} g/dia</p>}
+                                                        {diet.pt_g_dia && <p className="text-sm text-slate-500 dark:text-slate-400">PT Plena: {diet.pt_g_dia} g/dia</p>}
+                                                        {diet.th && <p className="text-sm text-slate-500 dark:text-slate-400">Taxa Hídrica (TH): {diet.th} ml/m²/dia</p>}
+                                                        {(diet.vet_at || diet.pt_at) && (
+                                                            <div className="mt-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2">
+                                                                <p className="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1">📊 Cálculos Automáticos</p>
+                                                                {diet.vet_at && diet.vet && diet.vet_pleno && <><p className="text-sm font-bold text-blue-900 dark:text-blue-200">VET AT: {diet.vet_at.toFixed(1)}%</p><p className="text-xs text-blue-600 dark:text-blue-400">{diet.vet} kcal/dia de {diet.vet_pleno} kcal/dia</p></>}
+                                                                {diet.pt_at && diet.pt && diet.pt_g_dia && <><p className="text-sm font-bold text-blue-900 dark:text-blue-200 mt-1">PT AT: {diet.pt_at.toFixed(1)}%</p><p className="text-xs text-blue-600 dark:text-blue-400">{diet.pt} g/dia de {diet.pt_g_dia} g/dia</p></>}
+                                                            </div>
+                                                        )}
+                                                        {diet.observacao && <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 font-medium">Observação: {diet.observacao}</p>}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2 shrink-0 ml-2">
+                                                    {!diet.data_remocao && <button onClick={() => setDietRemovalModalOpen(diet.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Retirada</button>}
+                                                    <button onClick={() => diet.data_remocao ? setEditingDietRemovalDate(diet) : setEditingDiet(diet)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
+                                                    <button onClick={() => setArchiveDietModal(diet)} className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"><CloseIcon className="w-4 h-4" /></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </>)}
+                                {openCategoryModal === 'aportes' && <AportesCard patientId={patient.id} />}
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
 
             {isAddDeviceModalOpen && <AddDeviceModal patientId={patient.id} onClose={() => setAddDeviceModalOpen(false)} />}
             {editingDevice && <EditDeviceModal device={editingDevice} patientId={patient.id} onClose={() => setEditingDevice(null)} />}

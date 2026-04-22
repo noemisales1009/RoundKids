@@ -28,7 +28,8 @@ interface PerguntaOpcao {
 }
 
 export const PerguntasAdmin: React.FC = () => {
-  const { isDark } = useContext(ThemeContext) || { isDark: false };
+  const { theme } = useContext(ThemeContext) || { theme: 'light' as const };
+  const isDark = theme === 'dark';
 
   const [categorias, setCategorias] = useState<Category[]>([]);
   const [perguntas, setPerguntas] = useState<Pergunta[]>([]);

@@ -269,12 +269,16 @@ export default function DeliriumPediatricoScale({ onSaveScore }: DeliriumScalePr
     const itensRespondidos = Object.keys(respostas).filter(key => respostas[key] !== undefined && respostas[key] !== null).length;
     
     if (itensRespondidos < totalItens) {
-      return { 
-          texto: 'Avaliação em Andamento', 
-          detalhe: `Responda a todos os ${totalItens} itens.`, 
+      return {
+          texto: 'Avaliação em Andamento',
+          detalhe: `Responda a todos os ${totalItens} itens.`,
           cor: 'text-yellow-400',
           icone: '⏳',
-          isCompleto: false
+          isCompleto: false,
+          pontuacao: null as any,
+          isPositivo: false,
+          bg: '',
+          border: ''
       };
     }
 
@@ -377,7 +381,7 @@ export default function DeliriumPediatricoScale({ onSaveScore }: DeliriumScalePr
         if (onSaveScore) {
           onSaveScore({
             scaleName: configAtual.titulo,
-            score: resultadoAvaliacao.pontuacao || 0,
+            score: resultadoAvaliacao?.pontuacao || 0,
             interpretation: resultadoAvaliacao.texto
           });
           setSaveStatus('success');

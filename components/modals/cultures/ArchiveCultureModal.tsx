@@ -75,14 +75,14 @@ export const ArchiveCultureModal: React.FC<ArchiveCultureModalProps> = ({ cultur
                 
                 <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                     <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
-                        {culture.location}
+                        {culture.site}
                     </p>
                     <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
                         Microorganismo: {culture.microorganism}
                     </p>
-                    {culture.date && (
+                    {culture.collectionDate && (
                         <p className="text-xs text-amber-700 dark:text-amber-300">
-                            Data: {new Date(culture.date).toLocaleDateString('pt-BR')}
+                            Data: {new Date(culture.collectionDate).toLocaleDateString('pt-BR')}
                         </p>
                     )}
                 </div>

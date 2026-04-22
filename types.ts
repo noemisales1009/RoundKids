@@ -23,7 +23,9 @@ export interface Exam {
 export interface Medication {
   id: number | string;
   name: string;
-  dosage: string;
+  dosage?: string;
+  dosageValue?: string;
+  unidade?: string;
   startDate: string; // "YYYY-MM-DD"
   endDate?: string; // "YYYY-MM-DD"
   isArchived?: boolean;
@@ -188,10 +190,10 @@ export interface PatientsContextType {
   questions: Question[];
   categories: Category[];
   checklistAnswers: Record<string, Record<number, Answer>>; // patientId -> questionId -> Answer
-  addDeviceToPatient: (patientId: number | string, device: Omit<Device, 'id'>) => void;
-  addExamToPatient: (patientId: number | string, exam: Omit<Exam, 'id'>) => void;
-  addMedicationToPatient: (patientId: number | string, medication: Omit<Medication, 'id'>) => void;
-  addSurgicalProcedureToPatient: (patientId: number | string, procedure: Omit<SurgicalProcedure, 'id'>) => void;
+  addDeviceToPatient: (patientId: number | string, device: Omit<Device, 'id'>, userId?: string) => void;
+  addExamToPatient: (patientId: number | string, exam: Omit<Exam, 'id'>, userId?: string) => void;
+  addMedicationToPatient: (patientId: number | string, medication: Omit<Medication, 'id'>, userId?: string) => void;
+  addSurgicalProcedureToPatient: (patientId: number | string, procedure: Omit<SurgicalProcedure, 'id'>, userId?: string) => void;
   addRemovalDateToDevice: (patientId: number | string, deviceId: number | string, removalDate: string) => void;
   deleteDeviceFromPatient: (patientId: number | string, deviceId: number | string) => void;
   addEndDateToMedication: (patientId: number | string, medicationId: number | string, endDate: string) => void;
@@ -205,10 +207,10 @@ export interface PatientsContextType {
   addScaleScoreToPatient: (patientId: number | string, score: Omit<ScaleScore, 'id'>) => void;
   updatePatientDetails: (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number; sc?: number }) => void;
   saveChecklistAnswer: (patientId: number | string, categoryId: number, questionId: number, answer: Answer) => Promise<void>;
-  addCultureToPatient: (patientId: number | string, culture: Omit<Culture, 'id'>) => void;
+  addCultureToPatient: (patientId: number | string, culture: Omit<Culture, 'id'>, userId?: string) => void;
   deleteCultureFromPatient: (patientId: number | string, cultureId: number | string) => void;
   updateCultureInPatient: (patientId: number | string, cultureData: Culture) => void;
-  addDietToPatient: (patientId: number | string, diet: Omit<Diet, 'id'>) => void;
+  addDietToPatient: (patientId: number | string, diet: Omit<Diet, 'id'>, userId?: string) => void;
   deleteDietFromPatient: (patientId: number | string, dietId: number | string, userId?: string) => void;
   updateDietInPatient: (patientId: number | string, dietData: Diet) => void;
   addPrecautionToPatient: (patientId: number | string, precaution: Omit<Precaution, 'id'>) => void;
