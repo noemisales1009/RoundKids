@@ -168,7 +168,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (!error) fetchTasks();
     };
 
-    const addPatientAlert = async (data: { patientId: string | number; description: string; responsible: string; timeLabel: string }) => {
+    const addPatientAlert = async (data: { patientId: string | number; description: string; responsible: string; timeLabel: string; sistemas?: string[] }) => {
         const user = await supabase.auth.getUser();
         const userId = user.data?.user?.id;
 
@@ -179,7 +179,8 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             hora_selecionada: data.timeLabel,
             status: 'Pendente',
             created_at: new Date().toISOString(),
-            created_by: userId
+            created_by: userId,
+            ...(data.sistemas && data.sistemas.length > 0 ? { sistemas: data.sistemas } : {}),
         }]);
 
         if (error) {

@@ -54,6 +54,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 date: e.data_exame,
                 result: e.resultado || 'Pendente',
                 observation: e.observacao,
+                sistema: e.sistema || undefined,
             });
             return acc;
         }, {});
@@ -71,7 +72,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 startDate: m.data_inicio,
                 endDate: m.data_fim,
                 isArchived: m.is_archived,
-                observacao: m.observacao
+                observacao: m.observacao,
+                sistema: m.sistema || undefined,
             });
             return acc;
         }, {});
@@ -468,7 +470,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             nome_exame: sanitizeText(exam.name),
             data_exame: exam.date,
             observacao: sanitizeTextOrNull(exam.observation),
-            criado_por_id: userId || null
+            criado_por_id: userId || null,
+            ...(exam.sistema ? { sistema: exam.sistema } : {}),
         };
         const { data, error } = await supabase.from('exames_pacientes').insert([payload]);
 
@@ -493,7 +496,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             unidade_medida: sanitizeTextOrNull(unidade),
             data_inicio: medication.startDate,
             observacao: sanitizeTextOrNull(medication.observacao),
-            criado_por_id: userId || null
+            criado_por_id: userId || null,
+            ...(medication.sistema ? { sistema: medication.sistema } : {}),
         };
 
 
@@ -529,7 +533,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                             startDate: m.data_inicio,
                             endDate: m.data_fim,
                             isArchived: m.is_archived,
-                            observacao: m.observacao
+                            observacao: m.observacao,
+                            sistema: m.sistema || undefined,
                         }));
 
                         console.log('📝 Retornando paciente atualizado:', {

@@ -18,6 +18,7 @@ export interface Exam {
   result: 'Pendente' | 'Normal' | 'Alterado';
   observation?: string;
   isArchived?: boolean;
+  sistema?: string;
 }
 
 export interface Medication {
@@ -30,6 +31,7 @@ export interface Medication {
   endDate?: string; // "YYYY-MM-DD"
   isArchived?: boolean;
   observacao?: string;
+  sistema?: string;
 }
 
 export interface SurgicalProcedure {
@@ -196,7 +198,7 @@ export interface TasksContextType {
   updateTaskJustification: (taskId: number | string, justification: string) => void;
   updateTaskStatus: (taskId: number | string, status: TaskStatus) => void;
   addTask: (taskData: Omit<Task, 'id' | 'status' | 'justification'>) => void;
-  addPatientAlert: (data: { patientId: string | number; description: string; responsible: string; timeLabel: string }) => Promise<boolean>;
+  addPatientAlert: (data: { patientId: string | number; description: string; responsible: string; timeLabel: string; sistemas?: string[] }) => Promise<boolean>;
 }
 
 export interface PatientsContextType {

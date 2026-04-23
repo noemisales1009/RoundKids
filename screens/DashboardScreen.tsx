@@ -212,6 +212,15 @@ const DashboardScreen: React.FC = () => {
                                                             {alert.prazo_formatado && <p>⌛ Tempo: {alert.prazo_formatado}</p>}
                                                             {alert.live_status && <p>Status: <span className={alert.live_status === 'no_prazo' ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}>{alert.live_status}</span></p>}
                                                         </div>
+                                                        {alert.sistemas && alert.sistemas.length > 0 && (
+                                                            <div className="flex flex-wrap gap-1 mt-1">
+                                                                {alert.sistemas.map((s: string) => (
+                                                                    <span key={s} className="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300">
+                                                                        {s}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        )}
                                                         {(alert.justificativa || alert.justification) && (
                                                             <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded border-l-2 border-yellow-400 dark:border-yellow-500">
                                                                 <p className="text-yellow-700 dark:text-yellow-300 text-xs font-semibold">💬 Justificativa:</p>

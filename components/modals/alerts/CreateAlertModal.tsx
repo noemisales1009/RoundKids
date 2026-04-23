@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { TasksContext, NotificationContext } from '../../../contexts';
 import { AlertIcon, CloseIcon, SaveIcon, ChevronDownIcon } from '../../icons';
-import { RESPONSIBLES, ALERT_DEADLINES } from '../../../constants';
+import { RESPONSIBLES, ALERT_DEADLINES, ALERT_SYSTEMS } from '../../../constants';
 
 export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: () => void; }> = ({ patientId, onClose }) => {
     const { addPatientAlert } = useContext(TasksContext)!;
@@ -9,17 +9,18 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
     const [description, setDescription] = useState('');
     const [responsible, setResponsible] = useState('');
     const [deadline, setDeadline] = useState('');
+    const [sistema, setSistema] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e: { preventDefault: () => void }) => {
         e.preventDefault();
         if (!description || !responsible || !deadline) return;
 
-        // Using the dedicated addPatientAlert function which saves to the 'alertas_paciente' table
         addPatientAlert({
-            patientId: patientId,
+            patientId,
             description,
             responsible,
             timeLabel: deadline,
+            sistemas: sistema ? [sistema] : [],
         });
 
         showNotification({ message: 'Alerta criado com sucesso!', type: 'success' });
@@ -42,15 +43,27 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Alerta</label>
-                            <input
-                                type="text"
+                            <textarea
                                 value={description}
                                 onChange={e => setDescription(e.target.value)}
                                 placeholder="Digite o alerta identificado..."
                                 required
-                                className="w-full px-3 sm:px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                rows={3}
+                                className="w-full px-3 sm:px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200 resize-none"
                             />
                         </div>
+
+                        <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Sistema</label>
+                            <div className="relative">
+                                <select value={sistema} onChange={e => setSistema(e.target.value)} className="w-full px-3 sm:px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200 appearance-none">
+                                    <option value="">Selecione...</option>
+                                    {ALERT_SYSTEMS.map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                                <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
+                            </div>
+                        </div>
+
                         <div>
                             <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Responsável</label>
                             <div className="relative">
@@ -61,6 +74,7 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
                                 <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
                             </div>
                         </div>
+
                         <div>
                             <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Selecione a hora</label>
                             <div className="relative">
@@ -71,6 +85,7 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
                                 <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
                             </div>
                         </div>
+
                         <button
                             type="submit"
                             className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 sm:py-3 px-4 rounded-lg transition text-base sm:text-lg flex items-center justify-center gap-2 mt-2"

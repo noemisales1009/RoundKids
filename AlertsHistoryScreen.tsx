@@ -250,7 +250,12 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                             <tr>
                                 <td>${alert.patient_name || 'N/A'}</td>
                                 <td>${alert.bed_number || 'N/A'}</td>
-                                <td>${alert.alertaclinico || 'N/A'}</td>
+                                <td>
+                                    ${alert.alertaclinico || 'N/A'}
+                                    ${alert.source === 'alertas' && alert.sistemas && alert.sistemas.length > 0
+                                        ? `<br/><span style="font-size:11px;color:#64748b;">${alert.sistemas.join(' • ')}</span>`
+                                        : ''}
+                                </td>
                                 <td><span class="status-badge status-${alert.live_status}">${alert.live_status?.replace('_', ' ') || 'N/A'}</span></td>
                             </tr>
                         `).join('')}
@@ -510,6 +515,15 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                                             </div>
                                         )}
                                         <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 leading-snug">{alert.alertaclinico}</p>
+                                        {alert.source === 'alertas' && alert.sistemas && alert.sistemas.length > 0 && (
+                                            <div className="flex flex-wrap gap-1 mt-1.5">
+                                                {alert.sistemas.map((s: string) => (
+                                                    <span key={s} className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                                                        {s}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                     <span className={`shrink-0 px-2.5 py-1 text-xs font-semibold rounded-full ${badge}`}>
                                         {label}

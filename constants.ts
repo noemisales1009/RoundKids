@@ -363,6 +363,22 @@ export const ALERT_DEADLINES: string[] = [
     '19 horas', '20 horas', '21 horas', '22 horas', '23 horas', '24 horas'
 ] as const;
 
+export const ALERT_SYSTEMS: string[] = [
+    'Avaliação respiratória',
+    'Avaliação cardiovascular',
+    'Avaliação renal',
+    'Distúrbios hidroeletrolíticos e metabólicos',
+    'Avaliação gastrointestinal',
+    'Avaliação hematológica',
+    'Avaliação neurológica',
+    'Avaliação nutricional e metabólica',
+    'Infecções Relacionadas à Assistência à Saúde (IRAS)',
+    'Outras infecções',
+    'Gestão de riscos assistenciais',
+    'Precauções e controle de infecção',
+    'Notificação de eventos adversos',
+];
+
 export const INITIAL_USER: User = {
     name: '',
     title: '',

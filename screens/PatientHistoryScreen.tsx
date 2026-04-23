@@ -667,7 +667,7 @@ const PatientHistoryScreen: React.FC = () => {
             events.push({
                 timestamp: new Date(med.startDate).toISOString(),
                 icon: PillIcon,
-                description: `[MEDICACAO] Início Medicação: ${med.name} (${med.dosage}).`,
+                description: `[MEDICACAO] Início Medicação: ${med.name} (${med.dosage}).${med.sistema ? `\n🏷️ Sistema: ${med.sistema}` : ''}`,
                 hasTime: false,
             });
             if (med.endDate) {
@@ -684,7 +684,7 @@ const PatientHistoryScreen: React.FC = () => {
             events.push({
                 timestamp: new Date(exam.date).toISOString(),
                 icon: FileTextIcon,
-                description: `[EXAME] Exame Realizado: ${exam.name}.`,
+                description: `[EXAME] Exame Realizado: ${exam.name}.${exam.sistema ? `\n🏷️ Sistema: ${exam.sistema}` : ''}`,
                 hasTime: false,
             });
         });
@@ -829,6 +829,11 @@ const PatientHistoryScreen: React.FC = () => {
 
             // Montar descrição com justificativa se existir
             let description = `[ALERTA] 🔔 ${desc}\n👤 Responsável: ${resp}\n📅 Prazo Limite: ${prazoLimite}\n⏳ Prazo: ${prazoDuracao}\n🕐 Criado em: ${dataHora}\n👨‍⚕️ Criado por: ${criadoPor}\n📊 Status: ${liveStatus}`;
+
+            const sistemas = alert.sistemas;
+            if (sistemas && Array.isArray(sistemas) && sistemas.length > 0) {
+                description += `\n🏷️ Sistemas: ${sistemas.join(' • ')}`;
+            }
 
             if (justificativa) {
                 description += `\n\n📝 Justificativa: ${justificativa}`;

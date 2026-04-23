@@ -2,6 +2,8 @@ import React, { useState, useContext, useEffect } from 'react';
 import { PatientsContext, NotificationContext, UserContext } from '../../../contexts';
 import { CloseIcon } from '../../icons';
 import { supabase } from '../../../supabaseClient';
+import { ChevronDownIcon } from '../../icons';
+import { ALERT_SYSTEMS } from '../../../constants';
 
 interface Medicamento {
     id: number;
@@ -35,6 +37,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
     const [dosageValue, setDosageValue] = useState('');
     const [startDate, setStartDate] = useState(getTodayDateString());
     const [observacao, setObservacao] = useState('');
+    const [sistema, setSistema] = useState('');
     const [loading, setLoading] = useState(true);
 
     // Buscar categorias ao montar
@@ -151,14 +154,15 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
 
         
         addMedicationToPatient(
-            patientId, 
-            { 
-                name: finalMedicationName, 
+            patientId,
+            {
+                name: finalMedicationName,
                 dosageValue: dosageValueFinal,
                 unidade: unidade,
-                startDate, 
-                observacao 
-            }, 
+                startDate,
+                observacao,
+                sistema: sistema || undefined,
+            },
             user.id
         );
         
@@ -323,7 +327,19 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                         />
                     </div>
 
-                    {/* Campo 6: Observação */}
+                    {/* Campo 6: Sistema */}
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Sistema <span className="text-slate-400 font-normal">(opcional)</span></label>
+                        <div className="relative">
+                            <select value={sistema} onChange={e => setSistema(e.target.value)} className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200 appearance-none">
+                                <option value="">Selecione...</option>
+                                {ALERT_SYSTEMS.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                            <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
+                        </div>
+                    </div>
+
+                    {/* Campo 7: Observação */}
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Observação <span className="text-slate-400 font-normal">(opcional)</span></label>
                         <textarea 

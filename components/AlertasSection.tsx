@@ -47,6 +47,7 @@ interface Alert {
     source?: 'tasks' | 'alertas'; // Para diferenciar a origem
     justificativa?: string | null;
     justification?: string | null;
+    sistemas?: string[] | null;
 }
 
 export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) => {
@@ -122,7 +123,8 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                                 responsible: alert.responsavel,
                                 deadline: alert.deadline,
                                 source: 'alertas',
-                                justificativa: alert.justificativa
+                                justificativa: alert.justificativa,
+                                sistemas: alert.sistemas
                             });
                         }
                     });
@@ -443,6 +445,15 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                                                     <p>⏱️ {alerta.time_label}</p>
                                                 )}
                                             </div>
+                                            {alerta.source === 'alertas' && alerta.sistemas && alerta.sistemas.length > 0 && (
+                                                <div className="flex flex-wrap gap-1 mt-2">
+                                                    {alerta.sistemas.map((s: string) => (
+                                                        <span key={s} className="text-xs px-2 py-0.5 rounded-full bg-white/30 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 border border-slate-300/50 dark:border-slate-600">
+                                                            {s}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
                                             {((alerta.source === 'alertas' && alerta.justificativa) || (alerta.source === 'tasks' && alerta.justification)) && (
                                                 <div className="mt-2 p-2 bg-white/50 dark:bg-slate-800/50 rounded">
                                                     <p className="text-xs font-semibold">📝 Justificativa:</p>
