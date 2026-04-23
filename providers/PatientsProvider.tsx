@@ -817,6 +817,29 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     // Precautions Functions
+    const refreshPatientPrecautions = async (patientId: number | string) => {
+        const { data, error } = await supabase
+            .from('precautions_com_calculo')
+            .select('*')
+            .eq('patient_id', patientId)
+            .is('archived_at', null);
+        if (error || !data) return;
+        const precautions: Precaution[] = data.map((p: any) => ({
+            id: p.id,
+            tipo_precaucao: p.tipo_precaucao,
+            data_inicio: p.data_inicio,
+            data_fim: p.data_fim || undefined,
+            data_fim_sugerida: p.data_fim_sugerida || undefined,
+            doenca_id: p.doenca_id || undefined,
+            doenca_nome: p.doenca_nome || undefined,
+            doenca_nome_manual: p.doenca_nome_manual || undefined,
+            observacao: p.observacao || undefined,
+            isArchived: !!p.archived_at,
+            motivo_arquivamento: p.motivo_arquivamento || undefined,
+        }));
+        setPatients(prev => prev.map(p => p.id == patientId ? { ...p, precautions } : p));
+    };
+
     const addPrecautionToPatient = async (patientId: number | string, precaution: Omit<Precaution, 'id'>) => {
         const { error } = await supabase.from('precautions').insert([{
             patient_id: patientId,
@@ -830,7 +853,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }]);
 
         if (error) console.warn("Precaution table error", error);
-        if (!error) fetchPatients();
+        if (!error) refreshPatientPrecautions(patientId);
     };
 
     const deletePrecautionFromPatient = async (patientId: number | string, precautionId: number | string, motivo?: string) => {
@@ -840,7 +863,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 motivo_arquivamento: motivo ?? null,
             })
             .eq('id', precautionId);
-        if (!error) fetchPatients();
+        if (!error) refreshPatientPrecautions(patientId);
     };
 
     const updatePrecautionInPatient = async (patientId: number | string, precautionData: Precaution) => {
@@ -855,14 +878,14 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 data_fim_sugerida: precautionData.data_fim_sugerida ?? null
             })
             .eq('id', precautionData.id);
-        if (!error) fetchPatients();
+        if (!error) refreshPatientPrecautions(patientId);
     };
 
     const addEndDateToPrecaution = async (patientId: number | string, precautionId: number | string, endDate: string) => {
         const { error } = await supabase.from('precautions')
             .update({ data_fim: endDate })
             .eq('id', precautionId);
-        if (!error) fetchPatients();
+        if (!error) refreshPatientPrecautions(patientId);
     };
 
     const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number; sc?: number }) => {
