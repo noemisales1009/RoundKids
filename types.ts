@@ -75,11 +75,23 @@ export interface Diet {
   isArchived?: boolean;
 }
 
+export interface DoencaPrecaucao {
+  id: number;
+  nome: string;
+  tipo_precaucao: string;
+  duracao_observacao: string;
+  duracao_dias: number | null;
+}
+
 export interface Precaution {
   id: number | string;
-  tipo_precaucao: 'padrao' | 'contato' | 'goticula' | 'aerossois';
+  tipo_precaucao: 'padrao' | 'contato' | 'goticula' | 'aerossois' | 'contato_goticula' | 'contato_aerossois' | 'contato_goticula_aerossois';
   data_inicio: string; // "YYYY-MM-DD"
   data_fim?: string; // "YYYY-MM-DD"
+  data_fim_sugerida?: string; // "YYYY-MM-DD" — calculada a partir de duracao_dias
+  doenca_id?: number;
+  doenca_nome?: string;
+  observacao?: string;
   isArchived?: boolean;
 }
 

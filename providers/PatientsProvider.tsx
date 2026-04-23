@@ -144,6 +144,10 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 tipo_precaucao: p.tipo_precaucao,
                 data_inicio: p.data_inicio,
                 data_fim: p.data_fim || undefined,
+                data_fim_sugerida: p.data_fim_sugerida || undefined,
+                doenca_id: p.doenca_id || undefined,
+                doenca_nome: p.doenca_nome || undefined,
+                observacao: p.observacao || undefined,
                 isArchived: false
             });
             return acc;
@@ -279,7 +283,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 supabase.from('scale_scores').select('*').in('patient_id', activePatientIds),
                 supabase.from('culturas_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
                 supabase.from('dietas_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
-                supabase.from('precautions').select('*').in('patient_id', activePatientIds),
+                supabase.from('precautions_com_calculo').select('*').in('patient_id', activePatientIds),
                 supabase.from('diurese').select('*').in('patient_id', activePatientIds).order('data_registro', { ascending: false }).limit(100),
                 supabase.from('balanco_hidrico').select('*').in('patient_id', activePatientIds).order('data_registro', { ascending: false }).limit(100)
             ]).then(([
@@ -656,7 +660,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     const updateMedicationInPatient = async (patientId: number | string, medicationData: Medication) => {
-        const parts = medicationData.dosage.split(' ');
+        const parts = (medicationData.dosage ?? '').split(' ');
         const valor = parts[0] || '';
         const unidade = parts.slice(1).join(' ') || '';
 
@@ -816,7 +820,10 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             patient_id: patientId,
             tipo_precaucao: precaution.tipo_precaucao,
             data_inicio: precaution.data_inicio,
-            data_fim: precaution.data_fim || null
+            data_fim: precaution.data_fim || null,
+            doenca_id: precaution.doenca_id ?? null,
+            observacao: precaution.observacao ?? null,
+            data_fim_sugerida: precaution.data_fim_sugerida ?? null
         }]);
 
         if (error) console.warn("Precaution table error", error);
@@ -835,7 +842,10 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             .update({
                 tipo_precaucao: precautionData.tipo_precaucao,
                 data_inicio: precautionData.data_inicio,
-                data_fim: precautionData.data_fim || null
+                data_fim: precautionData.data_fim || null,
+                doenca_id: precautionData.doenca_id ?? null,
+                observacao: precautionData.observacao ?? null,
+                data_fim_sugerida: precautionData.data_fim_sugerida ?? null
             })
             .eq('id', precautionData.id);
         if (!error) fetchPatients();
