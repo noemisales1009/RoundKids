@@ -91,7 +91,7 @@ const PatientDetailScreen: React.FC = () => {
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
     const [mainTab, setMainTab] = useState<'npt' | 'scales' | null>(null);
-    const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | null>(null);
+    const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'scales' | null>(null);
     const [isAddDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
     const [editingDevice, setEditingDevice] = useState<Device | null>(null);
     const [editingDeviceRemovalDate, setEditingDeviceRemovalDate] = useState<Device | null>(null);
@@ -352,6 +352,7 @@ const PatientDetailScreen: React.FC = () => {
                     { id: 'exams' as const, label: 'Exames', icon: FileTextIcon, count: patient.exams.filter(e => !e.isArchived).length, gradient: 'from-teal-400 to-cyan-600' },
                     { id: 'diets' as const, label: 'Dietas', icon: AppleIcon, count: patient.diets.filter(d => !d.isArchived).length, gradient: 'from-amber-400 to-orange-500' },
                     { id: 'aportes' as const, label: 'Aportes', icon: DropletIcon, count: null, gradient: 'from-sky-400 to-blue-500' },
+                    { id: 'scales' as const, label: 'Escalas', icon: BarChartIcon, count: patient.scaleScores?.length ?? 0, gradient: 'from-indigo-500 to-purple-600' },
                 ] as const).map(({ id, label, icon: Icon, count, gradient }) => (
                     <button
                         key={id}
@@ -544,6 +545,7 @@ const PatientDetailScreen: React.FC = () => {
                     exams: { label: 'Exames', icon: FileTextIcon, gradient: 'from-teal-400 to-cyan-600' },
                     diets: { label: 'Dietas', icon: AppleIcon, gradient: 'from-amber-400 to-orange-500' },
                     aportes: { label: 'Aportes', icon: DropletIcon, gradient: 'from-sky-400 to-blue-500' },
+                    scales: { label: 'Escalas', icon: BarChartIcon, gradient: 'from-indigo-500 to-purple-600' },
                 };
                 const config = modalConfig[openCategoryModal];
                 const ModalIcon = config.icon;
@@ -716,6 +718,28 @@ const PatientDetailScreen: React.FC = () => {
                                     ))}
                                 </>)}
                                 {openCategoryModal === 'aportes' && <AportesCard patientId={patient.id} />}
+                                {openCategoryModal === 'scales' && (<>
+                                    {(!patient.scaleScores || patient.scaleScores.length === 0) && (
+                                        <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhuma escala registrada.</p>
+                                    )}
+                                    {(patient.scaleScores ?? []).slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(score => (
+                                        <div key={score.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                                            <div className="flex items-start gap-3">
+                                                <BarChartIcon className="w-5 h-5 text-indigo-500 dark:text-indigo-400 mt-0.5 shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-bold text-slate-800 dark:text-slate-200">{score.scaleName}</p>
+                                                    <p className="text-sm text-slate-600 dark:text-slate-300 mt-0.5">
+                                                        Pontuação: <span className="font-semibold">{score.score}</span>
+                                                        {score.interpretation && <span className="ml-2 text-slate-500 dark:text-slate-400">({score.interpretation})</span>}
+                                                    </p>
+                                                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                                                        {new Date(score.date).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </>)}
                             </div>
                         </div>
                     </div>
