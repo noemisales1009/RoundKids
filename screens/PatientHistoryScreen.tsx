@@ -17,7 +17,9 @@ import {
     CheckCircleIcon,
     AppleIcon,
     BeakerIcon,
-    ChevronDownIcon
+    ChevronDownIcon,
+    ShieldIcon,
+    MapPinIcon
 } from '../components/icons';
 
 const formatHistoryDate = (dateString: string) => {
@@ -97,7 +99,9 @@ const PatientHistoryScreen: React.FC = () => {
         'Arquivamentos Dietas': 'Dieta Arquivada',
         'Arquivamentos Diagnósticos': 'Diagnóstico Arquivado',
         'Situação Clínica 24h': 'Situação Clínica 24h',
-        'Aportes': 'Aportes'
+        'Aportes': 'Aportes',
+        'Precauções': 'Precaução',
+        'Transferência': 'Transferência'
     };
 
     useHeader(patient ? `Histórico: ${patient.name}` : 'Histórico do Paciente');
@@ -917,6 +921,34 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
+        // Adicionar precauções
+        const tipoPrecaucaoLabel: Record<string, string> = {
+            padrao: 'Padrão', contato: 'Contato', goticula: 'Gotículas', aerossois: 'Aerossóis',
+            contato_goticula: 'Contato + Gotículas', contato_aerossois: 'Contato + Aerossóis',
+            contato_goticula_aerossois: 'Contato + Gotículas + Aerossóis',
+        };
+        patient.precautions?.filter(p => !p.isArchived).forEach(precaution => {
+            const nome = precaution.doenca_nome ?? tipoPrecaucaoLabel[precaution.tipo_precaucao] ?? precaution.tipo_precaucao;
+            const tipo = tipoPrecaucaoLabel[precaution.tipo_precaucao] ?? precaution.tipo_precaucao;
+            let desc = `[PRECAUCAO] Precaução Iniciada: ${nome} (${tipo})`;
+            if (precaution.observacao) desc += `\n📋 ${precaution.observacao}`;
+            if (precaution.data_fim_sugerida) desc += `\n📅 Fim sugerido: ${precaution.data_fim_sugerida.split('-').reverse().join('/')}`;
+            events.push({ timestamp: new Date(precaution.data_inicio).toISOString(), icon: ShieldIcon, description: desc, hasTime: false });
+            if (precaution.data_fim) {
+                events.push({ timestamp: new Date(precaution.data_fim).toISOString(), icon: ShieldIcon, description: `[PRECAUCAO] Precaução Finalizada: ${nome}`, hasTime: false });
+            }
+        });
+
+        // Adicionar transferência/destino
+        if (patient.localTransferencia) {
+            events.push({
+                timestamp: new Date().toISOString(),
+                icon: MapPinIcon,
+                description: `[TRANSFERENCIA] Destino: ${patient.localTransferencia}`,
+                hasTime: false,
+            });
+        }
+
         // Adicionar culturas ativas
         patient.cultures?.filter(c => !c.isArchived).forEach(culture => {
             events.push({
@@ -990,7 +1022,7 @@ const PatientHistoryScreen: React.FC = () => {
         }, {} as Record<string, TimelineEvent[]>);
 
         return groupedEvents;
-    }, [patient, tasks, diagnostics, diuresisData, balanceData, dietsData, alertsData, alertCompletions, alertJustifications, archivedAlerts, archivedDevices, archivedExams, archivedMedications, archivedProcedures, archivedCultures, archivedDiets, clinicalSituations24h, aportesHistorico, resolvedDiagnostics]);
+    }, [patient, tasks, diagnostics, diuresisData, balanceData, dietsData, alertsData, alertCompletions, alertJustifications, archivedAlerts, archivedDevices, archivedExams, archivedMedications, archivedProcedures, archivedCultures, archivedDiets, clinicalSituations24h, aportesHistorico, resolvedDiagnostics, archivedDiagnostics, auditLogData]);
 
     const handleGeneratePdf = () => {
         // ... (PDF generation logic remains the same)
@@ -1374,7 +1406,9 @@ const PatientHistoryScreen: React.FC = () => {
             '[DIETA_ARQUIVADA]': 'Arquivamentos Dietas',
             '[DIAGNOSTICO_ARQUIVADO]': 'Arquivamentos Diagnósticos',
             '[SITUACAO_24H]': 'Situação Clínica 24h',
-            '[APORTES]': 'Aportes'
+            '[APORTES]': 'Aportes',
+            '[PRECAUCAO]': 'Precauções',
+            '[TRANSFERENCIA]': 'Transferência'
         };
 
         for (const [marker, category] of Object.entries(categoryMap)) {
@@ -1432,7 +1466,7 @@ const PatientHistoryScreen: React.FC = () => {
         setSelectedCategories(new Set());
     };
 
-    const mainCategories = ['Dispositivos', 'Medicações', 'Exames', 'Cirúrgico', 'Escalas', 'Diagnósticos', 'Culturas', 'Diurese', 'Balanço Hídrico', 'Dietas', 'Alertas', 'Comorbidades', 'Completações', 'Justificativas', 'Situação Clínica 24h', 'Aportes'];
+    const mainCategories = ['Dispositivos', 'Medicações', 'Exames', 'Cirúrgico', 'Escalas', 'Diagnósticos', 'Culturas', 'Diurese', 'Balanço Hídrico', 'Dietas', 'Alertas', 'Comorbidades', 'Completações', 'Justificativas', 'Situação Clínica 24h', 'Aportes', 'Precauções', 'Transferência'];
     const archiveCategories = ['Arquivamentos', 'Arquivamentos Dispositivos', 'Arquivamentos Exames', 'Arquivamentos Medicações', 'Arquivamentos Procedimentos', 'Arquivamentos Culturas', 'Arquivamentos Dietas', 'Arquivamentos Diagnósticos'];
 
     const categoryIcons: Record<string, React.FC<{ className?: string }>> = {
@@ -1452,6 +1486,8 @@ const PatientHistoryScreen: React.FC = () => {
         'Justificativas': ClipboardIcon,
         'Situação Clínica 24h': HeartPulseIcon,
         'Aportes': DropletIcon,
+        'Precauções': ShieldIcon,
+        'Transferência': MapPinIcon,
         'Arquivamentos': BellIcon,
         'Arquivamentos Dispositivos': CpuIcon,
         'Arquivamentos Exames': FileTextIcon,

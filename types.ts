@@ -93,6 +93,7 @@ export interface Precaution {
   doenca_nome?: string;
   observacao?: string;
   isArchived?: boolean;
+  motivo_arquivamento?: string;
 }
 
 export interface Patient {
@@ -226,7 +227,7 @@ export interface PatientsContextType {
   deleteDietFromPatient: (patientId: number | string, dietId: number | string, userId?: string) => void;
   updateDietInPatient: (patientId: number | string, dietData: Diet) => void;
   addPrecautionToPatient: (patientId: number | string, precaution: Omit<Precaution, 'id'>) => void;
-  deletePrecautionFromPatient: (patientId: number | string, precautionId: number | string) => void;
+  deletePrecautionFromPatient: (patientId: number | string, precautionId: number | string, motivo?: string) => void;
   updatePrecautionInPatient: (patientId: number | string, precautionData: Precaution) => void;
   addEndDateToPrecaution: (patientId: number | string, precautionId: number | string, endDate: string) => void;
 }

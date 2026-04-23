@@ -148,7 +148,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 doenca_id: p.doenca_id || undefined,
                 doenca_nome: p.doenca_nome || undefined,
                 observacao: p.observacao || undefined,
-                isArchived: false
+                isArchived: !!p.archived_at,
+                motivo_arquivamento: p.motivo_arquivamento || undefined,
             });
             return acc;
         }, {});
@@ -284,7 +285,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 supabase.from('scale_scores').select('*').in('patient_id', activePatientIds),
                 supabase.from('culturas_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
                 supabase.from('dietas_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
-                supabase.from('precautions_com_calculo').select('*').in('patient_id', activePatientIds),
+                supabase.from('precautions_com_calculo').select('*').in('patient_id', activePatientIds).is('archived_at', null),
                 supabase.from('diurese').select('*').in('patient_id', activePatientIds).order('data_registro', { ascending: false }).limit(100),
                 supabase.from('balanco_hidrico').select('*').in('patient_id', activePatientIds).order('data_registro', { ascending: false }).limit(100)
             ]).then(([
@@ -831,9 +832,12 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (!error) fetchPatients();
     };
 
-    const deletePrecautionFromPatient = async (patientId: number | string, precautionId: number | string) => {
+    const deletePrecautionFromPatient = async (patientId: number | string, precautionId: number | string, motivo?: string) => {
         const { error } = await supabase.from('precautions')
-            .delete()
+            .update({
+                archived_at: new Date().toISOString(),
+                motivo_arquivamento: motivo ?? null,
+            })
             .eq('id', precautionId);
         if (!error) fetchPatients();
     };

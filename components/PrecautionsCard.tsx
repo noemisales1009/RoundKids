@@ -71,6 +71,8 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [isEndDateModalOpen, setEndDateModalOpen] = useState<number | string | null>(null);
+  const [isArchiveModalOpen, setArchiveModalOpen] = useState<number | string | null>(null);
+  const [archiveMotivo, setArchiveMotivo] = useState('');
   const [selectedPrecaution, setSelectedPrecaution] = useState<Precaution | null>(null);
 
   // Estado do modal de adicionar
@@ -163,9 +165,12 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
     setEndDateModalOpen(null);
   };
 
-  const handleDeletePrecaution = (precautionId: number | string) => {
-    deletePrecautionFromPatient(patientId, precautionId);
-    showNotification({ message: 'Precaução apagada.', type: 'info' });
+  const handleArchivePrecaution = () => {
+    if (!isArchiveModalOpen) return;
+    deletePrecautionFromPatient(patientId, isArchiveModalOpen, archiveMotivo || undefined);
+    showNotification({ message: 'Precaução arquivada.', type: 'info' });
+    setArchiveModalOpen(null);
+    setArchiveMotivo('');
   };
 
   const activePrecautions = precautions.filter(p => !p.isArchived && !p.data_fim);
@@ -248,9 +253,9 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                       </button>
                     )}
                     <button
-                      onClick={() => handleDeletePrecaution(precaution.id)}
+                      onClick={() => { setArchiveModalOpen(precaution.id); setArchiveMotivo(''); }}
                       className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/50 rounded transition"
-                      title="Apagar"
+                      title="Arquivar"
                     >
                       <CloseIcon className="w-4 h-4 text-red-500 dark:text-red-400" />
                     </button>
@@ -442,6 +447,46 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
               >
                 <SaveIcon className="w-4 h-4" />
                 <span>Salvar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =================== MODAL ARQUIVAR =================== */}
+      {isArchiveModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Arquivar Precaução</h3>
+              <button onClick={() => setArchiveModalOpen(null)} className="text-slate-400 hover:text-slate-600">
+                <CloseIcon className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Motivo do arquivamento <span className="text-slate-400 font-normal">(opcional)</span>
+              </label>
+              <textarea
+                value={archiveMotivo}
+                onChange={(e) => setArchiveMotivo(e.target.value)}
+                rows={3}
+                placeholder="Ex: Precaução encerrada por resolução clínica..."
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+              />
+            </div>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setArchiveModalOpen(null)}
+                className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleArchivePrecaution}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
+              >
+                Arquivar
               </button>
             </div>
           </div>
