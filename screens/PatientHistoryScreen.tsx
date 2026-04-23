@@ -1183,6 +1183,24 @@ const PatientHistoryScreen: React.FC = () => {
             };
         };
 
+        const generateDiagnosticsList = () => {
+            const filtered = diagnostics.filter(d => {
+                const passesDate = !dataInicio && !dataFinal ? true : isDateInRange(d.data_criacao);
+                return passesDate && isCategorySelected('Diagnósticos');
+            });
+            return {
+                hasData: filtered.length > 0,
+                html: filtered.map(d => `
+                    <li>
+                        <strong>${d.opcao_label || 'Não informado'}${d.texto_digitado ? ` - ${d.texto_digitado}` : ''}</strong><br>
+                        Status: ${d.status || 'Não informado'}<br>
+                        Criado por: ${d.nome_criador || 'Não informado'}<br>
+                        Data: ${d.data_criacao ? new Date(d.data_criacao).toLocaleString('pt-BR') : 'N/A'}
+                    </li>
+                `).join('')
+            };
+        };
+
         const devicesData = generateDeviceList();
         const medicationsData = generateMedicationList();
         const examsData = generateExamList();
@@ -1191,6 +1209,7 @@ const PatientHistoryScreen: React.FC = () => {
         const scalesData = generateScaleScoresList();
         const diuresisData = generateDiuresisListPDF();
         const balanceData = generateBalanceListPDF();
+        const diagnosticsData = generateDiagnosticsList();
 
         const generateHistoryList = () => {
             let allEventsHtml = '';
@@ -1305,7 +1324,6 @@ const PatientHistoryScreen: React.FC = () => {
                     <tr><th>Leito</th><td>${patient.bedNumber}</td></tr>
                     <tr><th>Nascimento</th><td>${formatDateToBRL(patient.dob)}</td></tr>
                     <tr><th>Nome da Mãe</th><td>${patient.motherName}</td></tr>
-                    <tr><th>Diagnóstico</th><td>${patient.ctd}</td></tr>
                 </table>
 
                 ${devicesData.hasData ? `
@@ -1341,6 +1359,11 @@ const PatientHistoryScreen: React.FC = () => {
                 ${balanceData.hasData ? `
                     <h2>Balanço Hídrico</h2>
                     <ul>${balanceData.html}</ul>
+                ` : ''}
+
+                ${diagnosticsData.hasData ? `
+                    <h2>Diagnósticos</h2>
+                    <ul>${diagnosticsData.html}</ul>
                 ` : ''}
 
                 ${scalesData.hasData ? `
