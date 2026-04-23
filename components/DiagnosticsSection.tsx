@@ -1,8 +1,8 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { sanitizeTextOrNull } from '../lib/sanitize';
 import { ThemeContext } from '../contexts';
-import { ChevronRightIcon, SaveIcon } from './icons';
+import { ChevronRightIcon } from './icons';
 
 interface DiagnosticQuestion {
   id: number;
@@ -35,6 +35,336 @@ interface DiagnosticsSectionProps {
   onSave?: (data: PatientDiagnostic[]) => void;
 }
 
+// ── Sub-components defined OUTSIDE parent to keep stable references ──
+
+interface StatusSelectProps {
+  optionId: number;
+  status: 'resolvido' | 'nao_resolvido';
+  isDark: boolean;
+  onChange: (optionId: number, value: 'resolvido' | 'nao_resolvido') => void;
+}
+
+const StatusSelect: React.FC<StatusSelectProps> = ({ optionId, status, isDark, onChange }) => {
+  const isResolved = status === 'resolvido';
+  return (
+    <select
+      value={status}
+      onChange={(e) => onChange(optionId, e.target.value as 'resolvido' | 'nao_resolvido')}
+      className={`px-2.5 py-1 text-xs rounded-full border font-semibold shrink-0 appearance-none cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 ${
+        isResolved
+          ? 'bg-emerald-500 border-emerald-400 text-white focus:ring-emerald-400'
+          : isDark
+            ? 'bg-rose-900/60 border-rose-700 text-rose-300 focus:ring-rose-500'
+            : 'bg-rose-50 border-rose-300 text-rose-700 focus:ring-rose-400'
+      }`}
+    >
+      <option value="nao_resolvido">Não Res.</option>
+      <option value="resolvido">Resolvido</option>
+    </select>
+  );
+};
+
+interface OptionRowProps {
+  option: DiagnosticOption;
+  allOptions: DiagnosticOption[];
+  diagnostics: PatientDiagnostic[];
+  checkedOptions: Record<number, boolean>;
+  expandedParentOption: number | null;
+  selectedStatus: Record<number, 'resolvido' | 'nao_resolvido'>;
+  inputValues: Record<number, string>;
+  isDark: boolean;
+  onToggle: (optionId: number, checked: boolean) => void;
+  onToggleParent: (optionId: number | null) => void;
+  onInputChange: (optionId: number, value: string) => void;
+  onStatusChange: (optionId: number, value: 'resolvido' | 'nao_resolvido') => void;
+  onArchive: (optionId: number) => void;
+}
+
+const OptionRow: React.FC<OptionRowProps> = ({
+  option,
+  allOptions,
+  diagnostics,
+  checkedOptions,
+  expandedParentOption,
+  selectedStatus,
+  inputValues,
+  isDark,
+  onToggle,
+  onToggleParent,
+  onInputChange,
+  onStatusChange,
+  onArchive,
+}) => {
+  const isChecked = diagnostics.some(d => d.opcao_id === option.id);
+  const isCurrentlyChecked = checkedOptions[option.id] !== undefined ? checkedOptions[option.id] : isChecked;
+  const childOptions = allOptions.filter(opt => opt.parent_id === option.id);
+  const hasChildren = childOptions.length > 0;
+  const isParentExpanded = expandedParentOption === option.id;
+  const isResolved = selectedStatus[option.id] === 'resolvido';
+
+  const rowBg = isCurrentlyChecked
+    ? isResolved
+      ? isDark
+        ? 'bg-emerald-950/60 border-l-4 border-l-emerald-500 border border-emerald-800/50'
+        : 'bg-emerald-50 border-l-4 border-l-emerald-500 border border-emerald-200'
+      : isDark
+        ? 'bg-blue-950/40 border-l-4 border-l-blue-500 border border-blue-800/40'
+        : 'bg-blue-50 border-l-4 border-l-blue-400 border border-blue-200'
+    : isDark
+      ? 'bg-slate-800/60 border border-slate-700/50'
+      : 'bg-white border border-slate-200';
+
+  return (
+    <div className="space-y-1.5">
+      <div className={`rounded-lg overflow-hidden transition-all duration-150 ${rowBg}`}>
+        <div className="flex items-center gap-2 px-3 py-2.5">
+          <input
+            type="checkbox"
+            checked={isCurrentlyChecked}
+            onChange={(e) => onToggle(option.id, e.target.checked)}
+            className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 shrink-0 accent-blue-500"
+          />
+          <span className={`flex-1 text-xs sm:text-sm leading-snug ${
+            isDark ? 'text-slate-200' : 'text-slate-800'
+          } ${isResolved ? 'line-through opacity-50' : ''}`}>
+            {option.label}
+          </span>
+
+          {hasChildren && (
+            <button
+              onClick={() => onToggleParent(isParentExpanded ? null : option.id)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold transition-colors shrink-0 ${
+                isDark
+                  ? 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+              }`}
+              title="Ver sub-opções"
+            >
+              <span className="material-symbols-rounded text-[14px]">
+                {isParentExpanded ? 'expand_less' : 'expand_more'}
+              </span>
+              <span>{childOptions.length}</span>
+            </button>
+          )}
+
+          {isCurrentlyChecked && (
+            <>
+              <StatusSelect
+                optionId={option.id}
+                status={selectedStatus[option.id] || 'nao_resolvido'}
+                isDark={isDark}
+                onChange={onStatusChange}
+              />
+              <button
+                onClick={() => onArchive(option.id)}
+                className={`flex items-center justify-center w-6 h-6 rounded-full shrink-0 transition-colors ${
+                  isDark
+                    ? 'text-slate-500 hover:text-red-400 hover:bg-red-900/40'
+                    : 'text-slate-400 hover:text-red-600 hover:bg-red-50'
+                }`}
+                title="Arquivar diagnóstico"
+              >
+                <span className="material-symbols-rounded text-[16px]">close</span>
+              </button>
+            </>
+          )}
+        </div>
+
+        {isCurrentlyChecked && option.has_input && (
+          <div className={`px-3 pb-2.5 pt-0 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+            <input
+              type="text"
+              placeholder={option.input_placeholder || 'Digite aqui...'}
+              value={inputValues[option.id] || ''}
+              onChange={(e) => onInputChange(option.id, e.target.value)}
+              className={`mt-2 w-full px-3 py-1.5 text-xs sm:text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                isDark
+                  ? 'bg-slate-900 border-slate-600 text-slate-200 placeholder-slate-500'
+                  : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
+              }`}
+            />
+          </div>
+        )}
+      </div>
+
+      {isParentExpanded && hasChildren && (
+        <div className={`ml-4 sm:ml-6 space-y-1.5 pl-3 border-l-2 ${isDark ? 'border-slate-600' : 'border-slate-300'}`}>
+          {childOptions.map(childOption => {
+            const isChildChecked = diagnostics.some(d => d.opcao_id === childOption.id);
+            const isChildCurrentlyChecked = checkedOptions[childOption.id] !== undefined ? checkedOptions[childOption.id] : isChildChecked;
+            const isChildResolved = selectedStatus[childOption.id] === 'resolvido';
+
+            const childRowBg = isChildCurrentlyChecked
+              ? isChildResolved
+                ? isDark
+                  ? 'bg-emerald-950/60 border-l-4 border-l-emerald-500 border border-emerald-800/50'
+                  : 'bg-emerald-50 border-l-4 border-l-emerald-500 border border-emerald-200'
+                : isDark
+                  ? 'bg-blue-950/40 border-l-4 border-l-blue-500 border border-blue-800/40'
+                  : 'bg-blue-50 border-l-4 border-l-blue-400 border border-blue-200'
+              : isDark
+                ? 'bg-slate-800/40 border border-slate-700/40'
+                : 'bg-slate-50 border border-slate-200';
+
+            return (
+              <div key={childOption.id} className="space-y-1.5">
+                <div className={`rounded-lg overflow-hidden transition-all duration-150 ${childRowBg}`}>
+                  <div className="flex items-center gap-2 px-3 py-2">
+                    <input
+                      type="checkbox"
+                      checked={isChildCurrentlyChecked}
+                      onChange={(e) => onToggle(childOption.id, e.target.checked)}
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 shrink-0 accent-blue-500"
+                    />
+                    <span className={`flex-1 text-xs sm:text-sm leading-snug ${
+                      isDark ? 'text-slate-200' : 'text-slate-800'
+                    } ${isChildResolved ? 'line-through opacity-50' : ''}`}>
+                      {childOption.label}
+                    </span>
+                    {isChildCurrentlyChecked && (
+                      <>
+                        <StatusSelect
+                          optionId={childOption.id}
+                          status={selectedStatus[childOption.id] || 'nao_resolvido'}
+                          isDark={isDark}
+                          onChange={onStatusChange}
+                        />
+                        <button
+                          onClick={() => onArchive(childOption.id)}
+                          className={`flex items-center justify-center w-6 h-6 rounded-full shrink-0 transition-colors ${
+                            isDark
+                              ? 'text-slate-500 hover:text-red-400 hover:bg-red-900/40'
+                              : 'text-slate-400 hover:text-red-600 hover:bg-red-50'
+                          }`}
+                          title="Arquivar diagnóstico"
+                        >
+                          <span className="material-symbols-rounded text-[16px]">close</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  {isChildCurrentlyChecked && childOption.has_input && (
+                    <div className={`px-3 pb-2.5 pt-0 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                      <input
+                        type="text"
+                        placeholder={childOption.input_placeholder || 'Digite aqui...'}
+                        value={inputValues[childOption.id] || ''}
+                        onChange={(e) => onInputChange(childOption.id, e.target.value)}
+                        className={`mt-2 w-full px-3 py-1.5 text-xs sm:text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          isDark
+                            ? 'bg-slate-900 border-slate-600 text-slate-200 placeholder-slate-500'
+                            : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
+                        }`}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+interface QuestionBlockProps {
+  question: DiagnosticQuestion;
+  accentColor: 'blue' | 'secondary';
+  allOptions: DiagnosticOption[];
+  expandedQuestion: number | null;
+  isDark: boolean;
+  checkedOptions: Record<number, boolean>;
+  onToggleQuestion: (questionId: number | null) => void;
+  diagnostics: PatientDiagnostic[];
+  expandedParentOption: number | null;
+  selectedStatus: Record<number, 'resolvido' | 'nao_resolvido'>;
+  inputValues: Record<number, string>;
+  onToggle: (optionId: number, checked: boolean) => void;
+  onToggleParent: (optionId: number | null) => void;
+  onInputChange: (optionId: number, value: string) => void;
+  onStatusChange: (optionId: number, value: 'resolvido' | 'nao_resolvido') => void;
+  onArchive: (optionId: number) => void;
+}
+
+const QuestionBlock: React.FC<QuestionBlockProps> = ({
+  question,
+  accentColor,
+  allOptions,
+  expandedQuestion,
+  isDark,
+  checkedOptions,
+  onToggleQuestion,
+  diagnostics,
+  expandedParentOption,
+  selectedStatus,
+  inputValues,
+  onToggle,
+  onToggleParent,
+  onInputChange,
+  onStatusChange,
+  onArchive,
+}) => {
+  const questionOptions = allOptions.filter(opt => opt.pergunta_id === question.id && !opt.parent_id);
+  const isExpanded = expandedQuestion === question.id;
+  const checkedCount = questionOptions.filter(opt => checkedOptions[opt.id]).length;
+
+  const pillColors = isDark
+    ? 'bg-blue-900/50 text-blue-300 hover:bg-blue-900/80'
+    : 'bg-blue-50 text-blue-700 hover:bg-blue-100';
+
+  return (
+    <div>
+      <button
+        onClick={() => onToggleQuestion(isExpanded ? null : question.id)}
+        className={`w-full text-left px-3 py-2 rounded-lg transition-all flex items-center justify-between gap-2 ${pillColors}`}
+      >
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <span className={`material-symbols-rounded text-[18px] shrink-0 ${
+            isDark ? 'text-blue-400' : 'text-blue-600'
+          }`}>
+            {accentColor === 'blue' ? 'folder_open' : 'folder'}
+          </span>
+          <span className="font-semibold text-xs sm:text-sm truncate">{question.titulo}</span>
+          {checkedCount > 0 && (
+            <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold shrink-0 bg-blue-500 text-white">
+              {checkedCount}
+            </span>
+          )}
+        </div>
+        <ChevronRightIcon className={`w-4 h-4 transition-transform shrink-0 ${isExpanded ? 'rotate-90' : ''}`} />
+      </button>
+
+      {isExpanded && (
+        <div className={`mt-2 ml-1 sm:ml-2 space-y-1.5 p-2 sm:p-3 rounded-xl ${
+          isDark ? 'bg-slate-900/60' : 'bg-slate-50'
+        }`}>
+          {questionOptions.map(option => (
+            <OptionRow
+              key={option.id}
+              option={option}
+              allOptions={allOptions}
+              diagnostics={diagnostics}
+              checkedOptions={checkedOptions}
+              expandedParentOption={expandedParentOption}
+              selectedStatus={selectedStatus}
+              inputValues={inputValues}
+              isDark={isDark}
+              onToggle={onToggle}
+              onToggleParent={onToggleParent}
+              onInputChange={onInputChange}
+              onStatusChange={onStatusChange}
+              onArchive={onArchive}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Main component ──
+
 export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientId, onSave }) => {
   const themeContext = useContext(ThemeContext);
   const isDark = themeContext?.theme === 'dark';
@@ -45,7 +375,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Estado da UI
   const [expandedGroup, setExpandedGroup] = useState<'principal' | 'secundario' | null>(null);
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
   const [expandedParentOption, setExpandedParentOption] = useState<number | null>(null);
@@ -53,7 +382,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const [selectedStatus, setSelectedStatus] = useState<Record<number, 'resolvido' | 'nao_resolvido'>>({});
   const [checkedOptions, setCheckedOptions] = useState<Record<number, boolean>>({});
 
-  // Estado para modal de arquivamento
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
   const [optionToArchive, setOptionToArchive] = useState<number | null>(null);
   const [archiveReason, setArchiveReason] = useState('');
@@ -80,16 +408,13 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         setOptions(optionsRes.data || []);
         setDiagnostics(diagnosticsRes.data || []);
 
-        // Inicializar estado a partir dos dados carregados
         const checked: Record<number, boolean> = {};
         const inputs: Record<number, string> = {};
         const statuses: Record<number, 'resolvido' | 'nao_resolvido'> = {};
 
         (diagnosticsRes.data || []).forEach(diag => {
           checked[diag.opcao_id] = true;
-          if (diag.texto_digitado) {
-            inputs[diag.opcao_id] = diag.texto_digitado;
-          }
+          if (diag.texto_digitado) inputs[diag.opcao_id] = diag.texto_digitado;
           statuses[diag.opcao_id] = diag.status;
         });
 
@@ -106,22 +431,35 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     loadData();
   }, [patientId]);
 
-  const handleRemoveDiagnostic = (optionId: number) => {
+  const handleToggle = useCallback((optionId: number, checked: boolean) => {
+    setCheckedOptions(prev => ({ ...prev, [optionId]: checked }));
+  }, []);
+
+  const handleToggleParent = useCallback((optionId: number | null) => {
+    setExpandedParentOption(optionId);
+  }, []);
+
+  const handleInputChange = useCallback((optionId: number, value: string) => {
+    setInputValues(prev => ({ ...prev, [optionId]: value }));
+  }, []);
+
+  const handleStatusChange = useCallback((optionId: number, value: 'resolvido' | 'nao_resolvido') => {
+    setSelectedStatus(prev => ({ ...prev, [optionId]: value }));
+  }, []);
+
+  const handleRemoveDiagnostic = useCallback((optionId: number) => {
     setOptionToArchive(optionId);
     setArchiveReason('');
     setArchiveModalOpen(true);
-  };
+  }, []);
 
   const handleConfirmArchive = async () => {
     if (!optionToArchive) return;
 
     try {
-
-      // Obter o ID do usuário logado
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id || null;
 
-      // Arquivar diagnóstico (soft delete) com informações do arquivador
       const { error } = await supabase
         .from('paciente_diagnosticos')
         .update({
@@ -135,48 +473,19 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         .eq('arquivado', false);
 
       if (error) {
-        console.error('Erro detalhado ao arquivar diagnóstico:', {
-          error,
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
+        console.error('Erro ao arquivar diagnóstico:', error);
         alert(`Erro ao remover diagnóstico: ${error.message}`);
         return;
       }
 
-
-      // Atualizar a lista de diagnósticos removendo o arquivado
       setDiagnostics(prev => prev.filter(d => d.opcao_id !== optionToArchive));
+      setCheckedOptions(prev => { const n = { ...prev }; delete n[optionToArchive]; return n; });
+      setInputValues(prev => { const n = { ...prev }; delete n[optionToArchive]; return n; });
+      setSelectedStatus(prev => { const n = { ...prev }; delete n[optionToArchive]; return n; });
 
-      // Remover diagnóstico da interface - Garantir que o checkbox seja desmarcado
-      setCheckedOptions(prev => {
-        const newChecked = { ...prev };
-        delete newChecked[optionToArchive];
-        return newChecked;
-      });
-
-      // Remover input associado
-      setInputValues(prev => {
-        const newInputs = { ...prev };
-        delete newInputs[optionToArchive];
-        return newInputs;
-      });
-
-      // Remover status associado
-      setSelectedStatus(prev => {
-        const newStatus = { ...prev };
-        delete newStatus[optionToArchive];
-        return newStatus;
-      });
-
-      // Fechar modal
       setArchiveModalOpen(false);
       setOptionToArchive(null);
       setArchiveReason('');
-
-      // Mensagem de sucesso
       alert('✅ Diagnóstico removido com sucesso!');
     } catch (error) {
       console.error('Erro ao arquivar diagnóstico (catch):', error);
@@ -187,31 +496,23 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const handleSave = async () => {
     setSaving(true);
     try {
-      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-
-      // Obter o ID do usuário logado
+      const today = new Date().toISOString().split('T')[0];
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id || null;
 
-      // Separar diagnósticos resolvidos e não resolvidos
       const allDiagnostics = options
         .filter(option => checkedOptions[option.id])
         .map(option => ({
           patient_id: patientId,
           pergunta_id: option.pergunta_id,
           opcao_id: option.id,
-          opcao_label: option.label,  // ← Adicionar o rótulo da opção
+          opcao_label: option.label,
           texto_digitado: inputValues[option.id] || null,
           status: selectedStatus[option.id] || 'nao_resolvido' as const
         }));
 
-      // Todos os diagnósticos selecionados ficam na tabela ativa (resolvidos e não resolvidos)
-      const diagnosticsToKeep = allDiagnostics;
-
-      // Resolvidos também vão para histórico
       const diagnosticsResolved = allDiagnostics.filter(d => d.status === 'resolvido');
 
-      // Buscar diagnósticos de HOJE para evitar duplicatas no mesmo dia
       const { data: existingDiagnostics } = await supabase
         .from('paciente_diagnosticos')
         .select('opcao_id')
@@ -220,31 +521,16 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         .lte('created_at', `${today}T23:59:59`);
 
       const existingOpcaoIds = new Set((existingDiagnostics || []).map(d => d.opcao_id));
+      const newDiagnostics = allDiagnostics.filter(d => !existingOpcaoIds.has(d.opcao_id));
 
-      // Filtrar apenas diagnósticos NOVOS (que não foram salvos hoje)
-      const newDiagnostics = diagnosticsToKeep.filter(d => !existingOpcaoIds.has(d.opcao_id));
-
-      // Inserir apenas diagnósticos novos (evita duplicatas)
       if (newDiagnostics.length > 0) {
-        const diagnosticsWithUserId = newDiagnostics.map(d => ({
-          ...d,
-          created_by: userId
-        }));
-
         const { error } = await supabase
           .from('paciente_diagnosticos')
-          .insert(diagnosticsWithUserId);
+          .insert(newDiagnostics.map(d => ({ ...d, created_by: userId })));
 
-        if (error) {
-          console.error('Erro ao inserir diagnósticos:', error);
-          throw new Error(`Erro ao salvar: ${error.message}`);
-        }
+        if (error) throw new Error(`Erro ao salvar: ${error.message}`);
       }
 
-      // Não é mais necessário salvar em diagnosticos_historico separadamente
-      // Os dados já estão em paciente_diagnosticos com opcao_label
-
-      // Recarregar dados para refletir mudanças
       const { data: diagnosticsData } = await supabase
         .from('paciente_diagnosticos')
         .select('*')
@@ -252,20 +538,13 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
       setDiagnostics(diagnosticsData || []);
 
-      // Limpar checkboxes de resolvidos
       const newCheckedOptions = { ...checkedOptions };
-      diagnosticsResolved.forEach(d => {
-        newCheckedOptions[d.opcao_id] = false;
-      });
+      diagnosticsResolved.forEach(d => { newCheckedOptions[d.opcao_id] = false; });
       setCheckedOptions(newCheckedOptions);
 
-      if (onSave) {
-        onSave(diagnosticsToKeep as PatientDiagnostic[]);
-      }
+      if (onSave) onSave(allDiagnostics as PatientDiagnostic[]);
 
       alert('✅ Diagnósticos salvos com sucesso!');
-
-      // Fechar/colapsar todos os grupos após salvar
       setExpandedGroup(null);
       setExpandedQuestion(null);
       setExpandedParentOption(null);
@@ -280,7 +559,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className={`flex flex-col items-center gap-3`}>
+        <div className="flex flex-col items-center gap-3">
           <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-blue-200 border-t-blue-500"></div>
           <span className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             Carregando diagnósticos...
@@ -293,296 +572,25 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const mainQuestions = questions.filter(q => q.tipo === 'principal');
   const secondaryQuestions = questions.filter(q => q.tipo === 'secundario');
 
-  // Calcular resumo de seleções
   const selectedOptions = options.filter(opt => checkedOptions[opt.id]);
   const selectedByGroup = {
-    principal: selectedOptions.filter(opt => {
-      const question = questions.find(q => q.id === opt.pergunta_id);
-      return question?.tipo === 'principal';
-    }),
-    secundario: selectedOptions.filter(opt => {
-      const question = questions.find(q => q.id === opt.pergunta_id);
-      return question?.tipo === 'secundario';
-    })
+    principal: selectedOptions.filter(opt => questions.find(q => q.id === opt.pergunta_id)?.tipo === 'principal'),
+    secundario: selectedOptions.filter(opt => questions.find(q => q.id === opt.pergunta_id)?.tipo === 'secundario'),
   };
 
-  // ── Reusable sub-components (defined inline to access closure vars) ──
-
-  /** Pill-shaped status select with colour coding */
-  const StatusSelect = ({ optionId }: { optionId: number }) => {
-    const status = selectedStatus[optionId] || 'nao_resolvido';
-    const isResolved = status === 'resolvido';
-    return (
-      <select
-        value={status}
-        onChange={(e) => setSelectedStatus(prev => ({
-          ...prev,
-          [optionId]: e.target.value as 'resolvido' | 'nao_resolvido'
-        }))}
-        className={`px-2.5 py-1 text-xs rounded-full border font-semibold shrink-0 appearance-none cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 ${
-          isResolved
-            ? 'bg-emerald-500 border-emerald-400 text-white focus:ring-emerald-400'
-            : isDark
-              ? 'bg-rose-900/60 border-rose-700 text-rose-300 focus:ring-rose-500'
-              : 'bg-rose-50 border-rose-300 text-rose-700 focus:ring-rose-400'
-        }`}
-      >
-        <option value="nao_resolvido">Não Res.</option>
-        <option value="resolvido">Resolvido</option>
-      </select>
-    );
-  };
-
-  /** A single checkbox option row (parent or child) */
-  const OptionRow = ({
-    option,
-    depth = 0,
-  }: {
-    option: DiagnosticOption;
-    depth?: number;
-  }) => {
-    const isChecked = diagnostics.some(d => d.opcao_id === option.id);
-    const isCurrentlyChecked = checkedOptions[option.id] !== undefined ? checkedOptions[option.id] : isChecked;
-    const childOptions = options.filter(opt => opt.parent_id === option.id);
-    const hasChildren = childOptions.length > 0;
-    const isParentExpanded = expandedParentOption === option.id;
-    const isResolved = selectedStatus[option.id] === 'resolvido';
-
-    const rowBg = isCurrentlyChecked
-      ? isResolved
-        ? isDark
-          ? 'bg-emerald-950/60 border-l-4 border-l-emerald-500 border border-emerald-800/50'
-          : 'bg-emerald-50 border-l-4 border-l-emerald-500 border border-emerald-200'
-        : isDark
-          ? 'bg-blue-950/40 border-l-4 border-l-blue-500 border border-blue-800/40'
-          : 'bg-blue-50 border-l-4 border-l-blue-400 border border-blue-200'
-      : isDark
-        ? 'bg-slate-800/60 border border-slate-700/50'
-        : 'bg-white border border-slate-200';
-
-    return (
-      <div className="space-y-1.5">
-        {/* Main row */}
-        <div className={`rounded-lg overflow-hidden transition-all duration-150 ${rowBg}`}>
-          <div className="flex items-center gap-2 px-3 py-2.5">
-            {/* Checkbox */}
-            <input
-              type="checkbox"
-              checked={isCurrentlyChecked}
-              onChange={(e) => {
-                setCheckedOptions(prev => ({
-                  ...prev,
-                  [option.id]: e.target.checked
-                }));
-              }}
-              className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 shrink-0 accent-blue-500"
-            />
-
-            {/* Label */}
-            <span className={`flex-1 text-xs sm:text-sm leading-snug ${
-              isDark ? 'text-slate-200' : 'text-slate-800'
-            } ${isResolved ? 'line-through opacity-50' : ''}`}>
-              {option.label}
-            </span>
-
-            {/* Expand children button */}
-            {hasChildren && (
-              <button
-                onClick={() => setExpandedParentOption(isParentExpanded ? null : option.id)}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold transition-colors shrink-0 ${
-                  isDark
-                    ? 'bg-slate-700 hover:bg-slate-600 text-slate-300'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
-                }`}
-                title="Ver sub-opções"
-              >
-                <span className="material-symbols-rounded text-[14px]">
-                  {isParentExpanded ? 'expand_less' : 'expand_more'}
-                </span>
-                <span>{childOptions.length}</span>
-              </button>
-            )}
-
-            {/* Status + remove (only when checked) */}
-            {isCurrentlyChecked && (
-              <>
-                <StatusSelect optionId={option.id} />
-                <button
-                  onClick={() => handleRemoveDiagnostic(option.id)}
-                  className={`flex items-center justify-center w-6 h-6 rounded-full shrink-0 transition-colors ${
-                    isDark
-                      ? 'text-slate-500 hover:text-red-400 hover:bg-red-900/40'
-                      : 'text-slate-400 hover:text-red-600 hover:bg-red-50'
-                  }`}
-                  title="Arquivar diagnóstico"
-                >
-                  <span className="material-symbols-rounded text-[16px]">close</span>
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* Optional text input */}
-          {isCurrentlyChecked && option.has_input && (
-            <div className={`px-3 pb-2.5 pt-0 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-              <input
-                type="text"
-                placeholder={option.input_placeholder || 'Digite aqui...'}
-                value={inputValues[option.id] || ''}
-                onChange={(e) => setInputValues(prev => ({
-                  ...prev,
-                  [option.id]: e.target.value
-                }))}
-                className={`mt-2 w-full px-3 py-1.5 text-xs sm:text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  isDark
-                    ? 'bg-slate-900 border-slate-600 text-slate-200 placeholder-slate-500'
-                    : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
-                }`}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Child options */}
-        {isParentExpanded && hasChildren && (
-          <div className={`ml-4 sm:ml-6 space-y-1.5 pl-3 border-l-2 ${isDark ? 'border-slate-600' : 'border-slate-300'}`}>
-            {childOptions.map(childOption => {
-              const isChildChecked = diagnostics.some(d => d.opcao_id === childOption.id);
-              const isChildCurrentlyChecked = checkedOptions[childOption.id] !== undefined ? checkedOptions[childOption.id] : isChildChecked;
-              const isChildResolved = selectedStatus[childOption.id] === 'resolvido';
-
-              const childRowBg = isChildCurrentlyChecked
-                ? isChildResolved
-                  ? isDark
-                    ? 'bg-emerald-950/60 border-l-4 border-l-emerald-500 border border-emerald-800/50'
-                    : 'bg-emerald-50 border-l-4 border-l-emerald-500 border border-emerald-200'
-                  : isDark
-                    ? 'bg-blue-950/40 border-l-4 border-l-blue-500 border border-blue-800/40'
-                    : 'bg-blue-50 border-l-4 border-l-blue-400 border border-blue-200'
-                : isDark
-                  ? 'bg-slate-800/40 border border-slate-700/40'
-                  : 'bg-slate-50 border border-slate-200';
-
-              return (
-                <div key={childOption.id} className="space-y-1.5">
-                  <div className={`rounded-lg overflow-hidden transition-all duration-150 ${childRowBg}`}>
-                    <div className="flex items-center gap-2 px-3 py-2">
-                      <input
-                        type="checkbox"
-                        checked={isChildCurrentlyChecked}
-                        onChange={(e) => {
-                          setCheckedOptions(prev => ({
-                            ...prev,
-                            [childOption.id]: e.target.checked
-                          }));
-                        }}
-                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 shrink-0 accent-blue-500"
-                      />
-                      <span className={`flex-1 text-xs sm:text-sm leading-snug ${
-                        isDark ? 'text-slate-200' : 'text-slate-800'
-                      } ${isChildResolved ? 'line-through opacity-50' : ''}`}>
-                        {childOption.label}
-                      </span>
-                      {isChildCurrentlyChecked && (
-                        <>
-                          <StatusSelect optionId={childOption.id} />
-                          <button
-                            onClick={() => handleRemoveDiagnostic(childOption.id)}
-                            className={`flex items-center justify-center w-6 h-6 rounded-full shrink-0 transition-colors ${
-                              isDark
-                                ? 'text-slate-500 hover:text-red-400 hover:bg-red-900/40'
-                                : 'text-slate-400 hover:text-red-600 hover:bg-red-50'
-                            }`}
-                            title="Arquivar diagnóstico"
-                          >
-                            <span className="material-symbols-rounded text-[16px]">close</span>
-                          </button>
-                        </>
-                      )}
-                    </div>
-                    {isChildCurrentlyChecked && childOption.has_input && (
-                      <div className={`px-3 pb-2.5 pt-0 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-                        <input
-                          type="text"
-                          placeholder={childOption.input_placeholder || 'Digite aqui...'}
-                          value={inputValues[childOption.id] || ''}
-                          onChange={(e) => setInputValues(prev => ({
-                            ...prev,
-                            [childOption.id]: e.target.value
-                          }))}
-                          className={`mt-2 w-full px-3 py-1.5 text-xs sm:text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            isDark
-                              ? 'bg-slate-900 border-slate-600 text-slate-200 placeholder-slate-500'
-                              : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
-                          }`}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  /** A collapsible question sub-header inside a group */
-  const QuestionBlock = ({
-    question,
-    accentColor,
-  }: {
-    question: DiagnosticQuestion;
-    accentColor: 'blue' | 'secondary';
-  }) => {
-    const questionOptions = options.filter(opt => opt.pergunta_id === question.id && !opt.parent_id);
-    const isExpanded = expandedQuestion === question.id;
-    const checkedCount = questionOptions.filter(opt => checkedOptions[opt.id]).length;
-
-    const pillColors = isDark
-      ? 'bg-blue-900/50 text-blue-300 hover:bg-blue-900/80'
-      : 'bg-blue-50 text-blue-700 hover:bg-blue-100';
-
-    return (
-      <div>
-        <button
-          onClick={() => setExpandedQuestion(isExpanded ? null : question.id)}
-          className={`w-full text-left px-3 py-2 rounded-lg transition-all flex items-center justify-between gap-2 ${pillColors}`}
-        >
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <span className={`material-symbols-rounded text-[18px] shrink-0 ${
-              accentColor === 'blue'
-                ? isDark ? 'text-blue-400' : 'text-blue-600'
-                : isDark ? 'text-blue-400' : 'text-blue-600'
-            }`}>
-              {accentColor === 'blue' ? 'folder_open' : 'folder'}
-            </span>
-            <span className="font-semibold text-xs sm:text-sm truncate">{question.titulo}</span>
-            {checkedCount > 0 && (
-              <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
-                accentColor === 'blue'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-blue-500 text-white'
-              }`}>
-                {checkedCount}
-              </span>
-            )}
-          </div>
-          <ChevronRightIcon className={`w-4 h-4 transition-transform shrink-0 ${isExpanded ? 'rotate-90' : ''}`} />
-        </button>
-
-        {isExpanded && (
-          <div className={`mt-2 ml-1 sm:ml-2 space-y-1.5 p-2 sm:p-3 rounded-xl ${
-            isDark ? 'bg-slate-900/60' : 'bg-slate-50'
-          }`}>
-            {questionOptions.map(option => (
-              <OptionRow key={option.id} option={option} />
-            ))}
-          </div>
-        )}
-      </div>
-    );
+  const sharedRowProps = {
+    allOptions: options,
+    diagnostics,
+    checkedOptions,
+    expandedParentOption,
+    selectedStatus,
+    inputValues,
+    isDark,
+    onToggle: handleToggle,
+    onToggleParent: handleToggleParent,
+    onInputChange: handleInputChange,
+    onStatusChange: handleStatusChange,
+    onArchive: handleRemoveDiagnostic,
   };
 
   return (
@@ -615,14 +623,11 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         <div className={`rounded-xl border overflow-hidden ${
           isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'
         }`}>
-          {/* column headers */}
           <div className={`grid grid-cols-2 border-b text-[10px] font-bold uppercase tracking-wider ${
             isDark ? 'border-slate-700 text-slate-400' : 'border-slate-200 text-slate-500'
           }`}>
             {selectedByGroup.principal.length > 0 && (
-              <div className={`flex items-center gap-1.5 px-3 py-1.5 border-r ${
-                isDark ? 'border-slate-700' : 'border-slate-200'
-              }`}>
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 border-r ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
                 <span className="material-symbols-rounded text-[12px] text-blue-500">local_hospital</span>
                 Principais ({selectedByGroup.principal.length})
               </div>
@@ -634,12 +639,9 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
               </div>
             )}
           </div>
-          {/* items */}
           <div className="grid grid-cols-2">
             {selectedByGroup.principal.length > 0 && (
-              <ul className={`px-3 py-2 space-y-1 text-xs border-r ${
-                isDark ? 'border-slate-700' : 'border-slate-200'
-              }`}>
+              <ul className={`px-3 py-2 space-y-1 text-xs border-r ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
                 {selectedByGroup.principal.map(opt => (
                   <li key={opt.id} className="flex items-start gap-1.5">
                     {selectedStatus[opt.id] === 'resolvido' ? (
@@ -647,9 +649,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                     ) : (
                       <span className={`material-symbols-rounded text-[13px] mt-px shrink-0 ${isDark ? 'text-blue-400' : 'text-blue-500'}`}>radio_button_unchecked</span>
                     )}
-                    <span className={`leading-snug ${
-                      isDark ? 'text-slate-300' : 'text-slate-700'
-                    } ${selectedStatus[opt.id] === 'resolvido' ? 'line-through opacity-50' : ''}`}>
+                    <span className={`flex-1 leading-snug ${isDark ? 'text-slate-300' : 'text-slate-700'} ${selectedStatus[opt.id] === 'resolvido' ? 'line-through opacity-50' : ''}`}>
                       {opt.label}
                       {inputValues[opt.id] && (
                         <span className={`block italic ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -657,6 +657,13 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                         </span>
                       )}
                     </span>
+                    <button
+                      onClick={() => handleRemoveDiagnostic(opt.id)}
+                      title="Arquivar diagnóstico"
+                      className={`shrink-0 mt-px transition-colors ${isDark ? 'text-slate-600 hover:text-red-400' : 'text-slate-300 hover:text-red-500'}`}
+                    >
+                      <span className="material-symbols-rounded text-[14px]">archive</span>
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -670,9 +677,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                     ) : (
                       <span className={`material-symbols-rounded text-[13px] mt-px shrink-0 ${isDark ? 'text-blue-400' : 'text-blue-500'}`}>radio_button_unchecked</span>
                     )}
-                    <span className={`leading-snug ${
-                      isDark ? 'text-slate-300' : 'text-slate-700'
-                    } ${selectedStatus[opt.id] === 'resolvido' ? 'line-through opacity-50' : ''}`}>
+                    <span className={`flex-1 leading-snug ${isDark ? 'text-slate-300' : 'text-slate-700'} ${selectedStatus[opt.id] === 'resolvido' ? 'line-through opacity-50' : ''}`}>
                       {opt.label}
                       {inputValues[opt.id] && (
                         <span className={`block italic ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -680,6 +685,13 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                         </span>
                       )}
                     </span>
+                    <button
+                      onClick={() => handleRemoveDiagnostic(opt.id)}
+                      title="Arquivar diagnóstico"
+                      className={`shrink-0 mt-px transition-colors ${isDark ? 'text-slate-600 hover:text-red-400' : 'text-slate-300 hover:text-red-500'}`}
+                    >
+                      <span className="material-symbols-rounded text-[14px]">archive</span>
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -691,7 +703,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       {/* ── Group panels ── */}
       <div className="space-y-2">
 
-        {/* Diagnósticos Principais */}
         {mainQuestions.length > 0 && (
           <div className={`rounded-xl overflow-hidden border-l-4 border transition-all ${
             expandedGroup === 'principal'
@@ -702,15 +713,12 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                 ? 'border-l-blue-700 border-slate-700 bg-slate-800'
                 : 'border-l-blue-300 border-slate-200 bg-slate-50'
           }`}>
-            {/* Toggle header */}
             <button
               onClick={() => setExpandedGroup(expandedGroup === 'principal' ? null : 'principal')}
               className="w-full flex items-center justify-between px-3 sm:px-4 py-3 transition-colors text-left"
             >
               <div className="flex items-center gap-2.5">
-                <span className={`material-symbols-rounded text-[22px] ${
-                  isDark ? 'text-blue-400' : 'text-blue-600'
-                }`}>
+                <span className={`material-symbols-rounded text-[22px] ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
                   local_hospital
                 </span>
                 <span className={`font-bold text-sm sm:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
@@ -727,12 +735,18 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
               } ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
             </button>
 
-            {/* Content */}
             {expandedGroup === 'principal' && (
               <div className={`px-3 sm:px-4 pb-4 space-y-2 border-t ${isDark ? 'border-slate-700' : 'border-blue-100'}`}>
                 <div className="pt-3 space-y-2">
                   {mainQuestions.map(question => (
-                    <QuestionBlock key={question.id} question={question} accentColor="blue" />
+                    <QuestionBlock
+                      key={question.id}
+                      question={question}
+                      accentColor="blue"
+                      expandedQuestion={expandedQuestion}
+                      onToggleQuestion={setExpandedQuestion}
+                      {...sharedRowProps}
+                    />
                   ))}
                 </div>
               </div>
@@ -740,7 +754,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           </div>
         )}
 
-        {/* Diagnósticos Secundários */}
         {secondaryQuestions.length > 0 && (
           <div className={`rounded-xl overflow-hidden border-l-4 border transition-all ${
             expandedGroup === 'secundario'
@@ -751,15 +764,12 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                 ? 'border-l-blue-600 border-slate-700 bg-slate-800'
                 : 'border-l-blue-300 border-slate-200 bg-slate-50'
           }`}>
-            {/* Toggle header */}
             <button
               onClick={() => setExpandedGroup(expandedGroup === 'secundario' ? null : 'secundario')}
               className="w-full flex items-center justify-between px-3 sm:px-4 py-3 transition-colors text-left"
             >
               <div className="flex items-center gap-2.5">
-                <span className={`material-symbols-rounded text-[22px] ${
-                  isDark ? 'text-blue-400' : 'text-blue-600'
-                }`}>
+                <span className={`material-symbols-rounded text-[22px] ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
                   description
                 </span>
                 <span className={`font-bold text-sm sm:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
@@ -776,12 +786,18 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
               } ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
             </button>
 
-            {/* Content */}
             {expandedGroup === 'secundario' && (
               <div className={`px-3 sm:px-4 pb-4 space-y-2 border-t ${isDark ? 'border-slate-700' : 'border-blue-100'}`}>
                 <div className="pt-3 space-y-2">
                   {secondaryQuestions.map(question => (
-                    <QuestionBlock key={question.id} question={question} accentColor="secondary" />
+                    <QuestionBlock
+                      key={question.id}
+                      question={question}
+                      accentColor="secondary"
+                      expandedQuestion={expandedQuestion}
+                      onToggleQuestion={setExpandedQuestion}
+                      {...sharedRowProps}
+                    />
                   ))}
                 </div>
               </div>
@@ -819,7 +835,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       {archiveModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className={`${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-slate-200'} rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden`}>
-            {/* Modal header */}
             <div className={`flex items-center gap-3 px-5 py-4 border-b ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
               <span className="material-symbols-rounded text-[22px] text-amber-500">archive</span>
               <h3 className={`text-base font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
@@ -827,7 +842,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
               </h3>
             </div>
 
-            {/* Modal body */}
             <div className="px-5 py-4 space-y-3">
               <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                 Informe o motivo do arquivamento (opcional):
@@ -845,14 +859,9 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
               />
             </div>
 
-            {/* Modal footer */}
             <div className={`flex gap-2 px-5 py-4 border-t ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
               <button
-                onClick={() => {
-                  setArchiveModalOpen(false);
-                  setOptionToArchive(null);
-                  setArchiveReason('');
-                }}
+                onClick={() => { setArchiveModalOpen(false); setOptionToArchive(null); setArchiveReason(''); }}
                 className={`flex-1 py-2 px-4 rounded-xl font-semibold text-sm transition-colors ${
                   isDark
                     ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'
