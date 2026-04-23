@@ -104,11 +104,12 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
     }, [selectedCategoria]);
 
     // Obter informações do medicamento selecionado
+    const isCategoriaManual = selectedCategoria === '__manual__';
     const selectedMedData = medicamentos.find(m => m.id.toString() === selectedMedicamento);
-    const isOther = selectedMedicamento === 'outro';
+    const isOther = selectedMedicamento === 'outro' || isCategoriaManual;
     const temUnidadeDose = selectedMedData?.unidade_dose_principal !== null || (isOther && customUnidade);
     const unidadeFinal = isOther ? customUnidade : selectedMedData?.unidade_dose_principal;
-    
+
     // Nome final do medicamento
     const finalMedicationName = isOther ? customMedicamento : selectedMedData?.nome || '';
 
@@ -140,13 +141,11 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
         // Se tem unidade: salva valor + unidade
         // Se NÃO tem unidade: salva nome do medicamento em dosageValue, unidade = null
         let dosageValueFinal = dosageValue;
-        let unidade = null;
-        
+        let unidade: string | undefined = undefined;
+
         if (temUnidadeDose) {
-            // Com unidade: usar o valor digitado
-            unidade = unidadeFinal;
+            unidade = unidadeFinal ?? undefined;
         } else {
-            // Sem unidade: salvar o nome do medicamento
             dosageValueFinal = finalMedicationName;
         }
 
@@ -201,11 +200,12 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                             {categorias.map(cat => (
                                 <option key={cat} value={cat}>{cat}</option>
                             ))}
+                            <option value="__manual__">Não encontrado na lista (preencher manualmente)</option>
                         </select>
                     </div>
 
                     {/* Campo 2: Medicamento */}
-                    {selectedCategoria && (
+                    {selectedCategoria && !isCategoriaManual && (
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                                 Medicamento <span className="text-red-500">*</span>
@@ -228,6 +228,13 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                     )}
 
                     {/* Campo 3: Digitar medicamento customizado */}
+                    {isCategoriaManual && (
+                        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md p-3">
+                            <p className="text-sm text-amber-800 dark:text-amber-200">
+                                ⚡ Preencha o nome do medicamento manualmente
+                            </p>
+                        </div>
+                    )}
                     {isOther && (
                         <>
                             <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md p-3 mb-4">
