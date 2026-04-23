@@ -3,7 +3,7 @@ import React, { useState, useMemo, useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { PatientsContext } from '../contexts';
 import { useHeader } from '../hooks/useHeader';
-import { ChevronRightIcon } from '../components/icons';
+import { ChevronRightIcon, MapPinIcon } from '../components/icons';
 import { LoadingIndicator } from '../components/LoadingIndicator';
 
 const PatientListScreen: React.FC = () => {
@@ -63,6 +63,13 @@ const PatientListScreen: React.FC = () => {
                     const statusLabel = patient.status === 'estavel' ? 'Estável' : patient.status === 'instavel' ? 'Instável' : patient.status === 'em_risco' ? 'Em Risco' : 'Sem Status';
 
                     const precaucoesAtivas = (patient.precautions ?? []).filter(p => !p.isArchived && !p.data_fim);
+                    const transferLabels: Record<string, string> = {
+                        'Alta': 'Alta',
+                        'Transferência Interna': 'Transf. Interna',
+                        'Transferência Externa': 'Transf. Externa',
+                        'Óbito': 'Óbito',
+                    };
+                    const transferInfo = patient.localTransferencia ? { label: transferLabels[patient.localTransferencia] ?? patient.localTransferencia } : null;
                     const tipoBadgeConfig: Record<string, { label: string; cls: string }> = {
                         padrao:                     { label: 'Padrão',               cls: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
                         contato:                    { label: 'Contato',              cls: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' },
@@ -89,16 +96,22 @@ const PatientListScreen: React.FC = () => {
                                         )}
                                     </div>
                                     <p className="text-sm text-slate-500 dark:text-slate-400">Nasc: {new Date(patient.dob).toLocaleDateString('pt-BR')}</p>
-                                    {precaucoesAtivas.length > 0 && (
+                                    {(precaucoesAtivas.length > 0 || transferInfo) && (
                                         <div className="flex flex-wrap gap-1 mt-1.5">
                                             {precaucoesAtivas.map(p => {
                                                 const cfg = tipoBadgeConfig[p.tipo_precaucao];
                                                 return (
                                                     <span key={p.id} className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${cfg?.cls ?? 'bg-gray-100 text-gray-800'}`}>
-                                                        {p.doenca_nome ?? cfg?.label ?? p.tipo_precaucao}
+                                                        {cfg?.label ?? p.tipo_precaucao}
                                                     </span>
                                                 );
                                             })}
+                                            {transferInfo && (
+                                                <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-500 dark:text-red-400">
+                                                    <MapPinIcon className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
+                                                    {transferInfo.label}
+                                                </span>
+                                            )}
                                         </div>
                                     )}
                                 </div>

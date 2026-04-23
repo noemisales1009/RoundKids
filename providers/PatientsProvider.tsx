@@ -193,6 +193,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 peso: p.peso,
                 sc: p.sc,
                 status: p.status || 'estavel',
+                localTransferencia: p.local_transferencia || undefined,
                 comorbidade: p.comorbidade || undefined,
                 admissionDate: p.dt_internacao || undefined,
                 devices: devicesMap[p.id] || [],
@@ -232,7 +233,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             categoriesRes,
             answersRes
         ] = await Promise.all([
-            supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc').is('archived_at', null),
+            supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc, local_transferencia, comorbidade').is('archived_at', null),
             supabase.from('perguntas').select('*').order('ordem', { ascending: true }),
             supabase.from('pergunta_opcoes').select('*').order('ordem', { ascending: true }),
             supabase.from('categorias').select('*').order('ordem', { ascending: true }),
@@ -275,7 +276,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const activePatientIds = basicPatients.map(p => p.id);
         setTimeout(() => {
             Promise.all([
-                supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc').is('archived_at', null),
+                supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc, local_transferencia, comorbidade').is('archived_at', null),
                 supabase.from('dispositivos_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
                 supabase.from('exames_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
                 supabase.from('medicacoes_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
