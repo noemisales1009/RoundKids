@@ -91,6 +91,7 @@ export interface Precaution {
   data_fim_sugerida?: string; // "YYYY-MM-DD" — calculada a partir de duracao_dias
   doenca_id?: number;
   doenca_nome?: string;
+  doenca_nome_manual?: string; // usado quando a doença não está no catálogo
   observacao?: string;
   isArchived?: boolean;
   motivo_arquivamento?: string;

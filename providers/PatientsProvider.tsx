@@ -824,6 +824,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             data_inicio: precaution.data_inicio,
             data_fim: precaution.data_fim || null,
             doenca_id: precaution.doenca_id ?? null,
+            doenca_nome_manual: precaution.doenca_nome_manual ?? null,
             observacao: precaution.observacao ?? null,
             data_fim_sugerida: precaution.data_fim_sugerida ?? null
         }]);
@@ -849,6 +850,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 data_inicio: precautionData.data_inicio,
                 data_fim: precautionData.data_fim || null,
                 doenca_id: precautionData.doenca_id ?? null,
+                doenca_nome_manual: precautionData.doenca_nome_manual ?? null,
                 observacao: precautionData.observacao ?? null,
                 data_fim_sugerida: precautionData.data_fim_sugerida ?? null
             })

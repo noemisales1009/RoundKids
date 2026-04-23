@@ -82,6 +82,9 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedDoenca, setSelectedDoenca] = useState<DoencaPrecaucao | null>(null);
   const [newDataInicio, setNewDataInicio] = useState(getTodayDateString());
+  const [isManualMode, setIsManualMode] = useState(false);
+  const [manualTipoPrecaucao, setManualTipoPrecaucao] = useState<TipoPrecaucao>('contato');
+  const [manualObservacao, setManualObservacao] = useState('');
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Fechar dropdown ao clicar fora
@@ -121,25 +124,45 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
     setSelectedDoenca(doenca);
     setDoencaSearch(doenca.nome);
     setShowDropdown(false);
+    setIsManualMode(false);
+  };
+
+  const handleUsarManual = () => {
+    setIsManualMode(true);
+    setSelectedDoenca(null);
+    setShowDropdown(false);
   };
 
   const handleAddPrecaution = () => {
-    if (!selectedDoenca) {
-      showNotification({ message: 'Por favor, selecione uma doença.', type: 'error' });
-      return;
+    if (isManualMode) {
+      if (!doencaSearch.trim()) {
+        showNotification({ message: 'Por favor, informe o nome da doença.', type: 'error' });
+        return;
+      }
+      addPrecautionToPatient(patientId, {
+        tipo_precaucao: manualTipoPrecaucao,
+        data_inicio: newDataInicio,
+        doenca_nome_manual: doencaSearch.trim(),
+        observacao: manualObservacao.trim() || undefined,
+        isArchived: false,
+      });
+      showNotification({ message: `Precaução de ${doencaSearch.trim()} adicionada.`, type: 'success' });
+    } else {
+      if (!selectedDoenca) {
+        showNotification({ message: 'Por favor, selecione uma doença.', type: 'error' });
+        return;
+      }
+      addPrecautionToPatient(patientId, {
+        tipo_precaucao: selectedDoenca.tipo_precaucao as TipoPrecaucao,
+        data_inicio: newDataInicio,
+        data_fim_sugerida: dataFimSugerida ?? undefined,
+        doenca_id: selectedDoenca.id,
+        doenca_nome: selectedDoenca.nome,
+        observacao: selectedDoenca.duracao_observacao,
+        isArchived: false,
+      });
+      showNotification({ message: `Precaução de ${selectedDoenca.nome} adicionada.`, type: 'success' });
     }
-
-    addPrecautionToPatient(patientId, {
-      tipo_precaucao: selectedDoenca.tipo_precaucao as TipoPrecaucao,
-      data_inicio: newDataInicio,
-      data_fim_sugerida: dataFimSugerida ?? undefined,
-      doenca_id: selectedDoenca.id,
-      doenca_nome: selectedDoenca.nome,
-      observacao: selectedDoenca.duracao_observacao,
-      isArchived: false,
-    });
-
-    showNotification({ message: `Precaução de ${selectedDoenca.nome} adicionada.`, type: 'success' });
     handleCloseAddModal();
   };
 
@@ -149,6 +172,9 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
     setDoencaSearch('');
     setShowDropdown(false);
     setNewDataInicio(getTodayDateString());
+    setIsManualMode(false);
+    setManualTipoPrecaucao('contato');
+    setManualObservacao('');
   };
 
   const handleEditPrecaution = () => {
@@ -295,6 +321,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                     onChange={(e) => {
                       setDoencaSearch(e.target.value);
                       setSelectedDoenca(null);
+                      setIsManualMode(false);
                       setShowDropdown(true);
                     }}
                     onFocus={() => setShowDropdown(true)}
@@ -302,14 +329,14 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                   />
                   <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
 
-                  {showDropdown && doencasFiltradas.length > 0 && (
+                  {showDropdown && !loadingDoencas && (doencasFiltradas.length > 0 || doencaSearch.length === 0) && (
                     <div className="absolute z-10 mt-1 w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg shadow-lg max-h-56 overflow-y-auto">
                       {doencasFiltradas.map(d => (
                         <button
                           key={d.id}
                           type="button"
                           onMouseDown={() => handleSelecionarDoenca(d)}
-                          className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors border-b last:border-0 border-slate-100 dark:border-slate-600"
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors border-b border-slate-100 dark:border-slate-600"
                         >
                           <span className="block font-medium text-slate-800 dark:text-slate-100">{d.nome}</span>
                           <span className="block text-xs text-slate-500 dark:text-slate-400">
@@ -317,18 +344,34 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                           </span>
                         </button>
                       ))}
+                      <button
+                        type="button"
+                        onMouseDown={handleUsarManual}
+                        className="w-full text-left px-3 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors italic"
+                      >
+                        Outros / Não listado
+                      </button>
                     </div>
                   )}
 
                   {showDropdown && doencaSearch.length > 0 && doencasFiltradas.length === 0 && !loadingDoencas && (
-                    <div className="absolute z-10 mt-1 w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg shadow-lg px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
-                      Nenhuma doença encontrada.
+                    <div className="absolute z-10 mt-1 w-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg shadow-lg">
+                      <p className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
+                        Nenhuma doença encontrada na lista.
+                      </p>
+                      <button
+                        type="button"
+                        onMouseDown={handleUsarManual}
+                        className="w-full text-left px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 border-t border-slate-100 dark:border-slate-600 transition-colors"
+                      >
+                        + Registrar "{doencaSearch}" manualmente
+                      </button>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Card de informações da doença selecionada */}
+              {/* Card de informações da doença do catálogo */}
               {selectedDoenca && (
                 <div className="rounded-lg border border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 p-3 space-y-2">
                   <div className="flex items-center gap-2">
@@ -345,6 +388,46 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                     </p>
                   )}
                 </div>
+              )}
+
+              {/* Campos manuais — visíveis quando a doença não está no catálogo */}
+              {isManualMode && (
+                <>
+                  <div className="rounded-lg border border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
+                    Doença não listada no protocolo. Selecione o tipo de precaução manualmente.
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      Tipo de Precaução <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={manualTipoPrecaucao}
+                        onChange={(e) => setManualTipoPrecaucao(e.target.value as TipoPrecaucao)}
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        {Object.entries(TIPO_CONFIG).map(([key, val]) => (
+                          <option key={key} value={key}>{val.label}</option>
+                        ))}
+                      </select>
+                      <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      Duração / Observação <span className="text-slate-400 font-normal">(opcional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={manualObservacao}
+                      onChange={(e) => setManualObservacao(e.target.value)}
+                      placeholder="Ex: Até resolução clínica..."
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </>
               )}
 
               {/* Data de início */}
@@ -370,7 +453,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
               </button>
               <button
                 onClick={handleAddPrecaution}
-                disabled={!selectedDoenca}
+                disabled={!selectedDoenca && !isManualMode}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium flex items-center justify-center space-x-2"
               >
                 <SaveIcon className="w-4 h-4" />
