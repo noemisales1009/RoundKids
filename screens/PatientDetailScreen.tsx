@@ -41,6 +41,7 @@ const SOSPDCalculator = lazy(() => import('../components/SOSPDCalculator'));
 const ConsciousnessCalculator = lazy(() => import('../components/ConsciousnessCalculator'));
 const VNICNAFCalculator = lazy(() => import('../components/VNICNAFCalculator'));
 const RespiratoryCalculator = lazy(() => import('../components/RespiratoryCalculator').then(m => ({ default: m.RespiratoryCalculator })));
+const AvaliacaoRespiratoriaScale = lazy(() => import('../components/AvaliacaoRespiratoriaScale').then(m => ({ default: m.AvaliacaoRespiratoriaScale })));
 const PhoenixSepsisCalculator = lazy(() => import('../components/PhoenixSepsisCalculator'));
 const NPTCalculator = lazy(() => import('../npt/NPTWrapper'));
 const DiagnosticsSection = lazy(() => import('../components/DiagnosticsSection').then(m => ({ default: m.DiagnosticsSection })));
@@ -117,7 +118,7 @@ const PatientDetailScreen: React.FC = () => {
     const [isEndDateModalOpen, setEndDateModalOpen] = useState<number | string | null>(null);
     const [isEditInfoModalOpen, setEditInfoModalOpen] = useState(false);
     const [isCreateAlertModalOpen, setCreateAlertModalOpen] = useState(false);
-    const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'vni-cnaf' | 'fss' | 'abstinencia' | 'sos-pd' | 'consciousness' | 'respiratory' | 'phoenix-sepsis'>('list');
+    const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'vni-cnaf' | 'fss' | 'abstinencia' | 'sos-pd' | 'consciousness' | 'respiratory' | 'phoenix-sepsis' | 'avaliacao-respiratoria'>('list');
     const [calculationsRefresh, setCalculationsRefresh] = useState(0);
     const scalesSectionRef = useRef<HTMLDivElement>(null);
 
@@ -438,6 +439,9 @@ const PatientDetailScreen: React.FC = () => {
                                 <button onClick={() => setScaleView('respiratory')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Cálculo Respiratório">
                                     <div className="flex items-center gap-3"><LungsIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Cálculo Respiratório</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
+                                <button onClick={() => setScaleView('avaliacao-respiratoria')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Escala para Avaliação Respiratória">
+                                    <div className="flex items-center gap-3"><LungsIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala para Avaliação Respiratória</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                </button>
                                 <button onClick={() => setScaleView('fss')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Escala FSS">
                                     <div className="flex items-center gap-3"><DumbbellIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala de Status Funcional (FSS)</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
@@ -469,6 +473,7 @@ const PatientDetailScreen: React.FC = () => {
                         {scaleView === 'consciousness' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><ConsciousnessCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
                         {scaleView === 'respiratory' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><RespiratoryCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></Suspense></div></div>)}
                         {scaleView === 'phoenix-sepsis' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><PhoenixSepsisCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></Suspense></div></div>)}
+                        {scaleView === 'avaliacao-respiratoria' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><AvaliacaoRespiratoriaScale patientId={patient.id.toString()} /></Suspense></div></div>)}
                     </div>
                 )}
             </div>
