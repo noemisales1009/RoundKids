@@ -43,6 +43,7 @@ const VNICNAFCalculator = lazy(() => import('../components/VNICNAFCalculator'));
 const RespiratoryCalculator = lazy(() => import('../components/RespiratoryCalculator').then(m => ({ default: m.RespiratoryCalculator })));
 const AvaliacaoRespiratoriaScale = lazy(() => import('../components/AvaliacaoRespiratoriaScale').then(m => ({ default: m.AvaliacaoRespiratoriaScale })));
 const PhoenixSepsisCalculator = lazy(() => import('../components/PhoenixSepsisCalculator'));
+const KDIGOScale = lazy(() => import('../components/KDIGOScale').then(m => ({ default: m.KDIGOScale })));
 const NPTCalculator = lazy(() => import('../npt/NPTWrapper'));
 const DiagnosticsSection = lazy(() => import('../components/DiagnosticsSection').then(m => ({ default: m.DiagnosticsSection })));
 const AlertasSection = lazy(() => import('../components/AlertasSection').then(m => ({ default: m.AlertasSection })));
@@ -118,7 +119,7 @@ const PatientDetailScreen: React.FC = () => {
     const [isEndDateModalOpen, setEndDateModalOpen] = useState<number | string | null>(null);
     const [isEditInfoModalOpen, setEditInfoModalOpen] = useState(false);
     const [isCreateAlertModalOpen, setCreateAlertModalOpen] = useState(false);
-    const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'vni-cnaf' | 'fss' | 'abstinencia' | 'sos-pd' | 'consciousness' | 'respiratory' | 'phoenix-sepsis' | 'avaliacao-respiratoria'>('list');
+    const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'vni-cnaf' | 'fss' | 'abstinencia' | 'sos-pd' | 'consciousness' | 'respiratory' | 'phoenix-sepsis' | 'avaliacao-respiratoria' | 'kdigo'>('list');
     const [calculationsRefresh, setCalculationsRefresh] = useState(0);
     const scalesSectionRef = useRef<HTMLDivElement>(null);
 
@@ -458,6 +459,9 @@ const PatientDetailScreen: React.FC = () => {
                                 <button onClick={() => setScaleView('phoenix-sepsis')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Critérios de Sepse de Phoenix">
                                     <div className="flex items-center gap-3"><ShieldIcon className="w-5 h-5 text-red-600 dark:text-red-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Critérios de Sepse de Phoenix (2024)</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
+                                <button onClick={() => setScaleView('kdigo')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Escala KDIGO – Lesão Renal Aguda">
+                                    <div className="flex items-center gap-3"><DropletIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">KDIGO – Lesão Renal Aguda</p></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                </button>
                             </div>
                         )}
                         {scaleView === 'comfort-b' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><ComfortBCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
@@ -475,6 +479,7 @@ const PatientDetailScreen: React.FC = () => {
                         {scaleView === 'respiratory' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><RespiratoryCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></Suspense></div></div>)}
                         {scaleView === 'phoenix-sepsis' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><PhoenixSepsisCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></Suspense></div></div>)}
                         {scaleView === 'avaliacao-respiratoria' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><AvaliacaoRespiratoriaScale patientId={patient.id.toString()} /></Suspense></div></div>)}
+                        {scaleView === 'kdigo' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><KDIGOScale onSaveScore={handleSaveScaleScore} /></Suspense></div></div>)}
                     </div>
                 )}
             </div>
