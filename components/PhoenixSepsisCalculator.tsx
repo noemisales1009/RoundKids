@@ -64,21 +64,26 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
   const [cardioDVA, setCardioDVA] = useState<number | null>(null);
   const [cardioLactato, setCardioLactato] = useState<number | null>(null);
   const [cardioPAM, setCardioPAM] = useState<number | null>(null);
-  const [coagulacao, setCoagulacao] = useState<number | null>(null);
+  const [coagPlaquetas, setCoagPlaquetas] = useState<number | null>(null);
+  const [coagINR, setCoagINR] = useState<number | null>(null);
+  const [coagDimeroD, setCoagDimeroD] = useState<number | null>(null);
+  const [coagFibrinogenio, setCoagFibrinogenio] = useState<number | null>(null);
 
   const scoreRespiratorio = respiratorio ?? 0;
   const scoreNeurologico = neurologico ?? 0;
 
   const cardiovascularPreenchido = cardioDVA !== null && cardioLactato !== null && cardioPAM !== null;
   const scoreCardiovascular = (cardioDVA ?? 0) + (cardioLactato ?? 0) + (cardioPAM ?? 0);
-  const scoreCoagulacao = coagulacao ?? 0;
+
+  const coagulacaoPreenchida = coagPlaquetas !== null && coagINR !== null && coagDimeroD !== null && coagFibrinogenio !== null;
+  const scoreCoagulacao = Math.min((coagPlaquetas ?? 0) + (coagINR ?? 0) + (coagDimeroD ?? 0) + (coagFibrinogenio ?? 0), 2);
 
   const scoreTotal = useMemo(() => {
     return scoreRespiratorio + scoreNeurologico + scoreCardiovascular + scoreCoagulacao;
   }, [scoreRespiratorio, scoreNeurologico, scoreCardiovascular, scoreCoagulacao]);
 
   const todosPreenchidos = respiratorio !== null && neurologico !== null
-    && cardiovascularPreenchido && coagulacao !== null;
+    && cardiovascularPreenchido && coagulacaoPreenchida;
 
   const classificacao = useMemo(() => {
     if (!todosPreenchidos) return null;
@@ -118,9 +123,9 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
     if (respiratorio !== null) total++;
     if (neurologico !== null) total++;
     if (cardiovascularPreenchido) total++;
-    if (coagulacao !== null) total++;
+    if (coagulacaoPreenchida) total++;
     return (total / 4) * 100;
-  }, [respiratorio, neurologico, cardiovascularPreenchido, coagulacao]);
+  }, [respiratorio, neurologico, cardiovascularPreenchido, coagulacaoPreenchida]);
 
   const saveToSupabase = async () => {
     if (!classificacao) return;
@@ -152,7 +157,10 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
     setCardioDVA(null);
     setCardioLactato(null);
     setCardioPAM(null);
-    setCoagulacao(null);
+    setCoagPlaquetas(null);
+    setCoagINR(null);
+    setCoagDimeroD(null);
+    setCoagFibrinogenio(null);
     setTela('infeccao');
   };
 
@@ -325,20 +333,74 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
             </div>
           </div>
 
-          <div className={`p-4 rounded-xl shadow-sm transition-all border-l-4 ${coagulacao !== null ? 'bg-slate-100 dark:bg-slate-700 border-rose-500' : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}>
-            <label className="block text-sm font-bold text-slate-800 dark:text-gray-100 mb-2">
-              {coagConfig.label}
+          <div className={`p-4 rounded-xl shadow-sm transition-all border-l-4 ${coagulacaoPreenchida ? 'bg-slate-100 dark:bg-slate-700 border-rose-500' : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}>
+            <label className="block text-sm font-bold text-slate-800 dark:text-gray-100 mb-3">
+              {coagConfig.label} <span className="text-xs font-normal text-slate-500 dark:text-gray-400">(avalie os 4 itens \u2014 1 pt cada, m\u00e1x 2)</span>
             </label>
-            <select
-              value={coagulacao === null ? '' : coagulacao}
-              onChange={(e) => setCoagulacao(parseInt(e.target.value))}
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
-            >
-              <option value="" disabled>{"Escolha uma op\u00e7\u00e3o..."}</option>
-              {(coagConfig as any).opcoes.map((op: any) => (
-                <option key={op.valor} value={op.valor}>{op.texto}</option>
-              ))}
-            </select>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-200 mb-1">Plaquetas</label>
+                <select
+                  value={coagPlaquetas === null ? '' : coagPlaquetas}
+                  onChange={(e) => setCoagPlaquetas(parseInt(e.target.value))}
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
+                >
+                  <option value="" disabled>Escolha uma op\u00e7\u00e3o...</option>
+                  <option value={0}>0 pts \u2014 \u2265 100.000/\u00b5L</option>
+                  <option value={1}>1 pt \u2014 \u2264 100.000/\u00b5L</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-200 mb-1">INR</label>
+                <select
+                  value={coagINR === null ? '' : coagINR}
+                  onChange={(e) => setCoagINR(parseInt(e.target.value))}
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
+                >
+                  <option value="" disabled>Escolha uma op\u00e7\u00e3o...</option>
+                  <option value={0}>0 pts \u2014 \u2264 1,3</option>
+                  <option value={1}>1 pt \u2014 {">"} 1,3</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-200 mb-1">D\u00edmero D</label>
+                <select
+                  value={coagDimeroD === null ? '' : coagDimeroD}
+                  onChange={(e) => setCoagDimeroD(parseInt(e.target.value))}
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
+                >
+                  <option value="" disabled>Escolha uma op\u00e7\u00e3o...</option>
+                  <option value={0}>0 pts \u2014 \u2264 2 mg/L</option>
+                  <option value={1}>1 pt \u2014 {">"} 2 mg/L</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-200 mb-1">Fibrinog\u00eanio</label>
+                <select
+                  value={coagFibrinogenio === null ? '' : coagFibrinogenio}
+                  onChange={(e) => setCoagFibrinogenio(parseInt(e.target.value))}
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
+                >
+                  <option value="" disabled>Escolha uma op\u00e7\u00e3o...</option>
+                  <option value={0}>0 pts \u2014 \u2265 100 mg/dL</option>
+                  <option value={1}>1 pt \u2014 {"<"} 100 mg/dL</option>
+                </select>
+              </div>
+
+              {coagulacaoPreenchida && (
+                <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 text-right">
+                  <span className="text-xs text-slate-500 dark:text-gray-400 uppercase font-bold">Subtotal: </span>
+                  <span className="text-sm font-black text-rose-600 dark:text-rose-400">{scoreCoagulacao} pontos</span>
+                  {(coagPlaquetas ?? 0) + (coagINR ?? 0) + (coagDimeroD ?? 0) + (coagFibrinogenio ?? 0) > 2 && (
+                    <span className="text-xs text-slate-400 ml-1">(limitado ao m\u00e1x 2)</span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -357,7 +419,7 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
               Cardio.
             </div>
             <div>
-              <span className="block text-lg text-slate-800 dark:text-gray-100">{scoreCoagulacao}</span>
+              <span className="block text-lg text-slate-800 dark:text-gray-100">{coagulacaoPreenchida ? scoreCoagulacao : '-'}</span>
               Coag.
             </div>
           </div>
