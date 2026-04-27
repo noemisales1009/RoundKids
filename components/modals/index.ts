@@ -27,3 +27,7 @@ export { AddMedicationModal, EditMedicationModal, AddEndDateModal, EditMedicatio
 
 // Surgical modals
 export { AddSurgicalProcedureModal, EditSurgicalProcedureModal, ArchiveSurgicalProcedureModal } from './surgical';
+
+// Parecer modals
+export { AddParecerModal, EditParecerModal, ArchiveParecerModal } from './pareceres';
+export type { ParecerRow } from './pareceres';

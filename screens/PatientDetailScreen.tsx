@@ -3,7 +3,7 @@ import React, { useState, useContext, useEffect, useRef, lazy, Suspense } from '
 import { Link, useParams } from 'react-router-dom';
 import { Device, Exam, Medication, SurgicalProcedure, Culture, Diet } from '../types';
 import { formatDateToBRL } from '../constants';
-import { BackArrowIcon, WarningIcon, PencilIcon, ClipboardIcon, FileTextIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, BrainIcon, ShieldIcon, BeakerIcon, LungsIcon, DumbbellIcon, CloseIcon, ScalpelIcon, ChevronRightIcon, CalculatorIcon, ChevronDownIcon } from '../components/icons';
+import { BackArrowIcon, WarningIcon, PencilIcon, ClipboardIcon, FileTextIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, BrainIcon, ShieldIcon, BeakerIcon, LungsIcon, DumbbellIcon, CloseIcon, ScalpelIcon, ChevronRightIcon, CalculatorIcon, ChevronDownIcon, CameraIcon } from '../components/icons';
 import { PatientDetailSkeleton } from '../components/SkeletonLoader';
 import { ArchiveModal } from '../components/modals/ArchiveModal';
 import { SecondaryNavigation } from '../components/SecondaryNavigation';
@@ -58,6 +58,8 @@ const ComorbidadeComponent = lazy(() => import('../components/ComorbidadeCompone
 const DestinoComponent = lazy(() => import('../components/DestinoComponent'));
 const ClinicalSituation24hCard = lazy(() => import('../components/ClinicalSituation24hCard').then(m => ({ default: m.ClinicalSituation24hCard })));
 const AportesCard = lazy(() => import('../components/AportesCard').then(m => ({ default: m.AportesCard })));
+const ParecerCard = lazy(() => import('../components/ParecerCard').then(m => ({ default: m.ParecerCard })));
+const ExameImagemCard = lazy(() => import('../components/ExameImagemCard').then(m => ({ default: m.ExameImagemCard })));
 const PrecautionsCard = lazy(() => import('../components/PrecautionsCard').then(m => ({ default: m.PrecautionsCard })));
 
 // Lazy load modals
@@ -92,7 +94,7 @@ const PatientDetailScreen: React.FC = () => {
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
     const [mainTab, setMainTab] = useState<'npt' | 'scales' | null>(null);
-    const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'scales' | null>(null);
+    const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'scales' | 'pareceres' | 'examesImagem' | null>(null);
     const [isAddDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
     const [editingDevice, setEditingDevice] = useState<Device | null>(null);
     const [editingDeviceRemovalDate, setEditingDeviceRemovalDate] = useState<Device | null>(null);
@@ -354,6 +356,8 @@ const PatientDetailScreen: React.FC = () => {
                     { id: 'diets' as const, label: 'Dietas', icon: AppleIcon, count: patient.diets.filter(d => !d.isArchived).length, gradient: 'from-amber-400 to-orange-500' },
                     { id: 'aportes' as const, label: 'Aportes', icon: DropletIcon, count: null, gradient: 'from-sky-400 to-blue-500' },
                     { id: 'scales' as const, label: 'Escalas', icon: BarChartIcon, count: patient.scaleScores?.length ?? 0, gradient: 'from-indigo-500 to-purple-600' },
+                    { id: 'pareceres' as const, label: 'Pareceres', icon: ClipboardIcon, count: null, gradient: 'from-pink-500 to-rose-600' },
+                    { id: 'examesImagem' as const, label: 'Imagem', icon: CameraIcon, count: null, gradient: 'from-violet-600 to-fuchsia-600' },
                 ] as const).map(({ id, label, icon: Icon, count, gradient }) => (
                     <button
                         key={id}
@@ -551,6 +555,8 @@ const PatientDetailScreen: React.FC = () => {
                     diets: { label: 'Dietas', icon: AppleIcon, gradient: 'from-amber-400 to-orange-500' },
                     aportes: { label: 'Aportes', icon: DropletIcon, gradient: 'from-sky-400 to-blue-500' },
                     scales: { label: 'Escalas', icon: BarChartIcon, gradient: 'from-indigo-500 to-purple-600' },
+                    pareceres: { label: 'Pareceres', icon: ClipboardIcon, gradient: 'from-pink-500 to-rose-600' },
+                    examesImagem: { label: 'Imagem', icon: CameraIcon, gradient: 'from-violet-600 to-fuchsia-600' },
                 };
                 const config = modalConfig[openCategoryModal];
                 const ModalIcon = config.icon;
@@ -725,6 +731,16 @@ const PatientDetailScreen: React.FC = () => {
                                     ))}
                                 </>)}
                                 {openCategoryModal === 'aportes' && <AportesCard patientId={patient.id} />}
+                                {openCategoryModal === 'pareceres' && (
+                                    <Suspense fallback={<LoadingSpinner />}>
+                                        <ParecerCard patientId={patient.id} />
+                                    </Suspense>
+                                )}
+                                {openCategoryModal === 'examesImagem' && (
+                                    <Suspense fallback={<LoadingSpinner />}>
+                                        <ExameImagemCard patientId={patient.id} />
+                                    </Suspense>
+                                )}
                                 {openCategoryModal === 'scales' && (<>
                                     {(!patient.scaleScores || patient.scaleScores.length === 0) && (
                                         <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhuma escala registrada.</p>
