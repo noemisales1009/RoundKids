@@ -112,7 +112,9 @@ export const EditExameImagemModal: React.FC<{
     const [exame, setExame] = useState(exameData.exame);
     const [dataExame, setDataExame] = useState(exameData.data_exame);
     const [resultado, setResultado] = useState(exameData.resultado ?? '');
-    const [sistema, setSistema] = useState(exameData.sistema ?? '');
+    const isCustomSistema = exameData.sistema != null && !ALERT_SYSTEMS.includes(exameData.sistema);
+    const [sistema, setSistema] = useState(isCustomSistema ? 'Outros' : (exameData.sistema ?? ''));
+    const [sistemaOutros, setSistemaOutros] = useState(isCustomSistema ? (exameData.sistema ?? '') : '');
     const [observacao, setObservacao] = useState(exameData.observacao ?? '');
     const [loading, setLoading] = useState(false);
 
@@ -143,7 +145,7 @@ export const EditExameImagemModal: React.FC<{
                     exame,
                     data_exame: dataExame,
                     resultado: resultado.trim() || null,
-                    sistema: sistema || null,
+                    sistema: sistema === 'Outros' ? sistemaOutros.trim() || null : sistema || null,
                     observacao: observacao.trim() || null,
                     updated_by: user.id,
                 })
@@ -235,6 +237,15 @@ export const EditExameImagemModal: React.FC<{
                             </select>
                             <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
                         </div>
+                        {sistema === 'Outros' && (
+                            <input
+                                type="text"
+                                value={sistemaOutros}
+                                onChange={(e) => setSistemaOutros(e.target.value)}
+                                placeholder="Especifique o sistema..."
+                                className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-violet-500 focus:border-violet-500 text-slate-800 dark:text-slate-200"
+                            />
+                        )}
                     </div>
 
                     <div>

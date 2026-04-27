@@ -19,6 +19,7 @@ export const AddExamModal: React.FC<{ patientId: number | string; onClose: () =>
     const [date, setDate] = useState(getTodayDateString());
     const [observation, setObservation] = useState('');
     const [sistema, setSistema] = useState('');
+    const [sistemaOutros, setSistemaOutros] = useState('');
 
     const handleSubmit = (e: { preventDefault: () => void }) => {
         e.preventDefault();
@@ -29,7 +30,7 @@ export const AddExamModal: React.FC<{ patientId: number | string; onClose: () =>
             return;
         }
 
-        addExamToPatient(patientId, { name, date, result: 'Pendente', observation, sistema: sistema || undefined }, user.id);
+        addExamToPatient(patientId, { name, date, result: 'Pendente', observation, sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined }, user.id);
         showNotification({ message: 'Exame cadastrado com sucesso!', type: 'success' });
         onClose();
     };
@@ -59,6 +60,15 @@ export const AddExamModal: React.FC<{ patientId: number | string; onClose: () =>
                             </select>
                             <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
                         </div>
+                        {sistema === 'Outros' && (
+                            <input
+                                type="text"
+                                value={sistemaOutros}
+                                onChange={(e) => setSistemaOutros(e.target.value)}
+                                placeholder="Especifique o sistema..."
+                                className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+                            />
+                        )}
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Observação <span className="text-slate-400 font-normal">(opcional)</span></label>

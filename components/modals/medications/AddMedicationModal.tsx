@@ -38,6 +38,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
     const [startDate, setStartDate] = useState(getTodayDateString());
     const [observacao, setObservacao] = useState('');
     const [sistema, setSistema] = useState('');
+    const [sistemaOutros, setSistemaOutros] = useState('');
     const [loading, setLoading] = useState(true);
 
     // Buscar categorias ao montar
@@ -161,7 +162,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                 unidade: unidade,
                 startDate,
                 observacao,
-                sistema: sistema || undefined,
+                sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined,
             },
             user.id
         );
@@ -337,6 +338,15 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                             </select>
                             <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
                         </div>
+                        {sistema === 'Outros' && (
+                            <input
+                                type="text"
+                                value={sistemaOutros}
+                                onChange={(e) => setSistemaOutros(e.target.value)}
+                                placeholder="Especifique o sistema..."
+                                className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+                            />
+                        )}
                     </div>
 
                     {/* Campo 7: Observação */}

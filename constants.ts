@@ -369,14 +369,22 @@ export const ALERT_SYSTEMS: string[] = [
     'Avaliação renal',
     'Distúrbios hidroeletrolíticos e metabólicos',
     'Avaliação gastrointestinal',
-    'Avaliação hematológica',
+    'Avaliação hematológica/ oncológica',
     'Avaliação neurológica',
     'Avaliação nutricional e metabólica',
+    'Avaliação imunológica',
+    'Avaliação genética',
+    'Avaliação dermatológica',
+    'Avaliação psiquiátrica',
+    'Avaliação psicológica',
+    'Avaliação odontológica',
+    'Serviço Social',
     'Infecções Relacionadas à Assistência à Saúde (IRAS)',
     'Outras infecções',
     'Gestão de riscos assistenciais',
     'Precauções e controle de infecção',
     'Notificação de eventos adversos',
+    'Outros',
 ];
 
 export const INITIAL_USER: User = {

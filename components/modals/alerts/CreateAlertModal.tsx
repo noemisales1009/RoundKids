@@ -10,6 +10,7 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
     const [responsible, setResponsible] = useState('');
     const [deadline, setDeadline] = useState('');
     const [sistema, setSistema] = useState('');
+    const [sistemaOutros, setSistemaOutros] = useState('');
 
     const handleSubmit = (e: { preventDefault: () => void }) => {
         e.preventDefault();
@@ -20,7 +21,7 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
             description,
             responsible,
             timeLabel: deadline,
-            sistemas: sistema ? [sistema] : [],
+            sistemas: sistema ? [(sistema === 'Outros' ? sistemaOutros.trim() : sistema)] : [],
         });
 
         showNotification({ message: 'Alerta criado com sucesso!', type: 'success' });
@@ -62,6 +63,15 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
                                 </select>
                                 <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
                             </div>
+                            {sistema === 'Outros' && (
+                                <input
+                                    type="text"
+                                    value={sistemaOutros}
+                                    onChange={(e) => setSistemaOutros(e.target.value)}
+                                    placeholder="Especifique o sistema..."
+                                    className="mt-2 block w-full border bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm text-slate-800 dark:text-slate-200"
+                                />
+                            )}
                         </div>
 
                         <div>
