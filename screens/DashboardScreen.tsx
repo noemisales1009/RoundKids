@@ -55,13 +55,13 @@ const DashboardScreen: React.FC = () => {
                     { data: alertasData }
                 ] = await Promise.all([
                     supabase.from('dashboard_summary').select('*').single(),
-                    supabase.from('tasks_view_horario_br').select('id,responsavel,responsible,live_status,description,alertaclinico,bed_number,patient_name,hora_criacao_formatado,prazo_limite_formatado,prazo_formatado,sistemas,justificativa,justification').not('live_status', 'in', '("concluído","arquivado")'),
-                    supabase.from('alertas_paciente_view_completa').select('id_alerta,id,responsavel,responsible,live_status,description,alertaclinico,bed_number,patient_name,hora_criacao_formatado,prazo_limite_formatado,prazo_formatado,sistemas,justificativa,justification').not('live_status', 'in', '("concluído","arquivado","resolvido")')
+                    supabase.from('tasks_view_horario_br').select('*'),
+                    supabase.from('alertas_paciente_view_completa').select('*')
                 ]);
 
                 const allAlertsFiltered = [
-                    ...(tasksData || []),
-                    ...(alertasData || [])
+                    ...(tasksData || []).filter(t => !['concluído', 'arquivado'].includes(t.live_status)),
+                    ...(alertasData || []).filter(a => !['concluído', 'arquivado', 'resolvido'].includes(a.live_status))
                 ];
                 setAllAlerts(allAlertsFiltered);
 

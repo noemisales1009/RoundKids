@@ -225,24 +225,26 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
     const coagConfig = sistemasConfig.coagulacao;
 
     return (
-      <div className="w-full bg-slate-50 dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 transition-colors">
-        <div className="flex justify-between items-center mb-4">
-          <button onClick={resetAll} className="text-slate-500 dark:text-gray-400 text-sm flex items-center">
-            <ChevronLeftIcon /> Voltar
-          </button>
-          <span className="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">
-            Phoenix 2024
-          </span>
+      <div className="w-full bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 transition-colors flex flex-col" style={{ maxHeight: 'calc(100dvh - 120px)' }}>
+        <div className="p-4 sm:p-5 shrink-0">
+          <div className="flex justify-between items-center mb-4">
+            <button onClick={resetAll} className="text-slate-500 dark:text-gray-400 text-sm flex items-center">
+              <ChevronLeftIcon /> Voltar
+            </button>
+            <span className="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">
+              Phoenix 2024
+            </span>
+          </div>
+
+          <h3 className="text-center font-bold text-lg mb-2 text-rose-600 dark:text-rose-400">{"Crit\u00e9rios de Avalia\u00e7\u00e3o"}</h3>
+          <p className="text-center text-xs text-slate-500 dark:text-gray-400 mb-4">{"Selecione a pontua\u00e7\u00e3o para cada sistema"}</p>
+
+          <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
+            <div className="h-full bg-rose-500 transition-all duration-700 ease-out" style={{ width: `${progresso}%` }} />
+          </div>
         </div>
 
-        <h3 className="text-center font-bold text-lg mb-2 text-rose-600 dark:text-rose-400">{"Crit\u00e9rios de Avalia\u00e7\u00e3o"}</h3>
-        <p className="text-center text-xs text-slate-500 dark:text-gray-400 mb-4">{"Selecione a pontua\u00e7\u00e3o para cada sistema"}</p>
-
-        <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full mb-6 overflow-hidden shadow-inner">
-          <div className="h-full bg-rose-500 transition-all duration-700 ease-out" style={{ width: `${progresso}%` }} />
-        </div>
-
-        <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-5 pb-2 space-y-4 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
 
           <div className={`p-4 rounded-xl shadow-sm transition-all border-l-4 ${respiratorio !== null ? 'bg-slate-100 dark:bg-slate-700 border-rose-500' : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}>
             <label className="block text-sm font-bold text-slate-800 dark:text-gray-100 mb-2">
@@ -404,43 +406,45 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
           </div>
         </div>
 
-        <div className="mt-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-          <div className="grid grid-cols-4 gap-2 text-center text-xs uppercase tracking-wider font-bold text-slate-500 dark:text-gray-400">
-            <div>
-              <span className="block text-lg text-slate-800 dark:text-gray-100">{respiratorio ?? '-'}</span>
-              Resp.
+        <div className="shrink-0 px-4 sm:px-5 pb-4 sm:pb-5 pt-2 space-y-3">
+          <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div className="grid grid-cols-4 gap-1 text-center text-[10px] sm:text-xs uppercase tracking-wider font-bold text-slate-500 dark:text-gray-400">
+              <div>
+                <span className="block text-base sm:text-lg text-slate-800 dark:text-gray-100">{respiratorio ?? '-'}</span>
+                Resp.
+              </div>
+              <div>
+                <span className="block text-base sm:text-lg text-slate-800 dark:text-gray-100">{neurologico ?? '-'}</span>
+                Neuro.
+              </div>
+              <div>
+                <span className="block text-base sm:text-lg text-slate-800 dark:text-gray-100">{cardiovascularPreenchido ? scoreCardiovascular : '-'}</span>
+                Cardio.
+              </div>
+              <div>
+                <span className="block text-base sm:text-lg text-slate-800 dark:text-gray-100">{coagulacaoPreenchida ? scoreCoagulacao : '-'}</span>
+                Coag.
+              </div>
             </div>
-            <div>
-              <span className="block text-lg text-slate-800 dark:text-gray-100">{neurologico ?? '-'}</span>
-              Neuro.
-            </div>
-            <div>
-              <span className="block text-lg text-slate-800 dark:text-gray-100">{cardiovascularPreenchido ? scoreCardiovascular : '-'}</span>
-              Cardio.
-            </div>
-            <div>
-              <span className="block text-lg text-slate-800 dark:text-gray-100">{coagulacaoPreenchida ? scoreCoagulacao : '-'}</span>
-              Coag.
+            <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700 text-center">
+              <span className="text-xs text-slate-500 dark:text-gray-400 uppercase font-bold tracking-wider">Total: </span>
+              <span className="text-xl font-black text-rose-600 dark:text-rose-400">{todosPreenchidos ? scoreTotal : '-'}</span>
+              <span className="text-xs text-slate-400"> pontos</span>
             </div>
           </div>
-          <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700 text-center">
-            <span className="text-xs text-slate-500 dark:text-gray-400 uppercase font-bold tracking-wider">Total: </span>
-            <span className="text-xl font-black text-rose-600 dark:text-rose-400">{todosPreenchidos ? scoreTotal : '-'}</span>
-            <span className="text-xs text-slate-400"> pontos</span>
-          </div>
-        </div>
 
-        <button
-          disabled={!todosPreenchidos}
-          onClick={() => setTela('resultado')}
-          className={`w-full mt-6 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all ${
-            todosPreenchidos
-              ? 'bg-rose-600 text-white shadow-xl hover:bg-rose-500 hover:scale-[1.02] active:scale-[0.98]'
-              : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-gray-600 cursor-not-allowed'
-          }`}
-        >
-          Classificar
-        </button>
+          <button
+            disabled={!todosPreenchidos}
+            onClick={() => setTela('resultado')}
+            className={`w-full py-3 sm:py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all ${
+              todosPreenchidos
+                ? 'bg-rose-600 text-white shadow-xl hover:bg-rose-500 hover:scale-[1.02] active:scale-[0.98]'
+                : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-gray-600 cursor-not-allowed'
+            }`}
+          >
+            Classificar
+          </button>
+        </div>
       </div>
     );
   }
