@@ -139,17 +139,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
     }, []);
 
-    const updateUser = async (userData: Partial<User>) => {
+    const updateUser = async (userData: Partial<User>): Promise<{ success: boolean; error?: string }> => {
         const newUser = { ...user, ...userData };
         setUser(newUser);
 
-        // SEGURANÇA: Não armazenar dados sensíveis em localStorage
-        // Apenas atualizar no estado React e no Supabase
-
-        // Persist to Supabase if logged in
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-            await supabase.from('users').upsert({
+            const { error } = await supabase.from('users').upsert({
                 id: session.user.id,
                 name: sanitizeText(newUser.name, 100),
                 role: sanitizeText(newUser.title, 100),
@@ -158,7 +154,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 email: session.user.email,
                 updated_at: new Date().toISOString()
             });
+            if (error) {
+                console.error('[updateUser] Erro ao salvar no Supabase:', error);
+                return { success: false, error: error.message };
+            }
         }
+        return { success: true };
     };
 
     return (

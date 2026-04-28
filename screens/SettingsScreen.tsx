@@ -23,9 +23,13 @@ export const SettingsScreen: React.FC = () => {
         setAvatarPreview(user.avatarUrl || '');
     }, [user.id, user.name, user.title, user.sector, user.avatarUrl]);
 
-    const handleSave = () => {
-        updateUser({ name, title, avatarUrl: avatarPreview || '', sector });
-        showNotification({ message: 'Perfil salvo com sucesso!', type: 'success' });
+    const handleSave = async () => {
+        const result = await updateUser({ name, title, avatarUrl: avatarPreview || '', sector });
+        if (result.success) {
+            showNotification({ message: 'Perfil salvo com sucesso!', type: 'success' });
+        } else {
+            showNotification({ message: `Erro ao salvar perfil: ${result.error}`, type: 'error' });
+        }
     };
 
     const handleAvatarClick = () => {

@@ -250,7 +250,7 @@ export interface NotificationContextType {
 export interface UserContextType {
   user: User;
   isLoading: boolean;
-  updateUser: (userData: Partial<User>) => void;
+  updateUser: (userData: Partial<User>) => Promise<{ success: boolean; error?: string }>;
   loadUser: () => Promise<void>;
 }
 
