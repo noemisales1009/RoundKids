@@ -19,7 +19,8 @@ import {
     BeakerIcon,
     ChevronDownIcon,
     ShieldIcon,
-    MapPinIcon
+    MapPinIcon,
+    CameraIcon
 } from '../components/icons';
 
 const formatHistoryDate = (dateString: string) => {
@@ -69,6 +70,8 @@ const PatientHistoryScreen: React.FC = () => {
     const [archivedDiets, setArchivedDiets] = React.useState<any[]>([]);
     const [clinicalSituations24h, setClinicalSituations24h] = React.useState<any[]>([]);
     const [aportesHistorico, setAportesHistorico] = React.useState<any[]>([]);
+    const [pareceres, setPareceres] = React.useState<any[]>([]);
+    const [examesImagem, setExamesImagem] = React.useState<any[]>([]);
     const [dietsData, setDietsData] = React.useState<any[]>([]);
     const [dataInicio, setDataInicio] = React.useState<string>('');
     const [dataFinal, setDataFinal] = React.useState<string>('');
@@ -101,7 +104,9 @@ const PatientHistoryScreen: React.FC = () => {
         'Situação Clínica 24h': 'Situação Clínica 24h',
         'Aportes': 'Aportes',
         'Precauções': 'Precaução',
-        'Transferência': 'Transferência'
+        'Transferência': 'Transferência',
+        'Pareceres': 'Parecer',
+        'Exames de Imagem': 'Exame de Imagem'
     };
 
     useHeader(patient ? `Histórico: ${patient.name}` : 'Histórico do Paciente');
@@ -621,6 +626,40 @@ const PatientHistoryScreen: React.FC = () => {
         fetchAportesHistorico();
     }, [patientId]);
 
+    // Buscar pareceres
+    React.useEffect(() => {
+        const fetchPareceres = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('pareceres_pacientes')
+                    .select('*')
+                    .eq('paciente_id', patientId)
+                    .order('data_parecer', { ascending: false });
+                if (error) return;
+                setPareceres(data || []);
+            } catch (err) {}
+        };
+        fetchPareceres();
+    }, [patientId]);
+
+    // Buscar exames de imagem
+    React.useEffect(() => {
+        const fetchExamesImagem = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('exames_imagem_pacientes')
+                    .select('*')
+                    .eq('paciente_id', patientId)
+                    .order('data_exame', { ascending: false });
+                if (error) return;
+                setExamesImagem(data || []);
+            } catch (err) {}
+        };
+        fetchExamesImagem();
+    }, [patientId]);
+
     type TimelineEvent = {
         timestamp: string;
         icon: React.FC<{ className?: string; }>;
@@ -1015,6 +1054,32 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
+        // Pareceres
+        pareceres.forEach((p: any) => {
+            const linhas = [`[PARECER] 📋 Parecer — ${p.especialista}`, `Data: ${new Date(p.data_parecer).toLocaleDateString('pt-BR')}`];
+            if (p.parecer) linhas.push(p.parecer);
+            events.push({
+                timestamp: p.created_at || `${p.data_parecer}T00:00:00`,
+                icon: ClipboardIcon,
+                description: linhas.join('\n'),
+                hasTime: true,
+            });
+        });
+
+        // Exames de Imagem
+        examesImagem.forEach((ex: any) => {
+            const linhas = [`[EXAME_IMAGEM] 🩻 ${ex.exame}`, `Categoria: ${ex.categoria}`, `Data: ${new Date(ex.data_exame).toLocaleDateString('pt-BR')}`];
+            if (ex.sistema) linhas.push(`Sistema: ${ex.sistema}`);
+            if (ex.resultado) linhas.push(`Resultado: ${ex.resultado}`);
+            if (ex.observacao) linhas.push(`Obs: ${ex.observacao}`);
+            events.push({
+                timestamp: ex.created_at || `${ex.data_exame}T00:00:00`,
+                icon: CameraIcon,
+                description: linhas.join('\n'),
+                hasTime: true,
+            });
+        });
+
         events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
         const groupedEvents = events.reduce((acc, event) => {
@@ -1027,7 +1092,7 @@ const PatientHistoryScreen: React.FC = () => {
         }, {} as Record<string, TimelineEvent[]>);
 
         return groupedEvents;
-    }, [patient, tasks, diagnostics, diuresisData, balanceData, dietsData, alertsData, alertCompletions, alertJustifications, archivedAlerts, archivedDevices, archivedExams, archivedMedications, archivedProcedures, archivedCultures, archivedDiets, clinicalSituations24h, aportesHistorico, resolvedDiagnostics, archivedDiagnostics, auditLogData]);
+    }, [patient, tasks, diagnostics, diuresisData, balanceData, dietsData, alertsData, alertCompletions, alertJustifications, archivedAlerts, archivedDevices, archivedExams, archivedMedications, archivedProcedures, archivedCultures, archivedDiets, clinicalSituations24h, aportesHistorico, resolvedDiagnostics, archivedDiagnostics, auditLogData, pareceres, examesImagem]);
 
     const handleGeneratePdf = () => {
         // ... (PDF generation logic remains the same)
@@ -1436,7 +1501,9 @@ const PatientHistoryScreen: React.FC = () => {
             '[SITUACAO_24H]': 'Situação Clínica 24h',
             '[APORTES]': 'Aportes',
             '[PRECAUCAO]': 'Precauções',
-            '[TRANSFERENCIA]': 'Transferência'
+            '[TRANSFERENCIA]': 'Transferência',
+            '[PARECER]': 'Pareceres',
+            '[EXAME_IMAGEM]': 'Exames de Imagem'
         };
 
         for (const [marker, category] of Object.entries(categoryMap)) {
@@ -1494,7 +1561,7 @@ const PatientHistoryScreen: React.FC = () => {
         setSelectedCategories(new Set());
     };
 
-    const mainCategories = ['Dispositivos', 'Medicações', 'Exames', 'Cirúrgico', 'Escalas', 'Diagnósticos', 'Culturas', 'Diurese', 'Balanço Hídrico', 'Dietas', 'Alertas', 'Comorbidades', 'Completações', 'Justificativas', 'Situação Clínica 24h', 'Aportes', 'Precauções', 'Transferência'];
+    const mainCategories = ['Dispositivos', 'Medicações', 'Exames', 'Cirúrgico', 'Escalas', 'Diagnósticos', 'Culturas', 'Diurese', 'Balanço Hídrico', 'Dietas', 'Alertas', 'Comorbidades', 'Completações', 'Justificativas', 'Situação Clínica 24h', 'Aportes', 'Precauções', 'Transferência', 'Pareceres', 'Exames de Imagem'];
     const archiveCategories = ['Arquivamentos', 'Arquivamentos Dispositivos', 'Arquivamentos Exames', 'Arquivamentos Medicações', 'Arquivamentos Procedimentos', 'Arquivamentos Culturas', 'Arquivamentos Dietas', 'Arquivamentos Diagnósticos'];
 
     const categoryIcons: Record<string, React.FC<{ className?: string }>> = {
@@ -1524,6 +1591,8 @@ const PatientHistoryScreen: React.FC = () => {
         'Arquivamentos Culturas': BeakerIcon,
         'Arquivamentos Dietas': AppleIcon,
         'Arquivamentos Diagnósticos': ClipboardIcon,
+        'Pareceres': ClipboardIcon,
+        'Exames de Imagem': CameraIcon,
     };
 
     const applyDateShortcut = (days: number) => {
