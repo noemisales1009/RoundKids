@@ -24,10 +24,7 @@ export const SettingsScreen: React.FC = () => {
     }, [user.id, user.name, user.title, user.sector, user.avatarUrl]);
 
     const handleSave = () => {
-        const isDataUrl = /^data:image\//i.test(avatarPreview || '');
-        const avatarToSave = isDataUrl ? (user.avatarUrl || '') : avatarPreview;
-
-        updateUser({ name, title, avatarUrl: avatarToSave, sector });
+        updateUser({ name, title, avatarUrl: avatarPreview || '', sector });
         showNotification({ message: 'Perfil salvo com sucesso!', type: 'success' });
     };
 
