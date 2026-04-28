@@ -15,6 +15,7 @@ export const LoginScreen: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [loginAttempts, setLoginAttempts] = useState(0);
     const [isLockedOut, setIsLockedOut] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     const validatePassword = (password: string) => password.length >= 6;
@@ -26,22 +27,23 @@ export const LoginScreen: React.FC = () => {
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setErrorMessage('');
         setLoading(true);
 
         if (isLockedOut) {
-            alert('Muitas tentativas de login. Tente novamente em alguns minutos.');
+            setErrorMessage('Muitas tentativas de login. Tente novamente em alguns minutos.');
             setLoading(false);
             return;
         }
 
         if (!validateEmail(email)) {
-            alert('Por favor, insira um email válido');
+            setErrorMessage('Por favor, insira um email válido.');
             setLoading(false);
             return;
         }
 
         if (!validatePassword(password)) {
-            alert('A senha deve ter pelo menos 6 caracteres');
+            setErrorMessage('A senha deve ter pelo menos 6 caracteres.');
             setLoading(false);
             return;
         }
@@ -57,13 +59,16 @@ export const LoginScreen: React.FC = () => {
 
             if (newAttempts >= 5) {
                 setIsLockedOut(true);
+                setErrorMessage('Muitas tentativas. Aguarde 15 minutos antes de tentar novamente.');
                 setTimeout(() => {
                     setIsLockedOut(false);
                     setLoginAttempts(0);
+                    setErrorMessage('');
                 }, 15 * 60 * 1000);
+            } else {
+                setErrorMessage('Email ou senha incorretos.');
             }
 
-            alert('Email ou senha incorretos');
             setLoading(false);
         } else {
             setLoginAttempts(0);
@@ -83,7 +88,7 @@ export const LoginScreen: React.FC = () => {
                     if (!existingUser) {
                         if (!isAllowedDomain(userEmail)) {
                             await supabase.auth.signOut();
-                            alert('Seu domínio de email não está autorizado. Contate o administrador.');
+                            setErrorMessage('Seu domínio de email não está autorizado. Contate o administrador.');
                             setLoading(false);
                             return;
                         }
@@ -122,7 +127,7 @@ export const LoginScreen: React.FC = () => {
                         <input
                             type="email"
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            onChange={(e) => { setEmail(e.target.value); setErrorMessage(''); }}
                             placeholder="seu@email.com"
                             className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             required
@@ -133,12 +138,19 @@ export const LoginScreen: React.FC = () => {
                         <input
                             type="password"
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChange={(e) => { setPassword(e.target.value); setErrorMessage(''); }}
                             placeholder="********"
                             className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             required
                         />
                     </div>
+
+                    {errorMessage && (
+                        <div className="px-4 py-3 bg-red-50 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg">
+                            <p className="text-sm text-red-700 dark:text-red-300">{errorMessage}</p>
+                        </div>
+                    )}
+
                     <button
                         type="submit"
                         disabled={loading || isLockedOut}
