@@ -20,7 +20,7 @@ import {
     ChevronDownIcon,
     ShieldIcon,
     MapPinIcon,
-    CameraIcon
+    CameraIcon,
 } from '../components/icons';
 
 const formatHistoryDate = (dateString: string) => {
