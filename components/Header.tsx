@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { BackArrowIcon, MenuIcon, ClipboardIcon, LogOutIcon } from './icons';
-import { UserContext, HeaderContext } from '../contexts';
+import { UserContext, HeaderContext, ThemeContext } from '../contexts';
 import { supabase } from '../supabaseClient';
 
 export const useHeader = (title: string) => {
@@ -22,6 +22,8 @@ export const Header: React.FC<{ title: string; onMenuClick: () => void }> = ({ t
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useContext(UserContext)!;
+    const themeCtx = useContext(ThemeContext);
+    const isDark = themeCtx?.theme === 'dark';
 
     const getBackPath = (): string | number => {
         const pathParts = location.pathname.split('/').filter(Boolean);
@@ -85,8 +87,17 @@ export const Header: React.FC<{ title: string; onMenuClick: () => void }> = ({ t
                 <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 truncate sm:hidden">{title}</h1>
             </div>
 
-            {/* Right side: Avatar and Logout */}
+            {/* Right side: Theme toggle, Avatar and Logout */}
             <div className="flex items-center gap-3">
+                <button
+                    onClick={() => themeCtx?.toggleTheme()}
+                    className="p-2 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition"
+                    title={isDark ? 'Modo claro' : 'Modo escuro'}
+                >
+                    <span className="material-symbols-rounded text-[22px]">
+                        {isDark ? 'light_mode' : 'dark_mode'}
+                    </span>
+                </button>
                 {user?.avatarUrl && (
                     <img
                         src={user.avatarUrl}
