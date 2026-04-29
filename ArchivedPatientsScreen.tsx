@@ -629,10 +629,10 @@ export const ArchivedPatientsScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-900">
+      <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-600 border-t-blue-500 mx-auto mb-4"></div>
-          <p className="text-slate-400 text-sm">Carregando pacientes arquivados...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-300 dark:border-slate-600 border-t-blue-500 mx-auto mb-4"></div>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">Carregando pacientes arquivados...</p>
         </div>
       </div>
     );
@@ -641,26 +641,26 @@ export const ArchivedPatientsScreen: React.FC = () => {
   const allSelected = filteredPatients.length > 0 && selectedIds.size === filteredPatients.length;
 
   const getMotivoStyle = (motivo?: string) => {
-    if (!motivo || motivo === 'Sem motivo') return 'bg-slate-700 text-slate-300';
+    if (!motivo || motivo === 'Sem motivo') return 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300';
     const m = motivo.toLowerCase();
-    if (m.includes('alta')) return 'bg-emerald-900/60 text-emerald-300 border border-emerald-700/50';
-    if (m.includes('óbito') || m.includes('obito')) return 'bg-red-900/60 text-red-300 border border-red-700/50';
-    if (m.includes('transfer')) return 'bg-blue-900/60 text-blue-300 border border-blue-700/50';
-    return 'bg-amber-900/60 text-amber-300 border border-amber-700/50';
+    if (m.includes('alta')) return 'bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/60 dark:text-emerald-300 dark:border-emerald-700/50';
+    if (m.includes('óbito') || m.includes('obito')) return 'bg-red-100 text-red-700 border border-red-200 dark:bg-red-900/60 dark:text-red-300 dark:border-red-700/50';
+    if (m.includes('transfer')) return 'bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900/60 dark:text-blue-300 dark:border-blue-700/50';
+    return 'bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-900/60 dark:text-amber-300 dark:border-amber-700/50';
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 p-4 md:p-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 md:p-6">
       <div className="max-w-6xl mx-auto space-y-5">
 
         {/* Header */}
-        <div className="flex items-start gap-4 pb-5 border-b border-slate-700/50">
-          <div className="w-11 h-11 rounded-xl bg-slate-700/80 flex items-center justify-center shrink-0">
-            <span className="material-symbols-rounded text-slate-300 text-[22px]">inventory_2</span>
+        <div className="flex items-start gap-4 pb-5 border-b border-slate-200 dark:border-slate-700/50">
+          <div className="w-11 h-11 rounded-xl bg-slate-200 dark:bg-slate-700/80 flex items-center justify-center shrink-0">
+            <span className="material-symbols-rounded text-slate-600 dark:text-slate-300 text-[22px]">inventory_2</span>
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white leading-tight">Pacientes Arquivados</h1>
-            <p className="text-slate-400 text-sm mt-0.5">Visualize, reative ou delete pacientes que tiveram alta, óbito ou transferência</p>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">Pacientes Arquivados</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">Visualize, reative ou delete pacientes que tiveram alta, óbito ou transferência</p>
           </div>
         </div>
 
@@ -668,8 +668,8 @@ export const ArchivedPatientsScreen: React.FC = () => {
         {message && (
           <div className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium ${
             message.type === 'success'
-              ? 'bg-emerald-900/40 border border-emerald-700/50 text-emerald-300'
-              : 'bg-red-900/40 border border-red-700/50 text-red-300'
+              ? 'bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-900/40 dark:border-emerald-700/50 dark:text-emerald-300'
+              : 'bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/40 dark:border-red-700/50 dark:text-red-300'
           }`}>
             <span className="material-symbols-rounded text-[18px]">
               {message.type === 'success' ? 'check_circle' : 'error'}
@@ -680,60 +680,60 @@ export const ArchivedPatientsScreen: React.FC = () => {
 
         {/* Search */}
         <div className="relative">
-          <span className="material-symbols-rounded absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-[18px] pointer-events-none">search</span>
+          <span className="material-symbols-rounded absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-[18px] pointer-events-none">search</span>
           <input
             type="text"
             placeholder="Buscar por nome ou leito..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition"
+            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition"
           />
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          <div className="bg-slate-800 border border-slate-700/50 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 flex items-center gap-2 sm:gap-3">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 flex items-center gap-2 sm:gap-3">
             <span className="material-symbols-rounded text-slate-400 text-[16px] sm:text-[18px] shrink-0">folder</span>
             <div className="min-w-0">
-              <p className="text-[10px] sm:text-[11px] text-slate-500 uppercase tracking-wide truncate">Total</p>
-              <p className="text-base sm:text-lg font-bold text-white leading-none">{patients.length}</p>
+              <p className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 uppercase tracking-wide truncate">Total</p>
+              <p className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-none">{patients.length}</p>
             </div>
           </div>
-          <div className="bg-slate-800 border border-slate-700/50 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 flex items-center gap-2 sm:gap-3">
-            <span className="material-symbols-rounded text-blue-400 text-[16px] sm:text-[18px] shrink-0">filter_list</span>
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 flex items-center gap-2 sm:gap-3">
+            <span className="material-symbols-rounded text-blue-500 dark:text-blue-400 text-[16px] sm:text-[18px] shrink-0">filter_list</span>
             <div className="min-w-0">
-              <p className="text-[10px] sm:text-[11px] text-slate-500 uppercase tracking-wide truncate">Encontrados</p>
-              <p className="text-base sm:text-lg font-bold text-blue-400 leading-none">{filteredPatients.length}</p>
+              <p className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 uppercase tracking-wide truncate">Encontrados</p>
+              <p className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 leading-none">{filteredPatients.length}</p>
             </div>
           </div>
-          <div className="bg-slate-800 border border-slate-700/50 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 flex items-center gap-2 sm:gap-3">
-            <span className="material-symbols-rounded text-emerald-400 text-[16px] sm:text-[18px] shrink-0">check_box</span>
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 flex items-center gap-2 sm:gap-3">
+            <span className="material-symbols-rounded text-emerald-500 dark:text-emerald-400 text-[16px] sm:text-[18px] shrink-0">check_box</span>
             <div className="min-w-0">
-              <p className="text-[10px] sm:text-[11px] text-slate-500 uppercase tracking-wide truncate">Selecionados</p>
-              <p className="text-base sm:text-lg font-bold text-emerald-400 leading-none">{selectedIds.size}</p>
+              <p className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 uppercase tracking-wide truncate">Selecionados</p>
+              <p className="text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 leading-none">{selectedIds.size}</p>
             </div>
           </div>
         </div>
 
         {/* Action bar */}
         {selectedIds.size > 0 && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3 bg-blue-950/50 border border-blue-800/50 rounded-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800/50 rounded-xl">
             <div className="flex items-center gap-2">
-              <span className="material-symbols-rounded text-blue-400 text-[18px]">info</span>
-              <span className="text-sm text-blue-300 font-medium">{selectedIds.size} paciente(s) selecionado(s)</span>
+              <span className="material-symbols-rounded text-blue-500 dark:text-blue-400 text-[18px]">info</span>
+              <span className="text-sm text-blue-700 dark:text-blue-300 font-medium">{selectedIds.size} paciente(s) selecionado(s)</span>
             </div>
             <div className="flex items-center gap-2 sm:ml-auto">
               <button
                 onClick={handleGeneratePdfForSelected}
                 disabled={generatingPdf}
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:text-blue-400 text-white text-sm font-medium rounded-lg transition"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-300 dark:disabled:bg-blue-800 disabled:text-white dark:disabled:text-blue-400 text-white text-sm font-medium rounded-lg transition"
               >
                 <span className="material-symbols-rounded text-[16px]">{generatingPdf ? 'hourglass_empty' : 'picture_as_pdf'}</span>
                 {generatingPdf ? 'Gerando...' : 'Gerar PDF'}
               </button>
               <button
                 onClick={() => setSelectedIds(new Set())}
-                className="flex-1 sm:flex-none px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-medium rounded-lg transition text-center"
+                className="flex-1 sm:flex-none px-4 py-2.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-lg transition text-center"
               >
                 Limpar
               </button>
@@ -746,22 +746,18 @@ export const ArchivedPatientsScreen: React.FC = () => {
           <>
             {/* MOBILE: cards */}
             <div className="flex flex-col gap-2 md:hidden">
-              {/* Selecionar todos */}
               <label className="flex items-center gap-2 px-1 py-1 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  onChange={toggleSelectAll}
-                  className="w-4 h-4 accent-blue-500"
-                />
-                <span className="text-xs text-slate-400">Selecionar todos</span>
+                <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="w-4 h-4 accent-blue-500" />
+                <span className="text-xs text-slate-500 dark:text-slate-400">Selecionar todos</span>
               </label>
 
               {filteredPatients.map((patient) => (
                 <div
                   key={patient.id}
-                  className={`bg-slate-800 border rounded-xl p-4 transition ${
-                    selectedIds.has(patient.id) ? 'border-blue-600/60 bg-blue-950/20' : 'border-slate-700/50'
+                  className={`bg-white dark:bg-slate-800 border rounded-xl p-4 transition ${
+                    selectedIds.has(patient.id)
+                      ? 'border-blue-400 dark:border-blue-600/60 bg-blue-50 dark:bg-blue-950/20'
+                      : 'border-slate-200 dark:border-slate-700/50'
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -773,14 +769,14 @@ export const ArchivedPatientsScreen: React.FC = () => {
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <span className="text-sm font-semibold text-white truncate">{patient.name}</span>
-                        <span className="inline-flex items-center justify-center px-2 h-5 bg-blue-900/60 text-blue-300 border border-blue-700/50 rounded text-xs font-bold shrink-0">
+                        <span className="text-sm font-semibold text-slate-900 dark:text-white truncate">{patient.name}</span>
+                        <span className="inline-flex items-center justify-center px-2 h-5 bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700/50 rounded text-xs font-bold shrink-0">
                           {patient.bed_number || '—'}
                         </span>
                       </div>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400 mb-2">
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400 mb-2">
                         <span>Admissão: {patient.dt_internacao ? formatDate(patient.dt_internacao) : '—'}</span>
-                        <span className="text-rose-400 font-medium">Arquivado: {formatDate(patient.archived_at)}</span>
+                        <span className="text-rose-500 dark:text-rose-400 font-medium">Arquivado: {formatDate(patient.archived_at)}</span>
                       </div>
                       <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium ${getMotivoStyle(patient.motivo_arquivamento)}`}>
                         {patient.motivo_arquivamento || 'Sem motivo'}
@@ -789,14 +785,14 @@ export const ArchivedPatientsScreen: React.FC = () => {
                     <div className="flex flex-col gap-1.5 shrink-0">
                       <button
                         onClick={() => setConfirmModal({ isOpen: true, action: 'reactivate', patientId: patient.id, patientName: patient.name })}
-                        className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-900/50 text-emerald-400 hover:bg-emerald-800/60 border border-emerald-700/40 transition"
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-800/60 border border-emerald-200 dark:border-emerald-700/40 transition"
                         title="Reativar"
                       >
                         <span className="material-symbols-rounded text-[16px]">restart_alt</span>
                       </button>
                       <button
                         onClick={() => setConfirmModal({ isOpen: true, action: 'delete', patientId: patient.id, patientName: patient.name })}
-                        className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-900/50 text-red-400 hover:bg-red-800/60 border border-red-700/40 transition"
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800/60 border border-red-200 dark:border-red-700/40 transition"
                         title="Deletar"
                       >
                         <span className="material-symbols-rounded text-[16px]">delete</span>
@@ -808,54 +804,43 @@ export const ArchivedPatientsScreen: React.FC = () => {
             </div>
 
             {/* TABLET / DESKTOP: tabela */}
-            <div className="hidden md:block bg-slate-800 border border-slate-700/50 rounded-xl overflow-hidden">
+            <div className="hidden md:block bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-slate-700">
+                    <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30">
                       <th className="px-4 py-3 text-center w-10">
-                        <input
-                          type="checkbox"
-                          checked={allSelected}
-                          onChange={toggleSelectAll}
-                          className="w-4 h-4 cursor-pointer accent-blue-500"
-                          title="Selecionar todos"
-                        />
+                        <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="w-4 h-4 cursor-pointer accent-blue-500" title="Selecionar todos" />
                       </th>
-                      <th className="px-5 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wide">Nome</th>
-                      <th className="px-5 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wide">Leito</th>
-                      <th className="px-5 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wide">Admissão</th>
-                      <th className="px-5 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wide">Arquivado em</th>
-                      <th className="px-5 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wide">Motivo</th>
-                      <th className="px-5 py-3 text-center text-xs font-semibold text-slate-400 uppercase tracking-wide">Ações</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Nome</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Leito</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Admissão</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Arquivado em</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Motivo</th>
+                      <th className="px-5 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Ações</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-700/50">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
                     {filteredPatients.map((patient) => (
                       <tr
                         key={patient.id}
-                        className={`transition-colors hover:bg-slate-700/40 ${selectedIds.has(patient.id) ? 'bg-blue-950/30' : ''}`}
+                        className={`transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/40 ${selectedIds.has(patient.id) ? 'bg-blue-50 dark:bg-blue-950/30' : ''}`}
                       >
                         <td className="px-4 py-3.5 text-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.has(patient.id)}
-                            onChange={() => toggleSelect(patient.id)}
-                            className="w-4 h-4 cursor-pointer accent-blue-500"
-                          />
+                          <input type="checkbox" checked={selectedIds.has(patient.id)} onChange={() => toggleSelect(patient.id)} className="w-4 h-4 cursor-pointer accent-blue-500" />
                         </td>
                         <td className="px-5 py-3.5">
-                          <span className="text-sm font-semibold text-white">{patient.name}</span>
+                          <span className="text-sm font-semibold text-slate-900 dark:text-white">{patient.name}</span>
                         </td>
                         <td className="px-5 py-3.5">
-                          <span className="inline-flex items-center justify-center min-w-[32px] h-7 px-2 bg-blue-900/60 text-blue-300 border border-blue-700/50 rounded-lg text-xs font-bold">
+                          <span className="inline-flex items-center justify-center min-w-[32px] h-7 px-2 bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700/50 rounded-lg text-xs font-bold">
                             {patient.bed_number || '—'}
                           </span>
                         </td>
-                        <td className="px-5 py-3.5 text-sm text-slate-400">
+                        <td className="px-5 py-3.5 text-sm text-slate-500 dark:text-slate-400">
                           {patient.dt_internacao ? formatDate(patient.dt_internacao) : '—'}
                         </td>
-                        <td className="px-5 py-3.5 text-sm font-medium text-rose-400">
+                        <td className="px-5 py-3.5 text-sm font-medium text-rose-500 dark:text-rose-400">
                           {formatDate(patient.archived_at)}
                         </td>
                         <td className="px-5 py-3.5">
@@ -867,14 +852,14 @@ export const ArchivedPatientsScreen: React.FC = () => {
                           <div className="flex items-center justify-center gap-1.5">
                             <button
                               onClick={() => setConfirmModal({ isOpen: true, action: 'reactivate', patientId: patient.id, patientName: patient.name })}
-                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-900/50 text-emerald-400 hover:bg-emerald-800/60 border border-emerald-700/40 transition"
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-800/60 border border-emerald-200 dark:border-emerald-700/40 transition"
                               title="Reativar paciente"
                             >
                               <span className="material-symbols-rounded text-[16px]">restart_alt</span>
                             </button>
                             <button
                               onClick={() => setConfirmModal({ isOpen: true, action: 'delete', patientId: patient.id, patientName: patient.name })}
-                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-900/50 text-red-400 hover:bg-red-800/60 border border-red-700/40 transition"
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800/60 border border-red-200 dark:border-red-700/40 transition"
                               title="Deletar permanentemente"
                             >
                               <span className="material-symbols-rounded text-[16px]">delete</span>
@@ -889,11 +874,11 @@ export const ArchivedPatientsScreen: React.FC = () => {
             </div>
           </>
         ) : (
-          <div className="bg-slate-800 border border-slate-700/50 rounded-xl p-12 text-center">
-            <span className="material-symbols-rounded text-slate-600 text-[48px] block mb-3">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl p-12 text-center">
+            <span className="material-symbols-rounded text-slate-300 dark:text-slate-600 text-[48px] block mb-3">
               {searchTerm ? 'search_off' : 'inventory_2'}
             </span>
-            <p className="text-slate-400 text-sm">
+            <p className="text-slate-500 dark:text-slate-400 text-sm">
               {searchTerm ? 'Nenhum paciente encontrado para essa busca' : 'Nenhum paciente arquivado'}
             </p>
           </div>
@@ -902,21 +887,21 @@ export const ArchivedPatientsScreen: React.FC = () => {
 
       {/* Confirm Modal */}
       {confirmModal.isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${
-              confirmModal.action === 'reactivate' ? 'bg-emerald-900/50' : 'bg-red-900/50'
+              confirmModal.action === 'reactivate' ? 'bg-emerald-100 dark:bg-emerald-900/50' : 'bg-red-100 dark:bg-red-900/50'
             }`}>
               <span className={`material-symbols-rounded text-[20px] ${
-                confirmModal.action === 'reactivate' ? 'text-emerald-400' : 'text-red-400'
+                confirmModal.action === 'reactivate' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
               }`}>
                 {confirmModal.action === 'reactivate' ? 'restart_alt' : 'delete_forever'}
               </span>
             </div>
-            <h3 className="text-base font-bold text-white mb-1">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">
               {confirmModal.action === 'reactivate' ? 'Reativar paciente?' : 'Deletar permanentemente?'}
             </h3>
-            <p className="text-slate-400 text-sm mb-5">
+            <p className="text-slate-500 dark:text-slate-400 text-sm mb-5">
               {confirmModal.action === 'reactivate'
                 ? `${confirmModal.patientName} voltará à lista de pacientes ativos.`
                 : `${confirmModal.patientName} será removido permanentemente. Esta ação não pode ser desfeita.`}
@@ -924,7 +909,7 @@ export const ArchivedPatientsScreen: React.FC = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmModal({ isOpen: false, action: 'reactivate' })}
-                className="flex-1 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-medium rounded-xl transition"
+                className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl transition"
               >
                 Cancelar
               </button>
