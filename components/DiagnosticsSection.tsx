@@ -28,6 +28,8 @@ interface PatientDiagnostic {
   opcao_id: number;
   texto_digitado?: string;
   status: 'resolvido' | 'nao_resolvido';
+  created_at?: string;
+  resolved_at?: string | null;
 }
 
 interface DiagnosticsSectionProps {
@@ -126,7 +128,7 @@ const OptionRow: React.FC<OptionRowProps> = ({
           />
           <span className={`flex-1 text-xs sm:text-sm leading-snug ${
             isDark ? 'text-slate-200' : 'text-slate-800'
-          } ${isResolved ? 'line-through opacity-50' : ''}`}>
+          } `}>
             {option.label}
           </span>
 
@@ -218,7 +220,7 @@ const OptionRow: React.FC<OptionRowProps> = ({
                     />
                     <span className={`flex-1 text-xs sm:text-sm leading-snug ${
                       isDark ? 'text-slate-200' : 'text-slate-800'
-                    } ${isChildResolved ? 'line-through opacity-50' : ''}`}>
+                    } `}>
                       {childOption.label}
                     </span>
                     {isChildCurrentlyChecked && (
@@ -363,6 +365,19 @@ const QuestionBlock: React.FC<QuestionBlockProps> = ({
   );
 };
 
+const formatDiagDate = (dateStr?: string | null) => {
+  if (!dateStr) return null;
+  try {
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit', month: '2-digit', year: '2-digit',
+      hour: '2-digit', minute: '2-digit',
+      timeZone: 'America/Sao_Paulo',
+    }).format(new Date(dateStr));
+  } catch {
+    return null;
+  }
+};
+
 // ── Main component ──
 
 export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientId, onSave }) => {
@@ -496,7 +511,8 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const handleSave = async () => {
     setSaving(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const now = new Date().toISOString();
+      const today = now.split('T')[0];
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id || null;
 
@@ -513,6 +529,23 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
       const diagnosticsResolved = allDiagnostics.filter(d => d.status === 'resolvido');
 
+      // Atualiza status e resolved_at dos registros já existentes no banco
+      const existingInDb = diagnostics.filter(d => checkedOptions[d.opcao_id]);
+      if (existingInDb.length > 0) {
+        await Promise.all(existingInDb.map(d => {
+          const newStatus = selectedStatus[d.opcao_id] || 'nao_resolvido';
+          const resolvedAt =
+            newStatus === 'resolvido'
+              ? (d.resolved_at || now)
+              : null;
+          return supabase
+            .from('paciente_diagnosticos')
+            .update({ status: newStatus, resolved_at: resolvedAt })
+            .eq('id', d.id!);
+        }));
+      }
+
+      // Insere apenas diagnósticos novos (não existentes hoje)
       const { data: existingDiagnostics } = await supabase
         .from('paciente_diagnosticos')
         .select('opcao_id')
@@ -526,7 +559,11 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       if (newDiagnostics.length > 0) {
         const { error } = await supabase
           .from('paciente_diagnosticos')
-          .insert(newDiagnostics.map(d => ({ ...d, created_by: userId })));
+          .insert(newDiagnostics.map(d => ({
+            ...d,
+            created_by: userId,
+            resolved_at: d.status === 'resolvido' ? now : null,
+          })));
 
         if (error) throw new Error(`Erro ao salvar: ${error.message}`);
       }
@@ -534,7 +571,8 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       const { data: diagnosticsData } = await supabase
         .from('paciente_diagnosticos')
         .select('*')
-        .eq('patient_id', patientId);
+        .eq('patient_id', patientId)
+        .eq('arquivado', false);
 
       setDiagnostics(diagnosticsData || []);
 
@@ -642,18 +680,29 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           <div className="grid grid-cols-2">
             {selectedByGroup.principal.length > 0 && (
               <ul className={`px-3 py-2 space-y-1 text-xs border-r ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-                {selectedByGroup.principal.map(opt => (
+                {selectedByGroup.principal.map(opt => {
+                  const diag = diagnostics.find(d => d.opcao_id === opt.id);
+                  const isResolved = selectedStatus[opt.id] === 'resolvido';
+                  return (
                   <li key={opt.id} className="flex items-start gap-1.5">
-                    {selectedStatus[opt.id] === 'resolvido' ? (
+                    {isResolved ? (
                       <span className="material-symbols-rounded text-[13px] text-emerald-500 mt-px shrink-0">check_circle</span>
                     ) : (
                       <span className={`material-symbols-rounded text-[13px] mt-px shrink-0 ${isDark ? 'text-blue-400' : 'text-blue-500'}`}>radio_button_unchecked</span>
                     )}
-                    <span className={`flex-1 leading-snug ${isDark ? 'text-slate-300' : 'text-slate-700'} ${selectedStatus[opt.id] === 'resolvido' ? 'line-through opacity-50' : ''}`}>
+                    <span className={`flex-1 leading-snug ${isDark ? 'text-slate-300' : 'text-slate-700'} `}>
                       {opt.label}
                       {inputValues[opt.id] && (
                         <span className={`block italic ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                           "{inputValues[opt.id]}"
+                        </span>
+                      )}
+                      {diag?.created_at && (
+                        <span className={`block text-[10px] not-italic ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>
+                          + {formatDiagDate(diag.created_at)}
+                          {isResolved && diag.resolved_at && (
+                            <> · ✓ {formatDiagDate(diag.resolved_at)}</>
+                          )}
                         </span>
                       )}
                     </span>
@@ -665,23 +714,35 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                       <span className="material-symbols-rounded text-[14px]">archive</span>
                     </button>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             )}
             {selectedByGroup.secundario.length > 0 && (
               <ul className="px-3 py-2 space-y-1 text-xs">
-                {selectedByGroup.secundario.map(opt => (
+                {selectedByGroup.secundario.map(opt => {
+                  const diag = diagnostics.find(d => d.opcao_id === opt.id);
+                  const isResolved = selectedStatus[opt.id] === 'resolvido';
+                  return (
                   <li key={opt.id} className="flex items-start gap-1.5">
-                    {selectedStatus[opt.id] === 'resolvido' ? (
+                    {isResolved ? (
                       <span className="material-symbols-rounded text-[13px] text-emerald-500 mt-px shrink-0">check_circle</span>
                     ) : (
                       <span className={`material-symbols-rounded text-[13px] mt-px shrink-0 ${isDark ? 'text-blue-400' : 'text-blue-500'}`}>radio_button_unchecked</span>
                     )}
-                    <span className={`flex-1 leading-snug ${isDark ? 'text-slate-300' : 'text-slate-700'} ${selectedStatus[opt.id] === 'resolvido' ? 'line-through opacity-50' : ''}`}>
+                    <span className={`flex-1 leading-snug ${isDark ? 'text-slate-300' : 'text-slate-700'} `}>
                       {opt.label}
                       {inputValues[opt.id] && (
                         <span className={`block italic ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                           "{inputValues[opt.id]}"
+                        </span>
+                      )}
+                      {diag?.created_at && (
+                        <span className={`block text-[10px] not-italic ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>
+                          + {formatDiagDate(diag.created_at)}
+                          {isResolved && diag.resolved_at && (
+                            <> · ✓ {formatDiagDate(diag.resolved_at)}</>
+                          )}
                         </span>
                       )}
                     </span>
@@ -693,7 +754,8 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                       <span className="material-symbols-rounded text-[14px]">archive</span>
                     </button>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             )}
           </div>
