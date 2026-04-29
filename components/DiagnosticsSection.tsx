@@ -370,7 +370,6 @@ const formatDiagDate = (dateStr?: string | null) => {
   try {
     return new Intl.DateTimeFormat('pt-BR', {
       day: '2-digit', month: '2-digit', year: '2-digit',
-      hour: '2-digit', minute: '2-digit',
       timeZone: 'America/Sao_Paulo',
     }).format(new Date(dateStr));
   } catch {
@@ -693,7 +692,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                       )}
                       {diag?.created_at && (
                         <span className={`block text-[10px] not-italic ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>
-                          + {formatDiagDate(diag.created_at)}
+                          {formatDiagDate(diag.created_at)}
                           {isResolved && diag.resolved_at && (
                             <> · Resolvido em: {formatDiagDate(diag.resolved_at)}</>
                           )}
@@ -733,7 +732,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                       )}
                       {diag?.created_at && (
                         <span className={`block text-[10px] not-italic ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>
-                          + {formatDiagDate(diag.created_at)}
+                          {formatDiagDate(diag.created_at)}
                           {isResolved && diag.resolved_at && (
                             <> · Resolvido em: {formatDiagDate(diag.resolved_at)}</>
                           )}
