@@ -46,23 +46,54 @@ export const NetworkBanner: React.FC = () => {
                 </p>
 
                 {/* Ilustração cabo desconectado */}
-                <div className="flex items-end justify-center gap-8 mt-4" style={{ height: '80px' }}>
-                    {/* Plugue esquerdo */}
-                    <svg width="70" height="70" viewBox="0 0 70 70" fill="none">
-                        <rect x="20" y="10" width="30" height="40" rx="6" fill="#1a3a4a" />
-                        <rect x="27" y="2" width="6" height="12" rx="2" fill="#c4a020" />
-                        <rect x="37" y="2" width="6" height="12" rx="2" fill="#c4a020" />
-                        <line x1="35" y1="50" x2="35" y2="70" stroke="#333" strokeWidth="8" strokeLinecap="round" />
-                        <line x1="35" y1="65" x2="5" y2="65" stroke="#333" strokeWidth="8" strokeLinecap="round" />
-                    </svg>
-                    {/* Fio direito cortado */}
-                    <svg width="70" height="70" viewBox="0 0 70 70" fill="none">
-                        <line x1="65" y1="65" x2="35" y2="65" stroke="#333" strokeWidth="8" strokeLinecap="round" />
-                        <line x1="35" y1="65" x2="35" y2="45" stroke="#333" strokeWidth="8" strokeLinecap="round" />
-                        <line x1="28" y1="42" x2="35" y2="45" stroke="#e05" strokeWidth="4" strokeLinecap="round" />
-                        <line x1="42" y1="42" x2="35" y2="45" stroke="#0a5" strokeWidth="4" strokeLinecap="round" />
-                    </svg>
-                </div>
+                <svg width="280" height="90" viewBox="0 0 280 90" fill="none" className="mt-2">
+                    {/* === PLUGUE ESQUERDO === */}
+                    {/* Corpo do plugue */}
+                    <rect x="10" y="18" width="52" height="38" rx="10" fill="#1c2e3a" />
+                    {/* Pino esquerdo */}
+                    <rect x="22" y="6" width="9" height="16" rx="3" fill="#d4a017" />
+                    {/* Pino direito */}
+                    <rect x="38" y="6" width="9" height="16" rx="3" fill="#d4a017" />
+                    {/* Sombra/detalhe no corpo */}
+                    <rect x="10" y="40" width="52" height="16" rx="0" fill="#162430" style={{ borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }} />
+                    <rect x="10" y="44" width="52" height="12" rx="0" fill="#162430" />
+                    <rect x="10" y="44" width="52" height="12" rx="10" fill="#162430" />
+                    {/* Fio saindo do plugue */}
+                    <path d="M36 56 Q36 72 60 72 Q90 72 100 72" stroke="#2a2a2a" strokeWidth="10" strokeLinecap="round" fill="none" />
+                    <path d="M36 56 Q36 72 60 72 Q90 72 100 72" stroke="#444" strokeWidth="6" strokeLinecap="round" fill="none" />
+
+                    {/* === FIO CORTADO NO CENTRO === */}
+                    {/* Ponta do fio esquerdo - fios expostos */}
+                    <line x1="100" y1="72" x2="118" y2="72" stroke="#2a2a2a" strokeWidth="10" strokeLinecap="round" />
+                    <line x1="100" y1="72" x2="118" y2="72" stroke="#444" strokeWidth="6" strokeLinecap="round" />
+                    {/* Fios internos expostos esquerda */}
+                    <line x1="118" y1="72" x2="128" y2="62" stroke="#e8c840" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="118" y1="72" x2="130" y2="68" stroke="#4caf50" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="118" y1="72" x2="130" y2="76" stroke="#e53935" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="118" y1="72" x2="128" y2="82" stroke="#1e88e5" strokeWidth="3" strokeLinecap="round" />
+
+                    {/* Fios internos expostos direita */}
+                    <line x1="162" y1="72" x2="152" y2="62" stroke="#e8c840" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="162" y1="72" x2="150" y2="68" stroke="#4caf50" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="162" y1="72" x2="150" y2="76" stroke="#e53935" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="162" y1="72" x2="152" y2="82" stroke="#1e88e5" strokeWidth="3" strokeLinecap="round" />
+
+                    {/* Ponta do fio direito */}
+                    <line x1="162" y1="72" x2="180" y2="72" stroke="#2a2a2a" strokeWidth="10" strokeLinecap="round" />
+                    <line x1="162" y1="72" x2="180" y2="72" stroke="#444" strokeWidth="6" strokeLinecap="round" />
+
+                    {/* === FIO DIREITO === */}
+                    <path d="M180 72 Q190 72 220 72 Q244 72 244 56" stroke="#2a2a2a" strokeWidth="10" strokeLinecap="round" fill="none" />
+                    <path d="M180 72 Q190 72 220 72 Q244 72 244 56" stroke="#444" strokeWidth="6" strokeLinecap="round" fill="none" />
+
+                    {/* === TOMADA FÊMEA DIREITA === */}
+                    <rect x="218" y="18" width="52" height="38" rx="10" fill="#1c2e3a" />
+                    <rect x="218" y="44" width="52" height="12" rx="10" fill="#162430" />
+                    {/* Buraco esquerdo */}
+                    <rect x="229" y="28" width="9" height="14" rx="3" fill="#0d1c26" />
+                    {/* Buraco direito */}
+                    <rect x="246" y="28" width="9" height="14" rx="3" fill="#0d1c26" />
+                </svg>
             </div>
 
             {/* Botão */}
