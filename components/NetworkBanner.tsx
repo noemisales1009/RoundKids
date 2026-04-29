@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNetwork } from '../contexts/NetworkContext';
+import semConexaoImg from '../src/assets/sem-conexao.png';
 
 export const NetworkBanner: React.FC = () => {
     const { isOnline } = useNetwork();
@@ -9,16 +10,16 @@ export const NetworkBanner: React.FC = () => {
     }
 
     return (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="relative w-full max-w-sm mx-auto">
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#3a9fd1]">
+            <div className="relative w-full h-full">
                 <img
-                    src="/sem-conexao.png"
+                    src={semConexaoImg}
                     alt="Sem conexão com a internet"
-                    className="w-full h-auto object-contain"
+                    className="w-full h-full object-cover"
                 />
                 <button
                     onClick={() => window.location.reload()}
-                    className="absolute bottom-8 left-1/2 -translate-x-1/2 px-8 py-3 rounded-2xl border-2 border-white text-white font-semibold text-base bg-transparent hover:bg-white/20 transition-colors whitespace-nowrap"
+                    className="absolute bottom-[12%] left-1/2 -translate-x-1/2 px-10 py-3 rounded-2xl border-2 border-white text-white font-semibold text-base bg-transparent hover:bg-white/20 transition-colors whitespace-nowrap"
                 >
                     Tentar Novamente
                 </button>
