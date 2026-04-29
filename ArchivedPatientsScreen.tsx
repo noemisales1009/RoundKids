@@ -208,7 +208,6 @@ export const ArchivedPatientsScreen: React.FC = () => {
   };
 
   const fetchPatientFullData = async (patientId: string) => {
-    // Busca tudo em paralelo
     const [
       patientRes,
       devicesRes,
@@ -222,8 +221,21 @@ export const ArchivedPatientsScreen: React.FC = () => {
       scalesRes,
       alertsClinicosRes,
       tasksRes,
-      completedAlertsRes,
       diagnosticsRes,
+      alertCompletionsRes,
+      alertJustificationsRes,
+      archivedAlertsRes,
+      archivedDevicesRes,
+      archivedExamsRes,
+      archivedMedicationsRes,
+      archivedProceduresRes,
+      archivedCulturesRes,
+      archivedDietsRes,
+      clinicalSituations24hRes,
+      aportesRes,
+      pareceresRes,
+      examesImagemRes,
+      auditLogRes,
     ] = await Promise.all([
       supabase.from('patients').select('*').eq('id', patientId).single(),
       supabase.from('dispositivos_pacientes').select('*').eq('paciente_id', patientId).order('data_inicio', { ascending: false }),
@@ -237,8 +249,21 @@ export const ArchivedPatientsScreen: React.FC = () => {
       supabase.from('scale_scores').select('*').eq('paciente_id', patientId).order('created_at', { ascending: false }),
       supabase.from('alertas_paciente_view_completa').select('*').eq('patient_id', patientId).order('created_at', { ascending: false }),
       supabase.from('tasks_view_horario_br').select('*').eq('patient_id', patientId).order('created_at', { ascending: false }),
-      supabase.from('alertas_paciente_visibilidade_24h').select('*').eq('patient_id', patientId).order('created_at', { ascending: false }),
-      supabase.from('paciente_diagnosticos').select('*').eq('patient_id', patientId),
+      supabase.from('diagnosticos_historico_com_usuario').select('*').eq('patient_id', patientId),
+      supabase.from('alert_completions_with_user').select('*').eq('patient_id', patientId),
+      supabase.from('monitoramento_geral_justificativas').select('*').eq('patient_id', patientId),
+      supabase.from('monitoramento_arquivamento_geral').select('*').eq('patient_id', patientId),
+      supabase.from('vw_dispositivos_detalhado').select('*').eq('paciente_id', patientId).eq('is_archived', true),
+      supabase.from('vw_exames_detalhado').select('*').eq('paciente_id', patientId).eq('is_archived', true),
+      supabase.from('vw_medicacoes_detalhado').select('*').eq('paciente_id', patientId).eq('is_archived', true),
+      supabase.from('vw_procedimentos_detalhado').select('*').eq('paciente_id', patientId).eq('is_archived', true),
+      supabase.from('vw_culturas_detalhado').select('*').eq('paciente_id', patientId).eq('is_archived', true),
+      supabase.from('vw_dietas_detalhado').select('*').eq('paciente_id', patientId).eq('is_archived', true),
+      supabase.from('clinical_situations_24h').select('*').eq('patient_id', patientId).order('created_at', { ascending: false }),
+      supabase.from('aportes_pacientes').select('*').eq('paciente_id', patientId).order('data_referencia', { ascending: false }),
+      supabase.from('pareceres_pacientes').select('*').eq('paciente_id', patientId).order('data_parecer', { ascending: false }),
+      supabase.from('exames_imagem_pacientes').select('*').eq('paciente_id', patientId).order('data_exame', { ascending: false }),
+      supabase.from('diagnosticos_audit_log').select('*').eq('patient_id', patientId).eq('acao', 'OCULTADO').order('created_at', { ascending: false }),
     ]);
 
     return {
@@ -254,8 +279,21 @@ export const ArchivedPatientsScreen: React.FC = () => {
       scales: scalesRes.data || [],
       alertsClinicos: alertsClinicosRes.data || [],
       tasks: tasksRes.data || [],
-      completedAlerts: completedAlertsRes.data || [],
       diagnostics: diagnosticsRes.data || [],
+      alertCompletions: alertCompletionsRes.data || [],
+      alertJustifications: alertJustificationsRes.data || [],
+      archivedAlerts: archivedAlertsRes.data || [],
+      archivedDevices: archivedDevicesRes.data || [],
+      archivedExams: archivedExamsRes.data || [],
+      archivedMedications: archivedMedicationsRes.data || [],
+      archivedProcedures: archivedProceduresRes.data || [],
+      archivedCultures: archivedCulturesRes.data || [],
+      archivedDiets: archivedDietsRes.data || [],
+      clinicalSituations24h: clinicalSituations24hRes.data || [],
+      aportes: aportesRes.data || [],
+      pareceres: pareceresRes.data || [],
+      examesImagem: examesImagemRes.data || [],
+      auditLog: auditLogRes.data || [],
     };
   };
 
@@ -274,121 +312,250 @@ export const ArchivedPatientsScreen: React.FC = () => {
         <tr><th>Data de Internação</th><td>${formatDateToBRL(p.dt_internacao)}</td></tr>
         <tr><th>Arquivado em</th><td>${formatDateToBRL(p.archived_at)}</td></tr>
         <tr><th>Motivo do Arquivamento</th><td>${escapeHtml(p.motivo_arquivamento || 'Sem motivo')}</td></tr>
+        ${p.comorbidade ? `<tr><th>Comorbidades</th><td>${escapeHtml(p.comorbidade.split('|').filter((c: string) => c.trim()).join(', '))}</td></tr>` : ''}
+        ${p.localTransferencia ? `<tr><th>Destino/Transferência</th><td>${escapeHtml(p.localTransferencia)}</td></tr>` : ''}
       </table>
     `;
 
-    const diagnosticsHtml = renderList('Diagnósticos', data.diagnostics, (d: any) => `
-      <strong>${escapeHtml(d.diagnostico || d.nome || '—')}</strong>
-      ${d.data_diagnostico ? `<br>Data: ${formatDateToBRL(d.data_diagnostico)}` : ''}
-      ${d.observacao ? `<br><em>Obs: ${escapeHtml(d.observacao)}</em>` : ''}
-      ${d.arquivado ? `<br><span style="color:#b00">Arquivado</span>` : ''}
+    const activeDiagnostics = data.diagnostics.filter((d: any) => !d.arquivado);
+    const archivedDiagnostics = data.diagnostics.filter((d: any) => d.arquivado);
+
+    const diagnosticsHtml = renderList('Diagnósticos Ativos', activeDiagnostics, (d: any) => `
+      <strong>${escapeHtml(d.opcao_label || 'Não informado')}</strong>${d.texto_digitado ? ` — ${escapeHtml(d.texto_digitado)}` : ''}
+      <br>Status: ${escapeHtml(d.status || '—')}
+      ${d.nome_criador ? `<br>Criado por: ${escapeHtml(d.nome_criador)}` : ''}
+      ${d.data_criacao ? `<br>Data: ${formatDateTimeToBRL(d.data_criacao)}` : ''}
     `);
 
-    const devicesHtml = renderList('Dispositivos', data.devices, (d: any) => `
+    const archivedDiagnosticsHtml = renderList('Diagnósticos Arquivados', archivedDiagnostics, (d: any) => `
+      <strong>${escapeHtml(d.opcao_label || 'Não informado')}</strong>${d.texto_digitado ? ` — ${escapeHtml(d.texto_digitado)}` : ''}
+      ${d.nome_criador ? `<br>Criado por: ${escapeHtml(d.nome_criador)}` : ''}
+      ${d.nome_arquivador ? `<br>Arquivado por: ${escapeHtml(d.nome_arquivador)}` : ''}
+      ${d.motivo_arquivamento ? `<br>Motivo: ${escapeHtml(d.motivo_arquivamento)}` : ''}
+      ${d.data_arquivamento ? `<br>Data arquivamento: ${formatDateTimeToBRL(d.data_arquivamento)}` : ''}
+    `);
+
+    const auditLogHtml = renderList('Auditoria de Diagnósticos', data.auditLog, (log: any) => `
+      <strong>${escapeHtml(log.diagnostico_label || 'Não informado')}</strong>
+      <br>Criado por: ${escapeHtml(log.criado_por_nome || 'Desconhecido')}
+      <br>Ocultado por: ${escapeHtml(log.modificado_por_nome || 'Desconhecido')}
+      ${log.created_at ? `<br>Data: ${formatDateTimeToBRL(log.created_at)}` : ''}
+    `);
+
+    const devicesHtml = renderList('Dispositivos', data.devices.filter((d: any) => !d.is_archived), (d: any) => `
       <strong>${escapeHtml(d.nome || d.tipo)} ${d.localizacao ? `(${escapeHtml(d.localizacao)})` : ''}</strong>
       ${d.data_inicio ? `<br>Início: ${formatDateToBRL(d.data_inicio)}` : ''}
       ${d.data_remocao ? `<br>Retirada: ${formatDateToBRL(d.data_remocao)}` : ''}
       ${d.observacao ? `<br><em>Obs: ${escapeHtml(d.observacao)}</em>` : ''}
-      ${d.is_archived ? `<br><span style="color:#b00">Arquivado</span>` : ''}
     `);
 
-    const medicationsHtml = renderList('Medicações', data.medications, (m: any) => `
+    const archivedDevicesHtml = renderList('Dispositivos Arquivados', data.archivedDevices, (d: any) => `
+      <strong>${escapeHtml(d.tipo_dispositivo)} ${d.localizacao ? `— ${escapeHtml(d.localizacao)}` : ''}</strong>
+      <br>Motivo: ${escapeHtml(d.motivo_arquivamento || 'Não informado')}
+      <br>Arquivado por: ${escapeHtml(d.nome_arquivador || 'Sistema')}
+      ${d.created_at ? `<br>Data: ${formatDateTimeToBRL(d.created_at)}` : ''}
+    `);
+
+    const medicationsHtml = renderList('Medicações', data.medications.filter((m: any) => !m.is_archived), (m: any) => `
       <strong>${escapeHtml(m.nome)} ${m.dosagem ? `(${escapeHtml(m.dosagem)})` : ''}</strong>
+      ${m.sistema ? `<br>Sistema: ${escapeHtml(m.sistema)}` : ''}
       ${m.data_inicio ? `<br>Início: ${formatDateToBRL(m.data_inicio)}` : ''}
       ${m.data_fim ? `<br>Fim: ${formatDateToBRL(m.data_fim)}` : ''}
       ${m.observacao ? `<br><em>Obs: ${escapeHtml(m.observacao)}</em>` : ''}
-      ${m.is_archived ? `<br><span style="color:#b00">Arquivado</span>` : ''}
     `);
 
-    const examsHtml = renderList('Exames', data.exams, (e: any) => `
+    const archivedMedicationsHtml = renderList('Medicações Arquivadas', data.archivedMedications, (m: any) => `
+      <strong>${escapeHtml(m.nome_medicacao)} — ${escapeHtml(m.dosagem_valor)} ${escapeHtml(m.unidade_medida)}</strong>
+      <br>Motivo: ${escapeHtml(m.motivo_arquivamento || 'Não informado')}
+      <br>Arquivado por: ${escapeHtml(m.nome_arquivador || 'Sistema')}
+      ${m.created_at ? `<br>Data: ${formatDateTimeToBRL(m.created_at)}` : ''}
+    `);
+
+    const examsHtml = renderList('Exames Laboratoriais', data.exams.filter((e: any) => !e.is_archived), (e: any) => `
       <strong>${escapeHtml(e.nome)}</strong>
+      ${e.sistema ? `<br>Sistema: ${escapeHtml(e.sistema)}` : ''}
       ${e.data ? `<br>Data: ${formatDateToBRL(e.data)}` : ''}
       ${e.resultado ? `<br>Resultado: ${escapeHtml(e.resultado)}` : ''}
       ${e.observacao ? `<br><em>Obs: ${escapeHtml(e.observacao)}</em>` : ''}
-      ${e.is_archived ? `<br><span style="color:#b00">Arquivado</span>` : ''}
     `);
 
-    const proceduresHtml = renderList('Procedimentos Cirúrgicos', data.procedures, (pr: any) => `
+    const archivedExamsHtml = renderList('Exames Arquivados', data.archivedExams, (e: any) => `
+      <strong>${escapeHtml(e.nome_exame)}</strong>
+      <br>Motivo: ${escapeHtml(e.motivo_arquivamento || 'Não informado')}
+      <br>Arquivado por: ${escapeHtml(e.nome_arquivador || 'Sistema')}
+      ${e.created_at ? `<br>Data: ${formatDateTimeToBRL(e.created_at)}` : ''}
+    `);
+
+    const proceduresHtml = renderList('Procedimentos Cirúrgicos', data.procedures.filter((pr: any) => !pr.is_archived), (pr: any) => `
       <strong>${escapeHtml(pr.nome)}</strong>
-      ${pr.cirurgiao ? ` - Dr(a): ${escapeHtml(pr.cirurgiao)}` : ''}
+      ${pr.cirurgiao ? `<br>Dr(a): ${escapeHtml(pr.cirurgiao)}` : ''}
       ${pr.data ? `<br>Data: ${formatDateToBRL(pr.data)}` : ''}
       ${pr.observacao ? `<br><em>Obs: ${escapeHtml(pr.observacao)}</em>` : ''}
-      ${pr.is_archived ? `<br><span style="color:#b00">Arquivado</span>` : ''}
     `);
 
-    const culturesHtml = renderList('Culturas', data.cultures, (c: any) => `
-      <strong>${escapeHtml(c.tipo || c.nome)}</strong>
+    const archivedProceduresHtml = renderList('Procedimentos Cirúrgicos Arquivados', data.archivedProcedures, (pr: any) => `
+      <strong>${escapeHtml(pr.nome_procedimento)}</strong>
+      ${pr.nome_cirurgiao ? `<br>Dr(a): ${escapeHtml(pr.nome_cirurgiao)}` : ''}
+      <br>Motivo: ${escapeHtml(pr.motivo_arquivamento || 'Não informado')}
+      <br>Arquivado por: ${escapeHtml(pr.nome_arquivador || 'Sistema')}
+      ${pr.created_at ? `<br>Data: ${formatDateTimeToBRL(pr.created_at)}` : ''}
+    `);
+
+    const culturesHtml = renderList('Culturas', data.cultures.filter((c: any) => !c.is_archived), (c: any) => `
+      <strong>${escapeHtml(c.tipo || c.nome || c.site)}</strong>
+      ${c.microorganismo || c.microorganism ? `<br>Microorganismo: ${escapeHtml(c.microorganismo || c.microorganism)}` : ''}
       ${c.data_coleta ? `<br>Coleta: ${formatDateToBRL(c.data_coleta)}` : ''}
       ${c.resultado ? `<br>Resultado: ${escapeHtml(c.resultado)}` : ''}
       ${c.observacao ? `<br><em>Obs: ${escapeHtml(c.observacao)}</em>` : ''}
-      ${c.is_archived ? `<br><span style="color:#b00">Arquivado</span>` : ''}
     `);
 
-    const dietsHtml = renderList('Dietas', data.diets, (d: any) => `
+    const archivedCulturesHtml = renderList('Culturas Arquivadas', data.archivedCultures, (c: any) => `
+      <strong>${escapeHtml(c.local)}</strong> — ${escapeHtml(c.microorganismo || 'Não identificado')}
+      <br>Motivo: ${escapeHtml(c.motivo_arquivamento || 'Não informado')}
+      <br>Arquivado por: ${escapeHtml(c.nome_arquivador || 'Sistema')}
+      ${c.created_at ? `<br>Data: ${formatDateTimeToBRL(c.created_at)}` : ''}
+    `);
+
+    const dietsHtml = renderList('Dietas', data.diets.filter((d: any) => !d.is_archived), (d: any) => `
       <strong>${escapeHtml(d.tipo || d.type)}</strong>
       ${d.data_inicio ? `<br>Início: ${formatDateToBRL(d.data_inicio)}` : ''}
       ${d.volume ? `<br>Volume: ${escapeHtml(d.volume)} mL` : ''}
       ${d.vet ? `<br>VET: ${escapeHtml(d.vet)} kcal/dia` : ''}
-      ${d.pt ? `<br>Proteína (PT): ${escapeHtml(d.pt)} g/dia` : ''}
-      ${d.th ? `<br>Taxa Hídrica (TH): ${escapeHtml(d.th)} ml/m²/dia` : ''}
+      ${d.vet_pleno ? `<br>VET Pleno: ${escapeHtml(d.vet_pleno)} kcal/dia` : ''}
+      ${d.pt ? `<br>PT: ${escapeHtml(d.pt)} g/dia` : ''}
+      ${d.th ? `<br>TH: ${escapeHtml(d.th)} ml/m²/dia` : ''}
       ${d.data_remocao ? `<br>Retirada: ${formatDateToBRL(d.data_remocao)}` : ''}
       ${d.observacao ? `<br><em>Obs: ${escapeHtml(d.observacao)}</em>` : ''}
-      ${d.is_archived ? `<br><span style="color:#b00">Arquivado</span>` : ''}
     `);
 
-    const diureseHtml = renderList('Diurese', data.diurese, (d: any) => `
-      <strong>Resultado: ${escapeHtml(d.resultado ?? 'N/A')} mL/kg/h</strong>
-      <br>Peso: ${escapeHtml(d.peso)}kg | Volume: ${escapeHtml(d.volume)}mL | Período: ${escapeHtml(d.horas)}h
-      ${d.data_registro ? `<br>Data: ${formatDateToBRL(d.data_registro)}` : ''}
+    const archivedDietsHtml = renderList('Dietas Arquivadas', data.archivedDiets, (d: any) => `
+      <strong>${escapeHtml(d.tipo)}</strong>
+      ${d.volume ? `<br>Volume: ${escapeHtml(d.volume)} mL` : ''}
+      ${d.vet ? `<br>VET: ${escapeHtml(d.vet)} kcal/dia` : ''}
+      <br>Motivo: ${escapeHtml(d.motivo_arquivamento || 'Não informado')}
+      <br>Arquivado por: ${escapeHtml(d.nome_arquivador || 'Sistema')}
+      ${d.created_at ? `<br>Data: ${formatDateTimeToBRL(d.created_at)}` : ''}
     `);
 
-    const balanceHtml = renderList('Balanço Hídrico', data.balance, (b: any) => `
-      <strong>Resultado: ${escapeHtml(b.resultado ?? 'N/A')}%</strong>
-      <br>Peso: ${escapeHtml(b.peso)}kg | Volume: ${b.volume > 0 ? '+' : ''}${escapeHtml(b.volume)}mL
-      ${b.data_registro ? `<br>Data: ${formatDateToBRL(b.data_registro)}` : ''}
-    `);
+    const diureseHtml = renderList('Diurese', data.diurese, (d: any) => {
+      const result = d.peso && d.horas ? ((d.volume / d.horas) / d.peso).toFixed(2) : 'N/A';
+      return `
+        <strong>${result} mL/kg/h</strong>
+        <br>Peso: ${escapeHtml(d.peso)}kg | Volume: ${escapeHtml(d.volume)}mL | Período: ${escapeHtml(d.horas)}h
+        ${d.data_registro ? `<br>Data: ${formatDateTimeToBRL(d.data_registro)}` : ''}
+      `;
+    });
+
+    const balanceHtml = renderList('Balanço Hídrico', data.balance, (b: any) => {
+      const result = b.peso ? (b.volume / (b.peso * 10)).toFixed(2) : 'N/A';
+      return `
+        <strong>${b.volume > 0 ? '+' : ''}${result}%</strong>
+        <br>Peso: ${escapeHtml(b.peso)}kg | Volume: ${b.volume > 0 ? '+' : ''}${escapeHtml(b.volume)}mL
+        ${b.data_registro ? `<br>Data: ${formatDateTimeToBRL(b.data_registro)}` : ''}
+      `;
+    });
 
     const scalesHtml = renderList('Avaliações de Escalas', data.scales, (s: any) => `
-      <strong>${escapeHtml(s.scale_name)}</strong> - Pontuação: ${escapeHtml(s.score)}
+      <strong>${escapeHtml(s.scale_name)}</strong> — Pontuação: ${escapeHtml(s.score)}
       ${s.interpretation ? ` (${escapeHtml(s.interpretation)})` : ''}
-      ${s.created_at ? `<br>Data e Hora: ${formatDateTimeToBRL(s.created_at)}` : ''}
+      ${s.created_at ? `<br>Data: ${formatDateTimeToBRL(s.created_at)}` : ''}
     `);
 
     const renderAlertItem = (a: any) => `
-      <strong>${escapeHtml(a.alertaclinico || a.description || a.descricao_limpa || a.titulo || 'Alerta')}</strong>
-      ${a.category ? `<br>Categoria: ${escapeHtml(a.category)}` : ''}
-      ${a.priority ? `<br>Prioridade: ${escapeHtml(a.priority)}` : ''}
-      ${a.status ? `<br>Status: ${escapeHtml(a.status)}` : ''}
-      ${a.responsible ? `<br>Responsável: ${escapeHtml(a.responsible)}` : ''}
+      <strong>${escapeHtml(a.alertaclinico || a.descricao_limpa || a.description || 'Alerta')}</strong>
+      ${a.responsavel || a.responsible ? `<br>Responsável: ${escapeHtml(a.responsavel || a.responsible)}` : ''}
+      ${a.live_status || a.status ? `<br>Status: ${escapeHtml(a.live_status || a.status)}` : ''}
       ${a.created_by_name ? `<br>Criado por: ${escapeHtml(a.created_by_name)}` : ''}
+      ${a.prazo_limite_formatado ? `<br>Prazo limite: ${escapeHtml(a.prazo_limite_formatado)}` : ''}
       ${a.created_at ? `<br>Criado em: ${formatDateTimeToBRL(a.created_at)}` : ''}
-      ${a.prazo_formatado ? `<br>Prazo: ${escapeHtml(a.prazo_formatado)}` : (a.prazo ? `<br>Prazo: ${formatDateTimeToBRL(a.prazo)}` : '')}
-      ${a.concluded_at ? `<br>Concluído em: ${formatDateTimeToBRL(a.concluded_at)}` : ''}
-      ${a.concluded_by_name ? `<br>Concluído por: ${escapeHtml(a.concluded_by_name)}` : ''}
       ${a.justificativa ? `<br><em>Justificativa: ${escapeHtml(a.justificativa)}</em>` : ''}
     `;
 
-    const alertsClinicosHtml = renderList('Alertas do Paciente (Clínicos)', data.alertsClinicos, renderAlertItem);
+    const alertsClinicosHtml = renderList('Alertas Clínicos', data.alertsClinicos, renderAlertItem);
     const tasksHtml = renderList('Tasks / Checklist', data.tasks, renderAlertItem);
-    const completedAlertsHtml = renderList('Alertas Concluídos', data.completedAlerts, renderAlertItem);
+
+    const alertCompletionsHtml = renderList('Completações de Alertas', data.alertCompletions, (c: any) => `
+      <strong>${escapeHtml(c.alert_description || c.description || '—')}</strong>
+      <br>Concluído por: ${escapeHtml(c.completed_by_name || 'Não informado')}
+      ${c.completed_at ? `<br>Data: ${formatDateTimeToBRL(c.completed_at)}` : ''}
+    `);
+
+    const alertJustificationsHtml = renderList('Justificativas de Alertas', data.alertJustifications, (j: any) => `
+      <strong>${escapeHtml(j.descricao || '—')}</strong>
+      <br>Justificativa: ${escapeHtml(j.justificativa || '—')}
+      <br>Por: ${escapeHtml(j.quem_justificou_nome || 'Não informado')}
+      ${j.data_justificativa ? `<br>Data: ${formatDateTimeToBRL(j.data_justificativa)}` : ''}
+    `);
+
+    const archivedAlertsHtml = renderList('Alertas Arquivados', data.archivedAlerts, (a: any) => `
+      <strong>${escapeHtml(a.descricao_original || '—')}</strong>
+      <br>Motivo: ${escapeHtml(a.motivo_do_arquivamento || 'Não informado')}
+      <br>Arquivado por: ${escapeHtml(a.quem_arquivou || 'Sistema')}
+      ${a.data_arquivamento ? `<br>Data: ${formatDateTimeToBRL(a.data_arquivamento)}` : ''}
+    `);
+
+    const clinicalSituations24hHtml = renderList('Situação Clínica 24h', data.clinicalSituations24h, (s: any) => `
+      ${escapeHtml(s.situacao_texto || '—')}
+      ${s.created_at ? `<br>Data: ${formatDateTimeToBRL(s.created_at)}` : ''}
+    `);
+
+    const aportesHtml = renderList('Aportes', data.aportes, (a: any) => {
+      const vo = Number(a.vo_ml_kg_h || 0);
+      const hv = Number(a.hv_npt_ml_kg_h || 0);
+      const med = Number(a.medicacoes_ml_kg_h || 0);
+      const tht = Number(a.tht_ml_kg_h || 0);
+      return `
+        <strong>Data: ${escapeHtml(a.data_referencia)}</strong>
+        <br>VO: ${vo.toFixed(2)} ml/kg/h | HV/NPT: ${hv.toFixed(2)} ml/kg/h | MED: ${med.toFixed(2)} ml/kg/h | THT: ${tht.toFixed(2)} ml/kg/h
+      `;
+    });
+
+    const pareceresHtml = renderList('Pareceres', data.pareceres, (pr: any) => `
+      <strong>${escapeHtml(pr.especialista || '—')}</strong>
+      ${pr.data_parecer ? `<br>Data: ${formatDateToBRL(pr.data_parecer)}` : ''}
+      ${pr.parecer ? `<br>${escapeHtml(pr.parecer)}` : ''}
+    `);
+
+    const examesImagemHtml = renderList('Exames de Imagem', data.examesImagem, (ex: any) => `
+      <strong>${escapeHtml(ex.exame || '—')}</strong>
+      ${ex.categoria ? `<br>Categoria: ${escapeHtml(ex.categoria)}` : ''}
+      ${ex.sistema ? `<br>Sistema: ${escapeHtml(ex.sistema)}` : ''}
+      ${ex.data_exame ? `<br>Data: ${formatDateToBRL(ex.data_exame)}` : ''}
+      ${ex.resultado ? `<br>Resultado: ${escapeHtml(ex.resultado)}` : ''}
+      ${ex.observacao ? `<br><em>Obs: ${escapeHtml(ex.observacao)}</em>` : ''}
+    `);
 
     return `
       <section class="patient-section">
         <h1>Relatório do Paciente: ${escapeHtml(p.name)}</h1>
         ${infoTable}
         ${diagnosticsHtml}
+        ${archivedDiagnosticsHtml}
+        ${auditLogHtml}
         ${devicesHtml}
+        ${archivedDevicesHtml}
         ${medicationsHtml}
+        ${archivedMedicationsHtml}
         ${examsHtml}
+        ${archivedExamsHtml}
         ${proceduresHtml}
+        ${archivedProceduresHtml}
         ${culturesHtml}
+        ${archivedCulturesHtml}
         ${dietsHtml}
+        ${archivedDietsHtml}
         ${diureseHtml}
         ${balanceHtml}
         ${scalesHtml}
         ${alertsClinicosHtml}
         ${tasksHtml}
-        ${completedAlertsHtml}
+        ${alertCompletionsHtml}
+        ${alertJustificationsHtml}
+        ${archivedAlertsHtml}
+        ${clinicalSituations24hHtml}
+        ${aportesHtml}
+        ${pareceresHtml}
+        ${examesImagemHtml}
       </section>
     `;
   };
