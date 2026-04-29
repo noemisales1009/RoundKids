@@ -1,6 +1,5 @@
 import React from 'react';
 import { useNetwork } from '../contexts/NetworkContext';
-import semConexaoImg from '../src/assets/sem-conexao.png';
 
 export const NetworkBanner: React.FC = () => {
     const { isOnline } = useNetwork();
@@ -10,12 +9,13 @@ export const NetworkBanner: React.FC = () => {
     }
 
     return (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#3a9fd1]">
-            <div className="relative w-full h-full">
+        <div className="fixed inset-0 z-[9999] bg-[#3a9fd1] flex flex-col items-center justify-center">
+            <div className="relative w-full h-full flex items-center justify-center">
                 <img
-                    src={semConexaoImg}
+                    src="./sem-conexao.png"
                     alt="Sem conexão com a internet"
                     className="w-full h-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                 />
                 <button
                     onClick={() => window.location.reload()}
