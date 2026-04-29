@@ -357,7 +357,7 @@ const PatientDetailScreen: React.FC = () => {
                     { id: 'aportes' as const, label: 'Aportes', icon: DropletIcon, count: null, gradient: 'from-sky-400 to-blue-500' },
                     { id: 'scales' as const, label: 'Escalas', icon: BarChartIcon, count: patient.scaleScores?.length ?? 0, gradient: 'from-indigo-500 to-purple-600' },
                     { id: 'pareceres' as const, label: 'Pareceres', icon: ClipboardIcon, count: null, gradient: 'from-pink-500 to-rose-600' },
-                    { id: 'examesImagem' as const, label: 'Imagem', icon: CameraIcon, count: null, gradient: 'from-violet-600 to-fuchsia-600' },
+                    { id: 'examesImagem' as const, label: 'Exame de Imagem', icon: CameraIcon, count: null, gradient: 'from-violet-600 to-fuchsia-600' },
                 ] as const).map(({ id, label, icon: Icon, count, gradient }) => (
                     <button
                         key={id}
@@ -556,7 +556,7 @@ const PatientDetailScreen: React.FC = () => {
                     aportes: { label: 'Aportes', icon: DropletIcon, gradient: 'from-sky-400 to-blue-500' },
                     scales: { label: 'Escalas', icon: BarChartIcon, gradient: 'from-indigo-500 to-purple-600' },
                     pareceres: { label: 'Pareceres', icon: ClipboardIcon, gradient: 'from-pink-500 to-rose-600' },
-                    examesImagem: { label: 'Imagem', icon: CameraIcon, gradient: 'from-violet-600 to-fuchsia-600' },
+                    examesImagem: { label: 'Exame de Imagem', icon: CameraIcon, gradient: 'from-violet-600 to-fuchsia-600' },
                 };
                 const config = modalConfig[openCategoryModal];
                 const ModalIcon = config.icon;
