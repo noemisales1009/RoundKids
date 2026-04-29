@@ -9,17 +9,19 @@ export const NetworkBanner: React.FC = () => {
     }
 
     return (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white py-3 px-4 shadow-lg animate-pulse">
-            <div className="flex items-center justify-center gap-3 max-w-6xl mx-auto">
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
-                    <span className="font-semibold text-sm sm:text-base">
-                        ⚠️ Sem conexão com a internet
-                    </span>
-                </div>
-                <span className="text-xs sm:text-sm opacity-90">
-                    Verificando conexão...
-                </span>
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="relative w-full max-w-sm mx-auto">
+                <img
+                    src="/sem-conexao.png"
+                    alt="Sem conexão com a internet"
+                    className="w-full h-auto object-contain"
+                />
+                <button
+                    onClick={() => window.location.reload()}
+                    className="absolute bottom-8 left-1/2 -translate-x-1/2 px-8 py-3 rounded-2xl border-2 border-white text-white font-semibold text-base bg-transparent hover:bg-white/20 transition-colors whitespace-nowrap"
+                >
+                    Tentar Novamente
+                </button>
             </div>
         </div>
     );
