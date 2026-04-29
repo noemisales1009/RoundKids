@@ -527,8 +527,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           status: selectedStatus[option.id] || 'nao_resolvido' as const
         }));
 
-      const diagnosticsResolved = allDiagnostics.filter(d => d.status === 'resolvido');
-
       // Atualiza status e resolved_at dos registros já existentes no banco
       const existingInDb = diagnostics.filter(d => checkedOptions[d.opcao_id]);
       if (existingInDb.length > 0) {
@@ -575,10 +573,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         .eq('arquivado', false);
 
       setDiagnostics(diagnosticsData || []);
-
-      const newCheckedOptions = { ...checkedOptions };
-      diagnosticsResolved.forEach(d => { newCheckedOptions[d.opcao_id] = false; });
-      setCheckedOptions(newCheckedOptions);
 
       if (onSave) onSave(allDiagnostics as PatientDiagnostic[]);
 
