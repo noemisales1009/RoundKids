@@ -701,7 +701,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                         <span className={`block text-[10px] not-italic ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>
                           + {formatDiagDate(diag.created_at)}
                           {isResolved && diag.resolved_at && (
-                            <> · ✓ {formatDiagDate(diag.resolved_at)}</>
+                            <> · Resolvido em: {formatDiagDate(diag.resolved_at)}</>
                           )}
                         </span>
                       )}
@@ -741,7 +741,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                         <span className={`block text-[10px] not-italic ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>
                           + {formatDiagDate(diag.created_at)}
                           {isResolved && diag.resolved_at && (
-                            <> · ✓ {formatDiagDate(diag.resolved_at)}</>
+                            <> · Resolvido em: {formatDiagDate(diag.resolved_at)}</>
                           )}
                         </span>
                       )}
