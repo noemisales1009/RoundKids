@@ -8,3 +8,4 @@ export { RoundCategoryListScreen } from './RoundCategoryListScreen';
 export { ChecklistScreen } from './ChecklistScreen';
 export { CreateAlertScreen } from './CreateAlertScreen';
 export { TaskStatusScreen } from './TaskStatusScreen';
+export { EvolucaoDiariaScreen } from './EvolucaoDiariaScreen';

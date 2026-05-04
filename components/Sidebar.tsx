@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { DashboardIcon, BedIcon, FileTextIcon, ClipboardIcon, SettingsIcon, LogOutIcon } from './icons';
+import { DashboardIcon, BedIcon, FileTextIcon, ClipboardIcon, SettingsIcon, LogOutIcon, EvolucaoIcon } from './icons';
 import { LoadingIndicator } from './LoadingIndicator';
 import { UserContext } from '../contexts';
 import { supabase } from '../supabaseClient';
@@ -13,6 +13,7 @@ export const Sidebar: React.FC = () => {
         { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
         { path: '/patients', label: 'Leitos', icon: BedIcon },
         { path: '/history', label: 'Histórico Geral', icon: FileTextIcon },
+        { path: '/evolucao-diaria', label: 'Evolução Diária', icon: EvolucaoIcon },
         ...(isAdmin ? [{ path: '/archived', label: 'Pacientes Arquivados', icon: ClipboardIcon }] : []),
         { path: '/settings', label: 'Ajustes', icon: SettingsIcon },
     ];

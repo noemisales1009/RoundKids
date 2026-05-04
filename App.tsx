@@ -28,6 +28,7 @@ import {
     ChecklistScreen,
     CreateAlertScreen,
     TaskStatusScreen,
+    EvolucaoDiariaScreen,
 } from './screens';
 
 // Lazy-loaded screens
@@ -79,6 +80,7 @@ const App: React.FC = () => {
                                             <Route path="status/:status" element={<ErrorBoundary><TaskStatusScreen /></ErrorBoundary>} />
                                             <Route path="history" element={<ErrorBoundary><Suspense fallback={<LoadingSpinner />}><AlertsHistoryScreen useHeader={useHeader} /></Suspense></ErrorBoundary>} />
                                             <Route path="archived" element={<ErrorBoundary><AdminRoute><Suspense fallback={<LoadingSpinner />}><ArchivedPatientsScreen /></Suspense></AdminRoute></ErrorBoundary>} />
+                                            <Route path="evolucao-diaria" element={<ErrorBoundary><EvolucaoDiariaScreen /></ErrorBoundary>} />
                                             <Route path="settings" element={<ErrorBoundary><SettingsScreen /></ErrorBoundary>} />
                                         </Route>
                                     </Routes>

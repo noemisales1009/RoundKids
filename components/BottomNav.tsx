@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { NavLink } from 'react-router-dom';
-import { DashboardIcon, BedIcon, FileTextIcon, ClipboardIcon, SettingsIcon } from './icons';
+import { DashboardIcon, BedIcon, FileTextIcon, ClipboardIcon, SettingsIcon, EvolucaoIcon } from './icons';
 import { UserContext } from '../contexts';
 
 export const BottomNav: React.FC = () => {
@@ -10,6 +10,7 @@ export const BottomNav: React.FC = () => {
         { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
         { path: '/patients', label: 'Leitos', icon: BedIcon },
         { path: '/history', label: 'Histórico Geral', icon: FileTextIcon },
+        { path: '/evolucao-diaria', label: 'Evolução', icon: EvolucaoIcon },
         ...(isAdmin ? [{ path: '/archived', label: 'Arquivados', icon: ClipboardIcon }] : []),
         { path: '/settings', label: 'Ajustes', icon: SettingsIcon },
     ];
