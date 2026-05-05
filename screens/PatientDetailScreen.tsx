@@ -1,6 +1,7 @@
 
 import React, { useState, useContext, useEffect, useRef, lazy, Suspense } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
 import { Device, Exam, Medication, SurgicalProcedure, Culture, Diet } from '../types';
 import { formatDateToBRL } from '../constants';
 import { BackArrowIcon, WarningIcon, PencilIcon, ClipboardIcon, FileTextIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, BrainIcon, ShieldIcon, BeakerIcon, LungsIcon, DumbbellIcon, CloseIcon, ScalpelIcon, ChevronRightIcon, CalculatorIcon, ChevronDownIcon, CameraIcon } from '../components/icons';
@@ -46,6 +47,7 @@ const PhoenixSepsisCalculator = lazy(() => import('../components/PhoenixSepsisCa
 const KDIGOScale = lazy(() => import('../components/KDIGOScale').then(m => ({ default: m.KDIGOScale })));
 const NPTCalculator = lazy(() => import('../npt/NPTWrapper'));
 const DiagnosticsSection = lazy(() => import('../components/DiagnosticsSection').then(m => ({ default: m.DiagnosticsSection })));
+const ControlesSaidasSection = lazy(() => import('../components/ControlesSaidasSection').then(m => ({ default: m.ControlesSaidasSection })));
 const AlertasSection = lazy(() => import('../components/AlertasSection').then(m => ({ default: m.AlertasSection })));
 const CompletedAlertsSection = lazy(() => import('../components/CompletedAlertsSection').then(m => ({ default: m.CompletedAlertsSection })));
 const DiuresisCalc = lazy(() => import('../components/DiuresisCalc'));
@@ -125,7 +127,30 @@ const PatientDetailScreen: React.FC = () => {
     const [calculationsRefresh, setCalculationsRefresh] = useState(0);
     const scalesSectionRef = useRef<HTMLDivElement>(null);
 
-    const { showNotification } = useContext(NotificationContext)!;
+    const navigate = useNavigate();
+    const { showNotification } = useContext(NotificationContext)!
+
+    const [showArchiveModal, setShowArchiveModal] = useState(false);
+    const [archiving, setArchiving] = useState(false);
+
+    const handleArchivePatient = async () => {
+        setArchiving(true);
+        const { error } = await supabase
+            .from('patients')
+            .update({
+                archived_at: new Date().toISOString(),
+                motivo_arquivamento: 'Alta automática (Paciente não consta no PDF)',
+            })
+            .eq('id', patient!.id);
+        setArchiving(false);
+        if (error) {
+            showNotification({ message: 'Erro ao arquivar paciente.', type: 'error' });
+        } else {
+            showNotification({ message: `Paciente ${patient!.name} arquivado.`, type: 'success' });
+            setShowArchiveModal(false);
+            navigate('/patients');
+        }
+    };;
 
     useEffect(() => {
         // Scroll para o topo quando entra na página
@@ -493,11 +518,7 @@ const PatientDetailScreen: React.FC = () => {
             </Suspense>
 
             <Suspense fallback={<LoadingSpinner />}>
-                <AlertasSection patientId={patient.id.toString()} />
-            </Suspense>
-
-            <Suspense fallback={<LoadingSpinner />}>
-                <CompletedAlertsSection patientId={patient.id.toString()} />
+                <ControlesSaidasSection patientId={patient.id.toString()} />
             </Suspense>
 
             <Suspense fallback={<LoadingSpinner />}>
@@ -516,6 +537,14 @@ const PatientDetailScreen: React.FC = () => {
                     patientId={patient.id.toString()}
                     onCalculationSaved={() => setCalculationsRefresh(prev => prev + 1)}
                 />
+            </Suspense>
+
+            <Suspense fallback={<LoadingSpinner />}>
+                <AlertasSection patientId={patient.id.toString()} />
+            </Suspense>
+
+            <Suspense fallback={<LoadingSpinner />}>
+                <CompletedAlertsSection patientId={patient.id.toString()} />
             </Suspense>
 
             {user?.access_level === 'adm' ? (
@@ -543,6 +572,14 @@ const PatientDetailScreen: React.FC = () => {
             </button>
 
             <DestinoComponent patientId={patient.id.toString()} />
+
+            <button
+                onClick={() => setShowArchiveModal(true)}
+                className="w-full text-center bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white font-bold py-4 px-4 rounded-lg transition text-lg flex items-center justify-center gap-2"
+            >
+                <span className="material-symbols-rounded text-[22px]">archive</span>
+                Arquivar Paciente
+            </button>
 
             {/* Category Modal */}
             {openCategoryModal && (() => {
@@ -868,6 +905,41 @@ const PatientDetailScreen: React.FC = () => {
             {isEndDateModalOpen && <AddEndDateModal medicationId={isEndDateModalOpen} patientId={patient.id} onClose={() => setEndDateModalOpen(null)} />}
             {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} currentMotherName={patient.motherName} currentWeight={patient.peso} currentSC={patient.sc} onClose={() => setEditInfoModalOpen(false)} />}
             {isCreateAlertModalOpen && <CreateAlertModal patientId={patient.id} onClose={() => setCreateAlertModalOpen(false)} />}
+
+            {/* Modal Arquivar Paciente */}
+            {showArchiveModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-5">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
+                                <span className="material-symbols-rounded text-amber-600 dark:text-amber-400 text-[22px]">archive</span>
+                            </div>
+                            <div>
+                                <h2 className="font-bold text-lg text-slate-900 dark:text-white">Arquivar Paciente?</h2>
+                                <p className="text-sm text-slate-500 dark:text-slate-400">{patient.name}</p>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowArchiveModal(false)}
+                                className="flex-1 py-3 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                            >
+                                Não
+                            </button>
+                            <button
+                                onClick={handleArchivePatient}
+                                disabled={archiving}
+                                className="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm transition flex items-center justify-center gap-2"
+                            >
+                                {archiving ? (
+                                    <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                                ) : 'Sim'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
