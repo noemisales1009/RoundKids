@@ -58,6 +58,8 @@ const LatestCalculationsCard = lazy(() => import('../components/LatestCalculatio
 const StatusComponent = lazy(() => import('../components/StatusComponent'));
 const ComorbidadeComponent = lazy(() => import('../components/ComorbidadeComponent'));
 const DestinoComponent = lazy(() => import('../components/DestinoComponent'));
+const NotificacaoEventoCard = lazy(() => import('../components/NotificacaoEventoCard').then(m => ({ default: m.NotificacaoEventoCard })));
+const NotificacoesListCard = lazy(() => import('../components/NotificacoesListCard').then(m => ({ default: m.NotificacoesListCard })));
 const ClinicalSituation24hCard = lazy(() => import('../components/ClinicalSituation24hCard').then(m => ({ default: m.ClinicalSituation24hCard })));
 const AportesCard = lazy(() => import('../components/AportesCard').then(m => ({ default: m.AportesCard })));
 const ParecerCard = lazy(() => import('../components/ParecerCard').then(m => ({ default: m.ParecerCard })));
@@ -97,6 +99,7 @@ const PatientDetailScreen: React.FC = () => {
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
     const [mainTab, setMainTab] = useState<'npt' | 'scales' | null>(null);
+    const [notifRefresh, setNotifRefresh] = useState(0);
     const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'scales' | 'pareceres' | 'examesImagem' | 'paPercentis' | null>(null);
     const [showPAForm, setShowPAForm] = useState(false);
     const [isAddDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
@@ -579,6 +582,21 @@ const PatientDetailScreen: React.FC = () => {
                 <WarningIcon className="w-6 h-6" />
                 Criar Novo Alerta
             </button>
+
+            <Suspense fallback={<div />}>
+                <NotificacaoEventoCard
+                    patientId={patient.id.toString()}
+                    onSaved={() => setNotifRefresh(r => r + 1)}
+                />
+            </Suspense>
+
+            <Suspense fallback={<div />}>
+                <NotificacoesListCard
+                    patientId={patient.id.toString()}
+                    patientName={patient.name}
+                    refresh={notifRefresh}
+                />
+            </Suspense>
 
             <DestinoComponent patientId={patient.id.toString()} />
 
