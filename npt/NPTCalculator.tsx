@@ -12,7 +12,7 @@ import { UserContext } from '../contexts';
 
 declare global {
   interface Window {
-    html2canvas: any;
+    htmlToImage: { toPng: (element: HTMLElement, options?: object) => Promise<string> };
     jspdf: any;
   }
 }
@@ -655,33 +655,43 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
 
     const generatePdfFromElement = async (elementId: string, setPrintingState: (isPrinting: boolean) => void) => {
         const reportElement = document.getElementById(elementId);
-        if (!reportElement || !window.html2canvas || !window.jspdf) {
-            console.error('Elemento do relatório ou bibliotecas de PDF não encontrados!');
-            alert('Não foi possível gerar o PDF. Por favor, tente recarregar a página.');
+        const jsPDFConstructor = window.jspdf?.jsPDF;
+
+        if (!reportElement || !window.htmlToImage || !jsPDFConstructor) {
+            const missing = [
+                !reportElement && `elemento #${elementId}`,
+                !window.htmlToImage && 'html-to-image',
+                !jsPDFConstructor && 'jsPDF',
+            ].filter(Boolean).join(', ');
+            alert(`Não foi possível gerar o PDF. Faltando: ${missing}. Tente recarregar a página.`);
             return;
         }
 
         setPrintingState(true);
 
         try {
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const pdf = new jsPDFConstructor({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const pdfWidth = pdf.internal.pageSize.getWidth();
             const pages = reportElement.querySelectorAll<HTMLElement>(':scope > div');
 
+            if (pages.length === 0) {
+                throw new Error(`Nenhuma página encontrada dentro de #${elementId}`);
+            }
+
             for (let i = 0; i < pages.length; i++) {
-                const page = pages[i];
-                const canvas = await window.html2canvas(page, { scale: 2, useCORS: true, logging: false });
-                const imgData = canvas.toDataURL('image/png');
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const imgData = await window.htmlToImage.toPng(pages[i], { pixelRatio: 2, skipFonts: true });
+                const img = new Image();
+                await new Promise<void>(resolve => { img.onload = () => resolve(); img.src = imgData; });
+                const imgHeight = (img.naturalHeight * pdfWidth) / img.naturalWidth;
                 if (i > 0) pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
             }
 
             pdf.save(`npt-${elementId}-${new Date().toISOString().slice(0, 10)}.pdf`);
         } catch (error) {
-            console.error("Erro ao gerar o PDF:", error);
-            alert('Ocorreu um erro ao gerar o PDF.');
+            const msg = error instanceof Error ? error.message : String(error);
+            console.error('[PDF] Erro:', error);
+            alert(`Erro ao gerar o PDF: ${msg}`);
         } finally {
             setPrintingState(false);
         }

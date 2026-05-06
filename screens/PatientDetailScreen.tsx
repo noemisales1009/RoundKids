@@ -789,7 +789,7 @@ const PatientDetailScreen: React.FC = () => {
                                 )}
                                 {openCategoryModal === 'paPercentis' && (
                                     <Suspense fallback={<LoadingSpinner />}>
-                                        <PAPercentisCard sexo={patient.sexo || ''} dob={patient.dob} />
+                                        <PAPercentisCard patientId={patient.id} sexo={patient.sexo || ''} dob={patient.dob} />
                                     </Suspense>
                                 )}
                                 {openCategoryModal === 'scales' && (<>

@@ -69,18 +69,16 @@ export async function classificarPA(
   idadeLabel: string,
   sistolica: number,
   diastolica: number
-): Promise<ClassificacaoPAResult | null> {
+): Promise<ClassificacaoPAResult> {
   const { data, error } = await supabase.rpc('classificar_pa', {
     p_sexo: sexo,
     p_idade_label: idadeLabel.toUpperCase(),
     p_sistolica: sistolica,
     p_diastolica: diastolica,
   });
-  if (error) {
-    console.error('[classificarPA] Erro:', error.message);
-    return null;
-  }
-  return data?.[0] ?? null;
+  if (error) throw new Error(error.message);
+  if (!data?.[0]) throw new Error(`Sem dados para ${sexo} / ${idadeLabel}`);
+  return data[0];
 }
 
 export function calcularPAMedia(sistolica: number, diastolica: number): number {
