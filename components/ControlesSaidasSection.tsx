@@ -84,7 +84,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedOk, setSavedOk] = useState(false);
-  const [openControles, setOpenControles] = useState(true);
+  const [openControles, setOpenControles] = useState(false);
   const [openSaidas, setOpenSaidas] = useState(false);
   const [drenoDropdownOpen, setDrenoDropdownOpen] = useState(false);
   const [activeDrenos, setActiveDrenos] = useState<Set<DrenoKey>>(new Set());
