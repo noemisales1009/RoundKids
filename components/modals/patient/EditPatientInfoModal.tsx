@@ -7,20 +7,23 @@ interface EditPatientInfoModalProps {
     currentMotherName: string;
     currentWeight?: number;
     currentSC?: number;
+    currentSexo?: string;
     onClose: () => void;
 }
 
-export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({ 
-    patientId, 
-    currentMotherName, 
-    currentWeight, 
+export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
+    patientId,
+    currentMotherName,
+    currentWeight,
     currentSC,
-    onClose 
+    currentSexo,
+    onClose
 }) => {
     const { updatePatientDetails } = useContext(PatientsContext)!;
     const [motherName, setMotherName] = useState(currentMotherName);
     const [weight, setWeight] = useState(currentWeight?.toString() || '');
     const [sc, setSc] = useState(currentSC?.toString() || '');
+    const [sexo, setSexo] = useState<string>(currentSexo || '');
 
     // Fórmula de SC: (P × 4 + 7) / (P + 90)
     const calculateSC = (pesoKg: number) => {
@@ -34,11 +37,8 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
     const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newWeight = e.target.value;
         setWeight(newWeight);
-        
-        // Calcular SC automaticamente
         if (newWeight && parseFloat(newWeight) > 0) {
-            const calculatedSC = calculateSC(parseFloat(newWeight));
-            setSc(calculatedSC);
+            setSc(calculateSC(parseFloat(newWeight)));
         }
     };
 
@@ -47,10 +47,13 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
         updatePatientDetails(patientId, {
             motherName,
             peso: weight ? parseFloat(weight) : undefined,
-            sc: sc ? parseFloat(sc) : undefined
+            sc: sc ? parseFloat(sc) : undefined,
+            sexo: sexo || undefined,
         });
         onClose();
     };
+
+    const btnBase = 'flex-1 py-2 px-4 rounded-lg font-bold text-sm border transition-colors';
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30 p-2 sm:p-4">
@@ -69,6 +72,30 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
                             className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
                         />
                     </div>
+
+                    {/* Sexo */}
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Sexo</label>
+                        <div className="flex gap-2">
+                            {['Masculino', 'Feminino'].map(op => (
+                                <button
+                                    key={op}
+                                    type="button"
+                                    onClick={() => setSexo(prev => prev === op ? '' : op)}
+                                    className={`${btnBase} ${
+                                        sexo === op
+                                            ? op === 'Masculino'
+                                                ? 'bg-blue-500 border-blue-500 text-white'
+                                                : 'bg-pink-500 border-pink-500 text-white'
+                                            : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                    }`}
+                                >
+                                    {op === 'Masculino' ? '♂ Masculino' : '♀ Feminino'}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Peso (kg)</label>
                         <input

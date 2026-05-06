@@ -14,9 +14,11 @@ export const ParecerCard: React.FC<ParecerCardProps> = ({ patientId }) => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingParecer, setEditingParecer] = useState<ParecerRow | null>(null);
     const [archivingParecer, setArchivingParecer] = useState<ParecerRow | null>(null);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     const loadPareceres = async () => {
         setLoading(true);
+        setErrorMsg(null);
         try {
             const { data, error } = await supabase
                 .from('pareceres_pacientes')
@@ -27,8 +29,9 @@ export const ParecerCard: React.FC<ParecerCardProps> = ({ patientId }) => {
 
             if (error) throw error;
             setPareceres(data || []);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Erro ao carregar pareceres:', error);
+            setErrorMsg(error?.message || 'Erro ao carregar pareceres');
         } finally {
             setLoading(false);
         }
@@ -40,6 +43,15 @@ export const ParecerCard: React.FC<ParecerCardProps> = ({ patientId }) => {
 
     if (loading) {
         return <div className="text-center text-slate-500">Carregando pareceres...</div>;
+    }
+
+    if (errorMsg) {
+        return (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-lg p-4">
+                <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">Erro ao carregar pareceres</p>
+                <p className="text-xs text-red-600 dark:text-red-300">{errorMsg}</p>
+            </div>
+        );
     }
 
     return (

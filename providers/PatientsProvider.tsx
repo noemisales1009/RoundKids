@@ -195,6 +195,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 ctd: p.diagnosis || 'Estável',
                 peso: p.peso,
                 sc: p.sc,
+                sexo: p.sexo || undefined,
                 status: p.status || 'estavel',
                 localTransferencia: p.local_transferencia || undefined,
                 comorbidade: p.comorbidade || undefined,
@@ -236,7 +237,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             categoriesRes,
             answersRes
         ] = await Promise.all([
-            supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc, local_transferencia, comorbidade').is('archived_at', null),
+            supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc, local_transferencia, comorbidade, sexo').is('archived_at', null),
             supabase.from('perguntas').select('*').order('ordem', { ascending: true }),
             supabase.from('pergunta_opcoes').select('*').order('ordem', { ascending: true }),
             supabase.from('categorias').select('*').order('ordem', { ascending: true }),
@@ -261,6 +262,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             admissionDate: p.dt_internacao || undefined,
             peso: p.peso || undefined,
             sc: p.sc || undefined,
+            sexo: p.sexo || undefined,
             devices: [],
             exams: [],
             medications: [],
@@ -279,7 +281,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const activePatientIds = basicPatients.map(p => p.id);
         setTimeout(() => {
             Promise.all([
-                supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc, local_transferencia, comorbidade').is('archived_at', null),
+                supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc, local_transferencia, comorbidade, sexo').is('archived_at', null),
                 supabase.from('dispositivos_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
                 supabase.from('exames_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
                 supabase.from('medicacoes_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
@@ -893,13 +895,13 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (!error) refreshPatientPrecautions(patientId);
     };
 
-    const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number; sc?: number }) => {
+    const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number; sc?: number; sexo?: string }) => {
         try {
             const updateData: any = {};
             if (data.motherName !== undefined) updateData.mother_name = data.motherName;
             if (data.ctd !== undefined) updateData.diagnosis = data.ctd;
+            if (data.sexo !== undefined) updateData.sexo = data.sexo || null;
             if (data.peso !== undefined) {
-                // Garantir que peso é um número
                 const pesoNumero = typeof data.peso === 'string' ? parseFloat(data.peso) : data.peso;
                 updateData.peso = pesoNumero || null;
             }

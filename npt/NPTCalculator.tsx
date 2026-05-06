@@ -678,8 +678,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                 pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
             }
 
-            pdf.autoPrint();
-            window.open(pdf.output('bloburl'), '_blank');
+            pdf.save(`npt-${elementId}-${new Date().toISOString().slice(0, 10)}.pdf`);
         } catch (error) {
             console.error("Erro ao gerar o PDF:", error);
             alert('Ocorreu um erro ao gerar o PDF.');

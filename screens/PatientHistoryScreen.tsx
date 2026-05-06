@@ -1110,21 +1110,33 @@ const PatientHistoryScreen: React.FC = () => {
             if (registro.tax_min || registro.tax_max) controles.push(`Δ Tax: ${registro.tax_min}–${registro.tax_max} ºC`);
             if (registro.dxt_min  || registro.dxt_max)  controles.push(`Δ Dxt: ${registro.dxt_min}–${registro.dxt_max} mg/dl`);
             if (registro.spo2_min || registro.spo2_max) controles.push(`SpO₂: ${registro.spo2_min}–${registro.spo2_max} %`);
-            if (controles.length > 0) linhas.push(`Controles: ${controles.join(' | ')}`);
+            if (controles.length > 0) {
+                linhas.push('Controles:');
+                controles.forEach(c => linhas.push(`  ${c}`));
+            }
 
             const saidas: string[] = [];
-            if (registro.evacuacoes)       saidas.push(`Evacuações: ${registro.evacuacoes} g/ml`);
-            if (registro.dreno_torax)      saidas.push(`Dreno Tórax: ${registro.dreno_torax} ml/24h`);
-            if (registro.dve)              saidas.push(`DVE: ${registro.dve} ml/24h`);
-            if (registro.sng)              saidas.push(`SNG: ${registro.sng} ml/24h`);
-            if (registro.ileostomia)       saidas.push(`Ileostomia: ${registro.ileostomia} ml/24h`);
-            if (registro.penrose)          saidas.push(`Penrose: ${registro.penrose} ml/24h`);
-            if (registro.outros_drenos)    saidas.push(`${registro.outros_drenos_label || 'Outros drenos'}: ${registro.outros_drenos} ml/24h`);
-            if (registro.hemodialise)      saidas.push(`Hemodiálise: ${registro.hemodialise} ml/24h`);
+            if (registro.evacuacoes)         saidas.push(`Evacuações: ${registro.evacuacoes} g/ml`);
+            if (registro.dreno_torax)        saidas.push(`Dreno Tórax: ${registro.dreno_torax} ml/24h`);
+            if (registro.dve)                saidas.push(`DVE: ${registro.dve} ml/24h`);
+            if (registro.sng)                saidas.push(`SNG: ${registro.sng} ml/24h`);
+            if (registro.ileostomia)         saidas.push(`Ileostomia: ${registro.ileostomia} ml/24h`);
+            if (registro.penrose)            saidas.push(`Penrose: ${registro.penrose} ml/24h`);
+            if (registro.outros_drenos)      saidas.push(`${registro.outros_drenos_label || 'Outros drenos'}: ${registro.outros_drenos} ml/24h`);
+            if (registro.hemodialise)        saidas.push(`Hemodiálise: ${registro.hemodialise} ml/24h`);
             if (registro.dialise_peritoneal) saidas.push(`Diálise Peritoneal: ${registro.dialise_peritoneal} ml/24h`);
-            if (saidas.length > 0) linhas.push(`Saídas: ${saidas.join(' | ')}`);
+            if (saidas.length > 0) {
+                linhas.push('Saídas:');
+                saidas.forEach(s => linhas.push(`  ${s}`));
+            }
 
             if (controles.length === 0 && saidas.length === 0) return;
+
+            const audit: string[] = [];
+            if (registro.created_by) audit.push(`Criado por: ${registro.created_by}`);
+            if (registro.updated_by && registro.updated_by !== registro.created_by)
+                audit.push(`Editado por: ${registro.updated_by}`);
+            if (audit.length > 0) linhas.push(audit.join(' · '));
 
             events.push({
                 timestamp: `${registro.data}T00:00:00`,
@@ -1616,7 +1628,7 @@ const PatientHistoryScreen: React.FC = () => {
         setSelectedCategories(new Set());
     };
 
-    const mainCategories = ['Dispositivos', 'Medicações', 'Exames', 'Cirúrgico', 'Escalas', 'Diagnósticos', 'Culturas', 'Diurese', 'Balanço Hídrico', 'Dietas', 'Alertas', 'Comorbidades', 'Completações', 'Justificativas', 'Situação Clínica 24h', 'Aportes', 'Precauções', 'Transferência', 'Pareceres', 'Exames de Imagem'];
+    const mainCategories = ['Dispositivos', 'Medicações', 'Exames', 'Cirúrgico', 'Escalas', 'Diagnósticos', 'Culturas', 'Diurese', 'Balanço Hídrico', 'Dietas', 'Alertas', 'Comorbidades', 'Completações', 'Justificativas', 'Situação Clínica 24h', 'Aportes', 'Precauções', 'Transferência', 'Pareceres', 'Exames de Imagem', 'Controles e Saídas'];
     const archiveCategories = ['Arquivamentos', 'Arquivamentos Dispositivos', 'Arquivamentos Exames', 'Arquivamentos Medicações', 'Arquivamentos Procedimentos', 'Arquivamentos Culturas', 'Arquivamentos Dietas', 'Arquivamentos Diagnósticos'];
 
     const categoryIcons: Record<string, React.FC<{ className?: string }>> = {
@@ -1648,6 +1660,7 @@ const PatientHistoryScreen: React.FC = () => {
         'Arquivamentos Diagnósticos': ClipboardIcon,
         'Pareceres': ClipboardIcon,
         'Exames de Imagem': CameraIcon,
+        'Controles e Saídas': BarChartIcon,
     };
 
     const applyDateShortcut = (days: number) => {

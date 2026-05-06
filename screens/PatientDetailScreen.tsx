@@ -4,7 +4,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { Device, Exam, Medication, SurgicalProcedure, Culture, Diet } from '../types';
 import { formatDateToBRL } from '../constants';
-import { BackArrowIcon, WarningIcon, PencilIcon, ClipboardIcon, FileTextIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, BrainIcon, ShieldIcon, BeakerIcon, LungsIcon, DumbbellIcon, CloseIcon, ScalpelIcon, ChevronRightIcon, CalculatorIcon, ChevronDownIcon, CameraIcon } from '../components/icons';
+import { BackArrowIcon, WarningIcon, PencilIcon, ClipboardIcon, FileTextIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, BrainIcon, ShieldIcon, BeakerIcon, LungsIcon, DumbbellIcon, CloseIcon, ScalpelIcon, ChevronRightIcon, CalculatorIcon, ChevronDownIcon, CameraIcon, HeartPulseIcon } from '../components/icons';
 import { PatientDetailSkeleton } from '../components/SkeletonLoader';
 import { ArchiveModal } from '../components/modals/ArchiveModal';
 import { SecondaryNavigation } from '../components/SecondaryNavigation';
@@ -63,6 +63,7 @@ const AportesCard = lazy(() => import('../components/AportesCard').then(m => ({ 
 const ParecerCard = lazy(() => import('../components/ParecerCard').then(m => ({ default: m.ParecerCard })));
 const ExameImagemCard = lazy(() => import('../components/ExameImagemCard').then(m => ({ default: m.ExameImagemCard })));
 const PrecautionsCard = lazy(() => import('../components/PrecautionsCard').then(m => ({ default: m.PrecautionsCard })));
+const PAPercentisCard = lazy(() => import('../components/PAPercentisCard').then(m => ({ default: m.PAPercentisCard })));
 
 // Lazy load modals
 const EditPatientInfoModal = lazy(() => import('../components/modals').then(m => ({ default: m.EditPatientInfoModal })));
@@ -96,7 +97,7 @@ const PatientDetailScreen: React.FC = () => {
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
     const [mainTab, setMainTab] = useState<'npt' | 'scales' | null>(null);
-    const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'scales' | 'pareceres' | 'examesImagem' | null>(null);
+    const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'scales' | 'pareceres' | 'examesImagem' | 'paPercentis' | null>(null);
     const [isAddDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
     const [editingDevice, setEditingDevice] = useState<Device | null>(null);
     const [editingDeviceRemovalDate, setEditingDeviceRemovalDate] = useState<Device | null>(null);
@@ -306,6 +307,12 @@ const PatientDetailScreen: React.FC = () => {
                             <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 break-words">{formatAge(patient.dob)}</p>
                         </div>
                         <div className="bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
+                            <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Sexo</p>
+                            <p className={`text-sm font-semibold break-words ${patient.sexo ? 'text-slate-700 dark:text-slate-200' : 'text-orange-500 italic'}`}>
+                                {patient.sexo === 'Masculino' ? '♂ Masculino' : patient.sexo === 'Feminino' ? '♀ Feminino' : 'Não informado'}
+                            </p>
+                        </div>
+                        <div className="sm:col-span-2 bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
                             <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Mãe</p>
                             <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 break-words">{patient.motherName || '-'}</p>
                         </div>
@@ -383,6 +390,7 @@ const PatientDetailScreen: React.FC = () => {
                     { id: 'scales' as const, label: 'Escalas', icon: BarChartIcon, count: patient.scaleScores?.length ?? 0, gradient: 'from-indigo-500 to-purple-600' },
                     { id: 'pareceres' as const, label: 'Pareceres', icon: ClipboardIcon, count: null, gradient: 'from-pink-500 to-rose-600' },
                     { id: 'examesImagem' as const, label: 'Exame de Imagem', icon: CameraIcon, count: null, gradient: 'from-violet-600 to-fuchsia-600' },
+                    { id: 'paPercentis' as const, label: 'PA Percentis', icon: HeartPulseIcon, count: null, gradient: 'from-red-500 to-rose-700' },
                 ] as const).map(({ id, label, icon: Icon, count, gradient }) => (
                     <button
                         key={id}
@@ -594,6 +602,7 @@ const PatientDetailScreen: React.FC = () => {
                     scales: { label: 'Escalas', icon: BarChartIcon, gradient: 'from-indigo-500 to-purple-600' },
                     pareceres: { label: 'Pareceres', icon: ClipboardIcon, gradient: 'from-pink-500 to-rose-600' },
                     examesImagem: { label: 'Exame de Imagem', icon: CameraIcon, gradient: 'from-violet-600 to-fuchsia-600' },
+                    paPercentis: { label: 'PA Percentis', icon: HeartPulseIcon, gradient: 'from-red-500 to-rose-700' },
                 };
                 const config = modalConfig[openCategoryModal];
                 const ModalIcon = config.icon;
@@ -778,6 +787,11 @@ const PatientDetailScreen: React.FC = () => {
                                         <ExameImagemCard patientId={patient.id} />
                                     </Suspense>
                                 )}
+                                {openCategoryModal === 'paPercentis' && (
+                                    <Suspense fallback={<LoadingSpinner />}>
+                                        <PAPercentisCard sexo={patient.sexo || ''} dob={patient.dob} />
+                                    </Suspense>
+                                )}
                                 {openCategoryModal === 'scales' && (<>
                                     {(!patient.scaleScores || patient.scaleScores.length === 0) && (
                                         <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhuma escala registrada.</p>
@@ -903,7 +917,7 @@ const PatientDetailScreen: React.FC = () => {
             {editingDietRemovalDate && <EditDietRemovalDateModal diet={editingDietRemovalDate} patientId={patient.id} onClose={() => setEditingDietRemovalDate(null)} />}
             {isRemovalModalOpen && <AddRemovalDateModal deviceId={isRemovalModalOpen} patientId={patient.id} onClose={() => setRemovalModalOpen(null)} />}
             {isEndDateModalOpen && <AddEndDateModal medicationId={isEndDateModalOpen} patientId={patient.id} onClose={() => setEndDateModalOpen(null)} />}
-            {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} currentMotherName={patient.motherName} currentWeight={patient.peso} currentSC={patient.sc} onClose={() => setEditInfoModalOpen(false)} />}
+            {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} currentMotherName={patient.motherName} currentWeight={patient.peso} currentSC={patient.sc} currentSexo={patient.sexo} onClose={() => setEditInfoModalOpen(false)} />}
             {isCreateAlertModalOpen && <CreateAlertModal patientId={patient.id} onClose={() => setCreateAlertModalOpen(false)} />}
 
             {/* Modal Arquivar Paciente */}
