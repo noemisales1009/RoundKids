@@ -8,6 +8,8 @@ interface PAPercentisCardProps {
   patientId: number | string;
   sexo: string;
   dob: string;
+  showForm: boolean;
+  onFormClose: () => void;
 }
 
 type PAMedicaoRow = {
@@ -48,7 +50,7 @@ function classeTexto(classe: string) {
   return 'Normal ✓';
 }
 
-export const PAPercentisCard: React.FC<PAPercentisCardProps> = ({ patientId, sexo, dob }) => {
+export const PAPercentisCard: React.FC<PAPercentisCardProps> = ({ patientId, sexo, dob, showForm, onFormClose }) => {
   const { user } = useContext(UserContext)!;
   const idadeLabel = useMemo(() => computeIdadeLabel(dob), [dob]);
 
@@ -127,6 +129,7 @@ export const PAPercentisCard: React.FC<PAPercentisCardProps> = ({ patientId, sex
       setSistolica('');
       setDiastolica('');
       setResultado(null);
+      onFormClose();
       await loadMedicoes();
     } catch (e: any) {
       setErro(e.message || 'Erro ao salvar medição.');
@@ -143,103 +146,114 @@ export const PAPercentisCard: React.FC<PAPercentisCardProps> = ({ patientId, sex
     if (!error) loadMedicoes();
   };
 
+  const handleClose = () => {
+    setSistolica('');
+    setDiastolica('');
+    setResultado(null);
+    setErro(null);
+    onFormClose();
+  };
+
   return (
     <>
-      {/* Contexto do paciente */}
-      <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-3 flex gap-6 text-sm mb-4">
-        <div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Sexo</p>
-          <p className={`font-semibold ${semSexo ? 'text-amber-500 italic' : 'text-slate-700 dark:text-slate-200'}`}>
-            {sexo || 'Não informado'}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Faixa etária</p>
-          <p className="font-semibold text-slate-700 dark:text-slate-200">{idadeLabel}</p>
-        </div>
-      </div>
-
-      {semSexo && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg p-3 mb-4">
-          <p className="text-sm text-amber-700 dark:text-amber-400">
-            Informe o sexo do paciente (editar dados) para classificar a PA por percentis.
-          </p>
-        </div>
-      )}
-
-      {/* Formulário de nova medição */}
-      <div className="space-y-3 mb-6">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
-              PA Sistólica (mmHg)
-            </label>
-            <input
-              type="number" min="0"
-              value={sistolica}
-              onChange={e => { setSistolica(e.target.value); setResultado(null); }}
-              placeholder="ex: 110"
-              disabled={semSexo}
-              className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2.5 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
-              PA Diastólica (mmHg)
-            </label>
-            <input
-              type="number" min="0"
-              value={diastolica}
-              onChange={e => { setDiastolica(e.target.value); setResultado(null); }}
-              placeholder="ex: 65"
-              disabled={semSexo}
-              className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2.5 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
-            />
-          </div>
-        </div>
-
-        {erro && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-lg p-3">
-            <p className="text-sm text-red-700 dark:text-red-400">{erro}</p>
-          </div>
-        )}
-
-        <button
-          onClick={handleClassificar}
-          disabled={classifying || semSexo}
-          className="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-semibold py-3 rounded-lg transition active:scale-[0.98] disabled:opacity-50"
-        >
-          {classifying ? 'Classificando...' : 'Classificar PA'}
-        </button>
-
-        {resultado && (
-          <div className={`rounded-xl overflow-hidden border-2 ${resultado.alerta ? 'border-red-500' : 'border-emerald-500'}`}>
-            {resultado.alerta && (
-              <div className="bg-red-500 px-4 py-2.5 flex items-center gap-2">
-                <HeartPulseIcon className="w-5 h-5 text-white shrink-0" />
-                <p className="text-white font-bold text-sm">ALERTA: PA fora do intervalo P5–P95</p>
+      {/* Modal de nova medição */}
+      {showForm && (
+        <div className="fixed inset-0 z-[50] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm" onClick={handleClose}>
+          <div className="bg-white dark:bg-slate-900 w-full sm:max-w-lg max-h-[90vh] rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="bg-gradient-to-r from-red-500 to-rose-700 px-4 py-4 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <HeartPulseIcon className="w-6 h-6 text-white" />
+                <div>
+                  <h2 className="text-lg font-bold text-white">Nova Medição de PA</h2>
+                  <p className="text-xs text-white/80">{sexo} · {idadeLabel}</p>
+                </div>
               </div>
-            )}
-            <div className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
-              <PASection titulo="PA Sistólica" medido={`${sistolica} mmHg`} classe={resultado.class_sistolica}
-                percentis={[['P5', resultado.sist_p5], ['P50', resultado.sist_p50], ['P95', resultado.sist_p95]]} />
-              <PASection titulo="PA Diastólica" medido={`${diastolica} mmHg`} classe={resultado.class_diastolica}
-                percentis={[['P5', resultado.diast_p5], ['P50', resultado.diast_p50], ['P95', resultado.diast_p95]]} />
-              <PASection titulo="PA Média" medido={`${resultado.media_medida} mmHg`} classe={resultado.class_media}
-                percentis={[['P5', resultado.media_p5], ['P50', resultado.media_p50], ['P95', resultado.media_p95]]} />
-            </div>
-            <div className="bg-white dark:bg-slate-800 px-4 pb-4 pt-2">
-              <button
-                onClick={handleSalvar}
-                disabled={saving}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition active:scale-[0.98] disabled:opacity-50"
-              >
-                {saving ? 'Salvando...' : '💾 Salvar Medição'}
+              <button onClick={handleClose} className="text-white/80 hover:text-white transition p-1">
+                <CloseIcon className="w-6 h-6" />
               </button>
             </div>
+
+            {/* Conteúdo */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {semSexo && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg p-3">
+                  <p className="text-sm text-amber-700 dark:text-amber-400">
+                    Informe o sexo do paciente (editar dados) para classificar a PA por percentis.
+                  </p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">PA Sistólica (mmHg)</label>
+                  <input
+                    type="number" min="0"
+                    value={sistolica}
+                    onChange={e => { setSistolica(e.target.value); setResultado(null); }}
+                    placeholder="ex: 110"
+                    disabled={semSexo}
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2.5 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">PA Diastólica (mmHg)</label>
+                  <input
+                    type="number" min="0"
+                    value={diastolica}
+                    onChange={e => { setDiastolica(e.target.value); setResultado(null); }}
+                    placeholder="ex: 65"
+                    disabled={semSexo}
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2.5 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+                  />
+                </div>
+              </div>
+
+              {erro && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-lg p-3">
+                  <p className="text-sm text-red-700 dark:text-red-400">{erro}</p>
+                </div>
+              )}
+
+              <button
+                onClick={handleClassificar}
+                disabled={classifying || semSexo}
+                className="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-semibold py-3 rounded-lg transition active:scale-[0.98] disabled:opacity-50"
+              >
+                {classifying ? 'Classificando...' : 'Classificar PA'}
+              </button>
+
+              {resultado && (
+                <div className={`rounded-xl overflow-hidden border-2 ${resultado.alerta ? 'border-red-500' : 'border-emerald-500'}`}>
+                  {resultado.alerta && (
+                    <div className="bg-red-500 px-4 py-2.5 flex items-center gap-2">
+                      <HeartPulseIcon className="w-5 h-5 text-white shrink-0" />
+                      <p className="text-white font-bold text-sm">ALERTA: PA fora do intervalo P5–P95</p>
+                    </div>
+                  )}
+                  <div className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+                    <PASection titulo="PA Sistólica" medido={`${sistolica} mmHg`} classe={resultado.class_sistolica}
+                      percentis={[['P5', resultado.sist_p5], ['P50', resultado.sist_p50], ['P95', resultado.sist_p95]]} />
+                    <PASection titulo="PA Diastólica" medido={`${diastolica} mmHg`} classe={resultado.class_diastolica}
+                      percentis={[['P5', resultado.diast_p5], ['P50', resultado.diast_p50], ['P95', resultado.diast_p95]]} />
+                    <PASection titulo="PA Média" medido={`${resultado.media_medida} mmHg`} classe={resultado.class_media}
+                      percentis={[['P5', resultado.media_p5], ['P50', resultado.media_p50], ['P95', resultado.media_p95]]} />
+                  </div>
+                  <div className="bg-white dark:bg-slate-800 px-4 pb-4 pt-2">
+                    <button
+                      onClick={handleSalvar}
+                      disabled={saving}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition active:scale-[0.98] disabled:opacity-50"
+                    >
+                      {saving ? 'Salvando...' : '💾 Salvar Medição'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Histórico de medições */}
       {loadingList ? (
@@ -254,41 +268,56 @@ export const PAPercentisCard: React.FC<PAPercentisCardProps> = ({ patientId, sex
             Histórico
           </p>
           {medicoes.map(m => (
-            <div key={m.id} className={`bg-slate-50 dark:bg-slate-800 p-3 rounded-lg border-l-4 ${m.alerta ? 'border-red-500' : 'border-emerald-500'}`}>
-              <div className="flex justify-between items-start">
-                <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <HeartPulseIcon className={`w-5 h-5 mt-0.5 shrink-0 ${m.alerta ? 'text-red-500' : 'text-emerald-500'}`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-800 dark:text-slate-200">
-                      {m.sistolica}/{m.diastolica} mmHg
-                      <span className="text-slate-400 dark:text-slate-500 font-normal text-sm ml-2">
-                        (média {m.media_medida})
+            <div key={m.id} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+              <div className="flex items-stretch">
+                <div className={`w-1 shrink-0 ${m.alerta ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                <div className="flex-1 p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-wrap min-w-0">
+                      <HeartPulseIcon className={`w-4 h-4 shrink-0 ${m.alerta ? 'text-red-500' : 'text-emerald-500'}`} />
+                      <p className="font-bold text-slate-800 dark:text-slate-100">
+                        {m.sistolica}/{m.diastolica} mmHg
+                      </p>
+                      <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full">
+                        média {m.media_medida}
                       </span>
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      {m.alerta && (
+                        <span className="text-xs font-semibold bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full">
+                          ⚠ Alerta
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleArquivar(m.id)}
+                      className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition shrink-0"
+                      aria-label="Arquivar medição"
+                    >
+                      <CloseIcon className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
                       {new Date(m.data_medicao).toLocaleString('pt-BR', {
                         day: '2-digit', month: '2-digit', year: 'numeric',
                         hour: '2-digit', minute: '2-digit',
                         timeZone: 'America/Sao_Paulo'
                       })}
-                    </p>
-                    <div className="flex flex-wrap gap-1.5 mt-1.5">
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${classBadge(m.class_sistolica)}`}>
-                        Sist: {classeTexto(m.class_sistolica)}
-                      </span>
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${classBadge(m.class_diastolica)}`}>
-                        Diast: {classeTexto(m.class_diastolica)}
-                      </span>
-                    </div>
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${classBadge(m.class_sistolica)}`}>
+                      Sist: {classeTexto(m.class_sistolica)}
+                    </span>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${classBadge(m.class_diastolica)}`}>
+                      Diast: {classeTexto(m.class_diastolica)}
+                    </span>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${classBadge(m.class_media)}`}>
+                      Média: {classeTexto(m.class_media)}
+                    </span>
                   </div>
                 </div>
-                <button
-                  onClick={() => handleArquivar(m.id)}
-                  className="p-1.5 text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-full transition shrink-0 ml-2"
-                  aria-label="Arquivar medição"
-                >
-                  <CloseIcon className="w-4 h-4" />
-                </button>
               </div>
             </div>
           ))}

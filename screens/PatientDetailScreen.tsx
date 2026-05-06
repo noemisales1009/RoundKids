@@ -98,6 +98,7 @@ const PatientDetailScreen: React.FC = () => {
 
     const [mainTab, setMainTab] = useState<'npt' | 'scales' | null>(null);
     const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'scales' | 'pareceres' | 'examesImagem' | 'paPercentis' | null>(null);
+    const [showPAForm, setShowPAForm] = useState(false);
     const [isAddDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
     const [editingDevice, setEditingDevice] = useState<Device | null>(null);
     const [editingDeviceRemovalDate, setEditingDeviceRemovalDate] = useState<Device | null>(null);
@@ -621,7 +622,8 @@ const PatientDetailScreen: React.FC = () => {
                                     {openCategoryModal === 'surgical' && <button onClick={() => { setOpenCategoryModal(null); setAddSurgicalModalOpen(true); }} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
                                     {openCategoryModal === 'cultures' && <button onClick={() => { setOpenCategoryModal(null); setAddCultureModalOpen(true); }} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
                                     {openCategoryModal === 'diets' && <button onClick={() => { setOpenCategoryModal(null); setAddDietModalOpen(true); }} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
-                                    <button onClick={() => setOpenCategoryModal(null)} className="text-white/80 hover:text-white transition p-1">
+                                    {openCategoryModal === 'paPercentis' && <button onClick={() => setShowPAForm(v => !v)} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Nova Medição</button>}
+                                    <button onClick={() => { setOpenCategoryModal(null); setShowPAForm(false); }} className="text-white/80 hover:text-white transition p-1">
                                         <CloseIcon className="w-6 h-6" />
                                     </button>
                                 </div>
@@ -789,7 +791,7 @@ const PatientDetailScreen: React.FC = () => {
                                 )}
                                 {openCategoryModal === 'paPercentis' && (
                                     <Suspense fallback={<LoadingSpinner />}>
-                                        <PAPercentisCard patientId={patient.id} sexo={patient.sexo || ''} dob={patient.dob} />
+                                        <PAPercentisCard patientId={patient.id} sexo={patient.sexo || ''} dob={patient.dob} showForm={showPAForm} onFormClose={() => setShowPAForm(false)} />
                                     </Suspense>
                                 )}
                                 {openCategoryModal === 'scales' && (<>

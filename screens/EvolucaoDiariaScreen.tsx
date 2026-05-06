@@ -2,10 +2,11 @@
 import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { PatientsContext } from '../contexts';
 import { useHeader } from '../hooks/useHeader';
-import { CheckCircleIcon, AlertIcon, WarningIcon, ChevronRightIcon } from '../components/icons';
+import { CheckCircleIcon, AlertIcon, WarningIcon } from '../components/icons';
 import { formatDateToBRL } from '../constants';
 import { Patient } from '../types';
 import { supabase } from '../supabaseClient';
+import { ControlesSaidasSection } from '../components/ControlesSaidasSection';
 
 interface DiagItem {
   opcao_id: number;
@@ -62,6 +63,23 @@ interface AlertaRecord {
   status: string;
   created_at: string;
   hora_selecionada: string;
+}
+
+interface PropedeuticaExameImagem {
+  id: string;
+  exame_nome: string;
+  categoria: string;
+  data_exame: string;
+  sistema: string | null;
+  resultado: string | null;
+  observacao: string | null;
+}
+
+interface PropedeuticaParecer {
+  id: string;
+  especialista: string;
+  data_parecer: string;
+  parecer: string | null;
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -146,9 +164,9 @@ const PREC_BADGE: Record<string, { label: string; cls: string }> = {
 };
 
 const STATUS_CONFIG = {
-  estavel:  { label: 'Estável',   text: 'text-green-600 dark:text-green-400',  bg: 'bg-green-100 dark:bg-green-900/30',  border: 'border-green-500',  listBg: 'bg-green-50 dark:bg-green-900/10' },
-  instavel: { label: 'Instável',  text: 'text-yellow-600 dark:text-yellow-400',bg: 'bg-yellow-100 dark:bg-yellow-900/30',border: 'border-yellow-500', listBg: 'bg-yellow-50 dark:bg-yellow-900/10' },
-  em_risco: { label: 'Em Risco',  text: 'text-red-600 dark:text-red-400',      bg: 'bg-red-100 dark:bg-red-900/30',      border: 'border-red-500',    listBg: 'bg-red-50 dark:bg-red-900/10' },
+  estavel:  { label: 'Estável',   text: 'text-green-600 dark:text-green-400',  bg: 'bg-green-100 dark:bg-green-900/30',  border: 'border-green-500',  listBg: 'bg-green-50 dark:bg-green-900/10',  barBg: 'bg-green-500' },
+  instavel: { label: 'Instável',  text: 'text-yellow-600 dark:text-yellow-400',bg: 'bg-yellow-100 dark:bg-yellow-900/30',border: 'border-yellow-500', listBg: 'bg-yellow-50 dark:bg-yellow-900/10', barBg: 'bg-yellow-500' },
+  em_risco: { label: 'Em Risco',  text: 'text-red-600 dark:text-red-400',      bg: 'bg-red-100 dark:bg-red-900/30',      border: 'border-red-500',    listBg: 'bg-red-50 dark:bg-red-900/10',      barBg: 'bg-red-500' },
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -169,6 +187,29 @@ const SECTION_SISTEMAS: Record<string, string[]> = {
   gerenciamento:    ['Gestão de riscos assistenciais', 'Precauções e controle de infecção', 'Avaliação cirúrgica'],
   eventos:          ['Notificação de eventos adversos'],
   outras_av:        ['Outros', 'Avaliação nutricional e metabólica', 'Avaliação dermatológica', 'Avaliação odontológica', 'Serviço Social'],
+};
+
+const ESPECIALISTA_TO_SISTEMAS: Record<string, string[]> = {
+  'Alergologia Ped':      ['Avaliação imunológica'],
+  'CIPE':                 ['Gestão de riscos assistenciais'],
+  'Dermatologia Ped':     ['Avaliação dermatológica'],
+  'Endoscopia':           ['Avaliação gastrointestinal'],
+  'Farmácia Clínica':     ['Gestão de riscos assistenciais'],
+  'Genética':             ['Avaliação genética'],
+  'Gastropediatria':      ['Avaliação gastrointestinal'],
+  'Hematologia Ped':      ['Avaliação hematológica/ oncológica'],
+  'Infectologia Ped':     ['Infecções Relacionadas à Assistência à Saúde (IRAS)', 'Outras infecções'],
+  'Imunologia':           ['Avaliação imunológica'],
+  'Neurologia Pediátrica':['Avaliação neurológica'],
+  'Nefrologia Ped':       ['Avaliação renal'],
+  'Neurocirurgia':        ['Avaliação cirúrgica'],
+  'Oftalmologista':       ['Outros'],
+  'Ortopedia':            ['Avaliação cirúrgica'],
+  'Oncologia Ped':        ['Avaliação hematológica/ oncológica'],
+  'Pneumologia':          ['Avaliação respiratória'],
+  'Psiquiatria':          ['Avaliação psiquiátrica'],
+  'Psicologia':           ['Avaliação psicológica'],
+  'Reumatologista':       ['Avaliação imunológica'],
 };
 
 const todayStr = () => new Date().toISOString().split('T')[0];
@@ -312,6 +353,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   });
   const [alertasList, setAlertasList] = useState<AlertaRecord[]>([]);
   const [alertasLoading, setAlertasLoading] = useState(false);
+  const [examesImagemList, setExamesImagemList] = useState<PropedeuticaExameImagem[]>([]);
+  const [pareceresList, setPareceresList] = useState<PropedeuticaParecer[]>([]);
   const [condutasCriticas, setCondutasCriticas] = useState('');
 
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['diagPrincipais', 'diagSecundarios']));
@@ -416,14 +459,14 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       try {
         const { data } = await supabase
           .from('diurese')
-          .select('id, created_at, peso, volume, horas, data_registro')
+          .select('id, data_registro, peso, volume, horas')
           .eq('patient_id', patientId)
           .order('data_registro', { ascending: false })
           .limit(1);
         if (data?.[0]) {
           setDiureseRec({
             id: data[0].id,
-            created_at: data[0].data_registro || data[0].created_at,
+            created_at: data[0].data_registro,
             peso: parseFloat(data[0].peso),
             volume: parseFloat(data[0].volume),
             horas: parseInt(data[0].horas),
@@ -492,12 +535,37 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   }, [patientId]);
 
   useEffect(() => {
+    if (!patientId) { setExamesImagemList([]); setPareceresList([]); return; }
+    const fetchPropedeutica = async () => {
+      try {
+        const [imgRes, parRes] = await Promise.all([
+          supabase
+            .from('exames_imagem_pacientes')
+            .select('id, exame_nome, categoria, data_exame, sistema, resultado, observacao')
+            .eq('paciente_id', patientId)
+            .is('archived_at', null),
+          supabase
+            .from('pareceres_pacientes')
+            .select('id, especialista, data_parecer, parecer')
+            .eq('paciente_id', patientId)
+            .is('archived_at', null),
+        ]);
+        setExamesImagemList((imgRes.data ?? []) as PropedeuticaExameImagem[]);
+        setPareceresList((parRes.data ?? []) as PropedeuticaParecer[]);
+      } catch (e) {
+        console.error('Erro ao carregar propedêutica:', e);
+      }
+    };
+    fetchPropedeutica();
+  }, [patientId]);
+
+  useEffect(() => {
     if (!patientId) { setAlertasList([]); return; }
     const fetchAlertas = async () => {
       setAlertasLoading(true);
       try {
         const { data } = await supabase
-          .from('alertas_paciente_view_completa')
+          .from('alertas_paciente')
           .select('id, alerta_descricao, sistemas, responsavel, status, created_at, hora_selecionada')
           .eq('patient_id', patientId)
           .is('archived_at', null);
@@ -528,6 +596,161 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     setPatientId('');
   };
 
+  const buildTextContent = (): string => {
+    const p = selectedPatient!;
+    const lines: string[] = [];
+    const sep = '─'.repeat(60);
+    const add = (l: string) => lines.push(l);
+    const blank = () => lines.push('');
+    const title = (t: string) => { blank(); add(t); add(sep); };
+
+    add('EVOLUÇÃO DIÁRIA');
+    add(`Data: ${new Date(date + 'T12:00:00').toLocaleDateString('pt-BR')}`);
+    blank();
+    add(sep);
+    add(`PACIENTE: ${p.name}`);
+    add(`LEITO: ${p.bedNumber}`);
+    add(`IDADE: ${p.dob ? formatAge(p.dob) : '—'} | SEXO: ${p.sexo === 'Masculino' || p.sexo === 'M' ? 'Masculino' : p.sexo === 'Feminino' || p.sexo === 'F' ? 'Feminino' : p.sexo ?? 'Não informado'}`);
+    if (p.motherName) add(`MÃE: ${p.motherName}`);
+    add(`PESO: ${p.peso ? `${p.peso} kg` : '—'} | SC: ${p.sc ? `${p.sc} m²` : '—'}`);
+    add(`INTERNAÇÃO: ${p.admissionDate ? `${formatDateToBRL(p.admissionDate)} · ${calcDays(p.admissionDate)} dia(s)` : '—'}`);
+    add(sep);
+
+    if (p.status) {
+      const cfg = STATUS_CONFIG[p.status as keyof typeof STATUS_CONFIG];
+      if (cfg) add(`STATUS: ${cfg.label}`);
+    }
+    if (p.comorbidade) {
+      add(`COMORBIDADES: ${p.comorbidade.split('|').filter(c => c.trim()).join(', ')}`);
+    }
+    const precAtivas = (p.precautions ?? []).filter(pr => !pr.isArchived && !pr.data_fim);
+    if (precAtivas.length > 0) {
+      add(`PRECAUÇÕES: ${precAtivas.map(pr => PREC_BADGE[pr.tipo_precaucao]?.label ?? pr.tipo_precaucao).join(', ')}`);
+    }
+
+    const principais = diagItems.filter(d => d.tipo === 'principal');
+    if (principais.length > 0) {
+      title('5. DIAGNÓSTICOS PRINCIPAIS');
+      principais.forEach(d => {
+        const lbl = d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label;
+        const det = d.label !== 'Outros' && d.texto_digitado ? ` (${d.texto_digitado})` : '';
+        add(`• ${lbl}${det} — ${d.status === 'resolvido' ? 'Resolvido' : 'Não resolvido'}`);
+      });
+    }
+
+    const secundarios = diagItems.filter(d => d.tipo === 'secundario');
+    if (secundarios.length > 0) {
+      title('6. DIAGNÓSTICOS SECUNDÁRIOS');
+      secundarios.forEach(d => {
+        const lbl = d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label;
+        const det = d.label !== 'Outros' && d.texto_digitado ? ` (${d.texto_digitado})` : '';
+        add(`• ${lbl}${det} — ${d.status === 'resolvido' ? 'Resolvido' : 'Não resolvido'}`);
+      });
+    }
+
+    if (bhBalance) {
+      title('8. BH DIÁRIO');
+      const pct = bhBalance.volume / (bhBalance.peso * 10);
+      add(`${pct.toFixed(2)}% — ${bhBalance.volume > 0 ? 'Ganho' : 'Perda'}`);
+      add(`Peso: ${bhBalance.peso} kg | Volume: ${bhBalance.volume > 0 ? '+' : ''}${bhBalance.volume} mL`);
+    }
+
+    if (bhCumul && bhCumul.registros_ultimas_24h > 0) {
+      title('9. BH CUMULATIVO');
+      add(`Total: ${bhCumul.bh_cumulativo_total > 0 ? '+' : ''}${bhCumul.bh_cumulativo_total.toFixed(2)}%`);
+      add(`Anterior: ${bhCumul.bh_historico_antigo.toFixed(2)}% | Últimas 24h: ${bhCumul.bh_ultimas_24h.toFixed(2)}%`);
+    }
+
+    if (diureseRec) {
+      title('10. DIURESE');
+      add(`${((diureseRec.volume / diureseRec.horas) / diureseRec.peso).toFixed(2)} mL/kg/h`);
+      add(`Peso: ${diureseRec.peso} kg | Volume: ${diureseRec.volume} mL | ${diureseRec.horas}h`);
+    }
+
+    if (aportesList.length > 0) {
+      title('11. APORTES');
+      aportesList.forEach(a => {
+        add(`${new Date(a.data_referencia + 'T12:00:00').toLocaleDateString('pt-BR')}: VO ${a.vo_ml_kg_h.toFixed(3)} | HV/NPT ${a.hv_npt_ml_kg_h.toFixed(3)} | MED ${a.medicacoes_ml_kg_h.toFixed(3)} | THT ${a.tht_ml_kg_h.toFixed(3)} mL/kg/h`);
+      });
+    }
+
+    if (situacaoRec) {
+      title('12. SITUAÇÃO CLÍNICA');
+      add(situacaoRec.situacao_texto);
+    }
+
+    if (Object.values(exameFisico).some(v => v.trim())) {
+      title('13. EXAME FÍSICO');
+      EXAME_SECTIONS.forEach(s => {
+        const val = exameFisico[s.key as keyof ExameFisicoState];
+        if (val?.trim()) add(`${s.label}: ${val}`);
+      });
+    }
+
+    const apLines: string[] = [];
+    AVALIACAO_SECTIONS.forEach(sec => {
+      const sistemas = SECTION_SISTEMAS[sec.id] ?? [];
+      const meds = (p.medications ?? []).filter(m => !m.isArchived && m.sistema && sistemas.includes(m.sistema));
+      const exs  = (p.exams ?? []).filter(e => !e.isArchived && e.sistema && sistemas.includes(e.sistema));
+      const imgs = examesImagemList.filter(ei => ei.sistema && sistemas.includes(ei.sistema));
+      const pars = pareceresList.filter(par => (ESPECIALISTA_TO_SISTEMAS[par.especialista] ?? []).some(s => sistemas.includes(s)));
+      const alts = alertasList.filter(a => sistemas.length > 0 && a.sistemas.some(s => sistemas.includes(s)));
+      if (meds.length + exs.length + imgs.length + pars.length + alts.length === 0) return;
+      apLines.push('');
+      apLines.push(sec.label);
+      if (meds.length) apLines.push(`  Medicações: ${meds.map(m => `${m.name}${m.dosage ? ` (${m.dosage})` : ''}`).join(', ')}`);
+      if (exs.length)  apLines.push(`  Exames: ${exs.map(e => `${e.name} — ${e.result}`).join(', ')}`);
+      if (imgs.length) apLines.push(`  Imagem: ${imgs.map(i => `${i.exame_nome}${i.resultado ? ` — ${i.resultado}` : ''}`).join(', ')}`);
+      pars.forEach(par => apLines.push(`  Parecer (${par.especialista}): ${par.parecer ?? '—'}`));
+      if (alts.length) apLines.push(`  Alertas: ${alts.map(a => `${a.alerta_descricao} [${a.status}]`).join(' | ')}`);
+    });
+    if (apLines.length > 0) {
+      title('14. AP — AVALIAÇÃO x PROPEDÊUTICA');
+      apLines.forEach(l => add(l));
+    }
+
+    if (condutasCriticas.trim()) {
+      title('15. CONDUTAS CRÍTICAS');
+      add(condutasCriticas);
+    }
+
+    blank();
+    add(sep);
+    add(`Gerado em: ${new Date().toLocaleString('pt-BR')} | RoundKids`);
+    return lines.join('\n');
+  };
+
+  const handleDownloadTxt = () => {
+    const content = buildTextContent();
+    const blob = new Blob(['﻿' + content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `evolucao_${selectedPatient!.name.replace(/\s+/g, '_')}_${date}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadDoc = () => {
+    const content = buildTextContent();
+    const escaped = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset='utf-8'><title>Evolução Diária</title>
+<style>body{font-family:Arial,sans-serif;font-size:11pt;line-height:1.6;}pre{white-space:pre-wrap;font-family:Arial,sans-serif;font-size:11pt;}</style>
+</head><body><pre>${escaped}</pre></body></html>`;
+    const blob = new Blob([html], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `evolucao_${selectedPatient!.name.replace(/\s+/g, '_')}_${date}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   // ─── Patient selector ─────────────────────────────────────────────────────
 
   if (!selectedPatient) {
@@ -549,41 +772,43 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         {filteredPatients.length === 0 ? (
           <p className="text-center text-slate-500 dark:text-slate-400 py-8">Nenhum paciente encontrado</p>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {filteredPatients.map(patient => {
               const cfg = STATUS_CONFIG[patient.status as keyof typeof STATUS_CONFIG];
               const borderCls = cfg?.border ?? 'border-slate-300 dark:border-slate-600';
-              const bgCls = cfg?.listBg ?? 'bg-white dark:bg-slate-900';
               const precAtivas = (patient.precautions ?? []).filter(p => !p.isArchived && !p.data_fim);
 
               return (
                 <button
                   key={patient.id}
                   onClick={() => handleSelectPatient(patient)}
-                  className={`w-full text-left p-4 rounded-xl shadow-sm hover:shadow-md transition border-2 ${borderCls} ${bgCls}`}
+                  className={`text-left rounded-xl shadow-sm hover:shadow-md active:scale-95 transition-all border-2 ${borderCls} bg-white dark:bg-slate-900 overflow-hidden flex flex-col`}
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className="shrink-0 w-12 h-12 flex items-center justify-center bg-blue-100 dark:bg-blue-900/80 text-blue-600 dark:text-blue-300 rounded-full font-bold text-lg">
+                  <div className={`h-1.5 w-full shrink-0 ${cfg?.barBg ?? 'bg-slate-300'}`} />
+                  <div className="p-3 flex flex-col flex-1 gap-2">
+                    <div className="w-10 h-10 flex items-center justify-center bg-blue-100 dark:bg-blue-900/80 text-blue-600 dark:text-blue-300 rounded-full font-bold text-lg shrink-0">
                       {patient.bedNumber}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-bold text-slate-800 dark:text-slate-200">{patient.name}</p>
-                        {cfg && (
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${cfg.text} ${bgCls}`}>
-                            {cfg.label}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Nasc: {new Date(patient.dob).toLocaleDateString('pt-BR')}
+                      <p className="font-bold text-sm text-slate-800 dark:text-slate-200 leading-tight line-clamp-2">
+                        {patient.name}
                       </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {new Date(patient.dob).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      {cfg && (
+                        <span className={`self-start text-xs font-bold px-2 py-0.5 rounded-full ${cfg.text} ${cfg.bg}`}>
+                          {cfg.label}
+                        </span>
+                      )}
                       {precAtivas.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1.5">
+                        <div className="flex flex-wrap gap-1">
                           {precAtivas.map(p => {
                             const b = PREC_BADGE[p.tipo_precaucao];
                             return b ? (
-                              <span key={p.id} className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${b.cls}`}>
+                              <span key={p.id} className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-semibold ${b.cls}`}>
                                 {b.label}
                               </span>
                             ) : null;
@@ -591,7 +816,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                         </div>
                       )}
                     </div>
-                    <ChevronRightIcon className="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0" />
                   </div>
                 </button>
               );
@@ -634,7 +858,12 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <InfoBox label="Idade" value={formatAge(selectedPatient.dob)} />
-            <InfoBox label="Mãe" value={selectedPatient.motherName || '-'} />
+            <InfoBox label="Sexo" value={
+              selectedPatient.sexo === 'Masculino' ? '♂ Masculino'
+              : selectedPatient.sexo === 'Feminino' ? '♀ Feminino'
+              : <span className="text-orange-500 italic font-normal">Não informado</span>
+            } />
+            <InfoBox label="Mãe" colSpan value={selectedPatient.motherName || '-'} />
             <InfoBox label="Peso" value={
               selectedPatient.peso
                 ? `${selectedPatient.peso} kg`
@@ -670,12 +899,20 @@ export const EvolucaoDiariaScreen: React.FC = () => {
             className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <button
-          onClick={() => window.print()}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
-        >
-          Imprimir
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleDownloadTxt}
+            className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold transition"
+          >
+            Baixar TXT
+          </button>
+          <button
+            onClick={handleDownloadDoc}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
+          >
+            Baixar Word
+          </button>
+        </div>
       </div>
 
       {/* 2. Status */}
@@ -750,8 +987,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               {principais.map((d, i) => (
                 <div key={i} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{d.label}</p>
-                    {d.texto_digitado && (
+                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                      {d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label}
+                    </p>
+                    {d.label !== 'Outros' && d.texto_digitado && (
                       <p className="text-xs text-slate-500 dark:text-slate-400 italic mt-0.5">{d.texto_digitado}</p>
                     )}
                     {d.created_at && (
@@ -789,8 +1028,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               {secundarios.map((d, i) => (
                 <div key={i} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{d.label}</p>
-                    {d.texto_digitado && (
+                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                      {d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label}
+                    </p>
+                    {d.label !== 'Outros' && d.texto_digitado && (
                       <p className="text-xs text-slate-500 dark:text-slate-400 italic mt-0.5">{d.texto_digitado}</p>
                     )}
                     {d.created_at && (
@@ -813,77 +1054,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         })()}
       </Section>
 
-      {/* 7. Controles */}
-      <Section title="7. Controles" id="controles" open={openSections.has('controles')} onToggle={() => toggle('controles')}>
-        <div className="space-y-3">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Controles (Delta)</p>
-          {VITAIS.map(({ keyMin, keyMax, label, unit, desc }) => (
-            <div key={keyMin} className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-300 w-16 shrink-0">{label}:</span>
-              <input type="number" className={numInputCls}
-                value={controles[keyMin as keyof ControlesState]}
-                onChange={e => updateControles(keyMin as keyof ControlesState, e.target.value)}
-                placeholder="min" />
-              <span className="text-sm text-slate-400">a</span>
-              <input type="number" className={numInputCls}
-                value={controles[keyMax as keyof ControlesState]}
-                onChange={e => updateControles(keyMax as keyof ControlesState, e.target.value)}
-                placeholder="max" />
-              <span className="text-sm text-slate-500">{unit}</span>
-              <span className="text-xs text-slate-400 italic hidden sm:inline">({desc})</span>
-            </div>
-          ))}
-        </div>
-
-        <div className="border-t border-slate-100 dark:border-slate-800 pt-4 space-y-3">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Saídas</p>
-          {[
-            { key: 'diurese',    label: 'DIURESE',    unit: 'ml/kg/h' },
-            { key: 'evacuacoes', label: 'EVACUAÇÕES', unit: 'g/ml' },
-          ].map(({ key, label, unit }) => (
-            <div key={key} className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-300 w-36 shrink-0">{label}:</span>
-              <input type="number" className={numInputCls}
-                value={saidas[key as keyof SaidasState]}
-                onChange={e => updateSaidas(key as keyof SaidasState, e.target.value)} />
-              <span className="text-sm text-slate-500">{unit}</span>
-            </div>
-          ))}
-
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-300 w-36 shrink-0">Drenos — Tórax:</span>
-              <input type="number" className={numInputCls} value={saidas.drenoTorax} onChange={e => updateSaidas('drenoTorax', e.target.value)} />
-              <span className="text-sm text-slate-500">ml/24h</span>
-            </div>
-            {DRENOS.map(({ key, label }) => (
-              <div key={key} className="flex items-center gap-2 flex-wrap pl-6">
-                <span className="text-sm text-slate-600 dark:text-slate-400 w-56 shrink-0">{label}:</span>
-                <input type="number" className={numInputCls}
-                  value={saidas[key as keyof SaidasState]}
-                  onChange={e => updateSaidas(key as keyof SaidasState, e.target.value)} />
-                <span className="text-sm text-slate-500">ml/24h</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="border-t border-slate-100 dark:border-slate-800 pt-4 space-y-3">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">TSR — Terapia de Substituição Renal</p>
-          {[
-            { key: 'hemodialise',       label: 'HEMODIÁLISE' },
-            { key: 'dialisePeritoneal', label: 'DIÁLISE PERITONEAL' },
-          ].map(({ key, label }) => (
-            <div key={key} className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-300 w-48 shrink-0">{label}:</span>
-              <input type="number" className={numInputCls}
-                value={saidas[key as keyof SaidasState]}
-                onChange={e => updateSaidas(key as keyof SaidasState, e.target.value)} />
-              <span className="text-sm text-slate-500">ml/24h</span>
-            </div>
-          ))}
-        </div>
-      </Section>
+      {/* 7. Controles e Saídas */}
+      <ControlesSaidasSection patientId={patientId} readOnly />
 
       {/* 8. BH Diário */}
       <Section title="8. BH Diário" id="bhDiario" open={openSections.has('bhDiario')} onToggle={() => toggle('bhDiario')}>
@@ -1043,51 +1215,126 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           <div className="space-y-2">
             {AVALIACAO_SECTIONS.map(sec => {
               const sistemas = SECTION_SISTEMAS[sec.id] ?? [];
+
+              const secMedicacoes = (selectedPatient?.medications ?? [])
+                .filter(m => !m.isArchived && m.sistema && sistemas.includes(m.sistema));
+              const secExames = (selectedPatient?.exams ?? [])
+                .filter(e => !e.isArchived && e.sistema && sistemas.includes(e.sistema));
+              const secExamesImagem = examesImagemList
+                .filter(ei => ei.sistema && sistemas.includes(ei.sistema));
+              const secPareceres = pareceresList
+                .filter(p => (ESPECIALISTA_TO_SISTEMAS[p.especialista] ?? []).some(s => sistemas.includes(s)));
               const secAlertas = alertasList.filter(a =>
-                sistemas.length === 0
-                  ? false
-                  : a.sistemas.some(s => sistemas.includes(s))
+                sistemas.length > 0 && a.sistemas.some(s => sistemas.includes(s))
               );
+
+              const total = secMedicacoes.length + secExames.length + secExamesImagem.length + secPareceres.length + secAlertas.length;
+              if (total === 0) return null;
+
               return (
                 <SubSection
                   key={sec.id}
-                  title={`${sec.label}${secAlertas.length > 0 ? ` (${secAlertas.length})` : ''}`}
+                  title={`${sec.label} (${total})`}
                   open={openAvaliacoes.has(sec.id)}
                   onToggle={() => toggleAv(sec.id)}
                 >
-                  {secAlertas.length === 0 ? (
-                    <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum alerta registrado para este sistema.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {secAlertas.map(a => {
-                        const isPendente = a.status === 'Pendente';
-                        return (
-                          <div key={a.id} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                            <div className="flex items-start justify-between gap-2">
-                              <p className="text-sm text-slate-700 dark:text-slate-200 flex-1">{a.alerta_descricao}</p>
-                              <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${
-                                isPendente
-                                  ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300'
-                                  : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
-                              }`}>
-                                {a.status}
-                              </span>
+                  <div className="space-y-3">
+
+                    {secMedicacoes.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-blue-500 dark:text-blue-400 uppercase tracking-wide mb-1.5">Medicações</p>
+                        <div className="space-y-1">
+                          {secMedicacoes.map(m => (
+                            <div key={m.id} className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{m.name}</p>
+                              {m.dosage && <p className="text-xs text-slate-500 dark:text-slate-400">{m.dosage}</p>}
+                              <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(m.startDate).toLocaleDateString('pt-BR')}</p>
                             </div>
-                            <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-2">
-                              {a.sistemas.map(s => (
-                                <span key={s} className="text-xs text-blue-600 dark:text-blue-400 font-medium">{s}</span>
-                              ))}
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {secExames.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wide mb-1.5">Exames</p>
+                        <div className="space-y-1">
+                          {secExames.map(e => (
+                            <div key={e.id} className="p-2 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{e.name}</p>
+                                <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${
+                                  e.result === 'Alterado'
+                                    ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+                                    : e.result === 'Normal'
+                                      ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                                      : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300'
+                                }`}>{e.result}</span>
+                              </div>
+                              <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(e.date).toLocaleDateString('pt-BR')}</p>
                             </div>
-                            <div className="flex gap-4 mt-1">
-                              {a.responsavel && <p className="text-xs text-slate-500 dark:text-slate-400">Resp: {a.responsavel}</p>}
-                              {a.hora_selecionada && <p className="text-xs text-slate-500 dark:text-slate-400">Prazo: {a.hora_selecionada}</p>}
-                              <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(a.created_at).toLocaleDateString('pt-BR')}</p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {secExamesImagem.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wide mb-1.5">Exames de Imagem</p>
+                        <div className="space-y-1">
+                          {secExamesImagem.map(ei => (
+                            <div key={ei.id} className="p-2 bg-violet-50 dark:bg-violet-900/20 rounded-lg border border-violet-200 dark:border-violet-800">
+                              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ei.exame_nome}</p>
+                              {ei.resultado && <p className="text-xs text-slate-500 dark:text-slate-400">{ei.resultado}</p>}
+                              <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(ei.data_exame).toLocaleDateString('pt-BR')}</p>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {secPareceres.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-pink-600 dark:text-pink-400 uppercase tracking-wide mb-1.5">Pareceres</p>
+                        <div className="space-y-1">
+                          {secPareceres.map(p => (
+                            <div key={p.id} className="p-2 bg-pink-50 dark:bg-pink-900/20 rounded-lg border border-pink-200 dark:border-pink-800">
+                              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{p.especialista}</p>
+                              {p.parecer && <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{p.parecer}</p>}
+                              <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(p.data_parecer).toLocaleDateString('pt-BR')}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {secAlertas.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-1.5">Alertas</p>
+                        <div className="space-y-2">
+                          {secAlertas.map(a => {
+                            const isPendente = a.status === 'Pendente';
+                            return (
+                              <div key={a.id} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className="text-sm text-slate-700 dark:text-slate-200 flex-1">{a.alerta_descricao}</p>
+                                  <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${
+                                    isPendente
+                                      ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300'
+                                      : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                                  }`}>
+                                    {a.status}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{new Date(a.created_at).toLocaleDateString('pt-BR')}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
                 </SubSection>
               );
             })}

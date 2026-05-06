@@ -5,6 +5,7 @@ import { ChevronRightIcon } from './icons';
 
 interface Props {
   patientId: string;
+  readOnly?: boolean;
 }
 
 interface Data {
@@ -73,7 +74,7 @@ const getCurrentUserName = async (): Promise<string> => {
   return profile?.name || user.email || 'Usuário';
 };
 
-export const ControlesSaidasSection: React.FC<Props> = ({ patientId }) => {
+export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = false }) => {
   const themeContext = useContext(ThemeContext);
   const isDark = themeContext?.theme === 'dark';
 
@@ -592,7 +593,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId }) => {
           )}
 
           {/* Botões de ação */}
-          {!isArchived && (
+          {!isArchived && !readOnly && (
             <div className="space-y-2">
 
               {/* Modo leitura: botão Editar */}

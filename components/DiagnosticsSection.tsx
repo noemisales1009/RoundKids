@@ -27,6 +27,7 @@ interface PatientDiagnostic {
   pergunta_id: number;
   opcao_id: number;
   texto_digitado?: string;
+  sistema?: string;
   status: 'resolvido' | 'nao_resolvido';
   created_at?: string;
   resolved_at?: string | null;
@@ -36,6 +37,26 @@ interface DiagnosticsSectionProps {
   patientId: string;
   onSave?: (data: PatientDiagnostic[]) => void;
 }
+
+const SISTEMAS = [
+  'Avaliação respiratória',
+  'Avaliação cardiovascular',
+  'Avaliação infecciosa',
+  'Avaliação renal',
+  'Avaliação neurológica',
+  'Avaliação hematológica/ oncológica',
+  'Avaliação nutricional e metabólica',
+  'Avaliação gastrointestinal',
+  'Avaliação imunológica',
+  'Avaliação genética',
+  'Avaliação psiquiátrica',
+  'Avaliação psicológica',
+  'Distúrbios hidroeletrolíticos e metabólicos',
+  'Gestão de riscos assistenciais',
+  'Avaliação cirúrgica',
+  'Notificação de eventos adversos',
+  'Outros',
+];
 
 // ── Sub-components defined OUTSIDE parent to keep stable references ──
 
@@ -74,11 +95,13 @@ interface OptionRowProps {
   expandedParentOption: number | null;
   selectedStatus: Record<number, 'resolvido' | 'nao_resolvido'>;
   inputValues: Record<number, string>;
+  sistemaValues: Record<number, string>;
   isDark: boolean;
   onToggle: (optionId: number, checked: boolean) => void;
   onToggleParent: (optionId: number | null) => void;
   onInputChange: (optionId: number, value: string) => void;
   onStatusChange: (optionId: number, value: 'resolvido' | 'nao_resolvido') => void;
+  onSistemaChange: (optionId: number, value: string) => void;
   onArchive: (optionId: number) => void;
 }
 
@@ -90,11 +113,13 @@ const OptionRow: React.FC<OptionRowProps> = ({
   expandedParentOption,
   selectedStatus,
   inputValues,
+  sistemaValues,
   isDark,
   onToggle,
   onToggleParent,
   onInputChange,
   onStatusChange,
+  onSistemaChange,
   onArchive,
 }) => {
   const isChecked = diagnostics.some(d => d.opcao_id === option.id);
@@ -172,19 +197,38 @@ const OptionRow: React.FC<OptionRowProps> = ({
           )}
         </div>
 
-        {isCurrentlyChecked && option.has_input && (
-          <div className={`px-3 pb-2.5 pt-0 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-            <input
-              type="text"
-              placeholder={option.input_placeholder || 'Digite aqui...'}
-              value={inputValues[option.id] || ''}
-              onChange={(e) => onInputChange(option.id, e.target.value)}
-              className={`mt-2 w-full px-3 py-1.5 text-xs sm:text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                isDark
-                  ? 'bg-slate-900 border-slate-600 text-slate-200 placeholder-slate-500'
-                  : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
-              }`}
-            />
+        {isCurrentlyChecked && (
+          <div className={`px-3 pb-2.5 pt-0 border-t space-y-2 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+            {option.has_input && (
+              <input
+                type="text"
+                placeholder={option.input_placeholder || 'Digite aqui...'}
+                value={inputValues[option.id] || ''}
+                onChange={(e) => onInputChange(option.id, e.target.value)}
+                className={`mt-2 w-full px-3 py-1.5 text-xs sm:text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  isDark
+                    ? 'bg-slate-900 border-slate-600 text-slate-200 placeholder-slate-500'
+                    : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
+                }`}
+              />
+            )}
+            <div className={`flex items-center gap-2 ${option.has_input ? '' : 'mt-2'}`}>
+              <span className={`text-[10px] font-medium shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                Sistema:
+              </span>
+              <select
+                value={sistemaValues[option.id] || ''}
+                onChange={(e) => onSistemaChange(option.id, e.target.value)}
+                className={`flex-1 px-2 py-0.5 text-xs rounded-md border appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                  isDark
+                    ? 'bg-slate-900 border-slate-700 text-slate-300'
+                    : 'bg-white border-slate-300 text-slate-700'
+                }`}
+              >
+                <option value="">— Opcional —</option>
+                {SISTEMAS.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
           </div>
         )}
       </div>
@@ -245,19 +289,38 @@ const OptionRow: React.FC<OptionRowProps> = ({
                       </>
                     )}
                   </div>
-                  {isChildCurrentlyChecked && childOption.has_input && (
-                    <div className={`px-3 pb-2.5 pt-0 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-                      <input
-                        type="text"
-                        placeholder={childOption.input_placeholder || 'Digite aqui...'}
-                        value={inputValues[childOption.id] || ''}
-                        onChange={(e) => onInputChange(childOption.id, e.target.value)}
-                        className={`mt-2 w-full px-3 py-1.5 text-xs sm:text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          isDark
-                            ? 'bg-slate-900 border-slate-600 text-slate-200 placeholder-slate-500'
-                            : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
-                        }`}
-                      />
+                  {isChildCurrentlyChecked && (
+                    <div className={`px-3 pb-2.5 pt-0 border-t space-y-2 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                      {childOption.has_input && (
+                        <input
+                          type="text"
+                          placeholder={childOption.input_placeholder || 'Digite aqui...'}
+                          value={inputValues[childOption.id] || ''}
+                          onChange={(e) => onInputChange(childOption.id, e.target.value)}
+                          className={`mt-2 w-full px-3 py-1.5 text-xs sm:text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            isDark
+                              ? 'bg-slate-900 border-slate-600 text-slate-200 placeholder-slate-500'
+                              : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
+                          }`}
+                        />
+                      )}
+                      <div className={`flex items-center gap-2 ${childOption.has_input ? '' : 'mt-2'}`}>
+                        <span className={`text-[10px] font-medium shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Sistema:
+                        </span>
+                        <select
+                          value={sistemaValues[childOption.id] || ''}
+                          onChange={(e) => onSistemaChange(childOption.id, e.target.value)}
+                          className={`flex-1 px-2 py-0.5 text-xs rounded-md border appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                            isDark
+                              ? 'bg-slate-900 border-slate-700 text-slate-300'
+                              : 'bg-white border-slate-300 text-slate-700'
+                          }`}
+                        >
+                          <option value="">— Opcional —</option>
+                          {SISTEMAS.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -282,10 +345,12 @@ interface QuestionBlockProps {
   expandedParentOption: number | null;
   selectedStatus: Record<number, 'resolvido' | 'nao_resolvido'>;
   inputValues: Record<number, string>;
+  sistemaValues: Record<number, string>;
   onToggle: (optionId: number, checked: boolean) => void;
   onToggleParent: (optionId: number | null) => void;
   onInputChange: (optionId: number, value: string) => void;
   onStatusChange: (optionId: number, value: 'resolvido' | 'nao_resolvido') => void;
+  onSistemaChange: (optionId: number, value: string) => void;
   onArchive: (optionId: number) => void;
 }
 
@@ -301,10 +366,12 @@ const QuestionBlock: React.FC<QuestionBlockProps> = ({
   expandedParentOption,
   selectedStatus,
   inputValues,
+  sistemaValues,
   onToggle,
   onToggleParent,
   onInputChange,
   onStatusChange,
+  onSistemaChange,
   onArchive,
 }) => {
   const questionOptions = allOptions.filter(opt => opt.pergunta_id === question.id && !opt.parent_id);
@@ -351,11 +418,13 @@ const QuestionBlock: React.FC<QuestionBlockProps> = ({
               expandedParentOption={expandedParentOption}
               selectedStatus={selectedStatus}
               inputValues={inputValues}
+              sistemaValues={sistemaValues}
               isDark={isDark}
               onToggle={onToggle}
               onToggleParent={onToggleParent}
               onInputChange={onInputChange}
               onStatusChange={onStatusChange}
+              onSistemaChange={onSistemaChange}
               onArchive={onArchive}
             />
           ))}
@@ -393,6 +462,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
   const [expandedParentOption, setExpandedParentOption] = useState<number | null>(null);
   const [inputValues, setInputValues] = useState<Record<number, string>>({});
+  const [sistemaValues, setSistemaValues] = useState<Record<number, string>>({});
   const [selectedStatus, setSelectedStatus] = useState<Record<number, 'resolvido' | 'nao_resolvido'>>({});
   const [checkedOptions, setCheckedOptions] = useState<Record<number, boolean>>({});
 
@@ -424,16 +494,19 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
         const checked: Record<number, boolean> = {};
         const inputs: Record<number, string> = {};
+        const sistemas: Record<number, string> = {};
         const statuses: Record<number, 'resolvido' | 'nao_resolvido'> = {};
 
         (diagnosticsRes.data || []).forEach(diag => {
           checked[diag.opcao_id] = true;
           if (diag.texto_digitado) inputs[diag.opcao_id] = diag.texto_digitado;
+          if (diag.sistema) sistemas[diag.opcao_id] = diag.sistema;
           statuses[diag.opcao_id] = diag.status;
         });
 
         setCheckedOptions(checked);
         setInputValues(inputs);
+        setSistemaValues(sistemas);
         setSelectedStatus(statuses);
       } catch (error) {
         console.error('Erro ao carregar diagnósticos:', error);
@@ -459,6 +532,10 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
   const handleStatusChange = useCallback((optionId: number, value: 'resolvido' | 'nao_resolvido') => {
     setSelectedStatus(prev => ({ ...prev, [optionId]: value }));
+  }, []);
+
+  const handleSistemaChange = useCallback((optionId: number, value: string) => {
+    setSistemaValues(prev => ({ ...prev, [optionId]: value }));
   }, []);
 
   const handleRemoveDiagnostic = useCallback((optionId: number) => {
@@ -523,10 +600,11 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           opcao_id: option.id,
           opcao_label: option.label,
           texto_digitado: inputValues[option.id] || null,
+          sistema: sistemaValues[option.id] || null,
           status: selectedStatus[option.id] || 'nao_resolvido' as const
         }));
 
-      // Atualiza status e resolved_at dos registros já existentes no banco
+      // Atualiza status, sistema e resolved_at dos registros já existentes no banco
       const existingInDb = diagnostics.filter(d => checkedOptions[d.opcao_id]);
       if (existingInDb.length > 0) {
         await Promise.all(existingInDb.map(d => {
@@ -537,7 +615,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
               : null;
           return supabase
             .from('paciente_diagnosticos')
-            .update({ status: newStatus, resolved_at: resolvedAt })
+            .update({ status: newStatus, resolved_at: resolvedAt, sistema: sistemaValues[d.opcao_id] || null })
             .eq('id', d.id!);
         }));
       }
@@ -616,11 +694,13 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     expandedParentOption,
     selectedStatus,
     inputValues,
+    sistemaValues,
     isDark,
     onToggle: handleToggle,
     onToggleParent: handleToggleParent,
     onInputChange: handleInputChange,
     onStatusChange: handleStatusChange,
+    onSistemaChange: handleSistemaChange,
     onArchive: handleRemoveDiagnostic,
   };
 
@@ -672,29 +752,38 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           </div>
           <div className="grid grid-cols-2">
             {selectedByGroup.principal.length > 0 && (
-              <ul className={`px-3 py-2 space-y-1 text-xs border-r ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+              <ul className={`px-3 py-2 divide-y text-xs border-r ${isDark ? 'border-slate-700 divide-slate-700/60' : 'border-slate-200 divide-slate-100'}`}>
                 {selectedByGroup.principal.map(opt => {
                   const diag = diagnostics.find(d => d.opcao_id === opt.id);
                   const isResolved = selectedStatus[opt.id] === 'resolvido';
                   return (
-                  <li key={opt.id} className="flex items-start gap-1.5">
+                  <li key={opt.id} className="flex items-start gap-2 py-2 first:pt-1 last:pb-1">
                     {isResolved ? (
-                      <span className="material-symbols-rounded text-[13px] text-emerald-500 mt-px shrink-0">check_circle</span>
+                      <span className="material-symbols-rounded text-[14px] text-emerald-500 mt-0.5 shrink-0">check_circle</span>
                     ) : (
-                      <span className={`material-symbols-rounded text-[13px] mt-px shrink-0 ${isDark ? 'text-blue-400' : 'text-blue-500'}`}>radio_button_unchecked</span>
+                      <span className={`material-symbols-rounded text-[14px] mt-0.5 shrink-0 ${isDark ? 'text-blue-400' : 'text-blue-500'}`}>radio_button_unchecked</span>
                     )}
-                    <span className={`flex-1 leading-snug ${isDark ? 'text-slate-300' : 'text-slate-700'} `}>
-                      {opt.label}
+                    <span className={`flex-1 min-w-0 leading-snug ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                      <span className="block font-medium">{opt.label}</span>
+                      {sistemaValues[opt.id] && (
+                        <span className="block mt-1">
+                          <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                            isDark ? 'bg-blue-900/60 text-blue-300 border border-blue-800' : 'bg-blue-50 text-blue-600 border border-blue-200'
+                          }`}>
+                            {sistemaValues[opt.id]}
+                          </span>
+                        </span>
+                      )}
                       {inputValues[opt.id] && (
-                        <span className={`block italic ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                        <span className={`block italic text-[10px] mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                           "{inputValues[opt.id]}"
                         </span>
                       )}
                       {diag?.created_at && (
-                        <span className={`block text-[10px] not-italic ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>
+                        <span className={`block text-[10px] mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                           {formatDiagDate(diag.created_at)}
                           {isResolved && diag.resolved_at && (
-                            <> · Resolvido em: {formatDiagDate(diag.resolved_at)}</>
+                            <> · Res.: {formatDiagDate(diag.resolved_at)}</>
                           )}
                         </span>
                       )}
@@ -702,7 +791,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                     <button
                       onClick={() => handleRemoveDiagnostic(opt.id)}
                       title="Arquivar diagnóstico"
-                      className={`shrink-0 mt-px transition-colors ${isDark ? 'text-slate-600 hover:text-red-400' : 'text-slate-300 hover:text-red-500'}`}
+                      className={`shrink-0 mt-0.5 transition-colors ${isDark ? 'text-slate-600 hover:text-red-400' : 'text-slate-300 hover:text-red-500'}`}
                     >
                       <span className="material-symbols-rounded text-[14px]">archive</span>
                     </button>
@@ -712,29 +801,38 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
               </ul>
             )}
             {selectedByGroup.secundario.length > 0 && (
-              <ul className="px-3 py-2 space-y-1 text-xs">
+              <ul className={`px-3 py-2 divide-y text-xs ${isDark ? 'divide-slate-700/60' : 'divide-slate-100'}`}>
                 {selectedByGroup.secundario.map(opt => {
                   const diag = diagnostics.find(d => d.opcao_id === opt.id);
                   const isResolved = selectedStatus[opt.id] === 'resolvido';
                   return (
-                  <li key={opt.id} className="flex items-start gap-1.5">
+                  <li key={opt.id} className="flex items-start gap-2 py-2 first:pt-1 last:pb-1">
                     {isResolved ? (
-                      <span className="material-symbols-rounded text-[13px] text-emerald-500 mt-px shrink-0">check_circle</span>
+                      <span className="material-symbols-rounded text-[14px] text-emerald-500 mt-0.5 shrink-0">check_circle</span>
                     ) : (
-                      <span className={`material-symbols-rounded text-[13px] mt-px shrink-0 ${isDark ? 'text-blue-400' : 'text-blue-500'}`}>radio_button_unchecked</span>
+                      <span className={`material-symbols-rounded text-[14px] mt-0.5 shrink-0 ${isDark ? 'text-blue-400' : 'text-blue-500'}`}>radio_button_unchecked</span>
                     )}
-                    <span className={`flex-1 leading-snug ${isDark ? 'text-slate-300' : 'text-slate-700'} `}>
-                      {opt.label}
+                    <span className={`flex-1 min-w-0 leading-snug ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                      <span className="block font-medium">{opt.label}</span>
+                      {sistemaValues[opt.id] && (
+                        <span className="block mt-1">
+                          <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                            isDark ? 'bg-blue-900/60 text-blue-300 border border-blue-800' : 'bg-blue-50 text-blue-600 border border-blue-200'
+                          }`}>
+                            {sistemaValues[opt.id]}
+                          </span>
+                        </span>
+                      )}
                       {inputValues[opt.id] && (
-                        <span className={`block italic ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                        <span className={`block italic text-[10px] mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                           "{inputValues[opt.id]}"
                         </span>
                       )}
                       {diag?.created_at && (
-                        <span className={`block text-[10px] not-italic ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>
+                        <span className={`block text-[10px] mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                           {formatDiagDate(diag.created_at)}
                           {isResolved && diag.resolved_at && (
-                            <> · Resolvido em: {formatDiagDate(diag.resolved_at)}</>
+                            <> · Res.: {formatDiagDate(diag.resolved_at)}</>
                           )}
                         </span>
                       )}

@@ -774,7 +774,7 @@ const PatientHistoryScreen: React.FC = () => {
             const label = diagnostic.opcao_label || 'Não informado';
             const createdByName = diagnostic.nome_criador || 'Não informado';
 
-            let description = `[DIAGNOSTICO] Diagnóstico: ${label}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''} (Status: ${diagnostic.status}).\n👤 Criado por: ${createdByName}`;
+            let description = `[DIAGNOSTICO] Diagnóstico: ${label}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''}${diagnostic.sistema ? ` | Sistema: ${diagnostic.sistema}` : ''} (Status: ${diagnostic.status}).\n👤 Criado por: ${createdByName}`;
 
             events.push({
                 timestamp: diagnostic.data_criacao || new Date().toISOString(),
