@@ -107,12 +107,18 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
         fetchMedicamentos();
     }, [selectedCategoria]);
 
+    // Resetar customUnidade e dosagem ao trocar medicamento da lista
+    useEffect(() => {
+        setCustomUnidade('');
+        setDosageValue('');
+    }, [selectedMedicamento]);
+
     // Obter informações do medicamento selecionado
     const isCategoriaManual = selectedCategoria === '__manual__';
     const selectedMedData = medicamentos.find(m => m.id.toString() === selectedMedicamento);
     const isOther = selectedMedicamento === 'outro' || isCategoriaManual;
-    const temUnidadeDose = selectedMedData?.unidade_dose_principal !== null || (isOther && customUnidade);
-    const unidadeFinal = isOther ? customUnidade : selectedMedData?.unidade_dose_principal;
+    const temUnidadeDose = !!selectedMedData?.unidade_dose_principal || !!customUnidade;
+    const unidadeFinal = customUnidade || selectedMedData?.unidade_dose_principal;
 
     // Nome final do medicamento
     const finalMedicationName = isOther ? customMedicamento : selectedMedData?.nome || '';
@@ -279,16 +285,28 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                         </>
                     )}
 
-                    {/* Campo 4: Dosagem (apenas se medicamento tem unidade) */}
-                    {selectedMedicamento && temUnidadeDose && (
+                    {/* Campo 4a: Unidade opcional para medicamento da lista sem unidade predefinida */}
+                    {selectedMedicamento && !isOther && !selectedMedData?.unidade_dose_principal && (
                         <div>
-                            {isOther && (
-                                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-2 mb-3">
-                                    <p className="text-xs text-yellow-800 dark:text-yellow-200">
-                                        ⚠️ Você preencheu uma unidade, então precisa digitar a dosagem
-                                    </p>
-                                </div>
-                            )}
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                Unidade de Dosagem <span className="text-gray-400 font-normal">(opcional)</span>
+                            </label>
+                            <input
+                                type="text"
+                                value={customUnidade}
+                                onChange={e => setCustomUnidade(e.target.value)}
+                                placeholder="Ex: mg/kg/dia, ug/h, UI/ml..."
+                                className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+                            />
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                💡 Se deixar em branco, a medicação será salva sem unidade padronizada
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Campo 4b: Valor da dosagem (quando há unidade — lista ou manual) */}
+                    {(selectedMedicamento || isCategoriaManual) && temUnidadeDose && (
+                        <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                                 Dosagem <span className="text-red-500">*</span>
                                 <span className="text-slate-400 font-normal"> ({unidadeFinal})</span>
@@ -302,15 +320,6 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                             />
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                 ℹ️ Digite apenas o valor numérico. A unidade será "{unidadeFinal}"
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Mensagem: Medicação sem unidade */}
-                    {selectedMedicamento && !temUnidadeDose && !isOther && (
-                        <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-md p-3">
-                            <p className="text-sm text-blue-800 dark:text-blue-200">
-                                ℹ️ <strong>{selectedMedData?.nome}</strong> não requer dosagem com unidade (ex: spray, solução)
                             </p>
                         </div>
                     )}
