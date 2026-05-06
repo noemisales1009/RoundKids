@@ -73,6 +73,7 @@ const PatientHistoryScreen: React.FC = () => {
     const [pareceres, setPareceres] = React.useState<any[]>([]);
     const [examesImagem, setExamesImagem] = React.useState<any[]>([]);
     const [dietsData, setDietsData] = React.useState<any[]>([]);
+    const [controlesSaidasData, setControlesSaidasData] = React.useState<any[]>([]);
     const [dataInicio, setDataInicio] = React.useState<string>('');
     const [dataFinal, setDataFinal] = React.useState<string>('');
     const [selectedCategories, setSelectedCategories] = React.useState<Set<string>>(new Set());
@@ -106,7 +107,8 @@ const PatientHistoryScreen: React.FC = () => {
         'Precauções': 'Precaução',
         'Transferência': 'Transferência',
         'Pareceres': 'Parecer',
-        'Exames de Imagem': 'Exame de Imagem'
+        'Exames de Imagem': 'Exame de Imagem',
+        'Controles e Saídas': 'Controles e Saídas'
     };
 
     useHeader(patient ? `Histórico: ${patient.name}` : 'Histórico do Paciente');
@@ -643,6 +645,23 @@ const PatientHistoryScreen: React.FC = () => {
         fetchPareceres();
     }, [patientId]);
 
+    // Buscar controles e saídas
+    React.useEffect(() => {
+        const fetchControlesSaidas = async () => {
+            if (!patientId) return;
+            try {
+                const { data, error } = await supabase
+                    .from('patient_controles_saidas')
+                    .select('*')
+                    .eq('patient_id', patientId)
+                    .order('data', { ascending: false });
+                if (error) return;
+                setControlesSaidasData(data || []);
+            } catch (err) {}
+        };
+        fetchControlesSaidas();
+    }, [patientId]);
+
     // Buscar exames de imagem
     React.useEffect(() => {
         const fetchExamesImagem = async () => {
@@ -1080,6 +1099,41 @@ const PatientHistoryScreen: React.FC = () => {
             });
         });
 
+        // Controles e Saídas
+        controlesSaidasData.forEach((registro: any) => {
+            const linhas: string[] = [`[CONTROLES_SAIDAS] 📊 Controles e Saídas — ${formatDateToBRL(registro.data)}`];
+
+            const controles: string[] = [];
+            if (registro.pam_min || registro.pam_max) controles.push(`Δ PAM: ${registro.pam_min}–${registro.pam_max} mmHg`);
+            if (registro.fc_min  || registro.fc_max)  controles.push(`Δ FC: ${registro.fc_min}–${registro.fc_max} bpm`);
+            if (registro.fr_min  || registro.fr_max)  controles.push(`Δ Fr: ${registro.fr_min}–${registro.fr_max} irpm`);
+            if (registro.tax_min || registro.tax_max) controles.push(`Δ Tax: ${registro.tax_min}–${registro.tax_max} ºC`);
+            if (registro.dxt_min  || registro.dxt_max)  controles.push(`Δ Dxt: ${registro.dxt_min}–${registro.dxt_max} mg/dl`);
+            if (registro.spo2_min || registro.spo2_max) controles.push(`SpO₂: ${registro.spo2_min}–${registro.spo2_max} %`);
+            if (controles.length > 0) linhas.push(`Controles: ${controles.join(' | ')}`);
+
+            const saidas: string[] = [];
+            if (registro.evacuacoes)       saidas.push(`Evacuações: ${registro.evacuacoes} g/ml`);
+            if (registro.dreno_torax)      saidas.push(`Dreno Tórax: ${registro.dreno_torax} ml/24h`);
+            if (registro.dve)              saidas.push(`DVE: ${registro.dve} ml/24h`);
+            if (registro.sng)              saidas.push(`SNG: ${registro.sng} ml/24h`);
+            if (registro.ileostomia)       saidas.push(`Ileostomia: ${registro.ileostomia} ml/24h`);
+            if (registro.penrose)          saidas.push(`Penrose: ${registro.penrose} ml/24h`);
+            if (registro.outros_drenos)    saidas.push(`${registro.outros_drenos_label || 'Outros drenos'}: ${registro.outros_drenos} ml/24h`);
+            if (registro.hemodialise)      saidas.push(`Hemodiálise: ${registro.hemodialise} ml/24h`);
+            if (registro.dialise_peritoneal) saidas.push(`Diálise Peritoneal: ${registro.dialise_peritoneal} ml/24h`);
+            if (saidas.length > 0) linhas.push(`Saídas: ${saidas.join(' | ')}`);
+
+            if (controles.length === 0 && saidas.length === 0) return;
+
+            events.push({
+                timestamp: `${registro.data}T00:00:00`,
+                icon: BarChartIcon,
+                description: linhas.join('\n'),
+                hasTime: false,
+            });
+        });
+
         events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
         const groupedEvents = events.reduce((acc, event) => {
@@ -1092,7 +1146,7 @@ const PatientHistoryScreen: React.FC = () => {
         }, {} as Record<string, TimelineEvent[]>);
 
         return groupedEvents;
-    }, [patient, tasks, diagnostics, diuresisData, balanceData, dietsData, alertsData, alertCompletions, alertJustifications, archivedAlerts, archivedDevices, archivedExams, archivedMedications, archivedProcedures, archivedCultures, archivedDiets, clinicalSituations24h, aportesHistorico, resolvedDiagnostics, archivedDiagnostics, auditLogData, pareceres, examesImagem]);
+    }, [patient, tasks, diagnostics, diuresisData, balanceData, dietsData, alertsData, alertCompletions, alertJustifications, archivedAlerts, archivedDevices, archivedExams, archivedMedications, archivedProcedures, archivedCultures, archivedDiets, clinicalSituations24h, aportesHistorico, resolvedDiagnostics, archivedDiagnostics, auditLogData, pareceres, examesImagem, controlesSaidasData]);
 
     const handleGeneratePdf = () => {
         // ... (PDF generation logic remains the same)
@@ -1503,7 +1557,8 @@ const PatientHistoryScreen: React.FC = () => {
             '[PRECAUCAO]': 'Precauções',
             '[TRANSFERENCIA]': 'Transferência',
             '[PARECER]': 'Pareceres',
-            '[EXAME_IMAGEM]': 'Exames de Imagem'
+            '[EXAME_IMAGEM]': 'Exames de Imagem',
+            '[CONTROLES_SAIDAS]': 'Controles e Saídas'
         };
 
         for (const [marker, category] of Object.entries(categoryMap)) {

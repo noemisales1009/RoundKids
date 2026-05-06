@@ -13,6 +13,7 @@ interface Data {
   fr_min: string;  fr_max: string;
   tax_min: string; tax_max: string;
   dxt_min: string; dxt_max: string;
+  spo2_min: string; spo2_max: string;
   evacuacoes: string;
   dreno_torax: string;
   dve: string;
@@ -28,7 +29,7 @@ interface Data {
 const EMPTY: Data = {
   pam_min: '', pam_max: '', fc_min: '', fc_max: '',
   fr_min: '', fr_max: '', tax_min: '', tax_max: '',
-  dxt_min: '', dxt_max: '', evacuacoes: '',
+  dxt_min: '', dxt_max: '', spo2_min: '', spo2_max: '', evacuacoes: '',
   dreno_torax: '', dve: '', sng: '', ileostomia: '',
   penrose: '', outros_drenos: '', outros_drenos_label: '',
   hemodialise: '', dialise_peritoneal: '',
@@ -39,7 +40,8 @@ const VITAIS = [
   { minKey: 'fc_min',  maxKey: 'fc_max',  label: 'Δ FC',  unit: 'bpm',   desc: 'Delta da Frequência Cardíaca' },
   { minKey: 'fr_min',  maxKey: 'fr_max',  label: 'Δ Fr',  unit: 'irpm',  desc: 'Delta da Frequência Respiratória' },
   { minKey: 'tax_min', maxKey: 'tax_max', label: 'Δ Tax', unit: 'ºC',    desc: 'Delta da Temperatura Axilar' },
-  { minKey: 'dxt_min', maxKey: 'dxt_max', label: 'Δ Dxt', unit: 'mg/dl', desc: 'Delta do Dextro / Glicemia capilar' },
+  { minKey: 'dxt_min',  maxKey: 'dxt_max',  label: 'Δ Dxt',  unit: 'mg/dl', desc: 'Delta do Dextro / Glicemia capilar' },
+  { minKey: 'spo2_min', maxKey: 'spo2_max', label: 'SpO₂',  unit: '%',     desc: 'Saturação de Oxigênio' },
 ] as const;
 
 const DRENO_OPTIONS = [
@@ -102,7 +104,8 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId }) => {
         fc_min:  row.fc_min  ?? '', fc_max:  row.fc_max  ?? '',
         fr_min:  row.fr_min  ?? '', fr_max:  row.fr_max  ?? '',
         tax_min: row.tax_min ?? '', tax_max: row.tax_max ?? '',
-        dxt_min: row.dxt_min ?? '', dxt_max: row.dxt_max ?? '',
+        dxt_min:  row.dxt_min  ?? '', dxt_max:  row.dxt_max  ?? '',
+        spo2_min: row.spo2_min ?? '', spo2_max: row.spo2_max ?? '',
         evacuacoes:          row.evacuacoes          ?? '',
         dreno_torax:         row.dreno_torax         ?? '',
         dve:                 row.dve                 ?? '',
