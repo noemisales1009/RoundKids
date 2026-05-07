@@ -375,6 +375,7 @@ export const ALERT_SYSTEMS: string[] = [
     'Avaliação nutricional e metabólica',
     'Avaliação imunológica',
     'Avaliação genética',
+    'Avaliação reumatológica',
     'Avaliação dermatológica',
     'Avaliação psiquiátrica',
     'Avaliação psicológica',

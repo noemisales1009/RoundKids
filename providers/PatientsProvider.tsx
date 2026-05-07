@@ -196,6 +196,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 peso: p.peso,
                 sc: p.sc,
                 sexo: p.sexo || undefined,
+                prontuario: p.prontuario || undefined,
                 status: p.status || 'estavel',
                 localTransferencia: p.local_transferencia || undefined,
                 comorbidade: p.comorbidade || undefined,
@@ -237,7 +238,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             categoriesRes,
             answersRes
         ] = await Promise.all([
-            supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc, local_transferencia, comorbidade, sexo').is('archived_at', null),
+            supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc, local_transferencia, comorbidade, sexo, prontuario').is('archived_at', null),
             supabase.from('perguntas').select('*').order('ordem', { ascending: true }),
             supabase.from('pergunta_opcoes').select('*').order('ordem', { ascending: true }),
             supabase.from('categorias').select('*').order('ordem', { ascending: true }),
@@ -263,6 +264,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             peso: p.peso || undefined,
             sc: p.sc || undefined,
             sexo: p.sexo || undefined,
+            prontuario: p.prontuario || undefined,
             devices: [],
             exams: [],
             medications: [],
@@ -281,7 +283,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const activePatientIds = basicPatients.map(p => p.id);
         setTimeout(() => {
             Promise.all([
-                supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc, local_transferencia, comorbidade, sexo').is('archived_at', null),
+                supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc, local_transferencia, comorbidade, sexo, prontuario').is('archived_at', null),
                 supabase.from('dispositivos_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
                 supabase.from('exames_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
                 supabase.from('medicacoes_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
@@ -895,12 +897,13 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (!error) refreshPatientPrecautions(patientId);
     };
 
-    const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number; sc?: number; sexo?: string }) => {
+    const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number; sc?: number; sexo?: string; prontuario?: string }) => {
         try {
             const updateData: any = {};
             if (data.motherName !== undefined) updateData.mother_name = data.motherName;
             if (data.ctd !== undefined) updateData.diagnosis = data.ctd;
             if (data.sexo !== undefined) updateData.sexo = data.sexo || null;
+            if (data.prontuario !== undefined) updateData.prontuario = data.prontuario || null;
             if (data.peso !== undefined) {
                 const pesoNumero = typeof data.peso === 'string' ? parseFloat(data.peso) : data.peso;
                 updateData.peso = pesoNumero || null;
@@ -934,6 +937,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                         ctd: data.ctd ?? p.ctd,
                         peso: data.peso ?? p.peso,
                         sc: data.sc ?? p.sc,
+                        sexo: data.sexo ?? p.sexo,
+                        prontuario: data.prontuario ?? p.prontuario,
                     };
                 }
                 return p;

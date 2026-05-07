@@ -300,7 +300,10 @@ const PatientDetailScreen: React.FC = () => {
                         </div>
                         <div>
                             <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white leading-tight">{patient.name}</h2>
-                            <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Leito {patient.bedNumber}</span>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Leito {patient.bedNumber}</span>
+                                {patient.prontuario && <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">· Pront. {patient.prontuario}</span>}
+                            </div>
                         </div>
                     </div>
 
@@ -937,7 +940,7 @@ const PatientDetailScreen: React.FC = () => {
             {editingDietRemovalDate && <EditDietRemovalDateModal diet={editingDietRemovalDate} patientId={patient.id} onClose={() => setEditingDietRemovalDate(null)} />}
             {isRemovalModalOpen && <AddRemovalDateModal deviceId={isRemovalModalOpen} patientId={patient.id} onClose={() => setRemovalModalOpen(null)} />}
             {isEndDateModalOpen && <AddEndDateModal medicationId={isEndDateModalOpen} patientId={patient.id} onClose={() => setEndDateModalOpen(null)} />}
-            {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} currentMotherName={patient.motherName} currentWeight={patient.peso} currentSC={patient.sc} currentSexo={patient.sexo} onClose={() => setEditInfoModalOpen(false)} />}
+            {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} currentMotherName={patient.motherName} currentWeight={patient.peso} currentSC={patient.sc} currentSexo={patient.sexo} currentProntuario={patient.prontuario} onClose={() => setEditInfoModalOpen(false)} />}
             {isCreateAlertModalOpen && <CreateAlertModal patientId={patient.id} onClose={() => setCreateAlertModalOpen(false)} />}
 
             {/* Modal Arquivar Paciente */}

@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient';
 import { sanitizeTextOrNull } from '../lib/sanitize';
 import { ThemeContext } from '../contexts';
 import { ChevronRightIcon } from './icons';
+import { ALERT_SYSTEMS } from '../constants';
 
 interface DiagnosticQuestion {
   id: number;
@@ -38,25 +39,7 @@ interface DiagnosticsSectionProps {
   onSave?: (data: PatientDiagnostic[]) => void;
 }
 
-const SISTEMAS = [
-  'Avaliação respiratória',
-  'Avaliação cardiovascular',
-  'Avaliação infecciosa',
-  'Avaliação renal',
-  'Avaliação neurológica',
-  'Avaliação hematológica/ oncológica',
-  'Avaliação nutricional e metabólica',
-  'Avaliação gastrointestinal',
-  'Avaliação imunológica',
-  'Avaliação genética',
-  'Avaliação psiquiátrica',
-  'Avaliação psicológica',
-  'Distúrbios hidroeletrolíticos e metabólicos',
-  'Gestão de riscos assistenciais',
-  'Avaliação cirúrgica',
-  'Notificação de eventos adversos',
-  'Outros',
-];
+const SISTEMAS = ALERT_SYSTEMS;
 
 // ── Sub-components defined OUTSIDE parent to keep stable references ──
 

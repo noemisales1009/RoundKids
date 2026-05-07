@@ -8,6 +8,7 @@ interface EditPatientInfoModalProps {
     currentWeight?: number;
     currentSC?: number;
     currentSexo?: string;
+    currentProntuario?: string;
     onClose: () => void;
 }
 
@@ -17,6 +18,7 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
     currentWeight,
     currentSC,
     currentSexo,
+    currentProntuario,
     onClose
 }) => {
     const { updatePatientDetails } = useContext(PatientsContext)!;
@@ -24,6 +26,7 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
     const [weight, setWeight] = useState(currentWeight?.toString() || '');
     const [sc, setSc] = useState(currentSC?.toString() || '');
     const [sexo, setSexo] = useState<string>(currentSexo || '');
+    const [prontuario, setProntuario] = useState(currentProntuario || '');
 
     // Fórmula de SC: (P × 4 + 7) / (P + 90)
     const calculateSC = (pesoKg: number) => {
@@ -49,6 +52,7 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
             peso: weight ? parseFloat(weight) : undefined,
             sc: sc ? parseFloat(sc) : undefined,
             sexo: sexo || undefined,
+            prontuario: prontuario || undefined,
         });
         onClose();
     };
@@ -63,6 +67,16 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
                     <button onClick={onClose}><CloseIcon className="w-5 h-5 sm:w-6 sm:h-6 text-slate-500 dark:text-slate-400" /></button>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Nº do Prontuário</label>
+                        <input
+                            type="text"
+                            value={prontuario}
+                            onChange={e => setProntuario(e.target.value)}
+                            placeholder="Ex: 123456"
+                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                        />
+                    </div>
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Nome da Mãe</label>
                         <input
