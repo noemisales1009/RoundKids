@@ -18,11 +18,15 @@ interface NotificacaoRecord {
   causa: string[] | null;
   causa_outros: string | null;
   created_at: string;
+  bed_number?: number | null;
+  patient_name?: string | null;
 }
 
 interface Props {
   patientId: string;
   patientName: string;
+  bedNumber?: number;
+  prontuario?: string;
   refresh?: number;
 }
 
@@ -86,7 +90,7 @@ const CAUSA_LABEL: Record<string, string> = {
 const fmtDateTime = (iso: string) =>
   new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 
-const generatePDF = (n: NotificacaoRecord, patientName: string) => {
+const generatePDF = (n: NotificacaoRecord, patientName: string, bedNumber?: number, prontuario?: string) => {
   const gravBadgeColor: Record<string, string> = {
     quase_evento:  '#2563eb', sem_dano: '#16a34a', dano_leve: '#ca8a04',
     dano_moderado: '#ea580c', grave: '#dc2626', sentinela: '#7c3aed',
@@ -200,7 +204,11 @@ const generatePDF = (n: NotificacaoRecord, patientName: string) => {
   <div class="patient-bar">
     <div>
       <div class="patient-label">Paciente</div>
-      <div class="patient-name">${patientName}</div>
+      <div class="patient-name">${n.patient_name ?? patientName}</div>
+      <div style="display:flex;gap:12px;margin-top:3px;">
+        ${(n.bed_number ?? bedNumber) ? `<span style="font-size:8.5pt;color:#2563eb;font-weight:600;">Leito ${n.bed_number ?? bedNumber}</span>` : ''}
+        ${prontuario ? `<span style="font-size:8.5pt;color:#64748b;">Pront. ${prontuario}</span>` : ''}
+      </div>
     </div>
     <div class="patient-date">
       <div class="patient-date-label">Data do evento</div>
@@ -287,7 +295,7 @@ const generatePDF = (n: NotificacaoRecord, patientName: string) => {
   setTimeout(() => win.print(), 600);
 };
 
-export const NotificacoesListCard: React.FC<Props> = ({ patientId, patientName, refresh }) => {
+export const NotificacoesListCard: React.FC<Props> = ({ patientId, patientName, bedNumber, prontuario, refresh }) => {
   const { user } = useContext(UserContext)!;
   const { showNotification } = useContext(NotificationContext)!;
   const [list, setList] = useState<NotificacaoRecord[]>([]);
@@ -398,7 +406,7 @@ export const NotificacoesListCard: React.FC<Props> = ({ patientId, patientName, 
 
                     <div className="flex items-center gap-1.5 shrink-0">
                       <button
-                        onClick={() => generatePDF(n, patientName)}
+                        onClick={() => generatePDF(n, patientName, bedNumber, prontuario)}
                         className="flex items-center gap-1 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold rounded-lg transition"
                         title="Gerar PDF"
                       >

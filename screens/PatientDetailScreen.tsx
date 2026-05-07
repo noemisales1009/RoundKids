@@ -589,6 +589,8 @@ const PatientDetailScreen: React.FC = () => {
             <Suspense fallback={<div />}>
                 <NotificacaoEventoCard
                     patientId={patient.id.toString()}
+                    bedNumber={patient.bedNumber}
+                    patientName={patient.name}
                     onSaved={() => setNotifRefresh(r => r + 1)}
                 />
             </Suspense>
@@ -597,6 +599,8 @@ const PatientDetailScreen: React.FC = () => {
                 <NotificacoesListCard
                     patientId={patient.id.toString()}
                     patientName={patient.name}
+                    bedNumber={patient.bedNumber}
+                    prontuario={patient.prontuario}
                     refresh={notifRefresh}
                 />
             </Suspense>

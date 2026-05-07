@@ -67,7 +67,7 @@ interface AlertaRecord {
 
 interface PropedeuticaExameImagem {
   id: string;
-  exame_nome: string;
+  exame: string;
   categoria: string;
   data_exame: string;
   sistema: string | null;
@@ -541,7 +541,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         const [imgRes, parRes] = await Promise.all([
           supabase
             .from('exames_imagem_pacientes')
-            .select('id, exame_nome, categoria, data_exame, sistema, resultado, observacao')
+            .select('id, exame, categoria, data_exame, sistema, resultado, observacao')
             .eq('paciente_id', patientId)
             .is('archived_at', null),
           supabase
@@ -700,7 +700,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       apLines.push(sec.label);
       if (meds.length) apLines.push(`  Medicações: ${meds.map(m => `${m.name}${m.dosage ? ` (${m.dosage})` : ''}`).join(', ')}`);
       if (exs.length)  apLines.push(`  Exames: ${exs.map(e => `${e.name} — ${e.result}`).join(', ')}`);
-      if (imgs.length) apLines.push(`  Imagem: ${imgs.map(i => `${i.exame_nome}${i.resultado ? ` — ${i.resultado}` : ''}`).join(', ')}`);
+      if (imgs.length) apLines.push(`  Imagem: ${imgs.map(i => `${i.exame}${i.resultado ? ` — ${i.resultado}` : ''}`).join(', ')}`);
       pars.forEach(par => apLines.push(`  Parecer (${par.especialista}): ${par.parecer ?? '—'}`));
       if (alts.length) apLines.push(`  Alertas: ${alts.map(a => `${a.alerta_descricao} [${a.status}]`).join(' | ')}`);
     });
@@ -850,9 +850,16 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white leading-tight">
                 {selectedPatient.name}
               </h2>
-              <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
-                Leito {selectedPatient.bedNumber}
-              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+                  Leito {selectedPatient.bedNumber}
+                </span>
+                {selectedPatient.prontuario && (
+                  <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                    · Pront. {selectedPatient.prontuario}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -1284,7 +1291,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                         <div className="space-y-1">
                           {secExamesImagem.map(ei => (
                             <div key={ei.id} className="p-2 bg-violet-50 dark:bg-violet-900/20 rounded-lg border border-violet-200 dark:border-violet-800">
-                              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ei.exame_nome}</p>
+                              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ei.exame}</p>
                               {ei.resultado && <p className="text-xs text-slate-500 dark:text-slate-400">{ei.resultado}</p>}
                               <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(ei.data_exame).toLocaleDateString('pt-BR')}</p>
                             </div>

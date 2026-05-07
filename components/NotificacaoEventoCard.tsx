@@ -4,6 +4,8 @@ import { UserContext, NotificationContext } from '../contexts';
 
 interface Props {
   patientId: string;
+  bedNumber?: number;
+  patientName?: string;
   onSaved?: () => void;
 }
 
@@ -84,7 +86,7 @@ const CheckRow: React.FC<{
   </label>
 );
 
-export const NotificacaoEventoCard: React.FC<Props> = ({ patientId, onSaved }) => {
+export const NotificacaoEventoCard: React.FC<Props> = ({ patientId, bedNumber, patientName, onSaved }) => {
   const { user } = useContext(UserContext)!;
   const { showNotification } = useContext(NotificationContext)!;
 
@@ -96,7 +98,7 @@ export const NotificacaoEventoCard: React.FC<Props> = ({ patientId, onSaved }) =
   const [tipoOutros, setTipoOutros] = useState('');
   const [gravidade, setGravidade] = useState('');
   const [profissional, setProfissional] = useState('');
-  const [local, setLocal] = useState('');
+  const [local, setLocal] = useState(bedNumber ? `Leito ${bedNumber}` : '');
   const [descricao, setDescricao] = useState('');
   const [conduta, setConduta] = useState('');
   const [tempoResposta, setTempoResposta] = useState('');
@@ -117,6 +119,8 @@ export const NotificacaoEventoCard: React.FC<Props> = ({ patientId, onSaved }) =
     try {
       const { error } = await supabase.from('notificacoes_eventos_paciente').insert({
         patient_id: patientId,
+        patient_name: patientName ?? null,
+        bed_number: bedNumber ?? null,
         data_hora: new Date(dataHora).toISOString(),
         tipo_natureza: tipoNatureza,
         tipo_natureza_outros: tipoOutros || null,
@@ -138,7 +142,7 @@ export const NotificacaoEventoCard: React.FC<Props> = ({ patientId, onSaved }) =
       // reset
       setDataHora(nowLocal());
       setTipoNatureza([]); setTipoOutros(''); setGravidade('');
-      setProfissional(''); setLocal(''); setDescricao('');
+      setProfissional(''); setLocal(bedNumber ? `Leito ${bedNumber}` : ''); setDescricao('');
       setConduta(''); setTempoResposta(''); setDesfecho('');
       setNotificacao([]); setCausa([]); setCausaOutros('');
       setOpen(false);
@@ -170,6 +174,16 @@ export const NotificacaoEventoCard: React.FC<Props> = ({ patientId, onSaved }) =
 
       {open && (
         <div className="px-4 pb-5 pt-4 space-y-4">
+
+          {/* Paciente */}
+          {(patientName || bedNumber) && (
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+              <div>
+                {patientName && <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{patientName}</p>}
+                {bedNumber && <p className="text-xs text-blue-500 font-semibold uppercase tracking-wide">Leito {bedNumber}</p>}
+              </div>
+            </div>
+          )}
 
           {/* 1. IDENTIFICAÇÃO */}
           <div>
