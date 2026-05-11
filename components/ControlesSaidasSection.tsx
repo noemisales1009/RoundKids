@@ -438,14 +438,27 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
                 {/* Drenos */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <p className={`text-xs font-bold uppercase tracking-wide ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      Drenos
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className={`text-xs font-bold uppercase tracking-wide ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        Drenos
+                      </p>
                       {activeDrenos.size > 0 && (
-                        <span className="ml-2 px-1.5 py-0.5 rounded-full text-[11px] bg-blue-500 text-white normal-case font-bold">
-                          {activeDrenos.size}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="px-1.5 py-0.5 rounded-full text-[11px] bg-blue-500 text-white font-bold">
+                            {activeDrenos.size}
+                          </span>
+                          {DRENO_OPTIONS.filter(({ key }) => activeDrenos.has(key)).map(({ key, label }) => (
+                            <span key={key} className={`text-[11px] px-2 py-0.5 rounded-full font-semibold border ${
+                              isDark
+                                ? 'bg-blue-900/40 text-blue-300 border-blue-700/60'
+                                : 'bg-blue-50 text-blue-700 border-blue-200'
+                            }`}>
+                              {key === 'outros_drenos' && data.outros_drenos_label ? data.outros_drenos_label : label}
+                            </span>
+                          ))}
+                        </div>
                       )}
-                    </p>
+                    </div>
 
                     {isEditing && !isArchived && (
                       <div className="relative" ref={dropdownRef}>

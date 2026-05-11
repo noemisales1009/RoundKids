@@ -14,6 +14,7 @@ interface DiagItem {
   texto_digitado?: string;
   status: 'resolvido' | 'nao_resolvido';
   tipo: 'principal' | 'secundario';
+  sistema?: string;
   created_at?: string;
   resolved_at?: string | null;
 }
@@ -46,6 +47,7 @@ interface AporteRecord {
   hv_npt_ml_kg_h: number;
   medicacoes_ml_kg_h: number;
   tht_ml_kg_h: number;
+  sistema?: string;
 }
 
 interface SituacaoClinicaRecord {
@@ -105,53 +107,53 @@ interface ExameFisicoState {
   urinario: string; neurologico: string;
 }
 
+interface ControlesSaidasRec {
+  pam_min: string; pam_max: string;
+  fc_min: string;  fc_max: string;
+  fr_min: string;  fr_max: string;
+  tax_min: string; tax_max: string;
+  dxt_min: string; dxt_max: string;
+  spo2_min: string; spo2_max: string;
+  evacuacoes: string;
+  dreno_torax: string;
+  dve: string; sng: string; ileostomia: string;
+  penrose: string; outros_drenos: string; outros_drenos_label: string;
+  hemodialise: string; dialise_peritoneal: string;
+}
+
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const VITAIS = [
-  { keyMin: 'pamMin', keyMax: 'pamMax', label: 'Δ PAM', unit: 'mmHg', desc: 'Delta da Pressão Arterial Média' },
-  { keyMin: 'fcMin',  keyMax: 'fcMax',  label: 'Δ FC',  unit: 'bpm',  desc: 'Delta da Frequência Cardíaca' },
-  { keyMin: 'frMin',  keyMax: 'frMax',  label: 'Δ Fr',  unit: 'irpm', desc: 'Delta da Frequência Respiratória' },
-  { keyMin: 'taxMin', keyMax: 'taxMax', label: 'Δ Tax', unit: 'ºC',   desc: 'Delta da Temperatura Axilar' },
-  { keyMin: 'dxtMin', keyMax: 'dxtMax', label: 'Δ Dxt', unit: 'mg/dl',desc: 'Delta do Dextro / Glicemia capilar' },
-];
-
-const DRENOS = [
-  { key: 'dve',         label: 'DVE (Derivação Ventricular Externa)' },
-  { key: 'sng',         label: 'SNG (Sonda Nasogástrica)' },
-  { key: 'ileostomia',  label: 'ILEOSTOMIA' },
-  { key: 'penrose',     label: 'PENROSE' },
-  { key: 'outrosDrenos',label: 'OUTROS' },
-];
 
 const EXAME_SECTIONS = [
-  { key: 'monitorizacao',  label: '9.1 Monitorização' },
-  { key: 'ectoscopia',     label: '9.2 Ectoscopia' },
-  { key: 'peleFaneros',    label: '9.3 Pele e Fâneros' },
-  { key: 'respiratorio',   label: '9.4 Aparelho Respiratório' },
-  { key: 'cardiovascular', label: '9.5/9.6 Aparelho Cardiovascular' },
-  { key: 'digestivo',      label: '9.7 Aparelho Digestivo' },
-  { key: 'urinario',       label: '9.8 Sistema Urinário' },
-  { key: 'neurologico',    label: '9.9 Neurológico' },
+  { key: 'monitorizacao',  label: '13.1 Monitorização' },
+  { key: 'ectoscopia',     label: '13.2 Ectoscopia' },
+  { key: 'peleFaneros',    label: '13.3 Pele e Fâneros' },
+  { key: 'respiratorio',   label: '13.4 Aparelho Respiratório' },
+  { key: 'cardiovascular', label: '13.5/13.6 Aparelho Cardiovascular' },
+  { key: 'digestivo',      label: '13.7 Aparelho Digestivo' },
+  { key: 'urinario',       label: '13.8 Sistema Urinário' },
+  { key: 'neurologico',    label: '13.9 Neurológico' },
 ];
 
 const AVALIACAO_SECTIONS = [
-  { id: 'respiratoria',   label: '10.1 Avaliação Respiratória' },
-  { id: 'cardiovascular', label: '10.2 Avaliação Cardiovascular / Hemodinâmica' },
-  { id: 'infecciosa',     label: '10.3 Avaliação Infecciosa', hasIRAS: true },
-  { id: 'renal',          label: '10.4 Avaliação Renal' },
-  { id: 'dhe_metabolica', label: '10.5 Avaliação DHE / Metabólica' },
-  { id: 'endocrinologia', label: '10.6 Avaliação Endocrinologia' },
-  { id: 'gastrointestinal', label: '10.7 Avaliação Gastrointestinal' },
-  { id: 'hematologica',   label: '10.8/10.9 Avaliação Hematológica / Oncológica' },
-  { id: 'genetica',       label: '10.10 Avaliação Genética' },
-  { id: 'imunologica',    label: '10.11 Avaliação Imunológica' },
-  { id: 'neurologica_av', label: '10.12 Avaliação Neurológica' },
-  { id: 'psiquiatrica',   label: '10.13 Avaliação Psiquiátrica' },
-  { id: 'gerenciamento',  label: '10.14/10.15 Gerenciamento de Riscos' },
-  { id: 'eventos',        label: '10.16 Eventos x Notificações' },
-  { id: 'outras_av',      label: '10.17 Outras' },
+  { id: 'respiratoria',   label: '14.1 Avaliação Respiratória' },
+  { id: 'cardiovascular', label: '14.2 Avaliação Cardiovascular / Hemodinâmica' },
+  { id: 'infecciosa',     label: '14.3 Avaliação Infecciosa', hasIRAS: true },
+  { id: 'renal',          label: '14.4 Avaliação Renal' },
+  { id: 'dhe_metabolica', label: '14.5 Avaliação DHE / Metabólica' },
+  { id: 'endocrinologia', label: '14.6 Avaliação Endocrinologia' },
+  { id: 'gastrointestinal', label: '14.7 Avaliação Gastrointestinal' },
+  { id: 'hematologica',   label: '14.8/14.9 Avaliação Hematológica / Oncológica' },
+  { id: 'genetica',       label: '14.10 Avaliação Genética' },
+  { id: 'imunologica',    label: '14.11 Avaliação Imunológica' },
+  { id: 'neurologica_av', label: '14.12 Avaliação Neurológica' },
+  { id: 'psiquiatrica',   label: '14.13 Avaliação Psiquiátrica' },
+  { id: 'gerenciamento',  label: '14.14/14.15 Gerenciamento de Riscos' },
+  { id: 'eventos',        label: '14.16 Eventos x Notificações' },
+  { id: 'outras_av',      label: '14.17 Outras' },
 ] as const;
+
 
 const PREC_BADGE: Record<string, { label: string; cls: string }> = {
   padrao:                     { label: 'Padrão',              cls: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
@@ -239,7 +241,6 @@ const calcDays = (startDate: string) => {
 
 const inputCls = "w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg py-2.5 px-3 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm";
 const labelCls = "block text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5";
-const numInputCls = "w-20 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md py-1.5 px-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-center";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -328,15 +329,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
   const [diagItems, setDiagItems] = useState<DiagItem[]>([]);
   const [diagLoading, setDiagLoading] = useState(false);
-  const [controles, setControles] = useState<ControlesState>({
-    pamMin: '', pamMax: '', fcMin: '', fcMax: '',
-    frMin: '', frMax: '', taxMin: '', taxMax: '', dxtMin: '', dxtMax: '',
-  });
-  const [saidas, setSaidas] = useState<SaidasState>({
-    diurese: '', evacuacoes: '', drenoTorax: '',
-    dve: '', sng: '', ileostomia: '', penrose: '', outrosDrenos: '',
-    hemodialise: '', dialisePeritoneal: '',
-  });
+
   const [bhBalance, setBhBalance] = useState<BHBalanceRecord | null>(null);
   const [bhCumul, setBhCumul] = useState<BHCumulativoRecord | null>(null);
   const [bhLoading, setBhLoading] = useState(false);
@@ -346,6 +339,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   const [aportesLoading, setAportesLoading] = useState(false);
   const [situacaoRec, setSituacaoRec] = useState<SituacaoClinicaRecord | null>(null);
   const [situacaoLoading, setSituacaoLoading] = useState(false);
+  const [controlesSaidasRec, setControlesSaidasRec] = useState<ControlesSaidasRec | null>(null);
   const [exameFisico, setExameFisico] = useState<ExameFisicoState>({
     monitorizacao: '', ectoscopia: '', peleFaneros: '',
     respiratorio: '', cardiovascular: '', digestivo: '',
@@ -356,6 +350,12 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   const [examesImagemList, setExamesImagemList] = useState<PropedeuticaExameImagem[]>([]);
   const [pareceresList, setPareceresList] = useState<PropedeuticaParecer[]>([]);
   const [condutasCriticas, setCondutasCriticas] = useState('');
+  const [wordExcluded, setWordExcluded] = useState<Set<string>>(new Set());
+  const toggleWordItem = (key: string) => setWordExcluded(prev => {
+    const s = new Set(prev);
+    s.has(key) ? s.delete(key) : s.add(key);
+    return s;
+  });
 
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['diagPrincipais', 'diagSecundarios']));
   const [openAvaliacoes, setOpenAvaliacoes] = useState<Set<string>>(new Set());
@@ -372,11 +372,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     return s;
   });
 
-  const updateControles = (key: keyof ControlesState, val: string) =>
-    setControles(prev => ({ ...prev, [key]: val }));
-
-  const updateSaidas = (key: keyof SaidasState, val: string) =>
-    setSaidas(prev => ({ ...prev, [key]: val }));
 
   const updateExame = (key: keyof ExameFisicoState, val: string) =>
     setExameFisico(prev => ({ ...prev, [key]: val }));
@@ -415,6 +410,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           texto_digitado: d.texto_digitado,
           status: d.status,
           tipo: qTipo[opts[d.opcao_id]?.pergunta_id] ?? 'principal',
+          sistema: d.sistema,
           created_at: d.created_at,
           resolved_at: d.resolved_at,
         }));
@@ -490,7 +486,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       try {
         const { data } = await supabase
           .from('aportes_pacientes')
-          .select('id, data_referencia, vo_ml_kg_h, hv_npt_ml_kg_h, medicacoes_ml_kg_h, tht_ml_kg_h')
+          .select('id, data_referencia, vo_ml_kg_h, hv_npt_ml_kg_h, medicacoes_ml_kg_h, tht_ml_kg_h, sistema')
           .eq('paciente_id', patientId)
           .is('archived_at', null)
           .order('data_referencia', { ascending: false });
@@ -501,6 +497,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           hv_npt_ml_kg_h: parseFloat(r.hv_npt_ml_kg_h),
           medicacoes_ml_kg_h: parseFloat(r.medicacoes_ml_kg_h),
           tht_ml_kg_h: parseFloat(r.tht_ml_kg_h),
+          sistema: r.sistema,
         })));
       } catch (e) {
         console.error('Erro ao carregar aportes:', e);
@@ -587,6 +584,38 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     fetchAlertas();
   }, [patientId]);
 
+  useEffect(() => {
+    if (!patientId || !date) { setControlesSaidasRec(null); return; }
+    supabase
+      .from('patient_controles_saidas')
+      .select('*')
+      .eq('patient_id', patientId)
+      .eq('data', date)
+      .is('archived_at', null)
+      .maybeSingle()
+      .then(({ data: row }) => {
+        if (!row) { setControlesSaidasRec(null); return; }
+        setControlesSaidasRec({
+          pam_min: row.pam_min ?? '', pam_max: row.pam_max ?? '',
+          fc_min:  row.fc_min  ?? '', fc_max:  row.fc_max  ?? '',
+          fr_min:  row.fr_min  ?? '', fr_max:  row.fr_max  ?? '',
+          tax_min: row.tax_min ?? '', tax_max: row.tax_max ?? '',
+          dxt_min: row.dxt_min ?? '', dxt_max: row.dxt_max ?? '',
+          spo2_min: row.spo2_min ?? '', spo2_max: row.spo2_max ?? '',
+          evacuacoes:          row.evacuacoes          ?? '',
+          dreno_torax:         row.dreno_torax         ?? '',
+          dve:                 row.dve                 ?? '',
+          sng:                 row.sng                 ?? '',
+          ileostomia:          row.ileostomia          ?? '',
+          penrose:             row.penrose             ?? '',
+          outros_drenos:       row.outros_drenos       ?? '',
+          outros_drenos_label: row.outros_drenos_label ?? '',
+          hemodialise:         row.hemodialise         ?? '',
+          dialise_peritoneal:  row.dialise_peritoneal  ?? '',
+        });
+      });
+  }, [patientId, date]);
+
   const handleSelectPatient = (p: Patient) => {
     setPatientId(String(p.id));
     setSearch('');
@@ -607,34 +636,43 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     add('EVOLUÇÃO DIÁRIA');
     add(`Data: ${new Date(date + 'T12:00:00').toLocaleDateString('pt-BR')}`);
     blank();
-    add(sep);
-    add(`PACIENTE: ${p.name}`);
-    add(`LEITO: ${p.bedNumber}`);
-    add(`IDADE: ${p.dob ? formatAge(p.dob) : '—'} | SEXO: ${p.sexo === 'Masculino' || p.sexo === 'M' ? 'Masculino' : p.sexo === 'Feminino' || p.sexo === 'F' ? 'Feminino' : p.sexo ?? 'Não informado'}`);
-    if (p.motherName) add(`MÃE: ${p.motherName}`);
-    add(`PESO: ${p.peso ? `${p.peso} kg` : '—'} | SC: ${p.sc ? `${p.sc} m²` : '—'}`);
-    add(`INTERNAÇÃO: ${p.admissionDate ? `${formatDateToBRL(p.admissionDate)} · ${calcDays(p.admissionDate)} dia(s)` : '—'}`);
-    add(sep);
+
+    title('1. IDENTIFICAÇÃO');
+    add(`Paciente: ${p.name}`);
+    add(`Prontuário: ${p.prontuario || '—'}   Leito: ${p.bedNumber}`);
+    add(`Idade: ${p.dob ? formatAge(p.dob) : '—'}   Sexo: ${p.sexo === 'Masculino' || p.sexo === 'M' ? 'Masculino' : p.sexo === 'Feminino' || p.sexo === 'F' ? 'Feminino' : p.sexo ?? 'Não informado'}`);
+    if (p.motherName) add(`Mãe: ${p.motherName}`);
+    add(`Peso: ${p.peso ? `${p.peso} kg` : '—'}   SC: ${p.sc ? `${p.sc} m²` : '—'}`);
+    add(`Internação: ${p.admissionDate ? `${formatDateToBRL(p.admissionDate)} · ${calcDays(p.admissionDate)} dia(s)` : '—'}`);
 
     if (p.status) {
       const cfg = STATUS_CONFIG[p.status as keyof typeof STATUS_CONFIG];
-      if (cfg) add(`STATUS: ${cfg.label}`);
-    }
-    if (p.comorbidade) {
-      add(`COMORBIDADES: ${p.comorbidade.split('|').filter(c => c.trim()).join(', ')}`);
-    }
-    const precAtivas = (p.precautions ?? []).filter(pr => !pr.isArchived && !pr.data_fim);
-    if (precAtivas.length > 0) {
-      add(`PRECAUÇÕES: ${precAtivas.map(pr => PREC_BADGE[pr.tipo_precaucao]?.label ?? pr.tipo_precaucao).join(', ')}`);
+      if (cfg) {
+        title('2. STATUS');
+        add(cfg.label);
+      }
     }
 
+    if (p.comorbidade) {
+      title('3. COMORBIDADES');
+      p.comorbidade.split('|').filter(c => c.trim()).forEach(c => add(`• ${c.trim()}`));
+    }
+
+    const precAtivas = (p.precautions ?? []).filter(pr => !pr.isArchived && !pr.data_fim);
+    if (precAtivas.length > 0) {
+      title('4. PRECAUÇÕES');
+      precAtivas.forEach(pr => add(`• ${PREC_BADGE[pr.tipo_precaucao]?.label ?? pr.tipo_precaucao}`));
+    }
+
+    const we = wordExcluded;
     const principais = diagItems.filter(d => d.tipo === 'principal');
     if (principais.length > 0) {
       title('5. DIAGNÓSTICOS PRINCIPAIS');
       principais.forEach(d => {
         const lbl = d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label;
         const det = d.label !== 'Outros' && d.texto_digitado ? ` (${d.texto_digitado})` : '';
-        add(`• ${lbl}${det} — ${d.status === 'resolvido' ? 'Resolvido' : 'Não resolvido'}`);
+        const dataCriacao = d.created_at ? `  Em ${formatDateToBRL(d.created_at)}` : '';
+        add(`• ${lbl}${det}${dataCriacao}`);
       });
     }
 
@@ -644,33 +682,74 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       secundarios.forEach(d => {
         const lbl = d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label;
         const det = d.label !== 'Outros' && d.texto_digitado ? ` (${d.texto_digitado})` : '';
-        add(`• ${lbl}${det} — ${d.status === 'resolvido' ? 'Resolvido' : 'Não resolvido'}`);
+        const dataCriacao = d.created_at ? `  Em ${formatDateToBRL(d.created_at)}` : '';
+        add(`• ${lbl}${det}${dataCriacao}`);
       });
+    }
+
+    if (controlesSaidasRec) {
+      const cs = controlesSaidasRec;
+      const vitaisLines: string[] = [];
+      const vitaisDef = [
+        { min: cs.pam_min, max: cs.pam_max, label: 'Δ PAM', unit: 'mmHg' },
+        { min: cs.fc_min,  max: cs.fc_max,  label: 'Δ FC',  unit: 'bpm' },
+        { min: cs.fr_min,  max: cs.fr_max,  label: 'Δ Fr',  unit: 'irpm' },
+        { min: cs.tax_min, max: cs.tax_max, label: 'Δ Tax', unit: 'ºC' },
+        { min: cs.dxt_min, max: cs.dxt_max, label: 'Δ Dxt', unit: 'mg/dl' },
+        { min: cs.spo2_min, max: cs.spo2_max, label: 'SpO₂', unit: '%' },
+      ];
+      vitaisDef.forEach(v => {
+        if (v.min || v.max) vitaisLines.push(`  ${v.label}: ${v.min || '—'} – ${v.max || '—'} ${v.unit}`);
+      });
+      const saidasLines: string[] = [];
+      if (cs.evacuacoes)         saidasLines.push(`  Evacuações: ${cs.evacuacoes}`);
+      if (cs.dreno_torax)        saidasLines.push(`  Dreno Tórax: ${cs.dreno_torax} ml`);
+      if (cs.dve)                saidasLines.push(`  DVE: ${cs.dve} ml`);
+      if (cs.sng)                saidasLines.push(`  SNG: ${cs.sng} ml`);
+      if (cs.ileostomia)         saidasLines.push(`  Ileostomia: ${cs.ileostomia} ml`);
+      if (cs.penrose)            saidasLines.push(`  Penrose: ${cs.penrose} ml`);
+      if (cs.outros_drenos)      saidasLines.push(`  ${cs.outros_drenos_label || 'Outros'}: ${cs.outros_drenos} ml`);
+      if (cs.hemodialise)        saidasLines.push(`  Hemodiálise: ${cs.hemodialise} ml`);
+      if (cs.dialise_peritoneal) saidasLines.push(`  Diálise Peritoneal: ${cs.dialise_peritoneal} ml`);
+      if (vitaisLines.length > 0 || saidasLines.length > 0) {
+        title('7. CONTROLES E SAÍDAS');
+        if (vitaisLines.length > 0) { add('Controles:'); vitaisLines.forEach(l => add(l)); }
+        if (saidasLines.length > 0) { if (vitaisLines.length > 0) blank(); add('Saídas:'); saidasLines.forEach(l => add(l)); }
+      }
     }
 
     if (bhBalance) {
       title('8. BH DIÁRIO');
       const pct = bhBalance.volume / (bhBalance.peso * 10);
       add(`${pct.toFixed(2)}% — ${bhBalance.volume > 0 ? 'Ganho' : 'Perda'}`);
-      add(`Peso: ${bhBalance.peso} kg | Volume: ${bhBalance.volume > 0 ? '+' : ''}${bhBalance.volume} mL`);
+      add(`Peso: ${bhBalance.peso} kg`);
+      add(`Volume: ${bhBalance.volume > 0 ? '+' : ''}${bhBalance.volume} mL`);
     }
 
     if (bhCumul && bhCumul.registros_ultimas_24h > 0) {
       title('9. BH CUMULATIVO');
       add(`Total: ${bhCumul.bh_cumulativo_total > 0 ? '+' : ''}${bhCumul.bh_cumulativo_total.toFixed(2)}%`);
-      add(`Anterior: ${bhCumul.bh_historico_antigo.toFixed(2)}% | Últimas 24h: ${bhCumul.bh_ultimas_24h.toFixed(2)}%`);
+      add(`BH Anterior: ${bhCumul.bh_historico_antigo.toFixed(2)}%`);
+      add(`Últimas 24h: ${bhCumul.bh_ultimas_24h.toFixed(2)}%`);
     }
 
     if (diureseRec) {
       title('10. DIURESE');
       add(`${((diureseRec.volume / diureseRec.horas) / diureseRec.peso).toFixed(2)} mL/kg/h`);
-      add(`Peso: ${diureseRec.peso} kg | Volume: ${diureseRec.volume} mL | ${diureseRec.horas}h`);
+      add(`Peso: ${diureseRec.peso} kg`);
+      add(`Volume: ${diureseRec.volume} mL`);
+      add(`Período: ${diureseRec.horas}h`);
     }
 
     if (aportesList.length > 0) {
       title('11. APORTES');
       aportesList.forEach(a => {
-        add(`${new Date(a.data_referencia + 'T12:00:00').toLocaleDateString('pt-BR')}: VO ${a.vo_ml_kg_h.toFixed(3)} | HV/NPT ${a.hv_npt_ml_kg_h.toFixed(3)} | MED ${a.medicacoes_ml_kg_h.toFixed(3)} | THT ${a.tht_ml_kg_h.toFixed(3)} mL/kg/h`);
+        add(new Date(a.data_referencia + 'T12:00:00').toLocaleDateString('pt-BR'));
+        add(`VO: ${a.vo_ml_kg_h.toFixed(2)} mL/kg/h`);
+        add(`HV/NPT: ${a.hv_npt_ml_kg_h.toFixed(2)} mL/kg/h`);
+        add(`MED: ${a.medicacoes_ml_kg_h.toFixed(2)} mL/kg/h`);
+        add(`THT: ${a.tht_ml_kg_h.toFixed(2)} mL/kg/h`);
+        blank();
       });
     }
 
@@ -683,36 +762,54 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       title('13. EXAME FÍSICO');
       EXAME_SECTIONS.forEach(s => {
         const val = exameFisico[s.key as keyof ExameFisicoState];
-        if (val?.trim()) add(`${s.label}: ${val}`);
+        if (val?.trim()) add(`${s.label.replace(/^[\d./ ]+/, '')}: ${val}`);
       });
     }
 
     const apLines: string[] = [];
     AVALIACAO_SECTIONS.forEach(sec => {
       const sistemas = SECTION_SISTEMAS[sec.id] ?? [];
-      const meds = (p.medications ?? []).filter(m => !m.isArchived && m.sistema && sistemas.includes(m.sistema));
-      const exs  = (p.exams ?? []).filter(e => !e.isArchived && e.sistema && sistemas.includes(e.sistema));
-      const imgs = examesImagemList.filter(ei => ei.sistema && sistemas.includes(ei.sistema));
-      const pars = pareceresList.filter(par => (ESPECIALISTA_TO_SISTEMAS[par.especialista] ?? []).some(s => sistemas.includes(s)));
-      const alts = alertasList.filter(a => sistemas.length > 0 && a.sistemas.some(s => sistemas.includes(s)));
-      if (meds.length + exs.length + imgs.length + pars.length + alts.length === 0) return;
+      const diags = diagItems.filter(d => d.sistema && sistemas.includes(d.sistema) && !we.has(`diag_${d.opcao_id}`));
+      const disps = (p.devices ?? []).filter(d => !d.isArchived && d.sistema && sistemas.includes(d.sistema) && !we.has(`disp_${d.id}`));
+      const cirgs = (p.surgicalProcedures ?? []).filter(c => !c.isArchived && c.sistema && sistemas.includes(c.sistema) && !we.has(`cir_${c.id}`));
+      const cults = (p.cultures ?? []).filter(c => !c.isArchived && c.sistema && sistemas.includes(c.sistema) && !we.has(`cult_${c.id}`));
+      const diets = (p.diets ?? []).filter(d => !d.isArchived && d.sistema && sistemas.includes(d.sistema) && !we.has(`diet_${d.id}`));
+      const apts  = aportesList.filter(a => a.sistema && sistemas.includes(a.sistema) && !we.has(`apt_${a.id}`));
+      const meds  = (p.medications ?? []).filter(m => !m.isArchived && m.sistema && sistemas.includes(m.sistema) && !we.has(`med_${m.id}`));
+      const exs   = (p.exams ?? []).filter(e => !e.isArchived && e.sistema && sistemas.includes(e.sistema) && !we.has(`exam_${e.id}`));
+      const imgs  = examesImagemList.filter(ei => ei.sistema && sistemas.includes(ei.sistema) && !we.has(`img_${ei.id}`));
+      const pars  = pareceresList.filter(par => (ESPECIALISTA_TO_SISTEMAS[par.especialista] ?? []).some(s => sistemas.includes(s)) && !we.has(`par_${par.id}`));
+      const alts  = alertasList.filter(a => sistemas.length > 0 && a.sistemas.some(s => sistemas.includes(s)) && !we.has(`alt_${a.id}`));
+      if (diags.length + disps.length + cirgs.length + cults.length + diets.length + apts.length + meds.length + exs.length + imgs.length + pars.length + alts.length === 0) return;
       apLines.push('');
-      apLines.push(sec.label);
+      apLines.push(sec.label.replace(/^[\d./]+\s*/, ''));
+      if (diags.length) {
+        diags.forEach(d => {
+          const lbl = d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label;
+          const det = d.label !== 'Outros' && d.texto_digitado ? ` (${d.texto_digitado})` : '';
+          const dt = d.created_at ? ` — ${formatDateToBRL(d.created_at)}` : '';
+          apLines.push(`  • ${lbl}${det}${dt}`);
+        });
+        apLines.push('');
+      }
+      if (disps.length) apLines.push(`  Dispositivos: ${disps.map(d => `${d.name}${d.location ? ` (${d.location})` : ''} — ${formatDateToBRL(d.startDate)}`).join(', ')}`);
+      if (cirgs.length) apLines.push(`  Cirurgias: ${cirgs.map(c => `${c.name} — ${formatDateToBRL(c.date)}`).join(', ')}`);
+      if (cults.length) apLines.push(`  Culturas: ${cults.map(c => `${c.site}${c.microorganism ? ` — ${c.microorganism}` : ''}`).join(', ')}`);
+      if (diets.length) apLines.push(`  Dietas: ${diets.map(d => `${d.type}${d.volume ? ` ${d.volume}ml` : ''}`).join(', ')}`);
+      if (apts.length)  apLines.push(`  Aportes: ${apts.map(a => `THT ${a.tht_ml_kg_h.toFixed(2)} mL/kg/h (${formatDateToBRL(a.data_referencia)})`).join(', ')}`);
       if (meds.length) apLines.push(`  Medicações: ${meds.map(m => `${m.name}${m.dosage ? ` (${m.dosage})` : ''}`).join(', ')}`);
-      if (exs.length)  apLines.push(`  Exames: ${exs.map(e => `${e.name} — ${e.result}`).join(', ')}`);
+      if (exs.length)  apLines.push(`  Exames: ${exs.map(e => `${e.name}${e.date ? ` — ${formatDateToBRL(e.date)}` : ''}`).join(', ')}`);
       if (imgs.length) apLines.push(`  Imagem: ${imgs.map(i => `${i.exame}${i.resultado ? ` — ${i.resultado}` : ''}`).join(', ')}`);
       pars.forEach(par => apLines.push(`  Parecer (${par.especialista}): ${par.parecer ?? '—'}`));
-      if (alts.length) apLines.push(`  Alertas: ${alts.map(a => `${a.alerta_descricao} [${a.status}]`).join(' | ')}`);
+      if (alts.length) apLines.push(`  Condutas: ${alts.map(a => a.alerta_descricao).join(' | ')}`);
     });
     if (apLines.length > 0) {
       title('14. AP — AVALIAÇÃO x PROPEDÊUTICA');
       apLines.forEach(l => add(l));
     }
 
-    if (condutasCriticas.trim()) {
-      title('15. CONDUTAS CRÍTICAS');
-      add(condutasCriticas);
-    }
+    title('15. CONDUTAS CRÍTICAS — PRÓXIMAS 24H');
+    if (condutasCriticas.trim()) add(condutasCriticas);
 
     blank();
     add(sep);
@@ -720,21 +817,12 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     return lines.join('\n');
   };
 
-  const handleDownloadTxt = () => {
-    const content = buildTextContent();
-    const blob = new Blob(['﻿' + content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `evolucao_${selectedPatient!.name.replace(/\s+/g, '_')}_${date}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
 
-  const handleDownloadDoc = () => {
-    const content = buildTextContent();
+  const handleDownloadDoc = async () => {
+    const content = buildTextContent()
+      .split('\n')
+      .filter(line => !/^─+$/.test(line.trim()))
+      .join('\n');
     const escaped = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
 <head><meta charset='utf-8'><title>Evolução Diária</title>
@@ -749,6 +837,28 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+
+    const hasExame = Object.values(exameFisico).some(v => v.trim());
+    if (hasExame || condutasCriticas.trim()) {
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.from('evolucao_diaria_registros').insert({
+        patient_id: patientId,
+        data_evolucao: date,
+        exame_fisico_monitorizacao:  exameFisico.monitorizacao  || null,
+        exame_fisico_ectoscopia:     exameFisico.ectoscopia     || null,
+        exame_fisico_pele_faneros:   exameFisico.peleFaneros    || null,
+        exame_fisico_respiratorio:   exameFisico.respiratorio   || null,
+        exame_fisico_cardiovascular: exameFisico.cardiovascular || null,
+        exame_fisico_digestivo:      exameFisico.digestivo      || null,
+        exame_fisico_urinario:       exameFisico.urinario       || null,
+        exame_fisico_neurologico:    exameFisico.neurologico    || null,
+        condutas_criticas:           condutasCriticas           || null,
+        created_by: user?.id ?? null,
+      });
+    }
+
+    setExameFisico({ monitorizacao: '', ectoscopia: '', peleFaneros: '', respiratorio: '', cardiovascular: '', digestivo: '', urinario: '', neurologico: '' });
+    setCondutasCriticas('');
   };
 
   // ─── Patient selector ─────────────────────────────────────────────────────
@@ -907,12 +1017,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           />
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={handleDownloadTxt}
-            className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold transition"
-          >
-            Baixar TXT
-          </button>
           <button
             onClick={handleDownloadDoc}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
@@ -1223,6 +1327,16 @@ export const EvolucaoDiariaScreen: React.FC = () => {
             {AVALIACAO_SECTIONS.map(sec => {
               const sistemas = SECTION_SISTEMAS[sec.id] ?? [];
 
+              const secDiags = diagItems.filter(d => d.sistema && sistemas.includes(d.sistema));
+              const secDispositivos = (selectedPatient?.devices ?? [])
+                .filter(d => !d.isArchived && d.sistema && sistemas.includes(d.sistema));
+              const secCirurgias = (selectedPatient?.surgicalProcedures ?? [])
+                .filter(c => !c.isArchived && c.sistema && sistemas.includes(c.sistema));
+              const secCulturas = (selectedPatient?.cultures ?? [])
+                .filter(c => !c.isArchived && c.sistema && sistemas.includes(c.sistema));
+              const secDietas = (selectedPatient?.diets ?? [])
+                .filter(d => !d.isArchived && d.sistema && sistemas.includes(d.sistema));
+              const secAportes = aportesList.filter(a => a.sistema && sistemas.includes(a.sistema));
               const secMedicacoes = (selectedPatient?.medications ?? [])
                 .filter(m => !m.isArchived && m.sistema && sistemas.includes(m.sistema));
               const secExames = (selectedPatient?.exams ?? [])
@@ -1235,7 +1349,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                 sistemas.length > 0 && a.sistemas.some(s => sistemas.includes(s))
               );
 
-              const total = secMedicacoes.length + secExames.length + secExamesImagem.length + secPareceres.length + secAlertas.length;
+              const total = secDiags.length + secDispositivos.length + secCirurgias.length + secCulturas.length + secDietas.length + secAportes.length + secMedicacoes.length + secExames.length + secExamesImagem.length + secPareceres.length + secAlertas.length;
               if (total === 0) return null;
 
               return (
@@ -1247,17 +1361,136 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                 >
                   <div className="space-y-3">
 
+                    {secDiags.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wide mb-1.5">Diagnósticos</p>
+                        <div className="space-y-1">
+                          {secDiags.map((d, i) => {
+                            const wk = `diag_${d.opcao_id}`;
+                            const off = wordExcluded.has(wk);
+                            const lbl = d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label;
+                            const det = d.label !== 'Outros' && d.texto_digitado ? ` (${d.texto_digitado})` : '';
+                            return (
+                              <div key={i} className={`relative p-2 pr-10 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{lbl}{det}</p>
+                                {d.created_at && <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(d.created_at).toLocaleDateString('pt-BR')}</p>}
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {secDispositivos.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wide mb-1.5">Dispositivos</p>
+                        <div className="space-y-1">
+                          {secDispositivos.map(d => {
+                            const wk = `disp_${d.id}`; const off = wordExcluded.has(wk);
+                            return (
+                              <div key={d.id} className={`relative p-2 pr-10 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg border border-cyan-200 dark:border-cyan-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{d.name}</p>
+                                {d.location && <p className="text-xs text-slate-500 dark:text-slate-400">{d.location}</p>}
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(d.startDate).toLocaleDateString('pt-BR')}</p>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {secCirurgias.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wide mb-1.5">Cirurgias</p>
+                        <div className="space-y-1">
+                          {secCirurgias.map(c => {
+                            const wk = `cir_${c.id}`; const off = wordExcluded.has(wk);
+                            return (
+                              <div key={c.id} className={`relative p-2 pr-10 bg-rose-50 dark:bg-rose-900/20 rounded-lg border border-rose-200 dark:border-rose-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{c.name}</p>
+                                {c.surgeon && <p className="text-xs text-slate-500 dark:text-slate-400">{c.surgeon}</p>}
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(c.date).toLocaleDateString('pt-BR')}</p>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {secCulturas.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-lime-600 dark:text-lime-400 uppercase tracking-wide mb-1.5">Culturas</p>
+                        <div className="space-y-1">
+                          {secCulturas.map(c => {
+                            const wk = `cult_${c.id}`; const off = wordExcluded.has(wk);
+                            return (
+                              <div key={c.id} className={`relative p-2 pr-10 bg-lime-50 dark:bg-lime-900/20 rounded-lg border border-lime-200 dark:border-lime-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{c.site}</p>
+                                {c.microorganism && <p className="text-xs text-slate-500 dark:text-slate-400">{c.microorganism}</p>}
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(c.collectionDate).toLocaleDateString('pt-BR')}</p>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {secDietas.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide mb-1.5">Dietas</p>
+                        <div className="space-y-1">
+                          {secDietas.map(d => {
+                            const wk = `diet_${d.id}`; const off = wordExcluded.has(wk);
+                            return (
+                              <div key={d.id} className={`relative p-2 pr-10 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{d.type}</p>
+                                {d.volume && <p className="text-xs text-slate-500 dark:text-slate-400">Volume: {d.volume} ml</p>}
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(d.data_inicio).toLocaleDateString('pt-BR')}</p>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {secAportes.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide mb-1.5">Aportes</p>
+                        <div className="space-y-1">
+                          {secAportes.map(a => {
+                            const wk = `apt_${a.id}`; const off = wordExcluded.has(wk);
+                            return (
+                              <div key={a.id} className={`relative p-2 pr-10 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">THT: {a.tht_ml_kg_h.toFixed(2)} mL/kg/h</p>
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(a.data_referencia + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
                     {secMedicacoes.length > 0 && (
                       <div>
                         <p className="text-xs font-bold text-blue-500 dark:text-blue-400 uppercase tracking-wide mb-1.5">Medicações</p>
                         <div className="space-y-1">
-                          {secMedicacoes.map(m => (
-                            <div key={m.id} className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{m.name}</p>
-                              {m.dosage && <p className="text-xs text-slate-500 dark:text-slate-400">{m.dosage}</p>}
-                              <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(m.startDate).toLocaleDateString('pt-BR')}</p>
-                            </div>
-                          ))}
+                          {secMedicacoes.map(m => {
+                            const wk = `med_${m.id}`; const off = wordExcluded.has(wk);
+                            return (
+                              <div key={m.id} className={`relative p-2 pr-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{m.name}</p>
+                                {m.dosage && <p className="text-xs text-slate-500 dark:text-slate-400">{m.dosage}</p>}
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(m.startDate).toLocaleDateString('pt-BR')}</p>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -1266,21 +1499,18 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                       <div>
                         <p className="text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wide mb-1.5">Exames</p>
                         <div className="space-y-1">
-                          {secExames.map(e => (
-                            <div key={e.id} className="p-2 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800">
-                              <div className="flex items-center justify-between gap-2">
-                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{e.name}</p>
-                                <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${
-                                  e.result === 'Alterado'
-                                    ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
-                                    : e.result === 'Normal'
-                                      ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
-                                      : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300'
-                                }`}>{e.result}</span>
+                          {secExames.map(e => {
+                            const wk = `exam_${e.id}`; const off = wordExcluded.has(wk);
+                            return (
+                              <div key={e.id} className={`relative p-2 pr-10 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <div className="flex items-center justify-between gap-2 pr-2">
+                                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{e.name}</p>
+                                </div>
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(e.date).toLocaleDateString('pt-BR')}</p>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
-                              <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(e.date).toLocaleDateString('pt-BR')}</p>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -1289,13 +1519,17 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                       <div>
                         <p className="text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wide mb-1.5">Exames de Imagem</p>
                         <div className="space-y-1">
-                          {secExamesImagem.map(ei => (
-                            <div key={ei.id} className="p-2 bg-violet-50 dark:bg-violet-900/20 rounded-lg border border-violet-200 dark:border-violet-800">
-                              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ei.exame}</p>
-                              {ei.resultado && <p className="text-xs text-slate-500 dark:text-slate-400">{ei.resultado}</p>}
-                              <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(ei.data_exame).toLocaleDateString('pt-BR')}</p>
-                            </div>
-                          ))}
+                          {secExamesImagem.map(ei => {
+                            const wk = `img_${ei.id}`; const off = wordExcluded.has(wk);
+                            return (
+                              <div key={ei.id} className={`relative p-2 pr-10 bg-violet-50 dark:bg-violet-900/20 rounded-lg border border-violet-200 dark:border-violet-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ei.exame}</p>
+                                {ei.resultado && <p className="text-xs text-slate-500 dark:text-slate-400">{ei.resultado}</p>}
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(ei.data_exame).toLocaleDateString('pt-BR')}</p>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -1304,36 +1538,32 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                       <div>
                         <p className="text-xs font-bold text-pink-600 dark:text-pink-400 uppercase tracking-wide mb-1.5">Pareceres</p>
                         <div className="space-y-1">
-                          {secPareceres.map(p => (
-                            <div key={p.id} className="p-2 bg-pink-50 dark:bg-pink-900/20 rounded-lg border border-pink-200 dark:border-pink-800">
-                              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{p.especialista}</p>
-                              {p.parecer && <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{p.parecer}</p>}
-                              <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(p.data_parecer).toLocaleDateString('pt-BR')}</p>
-                            </div>
-                          ))}
+                          {secPareceres.map(p => {
+                            const wk = `par_${p.id}`; const off = wordExcluded.has(wk);
+                            return (
+                              <div key={p.id} className={`relative p-2 pr-10 bg-pink-50 dark:bg-pink-900/20 rounded-lg border border-pink-200 dark:border-pink-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{p.especialista}</p>
+                                {p.parecer && <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{p.parecer}</p>}
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(p.data_parecer).toLocaleDateString('pt-BR')}</p>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
 
                     {secAlertas.length > 0 && (
                       <div>
-                        <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-1.5">Alertas</p>
+                        <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-1.5">Condutas</p>
                         <div className="space-y-2">
                           {secAlertas.map(a => {
-                            const isPendente = a.status === 'Pendente';
+                            const wk = `alt_${a.id}`; const off = wordExcluded.has(wk);
                             return (
-                              <div key={a.id} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                                <div className="flex items-start justify-between gap-2">
-                                  <p className="text-sm text-slate-700 dark:text-slate-200 flex-1">{a.alerta_descricao}</p>
-                                  <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${
-                                    isPendente
-                                      ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300'
-                                      : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
-                                  }`}>
-                                    {a.status}
-                                  </span>
-                                </div>
+                              <div key={a.id} className={`relative p-2 pr-10 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-sm text-slate-700 dark:text-slate-200">{a.alerta_descricao}</p>
                                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{new Date(a.created_at).toLocaleDateString('pt-BR')}</p>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
                           })}
