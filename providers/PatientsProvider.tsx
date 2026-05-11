@@ -42,6 +42,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 removalDate: d.data_remocao,
                 isArchived: d.is_archived,
                 observacao: d.observacao,
+                sistema: d.sistema,
             });
             return acc;
         }, {});
@@ -87,7 +88,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 date: s.data_procedimento,
                 surgeon: s.nome_cirurgiao,
                 notes: s.notas,
-                isArchived: s.is_archived
+                isArchived: s.is_archived,
+                sistema: s.sistema,
             });
             return acc;
         }, {});
@@ -113,7 +115,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 microorganism: c.microorganismo,
                 collectionDate: c.data_coleta,
                 observation: c.observacao || undefined,
-                isArchived: c.is_archived
+                isArchived: c.is_archived,
+                sistema: c.sistema,
             });
             return acc;
         }, {});
@@ -134,6 +137,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 pt_at: d.pt_at || undefined,
                 th: d.th || undefined,
                 observacao: d.observacao || undefined,
+                sistema: d.sistema,
                 isArchived: d.is_archived
             });
             return acc;
@@ -452,7 +456,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 localizacao: sanitizeText(device.location),
                 data_insercao: device.startDate,
                 observacao: sanitizeTextOrNull(device.observacao),
-                criado_por_id: userId || null
+                criado_por_id: userId || null,
+                ...(device.sistema ? { sistema: device.sistema } : {}),
             }]);
 
             if (error) {
@@ -568,7 +573,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             data_procedimento: procedure.date,
             nome_cirurgiao: sanitizeText(procedure.surgeon),
             notas: sanitizeTextOrNull(procedure.notes),
-            criado_por_id: userId || null
+            criado_por_id: userId || null,
+            ...(procedure.sistema ? { sistema: procedure.sistema } : {}),
         };
 
         const { data, error } = await supabase.from('procedimentos_pacientes').insert([payload]);
@@ -644,7 +650,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             .update({
                 nome_exame: sanitizeText(examData.name),
                 data_exame: examData.date,
-                observacao: sanitizeTextOrNull(examData.observation)
+                observacao: sanitizeTextOrNull(examData.observation),
+                sistema: examData.sistema || null,
             })
             .eq('id', examData.id);
         if (!error) fetchPatients();
@@ -664,7 +671,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 localizacao: sanitizeText(deviceData.location),
                 data_insercao: deviceData.startDate,
                 data_remocao: deviceData.removalDate || null,
-                observacao: sanitizeTextOrNull(deviceData.observacao)
+                observacao: sanitizeTextOrNull(deviceData.observacao),
+                sistema: deviceData.sistema || null,
             })
             .eq('id', deviceData.id);
         if (!error) fetchPatients();
@@ -682,7 +690,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 unidade_medida: sanitizeText(unidade),
                 data_inicio: medicationData.startDate,
                 data_fim: medicationData.endDate || null,
-                observacao: sanitizeTextOrNull(medicationData.observacao)
+                observacao: sanitizeTextOrNull(medicationData.observacao),
+                sistema: medicationData.sistema || null,
             })
             .eq('id', medicationData.id);
         if (!error) fetchPatients();
@@ -694,7 +703,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 nome_procedimento: sanitizeText(procedureData.name),
                 data_procedimento: procedureData.date,
                 nome_cirurgiao: sanitizeText(procedureData.surgeon),
-                notas: sanitizeTextOrNull(procedureData.notes)
+                notas: sanitizeTextOrNull(procedureData.notes),
+                sistema: procedureData.sistema || null,
             })
             .eq('id', procedureData.id);
         if (!error) fetchPatients();
@@ -728,7 +738,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             microorganismo: sanitizeText(culture.microorganism),
             data_coleta: culture.collectionDate,
             observacao: sanitizeTextOrNull(culture.observation),
-            criado_por_id: userId || null
+            criado_por_id: userId || null,
+            ...(culture.sistema ? { sistema: culture.sistema } : {}),
         };
 
         const { data, error } = await supabase.from('culturas_pacientes').insert([payload]);
@@ -754,7 +765,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 local: sanitizeText(cultureData.site),
                 microorganismo: sanitizeText(cultureData.microorganism),
                 data_coleta: cultureData.collectionDate,
-                observacao: sanitizeTextOrNull(cultureData.observation)
+                observacao: sanitizeTextOrNull(cultureData.observation),
+                sistema: cultureData.sistema || null,
             })
             .eq('id', cultureData.id);
         if (!error) fetchPatients();
@@ -775,6 +787,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             pt_g_dia: diet.pt_g_dia || null,
             th: diet.th || null,
             observacao: sanitizeTextOrNull(diet.observacao),
+            ...(diet.sistema ? { sistema: diet.sistema } : {}),
             criado_por_id: userId || null
         };
 
@@ -819,7 +832,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 pt: dietData.pt || null,
                 pt_g_dia: dietData.pt_g_dia || null,
                 th: dietData.th || null,
-                observacao: sanitizeTextOrNull(dietData.observacao)
+                observacao: sanitizeTextOrNull(dietData.observacao),
+                sistema: dietData.sistema || null
             })
             .eq('id', dietData.id);
         if (!error) fetchPatients();

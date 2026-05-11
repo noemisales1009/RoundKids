@@ -1,7 +1,8 @@
 import React, { useState, useContext } from 'react';
 import { supabase } from '../../../supabaseClient';
 import { NotificationContext, UserContext } from '../../../contexts';
-import { CloseIcon } from '../../icons';
+import { CloseIcon, ChevronDownIcon } from '../../icons';
+import { ALERT_SYSTEMS } from '../../../constants';
 
 const ESPECIALISTAS = [
     'Alergologia Ped',
@@ -45,6 +46,8 @@ export const AddParecerModal: React.FC<{
     const [especialista, setEspecialista] = useState('');
     const [dataParecer, setDataParecer] = useState(getTodayDateString());
     const [parecer, setParecer] = useState('');
+    const [sistema, setSistema] = useState('');
+    const [sistemaOutros, setSistemaOutros] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -69,6 +72,7 @@ export const AddParecerModal: React.FC<{
                     especialista,
                     data_parecer: dataParecer,
                     parecer: parecer.trim() || null,
+                    sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || null,
                     created_by: user.id,
                 }]);
 
@@ -135,6 +139,22 @@ export const AddParecerModal: React.FC<{
                             placeholder="Descreva o parecer do especialista..."
                             className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 text-slate-800 dark:text-slate-200 resize-none"
                         />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Sistema <span className="text-slate-400 font-normal">(opcional)</span>
+                        </label>
+                        <div className="relative mt-1">
+                            <select value={sistema} onChange={e => setSistema(e.target.value)} className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 text-slate-800 dark:text-slate-200 appearance-none">
+                                <option value="">Selecione...</option>
+                                {ALERT_SYSTEMS.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                            <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
+                        </div>
+                        {sistema === 'Outros' && (
+                            <input type="text" value={sistemaOutros} onChange={e => setSistemaOutros(e.target.value)} placeholder="Especifique o sistema..." className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 text-slate-800 dark:text-slate-200" />
+                        )}
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-2 pt-4">

@@ -736,7 +736,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     if (diureseRec) {
       title('10. DIURESE');
       add(`${((diureseRec.volume / diureseRec.horas) / diureseRec.peso).toFixed(2)} mL/kg/h`);
-      add(`Peso: ${diureseRec.peso} kg`);
       add(`Volume: ${diureseRec.volume} mL`);
       add(`Período: ${diureseRec.horas}h`);
     }
@@ -753,13 +752,24 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       });
     }
 
+    const activeDevicesWord = (p.devices ?? []).filter(d => !d.isArchived);
+    if (activeDevicesWord.length > 0) {
+      title('12. DISPOSITIVOS');
+      activeDevicesWord.forEach(d => {
+        const days = Math.floor((Date.now() - new Date(d.startDate + 'T12:00:00').getTime()) / 86400000) + 1;
+        add(`${d.name}${d.location ? ` — ${d.location}` : ''}`);
+        add(`Inserção: ${formatDateToBRL(d.startDate)} (${days} dia${days !== 1 ? 's' : ''})`);
+        blank();
+      });
+    }
+
     if (situacaoRec) {
-      title('12. SITUAÇÃO CLÍNICA');
+      title('13. SITUAÇÃO CLÍNICA');
       add(situacaoRec.situacao_texto);
     }
 
     if (Object.values(exameFisico).some(v => v.trim())) {
-      title('13. EXAME FÍSICO');
+      title('14. EXAME FÍSICO');
       EXAME_SECTIONS.forEach(s => {
         const val = exameFisico[s.key as keyof ExameFisicoState];
         if (val?.trim()) add(`${s.label.replace(/^[\d./ ]+/, '')}: ${val}`);
@@ -804,11 +814,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       if (alts.length) apLines.push(`  Condutas: ${alts.map(a => a.alerta_descricao).join(' | ')}`);
     });
     if (apLines.length > 0) {
-      title('14. AP — AVALIAÇÃO x PROPEDÊUTICA');
+      title('15. AP — AVALIAÇÃO x PROPEDÊUTICA');
       apLines.forEach(l => add(l));
     }
 
-    title('15. CONDUTAS CRÍTICAS — PRÓXIMAS 24H');
+    title('16. CONDUTAS CRÍTICAS — PRÓXIMAS 24H');
     if (condutasCriticas.trim()) add(condutasCriticas);
 
     blank();
@@ -1240,7 +1250,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
             </p>
             <p className="text-xs font-medium text-teal-600 dark:text-teal-400 mb-2">mL/kg/h</p>
             <p className="text-xs text-slate-600 dark:text-slate-400">
-              Peso: {diureseRec.peso}kg | Volume: {diureseRec.volume}mL | {diureseRec.horas}h
+              Volume: {diureseRec.volume}mL | {diureseRec.horas}h
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
               {new Date(diureseRec.created_at).toLocaleString('pt-BR')}
@@ -1282,8 +1292,33 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         )}
       </Section>
 
-      {/* 12. S — Situação Clínica */}
-      <Section title="12. S — Situação Clínica" id="situacao" open={openSections.has('situacao')} onToggle={() => toggle('situacao')}>
+      {/* 12. Dispositivos */}
+      <Section title="12. Dispositivos" id="dispositivos" open={openSections.has('dispositivos')} onToggle={() => toggle('dispositivos')}>
+        {(() => {
+          const activeDevices = (selectedPatient?.devices ?? []).filter(d => !d.isArchived);
+          if (activeDevices.length === 0)
+            return <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum dispositivo ativo.</p>;
+          return (
+            <div className="space-y-2">
+              {activeDevices.map(d => {
+                const days = Math.floor((Date.now() - new Date(d.startDate + 'T12:00:00').getTime()) / 86400000) + 1;
+                return (
+                  <div key={d.id} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{d.name}</p>
+                    {d.location && <p className="text-xs text-slate-500 dark:text-slate-400">{d.location}</p>}
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                      Inserção: {new Date(d.startDate + 'T12:00:00').toLocaleDateString('pt-BR')} — {days} dia{days !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+      </Section>
+
+      {/* 13. S — Situação Clínica */}
+      <Section title="13. S — Situação Clínica" id="situacao" open={openSections.has('situacao')} onToggle={() => toggle('situacao')}>
         {situacaoLoading ? (
           <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" /></div>
         ) : !situacaoRec ? (
@@ -1306,7 +1341,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       </Section>
 
       {/* 13. O — Exame Físico */}
-      <Section title="13. O — Exame Físico" id="exameFisico" open={openSections.has('exameFisico')} onToggle={() => toggle('exameFisico')}>
+      <Section title="14. O — Exame Físico" id="exameFisico" open={openSections.has('exameFisico')} onToggle={() => toggle('exameFisico')}>
         {EXAME_SECTIONS.map(({ key, label }) => (
           <Field
             key={key}
@@ -1319,7 +1354,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       </Section>
 
       {/* 14. AP — Avaliação x Propedêutica */}
-      <Section title="14. AP — Avaliação x Propedêutica (Alertas)" id="avaliacoes" open={openSections.has('avaliacoes')} onToggle={() => toggle('avaliacoes')}>
+      <Section title="15. AP — Avaliação x Propedêutica (Alertas)" id="avaliacoes" open={openSections.has('avaliacoes')} onToggle={() => toggle('avaliacoes')}>
         {alertasLoading ? (
           <div className="flex justify-center py-6"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" /></div>
         ) : (
@@ -1580,7 +1615,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       </Section>
 
       {/* 15. Condutas Críticas */}
-      <Section title="15. Condutas Críticas — Próximas 24h" id="condutasCriticas" open={openSections.has('condutasCriticas')} onToggle={() => toggle('condutasCriticas')}>
+      <Section title="16. Condutas Críticas — Próximas 24h" id="condutasCriticas" open={openSections.has('condutasCriticas')} onToggle={() => toggle('condutasCriticas')}>
         <Field label="Condutas Críticas" value={condutasCriticas} onChange={setCondutasCriticas} rows={6} placeholder="Liste as condutas críticas para as próximas 24 horas..." />
       </Section>
 

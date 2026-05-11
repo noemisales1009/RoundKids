@@ -1,7 +1,8 @@
 import React, { useState, useContext } from 'react';
 import { PatientsContext, NotificationContext } from '../../../contexts';
 import { Exam } from '../../../types';
-import { CloseIcon } from '../../icons';
+import { CloseIcon, ChevronDownIcon } from '../../icons';
+import { ALERT_SYSTEMS } from '../../../constants';
 
 export const EditExamModal: React.FC<{ exam: Exam; patientId: number | string; onClose: () => void; }> = ({ exam, patientId, onClose }) => {
     const { updateExamInPatient } = useContext(PatientsContext)!;
@@ -10,11 +11,17 @@ export const EditExamModal: React.FC<{ exam: Exam; patientId: number | string; o
     const [name, setName] = useState(exam.name);
     const [date, setDate] = useState(exam.date);
     const [observation, setObservation] = useState(exam.observation || '');
+    const [sistema, setSistema] = useState(
+        exam.sistema && !ALERT_SYSTEMS.includes(exam.sistema) ? 'Outros' : (exam.sistema || '')
+    );
+    const [sistemaOutros, setSistemaOutros] = useState(
+        exam.sistema && !ALERT_SYSTEMS.includes(exam.sistema) ? exam.sistema : ''
+    );
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!name || !date) return;
-        updateExamInPatient(patientId, { ...exam, name, date, observation });
+        updateExamInPatient(patientId, { ...exam, name, date, observation, sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined });
         showNotification({ message: 'Exame atualizado com sucesso!', type: 'success' });
         onClose();
     };
@@ -34,6 +41,19 @@ export const EditExamModal: React.FC<{ exam: Exam; patientId: number | string; o
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
                         <input type="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Sistema <span className="text-slate-400 font-normal">(opcional)</span></label>
+                        <div className="relative mt-1">
+                            <select value={sistema} onChange={e => setSistema(e.target.value)} className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200 appearance-none">
+                                <option value="">Selecione...</option>
+                                {ALERT_SYSTEMS.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                            <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
+                        </div>
+                        {sistema === 'Outros' && (
+                            <input type="text" value={sistemaOutros} onChange={e => setSistemaOutros(e.target.value)} placeholder="Especifique o sistema..." className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
+                        )}
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Observação (Opcional)</label>

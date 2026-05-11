@@ -97,7 +97,7 @@ export const NotificacaoEventoCard: React.FC<Props> = ({ patientId, bedNumber, p
   const [tipoNatureza, setTipoNatureza] = useState<string[]>([]);
   const [tipoOutros, setTipoOutros] = useState('');
   const [gravidade, setGravidade] = useState('');
-  const [profissional, setProfissional] = useState('');
+  const [profissional, setProfissional] = useState(user?.name ?? '');
   const [local, setLocal] = useState(bedNumber ? `Leito ${bedNumber}` : '');
   const [descricao, setDescricao] = useState('');
   const [conduta, setConduta] = useState('');
@@ -142,7 +142,7 @@ export const NotificacaoEventoCard: React.FC<Props> = ({ patientId, bedNumber, p
       // reset
       setDataHora(nowLocal());
       setTipoNatureza([]); setTipoOutros(''); setGravidade('');
-      setProfissional(''); setLocal(bedNumber ? `Leito ${bedNumber}` : ''); setDescricao('');
+      setProfissional(user?.name ?? ''); setLocal(bedNumber ? `Leito ${bedNumber}` : ''); setDescricao('');
       setConduta(''); setTempoResposta(''); setDesfecho('');
       setNotificacao([]); setCausa([]); setCausaOutros('');
       setOpen(false);

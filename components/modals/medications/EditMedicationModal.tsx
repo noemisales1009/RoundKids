@@ -1,8 +1,9 @@
 import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { PatientsContext, NotificationContext, UserContext } from '../../../contexts';
 import { Medication } from '../../../types';
-import { CloseIcon } from '../../icons';
+import { CloseIcon, ChevronDownIcon } from '../../icons';
 import { supabase } from '../../../supabaseClient';
+import { ALERT_SYSTEMS } from '../../../constants';
 
 interface Medicamento {
     id: number;
@@ -29,6 +30,12 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
     const [dosageValue, setDosageValue] = useState('');
     const [startDate, setStartDate] = useState(medication.startDate);
     const [observacao, setObservacao] = useState(medication.observacao || '');
+    const [sistema, setSistema] = useState(
+        medication.sistema && !ALERT_SYSTEMS.includes(medication.sistema) ? 'Outros' : (medication.sistema || '')
+    );
+    const [sistemaOutros, setSistemaOutros] = useState(
+        medication.sistema && !ALERT_SYSTEMS.includes(medication.sistema) ? medication.sistema : ''
+    );
 
     // Carregar categorias ao montar
     useEffect(() => {
@@ -166,7 +173,8 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
             name: finalMedicationName,
             dosage: dosageFormatted,
             startDate,
-            observacao
+            observacao,
+            sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined,
         });
         showNotification({ message: 'Medicação atualizada com sucesso!', type: 'success' });
         onClose();
@@ -308,6 +316,29 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                             onChange={e => setStartDate(e.target.value)} 
                             className="block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" 
                         />
+                    </div>
+
+                    {/* Sistema */}
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            Sistema <span className="text-slate-400 font-normal">(opcional)</span>
+                        </label>
+                        <div className="relative">
+                            <select value={sistema} onChange={e => setSistema(e.target.value)} className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200 appearance-none">
+                                <option value="">Selecione...</option>
+                                {ALERT_SYSTEMS.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                            <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
+                        </div>
+                        {sistema === 'Outros' && (
+                            <input
+                                type="text"
+                                value={sistemaOutros}
+                                onChange={e => setSistemaOutros(e.target.value)}
+                                placeholder="Especifique o sistema..."
+                                className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+                            />
+                        )}
                     </div>
 
                     {/* Observação */}

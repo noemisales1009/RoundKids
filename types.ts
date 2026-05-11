@@ -9,6 +9,7 @@ export interface Device {
   removalDate?: string; // "YYYY-MM-DD"
   isArchived?: boolean;
   observacao?: string;
+  sistema?: string;
 }
 
 export interface Exam {
@@ -41,6 +42,7 @@ export interface SurgicalProcedure {
   surgeon: string;
   notes?: string;
   isArchived?: boolean;
+  sistema?: string;
 }
 
 export interface ScaleScore {
@@ -58,6 +60,7 @@ export interface Culture {
   collectionDate: string; // data_coleta
   observation?: string; // observação (opcional)
   isArchived?: boolean;
+  sistema?: string;
 }
 
 export interface Diet {
@@ -74,6 +77,7 @@ export interface Diet {
   pt_at?: number; // PT AT - Porcentagem calculada: (PT / PT Plena) * 100
   th?: string; // Taxa Hídrica [ml/m²/dia]
   observacao?: string; // Observações adicionais
+  sistema?: string;
   isArchived?: boolean;
 }
 

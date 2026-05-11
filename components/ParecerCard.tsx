@@ -85,6 +85,7 @@ export const ParecerCard: React.FC<ParecerCardProps> = ({ patientId }) => {
                                                 {p.parecer}
                                             </p>
                                         )}
+                                        {p.sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{p.sistema}</span>}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0 ml-2">

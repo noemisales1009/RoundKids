@@ -665,6 +665,7 @@ const PatientDetailScreen: React.FC = () => {
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{device.name} - {device.location}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(device.startDate)}</p>
                                                         {device.removalDate ? <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Retirada: {formatDateToBRL(device.removalDate)}</p> : <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(device.startDate)}</p>}
+                                                        {(device as any).sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{(device as any).sistema}</span>}
                                                         {device.observacao && <p className="text-sm text-slate-600 dark:text-slate-400 italic mt-1.5 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded">💬 {device.observacao}</p>}
                                                     </div>
                                                 </div>
@@ -734,6 +735,7 @@ const PatientDetailScreen: React.FC = () => {
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{procedure.name}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(procedure.date)} - Dr(a): {procedure.surgeon}</p>
                                                         <p className="text-sm text-blue-600 dark:text-blue-400 font-semibold mt-1">Dia Pós-Operatório: +{calculateDays(procedure.date)} dias</p>
+                                                        {(procedure as any).sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{(procedure as any).sistema}</span>}
                                                         {procedure.notes && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 italic">Obs: {procedure.notes}</p>}
                                                     </div>
                                                 </div>
@@ -756,6 +758,7 @@ const PatientDetailScreen: React.FC = () => {
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{culture.site}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Microorganismo: {culture.microorganism}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(culture.collectionDate)}</p>
+                                                        {culture.sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{culture.sistema}</span>}
                                                         {culture.observation && <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 font-medium">Observação: {culture.observation}</p>}
                                                     </div>
                                                 </div>
@@ -792,6 +795,7 @@ const PatientDetailScreen: React.FC = () => {
                                                             </div>
                                                         )}
                                                         {diet.observacao && <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 font-medium">Observação: {diet.observacao}</p>}
+                                                        {diet.sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{diet.sistema}</span>}
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0 ml-2">

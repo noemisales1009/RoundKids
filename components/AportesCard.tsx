@@ -14,6 +14,7 @@ type AporteRow = {
   hv_npt_ml_kg_h: number;
   medicacoes_ml_kg_h: number;
   tht_ml_kg_h: number;
+  sistema?: string;
   created_by: string;
   created_at: string;
 };
@@ -84,6 +85,7 @@ export const AportesCard: React.FC<AportesCardProps> = ({ patientId }) => {
                       <p className="mt-2 p-2 bg-blue-100 dark:bg-blue-900/30 rounded font-semibold text-blue-700 dark:text-blue-300">
                         THT: {aporte.tht_ml_kg_h.toFixed(2)} ml/kg/h
                       </p>
+                      {aporte.sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{aporte.sistema}</span>}
                     </div>
                   </div>
                 </div>

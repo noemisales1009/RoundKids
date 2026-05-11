@@ -708,7 +708,7 @@ const PatientHistoryScreen: React.FC = () => {
             events.push({
                 timestamp: new Date(device.startDate).toISOString(),
                 icon: CpuIcon,
-                description: `[DISPOSITIVO] Dispositivo Inserido: ${device.name} em ${device.location}.`,
+                description: `[DISPOSITIVO] Dispositivo Inserido: ${device.name} em ${device.location}.${device.sistema ? `\n🏷️ Sistema: ${device.sistema}` : ''}`,
                 hasTime: false,
             });
             if (device.removalDate) {
@@ -751,7 +751,7 @@ const PatientHistoryScreen: React.FC = () => {
             events.push({
                 timestamp: new Date(procedure.date).toISOString(),
                 icon: ScalpelIcon,
-                description: `[CIRURGICO] Cirurgia Realizada: ${procedure.name} por Dr(a). ${procedure.surgeon}.${procedure.notes ? ` Notas: ${procedure.notes}` : ''}`,
+                description: `[CIRURGICO] Cirurgia Realizada: ${procedure.name} por Dr(a). ${procedure.surgeon}.${procedure.notes ? ` Notas: ${procedure.notes}` : ''}${procedure.sistema ? `\n🏷️ Sistema: ${procedure.sistema}` : ''}`,
                 hasTime: false,
             });
         });
@@ -851,6 +851,7 @@ const PatientHistoryScreen: React.FC = () => {
             if (diet.pt_at) description += ` | PT AT: ${Number(diet.pt_at).toFixed(1)}%`;
             if (diet.th) description += ` | TH: ${diet.th}ml/m²/dia`;
             if (diet.observacao) description += ` | Obs: ${diet.observacao}`;
+            if (diet.sistema) description += `\n🏷️ Sistema: ${diet.sistema}`;
 
             events.push({
                 timestamp: diet.data_inicio || new Date().toISOString(),
@@ -1017,7 +1018,7 @@ const PatientHistoryScreen: React.FC = () => {
             events.push({
                 timestamp: culture.collectionDate || new Date().toISOString(),
                 icon: BeakerIcon,
-                description: `[CULTURA] 🧪 Cultura: ${culture.site || 'Não informado'} - ${culture.microorganism || 'Não identificado'}${culture.observation ? ` | Obs: ${culture.observation}` : ''}`,
+                description: `[CULTURA] 🧪 Cultura: ${culture.site || 'Não informado'} - ${culture.microorganism || 'Não identificado'}${culture.observation ? ` | Obs: ${culture.observation}` : ''}${culture.sistema ? `\n🏷️ Sistema: ${culture.sistema}` : ''}`,
                 hasTime: false,
             });
         });
@@ -1068,7 +1069,7 @@ const PatientHistoryScreen: React.FC = () => {
             events.push({
                 timestamp: aporte.created_at || `${aporte.data_referencia}T00:00:00`,
                 icon: DropletIcon,
-                description: `[APORTES] 💧 Aportes (${aporte.data_referencia})\nVO: ${vo.toFixed(2)} ml/kg/h | HV/NPT: ${hv.toFixed(2)} ml/kg/h | MED: ${med.toFixed(2)} ml/kg/h\nTHT: ${tht.toFixed(2)} ml/kg/h`,
+                description: `[APORTES] 💧 Aportes (${aporte.data_referencia})\nVO: ${vo.toFixed(2)} ml/kg/h | HV/NPT: ${hv.toFixed(2)} ml/kg/h | MED: ${med.toFixed(2)} ml/kg/h\nTHT: ${tht.toFixed(2)} ml/kg/h${aporte.sistema ? `\n🏷️ Sistema: ${aporte.sistema}` : ''}`,
                 hasTime: true,
             });
         });
@@ -1077,6 +1078,7 @@ const PatientHistoryScreen: React.FC = () => {
         pareceres.forEach((p: any) => {
             const linhas = [`[PARECER] 📋 Parecer — ${p.especialista}`, `Data: ${new Date(p.data_parecer).toLocaleDateString('pt-BR')}`];
             if (p.parecer) linhas.push(p.parecer);
+            if (p.sistema) linhas.push(`🏷️ Sistema: ${p.sistema}`);
             events.push({
                 timestamp: p.created_at || `${p.data_parecer}T00:00:00`,
                 icon: ClipboardIcon,
