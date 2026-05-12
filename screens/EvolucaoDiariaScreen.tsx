@@ -721,23 +721,17 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     if (bhBalance) {
       title('8. BH DIÁRIO');
       const pct = bhBalance.volume / (bhBalance.peso * 10);
-      add(`${pct.toFixed(2)}% — ${bhBalance.volume > 0 ? 'Ganho' : 'Perda'}`);
-      add(`Peso: ${bhBalance.peso} kg`);
-      add(`Volume: ${bhBalance.volume > 0 ? '+' : ''}${bhBalance.volume} mL`);
+      add(`${pct.toFixed(2)}% — ${bhBalance.volume > 0 ? 'Ganho' : 'Perda'} | Peso: ${bhBalance.peso} kg | Volume: ${bhBalance.volume > 0 ? '+' : ''}${bhBalance.volume} mL`);
     }
 
     if (bhCumul && bhCumul.registros_ultimas_24h > 0) {
       title('9. BH CUMULATIVO');
-      add(`Total: ${bhCumul.bh_cumulativo_total > 0 ? '+' : ''}${bhCumul.bh_cumulativo_total.toFixed(2)}%`);
-      add(`BH Anterior: ${bhCumul.bh_historico_antigo.toFixed(2)}%`);
-      add(`Últimas 24h: ${bhCumul.bh_ultimas_24h.toFixed(2)}%`);
+      add(`Total: ${bhCumul.bh_cumulativo_total > 0 ? '+' : ''}${bhCumul.bh_cumulativo_total.toFixed(2)}% | BH Anterior: ${bhCumul.bh_historico_antigo.toFixed(2)}% | Últimas 24h: ${bhCumul.bh_ultimas_24h.toFixed(2)}%`);
     }
 
     if (diureseRec) {
       title('10. DIURESE');
-      add(`${((diureseRec.volume / diureseRec.horas) / diureseRec.peso).toFixed(2)} mL/kg/h`);
-      add(`Volume: ${diureseRec.volume} mL`);
-      add(`Período: ${diureseRec.horas}h`);
+      add(`${((diureseRec.volume / diureseRec.horas) / diureseRec.peso).toFixed(2)} mL/kg/h | Volume: ${diureseRec.volume} mL | Período: ${diureseRec.horas}h`);
     }
 
     if (aportesList.length > 0) {
@@ -755,12 +749,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     const activeDevicesWord = (p.devices ?? []).filter(d => !d.isArchived);
     if (activeDevicesWord.length > 0) {
       title('12. DISPOSITIVOS');
-      activeDevicesWord.forEach(d => {
-        const days = Math.floor((Date.now() - new Date(d.startDate + 'T12:00:00').getTime()) / 86400000) + 1;
-        add(`${d.name}${d.location ? ` — ${d.location}` : ''}`);
-        add(`Inserção: ${formatDateToBRL(d.startDate)} (${days} dia${days !== 1 ? 's' : ''})`);
-        blank();
-      });
+      add('@@DEVICES_TABLE@@');
+      blank();
     }
 
     if (situacaoRec) {
@@ -833,11 +823,36 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       .split('\n')
       .filter(line => !/^─+$/.test(line.trim()))
       .join('\n');
-    const escaped = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const activeDevicesDoc = (selectedPatient!.devices ?? []).filter(d => !d.isArchived);
+    const devicesTableHtml = activeDevicesDoc.length > 0 ? `
+<table border="1" style="border-collapse:collapse;width:100%;margin:6px 0;font-family:Arial,sans-serif;font-size:11pt;">
+  <thead><tr style="background:#e8e8e8;">
+    <th style="padding:4px 8px;text-align:left;">Dispositivo</th>
+    <th style="padding:4px 8px;text-align:left;">Local</th>
+    <th style="padding:4px 8px;text-align:left;">Inserção</th>
+    <th style="padding:4px 8px;text-align:left;">Dias</th>
+  </tr></thead>
+  <tbody>
+    ${activeDevicesDoc.map(d => {
+      const days = Math.floor((Date.now() - new Date(d.startDate + 'T12:00:00').getTime()) / 86400000) + 1;
+      return `<tr>
+        <td style="padding:4px 8px;">${escHtml(d.name)}</td>
+        <td style="padding:4px 8px;">${escHtml(d.location || '—')}</td>
+        <td style="padding:4px 8px;">${formatDateToBRL(d.startDate)}</td>
+        <td style="padding:4px 8px;">${days} dia${days !== 1 ? 's' : ''}</td>
+      </tr>`;
+    }).join('')}
+  </tbody>
+</table>` : '';
+    const parts = content.split('@@DEVICES_TABLE@@');
+    const htmlBody = parts.map((part, i) =>
+      `<pre style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:11pt;">${escHtml(part)}</pre>${i < parts.length - 1 ? devicesTableHtml : ''}`
+    ).join('');
     const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
 <head><meta charset='utf-8'><title>Evolução Diária</title>
-<style>body{font-family:Arial,sans-serif;font-size:11pt;line-height:1.6;}pre{white-space:pre-wrap;font-family:Arial,sans-serif;font-size:11pt;}</style>
-</head><body><pre>${escaped}</pre></body></html>`;
+<style>body{font-family:Arial,sans-serif;font-size:11pt;line-height:1.6;}</style>
+</head><body>${htmlBody}</body></html>`;
     const blob = new Blob([html], { type: 'application/msword' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
