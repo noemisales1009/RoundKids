@@ -687,30 +687,35 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       });
     }
 
-    if (controlesSaidasRec) {
+    if (controlesSaidasRec || diureseRec) {
       const cs = controlesSaidasRec;
       const vitaisLines: string[] = [];
-      const vitaisDef = [
-        { min: cs.pam_min, max: cs.pam_max, label: 'Δ PAM', unit: 'mmHg' },
-        { min: cs.fc_min,  max: cs.fc_max,  label: 'Δ FC',  unit: 'bpm' },
-        { min: cs.fr_min,  max: cs.fr_max,  label: 'Δ Fr',  unit: 'irpm' },
-        { min: cs.tax_min, max: cs.tax_max, label: 'Δ Tax', unit: 'ºC' },
-        { min: cs.dxt_min, max: cs.dxt_max, label: 'Δ Dxt', unit: 'mg/dl' },
-        { min: cs.spo2_min, max: cs.spo2_max, label: 'SpO₂', unit: '%' },
-      ];
-      vitaisDef.forEach(v => {
-        if (v.min || v.max) vitaisLines.push(`  ${v.label}: ${v.min || '—'} – ${v.max || '—'} ${v.unit}`);
-      });
+      if (cs) {
+        const vitaisDef = [
+          { min: cs.pam_min, max: cs.pam_max, label: 'Δ PAM', unit: 'mmHg' },
+          { min: cs.fc_min,  max: cs.fc_max,  label: 'Δ FC',  unit: 'bpm' },
+          { min: cs.fr_min,  max: cs.fr_max,  label: 'Δ Fr',  unit: 'irpm' },
+          { min: cs.tax_min, max: cs.tax_max, label: 'Δ Tax', unit: 'ºC' },
+          { min: cs.dxt_min, max: cs.dxt_max, label: 'Δ Dxt', unit: 'mg/dl' },
+          { min: cs.spo2_min, max: cs.spo2_max, label: 'SpO₂', unit: '%' },
+        ];
+        vitaisDef.forEach(v => {
+          if (v.min || v.max) vitaisLines.push(`  ${v.label}: ${v.min || '—'} – ${v.max || '—'} ${v.unit}`);
+        });
+      }
       const saidasLines: string[] = [];
-      if (cs.evacuacoes)         saidasLines.push(`  Evacuações: ${cs.evacuacoes}`);
-      if (cs.dreno_torax)        saidasLines.push(`  Dreno Tórax: ${cs.dreno_torax} ml`);
-      if (cs.dve)                saidasLines.push(`  DVE: ${cs.dve} ml`);
-      if (cs.sng)                saidasLines.push(`  SNG: ${cs.sng} ml`);
-      if (cs.ileostomia)         saidasLines.push(`  Ileostomia: ${cs.ileostomia} ml`);
-      if (cs.penrose)            saidasLines.push(`  Penrose: ${cs.penrose} ml`);
-      if (cs.outros_drenos)      saidasLines.push(`  ${cs.outros_drenos_label || 'Outros'}: ${cs.outros_drenos} ml`);
-      if (cs.hemodialise)        saidasLines.push(`  Hemodiálise: ${cs.hemodialise} ml`);
-      if (cs.dialise_peritoneal) saidasLines.push(`  Diálise Peritoneal: ${cs.dialise_peritoneal} ml`);
+      if (cs) {
+        if (cs.evacuacoes)         saidasLines.push(`  Evacuações: ${cs.evacuacoes}`);
+        if (cs.dreno_torax)        saidasLines.push(`  Dreno Tórax: ${cs.dreno_torax} ml`);
+        if (cs.dve)                saidasLines.push(`  DVE: ${cs.dve} ml`);
+        if (cs.sng)                saidasLines.push(`  SNG: ${cs.sng} ml`);
+        if (cs.ileostomia)         saidasLines.push(`  Ileostomia: ${cs.ileostomia} ml`);
+        if (cs.penrose)            saidasLines.push(`  Penrose: ${cs.penrose} ml`);
+        if (cs.outros_drenos)      saidasLines.push(`  ${cs.outros_drenos_label || 'Outros'}: ${cs.outros_drenos} ml`);
+        if (cs.hemodialise)        saidasLines.push(`  Hemodiálise: ${cs.hemodialise} ml`);
+        if (cs.dialise_peritoneal) saidasLines.push(`  Diálise Peritoneal: ${cs.dialise_peritoneal} ml`);
+      }
+      if (diureseRec) saidasLines.push(`  Diurese: ${((diureseRec.volume / diureseRec.horas) / diureseRec.peso).toFixed(2)} mL/kg/h | Volume: ${diureseRec.volume} mL | Período: ${diureseRec.horas}h`);
       if (vitaisLines.length > 0 || saidasLines.length > 0) {
         title('7. CONTROLES E SAÍDAS');
         if (vitaisLines.length > 0) { add('Controles:'); vitaisLines.forEach(l => add(l)); }
@@ -729,13 +734,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       add(`Total: ${bhCumul.bh_cumulativo_total > 0 ? '+' : ''}${bhCumul.bh_cumulativo_total.toFixed(2)}% | BH Anterior: ${bhCumul.bh_historico_antigo.toFixed(2)}% | Últimas 24h: ${bhCumul.bh_ultimas_24h.toFixed(2)}%`);
     }
 
-    if (diureseRec) {
-      title('10. DIURESE');
-      add(`${((diureseRec.volume / diureseRec.horas) / diureseRec.peso).toFixed(2)} mL/kg/h | Volume: ${diureseRec.volume} mL | Período: ${diureseRec.horas}h`);
-    }
-
     if (aportesList.length > 0) {
-      title('11. APORTES');
+      title('10. APORTES');
       aportesList.forEach(a => {
         add(new Date(a.data_referencia + 'T12:00:00').toLocaleDateString('pt-BR'));
         add(`VO: ${a.vo_ml_kg_h.toFixed(2)} mL/kg/h`);
@@ -748,18 +748,18 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
     const activeDevicesWord = (p.devices ?? []).filter(d => !d.isArchived);
     if (activeDevicesWord.length > 0) {
-      title('12. DISPOSITIVOS');
+      title('11. DISPOSITIVOS');
       add('@@DEVICES_TABLE@@');
       blank();
     }
 
     if (situacaoRec) {
-      title('13. SITUAÇÃO CLÍNICA');
+      title('12. SITUAÇÃO CLÍNICA');
       add(situacaoRec.situacao_texto);
     }
 
     if (Object.values(exameFisico).some(v => v.trim())) {
-      title('14. EXAME FÍSICO');
+      title('13. EXAME FÍSICO');
       EXAME_SECTIONS.forEach(s => {
         const val = exameFisico[s.key as keyof ExameFisicoState];
         if (val?.trim()) add(`${s.label.replace(/^[\d./ ]+/, '')}: ${val}`);
@@ -804,11 +804,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       if (alts.length) apLines.push(`  Condutas: ${alts.map(a => a.alerta_descricao).join(' | ')}`);
     });
     if (apLines.length > 0) {
-      title('15. AP — AVALIAÇÃO x PROPEDÊUTICA');
+      title('14. AP — AVALIAÇÃO x PROPEDÊUTICA');
       apLines.forEach(l => add(l));
     }
 
-    title('16. CONDUTAS CRÍTICAS — PRÓXIMAS 24H');
+    title('15. CONDUTAS CRÍTICAS — PRÓXIMAS 24H');
     if (condutasCriticas.trim()) add(condutasCriticas);
 
     blank();
@@ -829,7 +829,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 <table border="1" style="border-collapse:collapse;width:100%;margin:6px 0;font-family:Arial,sans-serif;font-size:11pt;">
   <thead><tr style="background:#e8e8e8;">
     <th style="padding:4px 8px;text-align:left;">Dispositivo</th>
-    <th style="padding:4px 8px;text-align:left;">Local</th>
     <th style="padding:4px 8px;text-align:left;">Inserção</th>
     <th style="padding:4px 8px;text-align:left;">Dias</th>
   </tr></thead>
@@ -838,7 +837,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const days = Math.floor((Date.now() - new Date(d.startDate + 'T12:00:00').getTime()) / 86400000) + 1;
       return `<tr>
         <td style="padding:4px 8px;">${escHtml(d.name)}</td>
-        <td style="padding:4px 8px;">${escHtml(d.location || '—')}</td>
         <td style="padding:4px 8px;">${formatDateToBRL(d.startDate)}</td>
         <td style="padding:4px 8px;">${days} dia${days !== 1 ? 's' : ''}</td>
       </tr>`;
