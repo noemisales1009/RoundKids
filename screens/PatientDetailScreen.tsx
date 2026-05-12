@@ -46,6 +46,7 @@ const AvaliacaoRespiratoriaScale = lazy(() => import('../components/AvaliacaoRes
 const PhoenixSepsisCalculator = lazy(() => import('../components/PhoenixSepsisCalculator'));
 const KDIGOScale = lazy(() => import('../components/KDIGOScale').then(m => ({ default: m.KDIGOScale })));
 const NPTCalculator = lazy(() => import('../npt/NPTWrapper'));
+const GasometriaCalculator = lazy(() => import('../components/GasometriaCalculator').then(m => ({ default: m.GasometriaCalculator })));
 const DiagnosticsSection = lazy(() => import('../components/DiagnosticsSection').then(m => ({ default: m.DiagnosticsSection })));
 const ControlesSaidasSection = lazy(() => import('../components/ControlesSaidasSection').then(m => ({ default: m.ControlesSaidasSection })));
 const AlertasSection = lazy(() => import('../components/AlertasSection').then(m => ({ default: m.AlertasSection })));
@@ -98,7 +99,7 @@ const PatientDetailScreen: React.FC = () => {
 
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
-    const [mainTab, setMainTab] = useState<'npt' | 'scales' | null>(null);
+    const [mainTab, setMainTab] = useState<'npt' | 'scales' | 'gasometria' | null>(null);
     const [notifRefresh, setNotifRefresh] = useState(0);
     const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'scales' | 'pareceres' | 'examesImagem' | 'paPercentis' | null>(null);
     const [showPAForm, setShowPAForm] = useState(false);
@@ -435,6 +436,14 @@ const PatientDetailScreen: React.FC = () => {
                             Escalas
                             <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${mainTab === 'scales' ? 'rotate-180' : ''}`} />
                         </button>
+                        <button
+                            onClick={() => setMainTab(mainTab === 'gasometria' ? null : 'gasometria')}
+                            className={`flex-1 py-4 px-1 text-center font-bold flex items-center justify-center gap-2 transition-colors duration-200 text-lg ${mainTab === 'gasometria' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                        >
+                            <DropletIcon className="w-6 h-6" />
+                            Gasometria
+                            <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${mainTab === 'gasometria' ? 'rotate-180' : ''}`} />
+                        </button>
                     </nav>
                 </div>
 
@@ -449,6 +458,14 @@ const PatientDetailScreen: React.FC = () => {
                                     peso: patient.peso ?? null,
                                 }}
                             />
+                        </Suspense>
+                    </div>
+                )}
+
+                {mainTab === 'gasometria' && patient && (
+                    <div className="p-4">
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <GasometriaCalculator patientId={patient.id.toString()} />
                         </Suspense>
                     </div>
                 )}
