@@ -834,7 +834,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       }
       if (exs.length) {
         apLines.push('  Exames:');
-        exs.forEach(e => apLines.push(`    • ${e.name} — ${formatDateToBRL(e.date)}`));
+        exs.forEach(e => {
+          apLines.push(`    • ${e.name} — ${formatDateToBRL(e.date)}`);
+          if (e.observation) apLines.push(`      ${e.observation}`);
+        });
       }
       if (imgs.length) {
         apLines.push('  Imagem:');
