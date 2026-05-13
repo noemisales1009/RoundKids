@@ -4,7 +4,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { Device, Exam, Medication, SurgicalProcedure, Culture, Diet } from '../types';
 import { formatDateToBRL } from '../constants';
-import { BackArrowIcon, WarningIcon, PencilIcon, ClipboardIcon, FileTextIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, BrainIcon, ShieldIcon, BeakerIcon, LungsIcon, DumbbellIcon, CloseIcon, ScalpelIcon, ChevronRightIcon, CalculatorIcon, ChevronDownIcon, CameraIcon, HeartPulseIcon } from '../components/icons';
+import { BackArrowIcon, WarningIcon, PencilIcon, ClipboardIcon, FileTextIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, BrainIcon, ShieldIcon, BeakerIcon, LungsIcon, DumbbellIcon, CloseIcon, ScalpelIcon, ChevronRightIcon, CalculatorIcon, ChevronDownIcon, CameraIcon, HeartPulseIcon, VirusIcon } from '../components/icons';
 import { PatientDetailSkeleton } from '../components/SkeletonLoader';
 import { ArchiveModal } from '../components/modals/ArchiveModal';
 import { SecondaryNavigation } from '../components/SecondaryNavigation';
@@ -67,6 +67,7 @@ const ParecerCard = lazy(() => import('../components/ParecerCard').then(m => ({ 
 const ExameImagemCard = lazy(() => import('../components/ExameImagemCard').then(m => ({ default: m.ExameImagemCard })));
 const PrecautionsCard = lazy(() => import('../components/PrecautionsCard').then(m => ({ default: m.PrecautionsCard })));
 const PAPercentisCard = lazy(() => import('../components/PAPercentisCard').then(m => ({ default: m.PAPercentisCard })));
+const PaineisViraisCard = lazy(() => import('../components/PaineisViraisCard').then(m => ({ default: m.PaineisViraisCard })));
 
 // Lazy load modals
 const EditPatientInfoModal = lazy(() => import('../components/modals').then(m => ({ default: m.EditPatientInfoModal })));
@@ -101,7 +102,7 @@ const PatientDetailScreen: React.FC = () => {
 
     const [mainTab, setMainTab] = useState<'npt' | 'scales' | 'gasometria' | null>(null);
     const [notifRefresh, setNotifRefresh] = useState(0);
-    const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'scales' | 'pareceres' | 'examesImagem' | 'paPercentis' | null>(null);
+    const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'scales' | 'pareceres' | 'examesImagem' | 'paPercentis' | 'paineisVirais' | null>(null);
     const [showPAForm, setShowPAForm] = useState(false);
     const [isAddDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
     const [editingDevice, setEditingDevice] = useState<Device | null>(null);
@@ -399,6 +400,7 @@ const PatientDetailScreen: React.FC = () => {
                     { id: 'pareceres' as const, label: 'Pareceres', icon: ClipboardIcon, count: null, gradient: 'from-pink-500 to-rose-600' },
                     { id: 'examesImagem' as const, label: 'Exame de Imagem', icon: CameraIcon, count: null, gradient: 'from-violet-600 to-fuchsia-600' },
                     { id: 'paPercentis' as const, label: 'PA Percentis', icon: HeartPulseIcon, count: null, gradient: 'from-red-500 to-rose-700' },
+                    { id: 'paineisVirais' as const, label: 'Painéis Virais / Sorologia', icon: VirusIcon, count: null, gradient: 'from-cyan-600 to-teal-700' },
                 ] as const).map(({ id, label, icon: Icon, count, gradient }) => (
                     <button
                         key={id}
@@ -646,6 +648,7 @@ const PatientDetailScreen: React.FC = () => {
                     pareceres: { label: 'Pareceres', icon: ClipboardIcon, gradient: 'from-pink-500 to-rose-600' },
                     examesImagem: { label: 'Exame de Imagem', icon: CameraIcon, gradient: 'from-violet-600 to-fuchsia-600' },
                     paPercentis: { label: 'PA Percentis', icon: HeartPulseIcon, gradient: 'from-red-500 to-rose-700' },
+                    paineisVirais: { label: 'Painéis Virais / Sorologia', icon: VirusIcon, gradient: 'from-cyan-600 to-teal-700' },
                 };
                 const config = modalConfig[openCategoryModal];
                 const ModalIcon = config.icon;
@@ -838,6 +841,11 @@ const PatientDetailScreen: React.FC = () => {
                                 {openCategoryModal === 'paPercentis' && (
                                     <Suspense fallback={<LoadingSpinner />}>
                                         <PAPercentisCard patientId={patient.id} sexo={patient.sexo || ''} dob={patient.dob} showForm={showPAForm} onFormClose={() => setShowPAForm(false)} />
+                                    </Suspense>
+                                )}
+                                {openCategoryModal === 'paineisVirais' && (
+                                    <Suspense fallback={<LoadingSpinner />}>
+                                        <PaineisViraisCard patientId={patient.id} />
                                     </Suspense>
                                 )}
                                 {openCategoryModal === 'scales' && (<>

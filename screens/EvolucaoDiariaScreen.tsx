@@ -715,7 +715,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         if (cs.hemodialise)        saidasLines.push(`  Hemodiálise: ${cs.hemodialise} ml`);
         if (cs.dialise_peritoneal) saidasLines.push(`  Diálise Peritoneal: ${cs.dialise_peritoneal} ml`);
       }
-      if (diureseRec) saidasLines.push(`  Diurese: ${((diureseRec.volume / diureseRec.horas) / diureseRec.peso).toFixed(2)} mL/kg/h | Volume: ${diureseRec.volume} mL | Período: ${diureseRec.horas}h`);
+      if (diureseRec) saidasLines.push(`  Diurese: ${((diureseRec.volume / diureseRec.horas) / diureseRec.peso).toFixed(2)} mL/kg/h | Volume: ${diureseRec.volume} mL`);
       if (vitaisLines.length > 0 || saidasLines.length > 0) {
         title('7. CONTROLES E SAÍDAS');
         if (vitaisLines.length > 0) { add('Controles:'); vitaisLines.forEach(l => add(l)); }
@@ -726,7 +726,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     if (bhBalance) {
       title('8. BH DIÁRIO');
       const pct = bhBalance.volume / (bhBalance.peso * 10);
-      add(`${pct.toFixed(2)}% — ${bhBalance.volume > 0 ? 'Ganho' : 'Perda'} | Peso: ${bhBalance.peso} kg | Volume: ${bhBalance.volume > 0 ? '+' : ''}${bhBalance.volume} mL`);
+      add(`${pct.toFixed(2)}% — ${bhBalance.volume > 0 ? 'Ganho' : 'Perda'} | Volume: ${bhBalance.volume > 0 ? '+' : ''}${bhBalance.volume} mL`);
     }
 
     if (bhCumul && bhCumul.registros_ultimas_24h > 0) {
@@ -766,6 +766,12 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       });
     }
 
+    const calcDias = (dateStr: string): string => {
+      const s = new Date(dateStr.includes('T') ? dateStr : dateStr + 'T00:00:00');
+      const t = new Date(); t.setHours(0, 0, 0, 0);
+      return `${Math.max(1, Math.floor((t.getTime() - s.getTime()) / 86400000) + 1)}d`;
+    };
+
     const apLines: string[] = [];
     AVALIACAO_SECTIONS.forEach(sec => {
       const sistemas = SECTION_SISTEMAS[sec.id] ?? [];
@@ -775,7 +781,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const cults = (p.cultures ?? []).filter(c => !c.isArchived && c.sistema && sistemas.includes(c.sistema) && !we.has(`cult_${c.id}`));
       const diets = (p.diets ?? []).filter(d => !d.isArchived && d.sistema && sistemas.includes(d.sistema) && !we.has(`diet_${d.id}`));
       const apts  = aportesList.filter(a => a.sistema && sistemas.includes(a.sistema) && !we.has(`apt_${a.id}`));
-      const meds  = (p.medications ?? []).filter(m => !m.isArchived && m.sistema && sistemas.includes(m.sistema) && !we.has(`med_${m.id}`));
+      const _today = new Date(); _today.setHours(0, 0, 0, 0);
+      const meds  = (p.medications ?? []).filter(m => !m.isArchived && m.sistema && sistemas.includes(m.sistema) && !we.has(`med_${m.id}`) && (!m.endDate || new Date(m.endDate + 'T00:00:00') >= _today));
       const exs   = (p.exams ?? []).filter(e => !e.isArchived && e.sistema && sistemas.includes(e.sistema) && !we.has(`exam_${e.id}`));
       const imgs  = examesImagemList.filter(ei => ei.sistema && sistemas.includes(ei.sistema) && !we.has(`img_${ei.id}`));
       const pars  = pareceresList.filter(par => (ESPECIALISTA_TO_SISTEMAS[par.especialista] ?? []).some(s => sistemas.includes(s)) && !we.has(`par_${par.id}`));
@@ -792,16 +799,53 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         });
         apLines.push('');
       }
-      if (disps.length) apLines.push(`  Dispositivos: ${disps.map(d => `${d.name}${d.location ? ` (${d.location})` : ''} — ${formatDateToBRL(d.startDate)}`).join(', ')}`);
-      if (cirgs.length) apLines.push(`  Cirurgias: ${cirgs.map(c => `${c.name} — ${formatDateToBRL(c.date)}`).join(', ')}`);
-      if (cults.length) apLines.push(`  Culturas: ${cults.map(c => `${c.site}${c.microorganism ? ` — ${c.microorganism}` : ''}`).join(', ')}`);
-      if (diets.length) apLines.push(`  Dietas: ${diets.map(d => `${d.type}${d.volume ? ` ${d.volume}ml` : ''}`).join(', ')}`);
-      if (apts.length)  apLines.push(`  Aportes: ${apts.map(a => `THT ${a.tht_ml_kg_h.toFixed(2)} mL/kg/h (${formatDateToBRL(a.data_referencia)})`).join(', ')}`);
-      if (meds.length) apLines.push(`  Medicações: ${meds.map(m => `${m.name}${m.dosage ? ` (${m.dosage})` : ''}`).join(', ')}`);
-      if (exs.length)  apLines.push(`  Exames: ${exs.map(e => `${e.name}${e.date ? ` — ${formatDateToBRL(e.date)}` : ''}`).join(', ')}`);
-      if (imgs.length) apLines.push(`  Imagem: ${imgs.map(i => `${i.exame}${i.resultado ? ` — ${i.resultado}` : ''}`).join(', ')}`);
-      pars.forEach(par => apLines.push(`  Parecer (${par.especialista}): ${par.parecer ?? '—'}`));
-      if (alts.length) apLines.push(`  Condutas: ${alts.map(a => a.alerta_descricao).join(' | ')}`);
+      if (disps.length) {
+        apLines.push('  Dispositivos:');
+        disps.forEach(d => apLines.push(`    • ${d.name}${d.location ? ` (${d.location})` : ''} — ${formatDateToBRL(d.startDate)} (${calcDias(d.startDate)})`));
+      }
+      if (cirgs.length) {
+        apLines.push('  Cirurgias:');
+        cirgs.forEach(c => apLines.push(`    • ${c.name} — ${formatDateToBRL(c.date)} (${calcDias(c.date)})`));
+      }
+      if (cults.length) {
+        apLines.push('  Culturas:');
+        cults.forEach(c => apLines.push(`    • ${c.site}${c.microorganism ? ` — ${c.microorganism}` : ''} — ${formatDateToBRL(c.collectionDate)} (${calcDias(c.collectionDate)})`));
+      }
+      if (diets.length) {
+        apLines.push('  Dietas:');
+        diets.forEach(d => apLines.push(`    • ${d.type}${d.volume ? ` ${d.volume}ml` : ''} — Início: ${formatDateToBRL(d.data_inicio.split('T')[0])} (${calcDias(d.data_inicio)})`));
+      }
+      if (apts.length) {
+        apLines.push('  Aportes:');
+        apts.forEach(a => apLines.push(`    • THT ${a.tht_ml_kg_h.toFixed(2)} mL/kg/h — ${formatDateToBRL(a.data_referencia)} (${calcDias(a.data_referencia)})`));
+      }
+      if (meds.length) {
+        apLines.push('  Medicações:');
+        meds.forEach(m => {
+          const medDias = m.endDate
+            ? `${Math.max(1, Math.floor((new Date(m.endDate + 'T00:00:00').getTime() - new Date(m.startDate + 'T00:00:00').getTime()) / 86400000) + 1)}d`
+            : calcDias(m.startDate);
+          let line = `    • ${m.name}${m.dosage ? ` (${m.dosage})` : ''} — Início: ${formatDateToBRL(m.startDate)}`;
+          if (m.endDate) line += ` | Fim: ${formatDateToBRL(m.endDate)}`;
+          line += ` (${medDias})`;
+          if (m.observacao) line += ` | ${m.observacao}`;
+          apLines.push(line);
+        });
+      }
+      if (exs.length) {
+        apLines.push('  Exames:');
+        exs.forEach(e => apLines.push(`    • ${e.name} — ${formatDateToBRL(e.date)}`));
+      }
+      if (imgs.length) {
+        apLines.push('  Imagem:');
+        imgs.forEach(i => apLines.push(`    • ${i.exame} — ${formatDateToBRL(i.data_exame)}${i.resultado ? ` — ${i.resultado}` : ''}`));
+      }
+      if (pars.length) pars.forEach(par => apLines.push(`  Parecer (${par.especialista}) — ${formatDateToBRL(par.data_parecer)}: ${par.parecer ?? '—'}`));
+      const activeAlts = alts.filter(a => { const st = (a.status || '').toLowerCase(); return !st.includes('concluí') && !st.includes('concluido') && !st.includes('resolvido') && !st.includes('arquivado'); });
+      if (activeAlts.length) {
+        apLines.push('  Condutas:');
+        activeAlts.forEach(a => apLines.push(`    • ${a.alerta_descricao} — ${formatDateToBRL(a.created_at.split('T')[0])}`));
+      }
     });
     if (apLines.length > 0) {
       title('14. AP — AVALIAÇÃO x PROPEDÊUTICA');
