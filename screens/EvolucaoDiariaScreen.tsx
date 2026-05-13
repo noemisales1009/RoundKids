@@ -801,19 +801,31 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       }
       if (disps.length) {
         apLines.push('  Dispositivos:');
-        disps.forEach(d => apLines.push(`    • ${d.name}${d.location ? ` (${d.location})` : ''} — ${formatDateToBRL(d.startDate)} (${calcDias(d.startDate)})`));
+        disps.forEach(d => {
+          apLines.push(`    • ${d.name}${d.location ? ` (${d.location})` : ''} — ${formatDateToBRL(d.startDate)} (${calcDias(d.startDate)})`);
+          if (d.observacao) apLines.push(`      ${d.observacao}`);
+        });
       }
       if (cirgs.length) {
         apLines.push('  Cirurgias:');
-        cirgs.forEach(c => apLines.push(`    • ${c.name} — ${formatDateToBRL(c.date)} (${calcDias(c.date)})`));
+        cirgs.forEach(c => {
+          apLines.push(`    • ${c.name} — ${formatDateToBRL(c.date)} (${calcDias(c.date)})`);
+          if (c.notes) apLines.push(`      ${c.notes}`);
+        });
       }
       if (cults.length) {
         apLines.push('  Culturas:');
-        cults.forEach(c => apLines.push(`    • ${c.site}${c.microorganism ? ` — ${c.microorganism}` : ''} — ${formatDateToBRL(c.collectionDate)} (${calcDias(c.collectionDate)})`));
+        cults.forEach(c => {
+          apLines.push(`    • ${c.site}${c.microorganism ? ` — ${c.microorganism}` : ''} — ${formatDateToBRL(c.collectionDate)} (${calcDias(c.collectionDate)})`);
+          if (c.observation) apLines.push(`      ${c.observation}`);
+        });
       }
       if (diets.length) {
         apLines.push('  Dietas:');
-        diets.forEach(d => apLines.push(`    • ${d.type}${d.volume ? ` ${d.volume}ml` : ''} — Início: ${formatDateToBRL(d.data_inicio.split('T')[0])} (${calcDias(d.data_inicio)})`));
+        diets.forEach(d => {
+          apLines.push(`    • ${d.type}${d.volume ? ` ${d.volume}ml` : ''} — Início: ${formatDateToBRL(d.data_inicio.split('T')[0])} (${calcDias(d.data_inicio)})`);
+          if (d.observacao) apLines.push(`      ${d.observacao}`);
+        });
       }
       if (apts.length) {
         apLines.push('  Aportes:');
@@ -828,8 +840,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           let line = `    • ${m.name}${m.dosage ? ` (${m.dosage})` : ''} — Início: ${formatDateToBRL(m.startDate)}`;
           if (m.endDate) line += ` | Fim: ${formatDateToBRL(m.endDate)}`;
           line += ` (${medDias})`;
-          if (m.observacao) line += ` | ${m.observacao}`;
           apLines.push(line);
+          if (m.observacao) apLines.push(`      ${m.observacao}`);
         });
       }
       if (exs.length) {
@@ -841,7 +853,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       }
       if (imgs.length) {
         apLines.push('  Imagem:');
-        imgs.forEach(i => apLines.push(`    • ${i.exame} — ${formatDateToBRL(i.data_exame)}${i.resultado ? ` — ${i.resultado}` : ''}`));
+        imgs.forEach(i => {
+          apLines.push(`    • ${i.exame} — ${formatDateToBRL(i.data_exame)}${i.resultado ? ` — ${i.resultado}` : ''}`);
+          if (i.observacao) apLines.push(`      ${i.observacao}`);
+        });
       }
       if (pars.length) pars.forEach(par => apLines.push(`  Parecer (${par.especialista}) — ${formatDateToBRL(par.data_parecer)}: ${par.parecer ?? '—'}`));
       const activeAlts = alts.filter(a => { const st = (a.status || '').toLowerCase(); return !st.includes('concluí') && !st.includes('concluido') && !st.includes('resolvido') && !st.includes('arquivado'); });
