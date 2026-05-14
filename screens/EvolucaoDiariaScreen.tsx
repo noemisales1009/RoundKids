@@ -48,6 +48,7 @@ interface AporteRecord {
   medicacoes_ml_kg_h: number;
   tht_ml_kg_h: number;
   sistema?: string;
+  mostrar_evolucao?: boolean;
 }
 
 interface SituacaoClinicaRecord {
@@ -75,6 +76,7 @@ interface PropedeuticaExameImagem {
   sistema: string | null;
   resultado: string | null;
   observacao: string | null;
+  mostrar_evolucao?: boolean;
 }
 
 interface PropedeuticaParecer {
@@ -82,6 +84,19 @@ interface PropedeuticaParecer {
   especialista: string;
   data_parecer: string;
   parecer: string | null;
+  mostrar_evolucao?: boolean;
+}
+
+interface PainelViralRecord {
+  id: string;
+  categoria: string;
+  painel: string;
+  data_coleta: string;
+  resultado: string | null;
+  valor: string | null;
+  sistema: string | null;
+  observacao: string | null;
+  mostrar_evolucao?: boolean;
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -349,6 +364,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   const [alertasLoading, setAlertasLoading] = useState(false);
   const [examesImagemList, setExamesImagemList] = useState<PropedeuticaExameImagem[]>([]);
   const [pareceresList, setPareceresList] = useState<PropedeuticaParecer[]>([]);
+  const [paineisViraisList, setPaineisViraisList] = useState<PainelViralRecord[]>([]);
   const [condutasCriticas, setCondutasCriticas] = useState('');
   const [wordExcluded, setWordExcluded] = useState<Set<string>>(new Set());
   const toggleWordItem = (key: string) => setWordExcluded(prev => {
@@ -486,7 +502,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       try {
         const { data } = await supabase
           .from('aportes_pacientes')
-          .select('id, data_referencia, vo_ml_kg_h, hv_npt_ml_kg_h, medicacoes_ml_kg_h, tht_ml_kg_h, sistema')
+          .select('id, data_referencia, vo_ml_kg_h, hv_npt_ml_kg_h, medicacoes_ml_kg_h, tht_ml_kg_h, sistema, mostrar_evolucao')
           .eq('paciente_id', patientId)
           .is('archived_at', null)
           .order('data_referencia', { ascending: false });
@@ -498,6 +514,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           medicacoes_ml_kg_h: parseFloat(r.medicacoes_ml_kg_h),
           tht_ml_kg_h: parseFloat(r.tht_ml_kg_h),
           sistema: r.sistema,
+          mostrar_evolucao: r.mostrar_evolucao !== false,
         })));
       } catch (e) {
         console.error('Erro ao carregar aportes:', e);
@@ -532,23 +549,29 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   }, [patientId]);
 
   useEffect(() => {
-    if (!patientId) { setExamesImagemList([]); setPareceresList([]); return; }
+    if (!patientId) { setExamesImagemList([]); setPareceresList([]); setPaineisViraisList([]); return; }
     const fetchPropedeutica = async () => {
       try {
-        const [imgRes, parRes] = await Promise.all([
+        const [imgRes, parRes, pnlRes] = await Promise.all([
           supabase
             .from('exames_imagem_pacientes')
-            .select('id, exame, categoria, data_exame, sistema, resultado, observacao')
+            .select('id, exame, categoria, data_exame, sistema, resultado, observacao, mostrar_evolucao')
             .eq('paciente_id', patientId)
             .is('archived_at', null),
           supabase
             .from('pareceres_pacientes')
-            .select('id, especialista, data_parecer, parecer')
+            .select('id, especialista, data_parecer, parecer, mostrar_evolucao')
+            .eq('paciente_id', patientId)
+            .is('archived_at', null),
+          supabase
+            .from('paineis_virais_pacientes')
+            .select('id, categoria, painel, data_coleta, resultado, valor, sistema, observacao, mostrar_evolucao')
             .eq('paciente_id', patientId)
             .is('archived_at', null),
         ]);
         setExamesImagemList((imgRes.data ?? []) as PropedeuticaExameImagem[]);
         setPareceresList((parRes.data ?? []) as PropedeuticaParecer[]);
+        setPaineisViraisList((pnlRes.data ?? []) as PainelViralRecord[]);
       } catch (e) {
         console.error('Erro ao carregar propedêutica:', e);
       }
@@ -734,9 +757,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       add(`Total: ${bhCumul.bh_cumulativo_total > 0 ? '+' : ''}${bhCumul.bh_cumulativo_total.toFixed(2)}% | BH Anterior: ${bhCumul.bh_historico_antigo.toFixed(2)}% | Últimas 24h: ${bhCumul.bh_ultimas_24h.toFixed(2)}%`);
     }
 
-    if (aportesList.length > 0) {
+    const aportesVisiveis = aportesList.filter(a => a.mostrar_evolucao !== false);
+    if (aportesVisiveis.length > 0) {
       title('10. APORTES');
-      aportesList.forEach(a => {
+      aportesVisiveis.forEach(a => {
         add(new Date(a.data_referencia + 'T12:00:00').toLocaleDateString('pt-BR'));
         add(`VO: ${a.vo_ml_kg_h.toFixed(2)} mL/kg/h`);
         add(`HV/NPT: ${a.hv_npt_ml_kg_h.toFixed(2)} mL/kg/h`);
@@ -776,18 +800,19 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     AVALIACAO_SECTIONS.forEach(sec => {
       const sistemas = SECTION_SISTEMAS[sec.id] ?? [];
       const diags = diagItems.filter(d => d.sistema && sistemas.includes(d.sistema) && !we.has(`diag_${d.opcao_id}`));
-      const disps = (p.devices ?? []).filter(d => !d.isArchived && d.sistema && sistemas.includes(d.sistema) && !we.has(`disp_${d.id}`));
-      const cirgs = (p.surgicalProcedures ?? []).filter(c => !c.isArchived && c.sistema && sistemas.includes(c.sistema) && !we.has(`cir_${c.id}`));
-      const cults = (p.cultures ?? []).filter(c => !c.isArchived && c.sistema && sistemas.includes(c.sistema) && !we.has(`cult_${c.id}`));
-      const diets = (p.diets ?? []).filter(d => !d.isArchived && d.sistema && sistemas.includes(d.sistema) && !we.has(`diet_${d.id}`));
-      const apts  = aportesList.filter(a => a.sistema && sistemas.includes(a.sistema) && !we.has(`apt_${a.id}`));
+      const disps = (p.devices ?? []).filter(d => !d.isArchived && d.mostrar_evolucao !== false && d.sistema && sistemas.includes(d.sistema) && !we.has(`disp_${d.id}`));
+      const cirgs = (p.surgicalProcedures ?? []).filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && sistemas.includes(c.sistema) && !we.has(`cir_${c.id}`));
+      const cults = (p.cultures ?? []).filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && sistemas.includes(c.sistema) && !we.has(`cult_${c.id}`));
+      const diets = (p.diets ?? []).filter(d => !d.isArchived && d.mostrar_evolucao !== false && d.sistema && sistemas.includes(d.sistema) && !we.has(`diet_${d.id}`));
+      const apts  = aportesList.filter(a => a.mostrar_evolucao !== false && a.sistema && sistemas.includes(a.sistema) && !we.has(`apt_${a.id}`));
       const _today = new Date(); _today.setHours(0, 0, 0, 0);
-      const meds  = (p.medications ?? []).filter(m => !m.isArchived && m.sistema && sistemas.includes(m.sistema) && !we.has(`med_${m.id}`) && (!m.endDate || new Date(m.endDate + 'T00:00:00') >= _today));
-      const exs   = (p.exams ?? []).filter(e => !e.isArchived && e.sistema && sistemas.includes(e.sistema) && !we.has(`exam_${e.id}`));
-      const imgs  = examesImagemList.filter(ei => ei.sistema && sistemas.includes(ei.sistema) && !we.has(`img_${ei.id}`));
-      const pars  = pareceresList.filter(par => (ESPECIALISTA_TO_SISTEMAS[par.especialista] ?? []).some(s => sistemas.includes(s)) && !we.has(`par_${par.id}`));
+      const meds  = (p.medications ?? []).filter(m => !m.isArchived && m.mostrar_evolucao !== false && m.sistema && sistemas.includes(m.sistema) && !we.has(`med_${m.id}`) && (!m.endDate || new Date(m.endDate + 'T00:00:00') >= _today));
+      const exs   = (p.exams ?? []).filter(e => !e.isArchived && e.mostrar_evolucao !== false && e.sistema && sistemas.includes(e.sistema) && !we.has(`exam_${e.id}`));
+      const imgs  = examesImagemList.filter(ei => ei.mostrar_evolucao !== false && ei.sistema && sistemas.includes(ei.sistema) && !we.has(`img_${ei.id}`));
+      const pnls  = paineisViraisList.filter(pn => pn.mostrar_evolucao !== false && pn.sistema && sistemas.includes(pn.sistema) && !we.has(`pnl_${pn.id}`));
+      const pars  = pareceresList.filter(par => par.mostrar_evolucao !== false && (ESPECIALISTA_TO_SISTEMAS[par.especialista] ?? []).some(s => sistemas.includes(s)) && !we.has(`par_${par.id}`));
       const alts  = alertasList.filter(a => sistemas.length > 0 && a.sistemas.some(s => sistemas.includes(s)) && !we.has(`alt_${a.id}`));
-      if (diags.length + disps.length + cirgs.length + cults.length + diets.length + apts.length + meds.length + exs.length + imgs.length + pars.length + alts.length === 0) return;
+      if (diags.length + disps.length + cirgs.length + cults.length + diets.length + apts.length + meds.length + exs.length + imgs.length + pnls.length + pars.length + alts.length === 0) return;
       apLines.push('');
       apLines.push(sec.label.replace(/^[\d./]+\s*/, ''));
       if (diags.length) {
@@ -800,39 +825,45 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         apLines.push('');
       }
       if (disps.length) {
-        apLines.push('  Dispositivos:');
+        apLines.push('  DISPOSITIVOS:');
+        apLines.push('');
         disps.forEach(d => {
           apLines.push(`    • ${d.name}${d.location ? ` (${d.location})` : ''} — ${formatDateToBRL(d.startDate)} (${calcDias(d.startDate)})`);
           if (d.observacao) apLines.push(`      ${d.observacao}`);
         });
       }
       if (cirgs.length) {
-        apLines.push('  Cirurgias:');
+        apLines.push('  CIRURGIAS:');
+        apLines.push('');
         cirgs.forEach(c => {
           apLines.push(`    • ${c.name} — ${formatDateToBRL(c.date)} (${calcDias(c.date)})`);
           if (c.notes) apLines.push(`      ${c.notes}`);
         });
       }
       if (cults.length) {
-        apLines.push('  Culturas:');
+        apLines.push('  CULTURAS:');
+        apLines.push('');
         cults.forEach(c => {
           apLines.push(`    • ${c.site}${c.microorganism ? ` — ${c.microorganism}` : ''} — ${formatDateToBRL(c.collectionDate)} (${calcDias(c.collectionDate)})`);
           if (c.observation) apLines.push(`      ${c.observation}`);
         });
       }
       if (diets.length) {
-        apLines.push('  Dietas:');
+        apLines.push('  DIETAS:');
+        apLines.push('');
         diets.forEach(d => {
           apLines.push(`    • ${d.type}${d.volume ? ` ${d.volume}ml` : ''} — Início: ${formatDateToBRL(d.data_inicio.split('T')[0])} (${calcDias(d.data_inicio)})`);
           if (d.observacao) apLines.push(`      ${d.observacao}`);
         });
       }
       if (apts.length) {
-        apLines.push('  Aportes:');
+        apLines.push('  APORTES:');
+        apLines.push('');
         apts.forEach(a => apLines.push(`    • THT ${a.tht_ml_kg_h.toFixed(2)} mL/kg/h — ${formatDateToBRL(a.data_referencia)} (${calcDias(a.data_referencia)})`));
       }
       if (meds.length) {
-        apLines.push('  Medicações:');
+        apLines.push('  MEDICAÇÕES:');
+        apLines.push('');
         meds.forEach(m => {
           const medDias = m.endDate
             ? `${Math.max(1, Math.floor((new Date(m.endDate + 'T00:00:00').getTime() - new Date(m.startDate + 'T00:00:00').getTime()) / 86400000) + 1)}d`
@@ -845,23 +876,38 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         });
       }
       if (exs.length) {
-        apLines.push('  Exames:');
+        apLines.push('  EXAMES:');
+        apLines.push('');
         exs.forEach(e => {
           apLines.push(`    • ${e.name} — ${formatDateToBRL(e.date)}`);
           if (e.observation) apLines.push(`      ${e.observation}`);
         });
       }
       if (imgs.length) {
-        apLines.push('  Imagem:');
+        apLines.push('  IMAGEM:');
+        apLines.push('');
         imgs.forEach(i => {
           apLines.push(`    • ${i.exame} — ${formatDateToBRL(i.data_exame)}${i.resultado ? ` — ${i.resultado}` : ''}`);
           if (i.observacao) apLines.push(`      ${i.observacao}`);
         });
       }
-      if (pars.length) pars.forEach(par => apLines.push(`  Parecer (${par.especialista}) — ${formatDateToBRL(par.data_parecer)}: ${par.parecer ?? '—'}`));
+      if (pnls.length) {
+        apLines.push('  PAINÉIS VIRAIS:');
+        apLines.push('');
+        pnls.forEach(pn => {
+          apLines.push(`    • ${pn.categoria} — ${pn.painel} — ${formatDateToBRL(pn.data_coleta)}${pn.resultado ? ` — ${pn.resultado}` : ''}${pn.valor ? ` (${pn.valor})` : ''}`);
+          if (pn.observacao) apLines.push(`      ${pn.observacao}`);
+        });
+      }
+      if (pars.length) {
+        apLines.push('  PARECERES:');
+        apLines.push('');
+        pars.forEach(par => apLines.push(`    • ${par.especialista} — ${formatDateToBRL(par.data_parecer)}: ${par.parecer ?? '—'}`));
+      }
       const activeAlts = alts.filter(a => { const st = (a.status || '').toLowerCase(); return !st.includes('concluí') && !st.includes('concluido') && !st.includes('resolvido') && !st.includes('arquivado'); });
       if (activeAlts.length) {
-        apLines.push('  Condutas:');
+        apLines.push('  CONDUTAS:');
+        apLines.push('');
         activeAlts.forEach(a => apLines.push(`    • ${a.alerta_descricao} — ${formatDateToBRL(a.created_at.split('T')[0])}`));
       }
     });
@@ -1439,27 +1485,29 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
               const secDiags = diagItems.filter(d => d.sistema && sistemas.includes(d.sistema));
               const secDispositivos = (selectedPatient?.devices ?? [])
-                .filter(d => !d.isArchived && d.sistema && sistemas.includes(d.sistema));
+                .filter(d => !d.isArchived && d.mostrar_evolucao !== false && d.sistema && sistemas.includes(d.sistema));
               const secCirurgias = (selectedPatient?.surgicalProcedures ?? [])
-                .filter(c => !c.isArchived && c.sistema && sistemas.includes(c.sistema));
+                .filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && sistemas.includes(c.sistema));
               const secCulturas = (selectedPatient?.cultures ?? [])
-                .filter(c => !c.isArchived && c.sistema && sistemas.includes(c.sistema));
+                .filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && sistemas.includes(c.sistema));
               const secDietas = (selectedPatient?.diets ?? [])
-                .filter(d => !d.isArchived && d.sistema && sistemas.includes(d.sistema));
-              const secAportes = aportesList.filter(a => a.sistema && sistemas.includes(a.sistema));
+                .filter(d => !d.isArchived && d.mostrar_evolucao !== false && d.sistema && sistemas.includes(d.sistema));
+              const secAportes = aportesList.filter(a => a.mostrar_evolucao !== false && a.sistema && sistemas.includes(a.sistema));
               const secMedicacoes = (selectedPatient?.medications ?? [])
-                .filter(m => !m.isArchived && m.sistema && sistemas.includes(m.sistema));
+                .filter(m => !m.isArchived && m.mostrar_evolucao !== false && m.sistema && sistemas.includes(m.sistema));
               const secExames = (selectedPatient?.exams ?? [])
-                .filter(e => !e.isArchived && e.sistema && sistemas.includes(e.sistema));
+                .filter(e => !e.isArchived && e.mostrar_evolucao !== false && e.sistema && sistemas.includes(e.sistema));
               const secExamesImagem = examesImagemList
-                .filter(ei => ei.sistema && sistemas.includes(ei.sistema));
+                .filter(ei => ei.mostrar_evolucao !== false && ei.sistema && sistemas.includes(ei.sistema));
+              const secPaineisVirais = paineisViraisList
+                .filter(pn => pn.mostrar_evolucao !== false && pn.sistema && sistemas.includes(pn.sistema));
               const secPareceres = pareceresList
-                .filter(p => (ESPECIALISTA_TO_SISTEMAS[p.especialista] ?? []).some(s => sistemas.includes(s)));
+                .filter(p => p.mostrar_evolucao !== false && (ESPECIALISTA_TO_SISTEMAS[p.especialista] ?? []).some(s => sistemas.includes(s)));
               const secAlertas = alertasList.filter(a =>
                 sistemas.length > 0 && a.sistemas.some(s => sistemas.includes(s))
               );
 
-              const total = secDiags.length + secDispositivos.length + secCirurgias.length + secCulturas.length + secDietas.length + secAportes.length + secMedicacoes.length + secExames.length + secExamesImagem.length + secPareceres.length + secAlertas.length;
+              const total = secDiags.length + secDispositivos.length + secCirurgias.length + secCulturas.length + secDietas.length + secAportes.length + secMedicacoes.length + secExames.length + secExamesImagem.length + secPaineisVirais.length + secPareceres.length + secAlertas.length;
               if (total === 0) return null;
 
               return (
@@ -1636,6 +1684,26 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ei.exame}</p>
                                 {ei.resultado && <p className="text-xs text-slate-500 dark:text-slate-400">{ei.resultado}</p>}
                                 <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(ei.data_exame).toLocaleDateString('pt-BR')}</p>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {secPaineisVirais.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-fuchsia-600 dark:text-fuchsia-400 uppercase tracking-wide mb-1.5">Painéis Virais</p>
+                        <div className="space-y-1">
+                          {secPaineisVirais.map(pn => {
+                            const wk = `pnl_${pn.id}`; const off = wordExcluded.has(wk);
+                            return (
+                              <div key={pn.id} className={`relative p-2 pr-10 bg-fuchsia-50 dark:bg-fuchsia-900/20 rounded-lg border border-fuchsia-200 dark:border-fuchsia-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{pn.painel}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">{pn.categoria}</p>
+                                {pn.resultado && <p className="text-xs text-slate-500 dark:text-slate-400">{pn.resultado}{pn.valor ? ` (${pn.valor})` : ''}</p>}
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(pn.data_coleta + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
                                 <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );

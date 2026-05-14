@@ -26,6 +26,11 @@ export const PaineisViraisCard: React.FC<PaineisViraisCardProps> = ({ patientId 
     const [editingPainel, setEditingPainel] = useState<PainelViralRow | null>(null);
     const [archivingPainel, setArchivingPainel] = useState<PainelViralRow | null>(null);
 
+    const toggleMostrarEvolucao = async (id: string, value: boolean) => {
+        await supabase.from('paineis_virais_pacientes').update({ mostrar_evolucao: value }).eq('id', id);
+        setPaineis(prev => prev.map(p => p.id === id ? { ...p, mostrar_evolucao: value } : p));
+    };
+
     const loadPaineis = async () => {
         setLoading(true);
         try {
@@ -100,6 +105,10 @@ export const PaineisViraisCard: React.FC<PaineisViraisCardProps> = ({ patientId 
                                                 💬 {p.observacao}
                                             </p>
                                         )}
+                                        <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
+                                            <input type="checkbox" checked={p.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucao(p.id, e.target.checked)} className="w-3.5 h-3.5 accent-blue-500" />
+                                            <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
+                                        </label>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0 ml-2">

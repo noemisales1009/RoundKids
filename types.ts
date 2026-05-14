@@ -10,6 +10,7 @@ export interface Device {
   isArchived?: boolean;
   observacao?: string;
   sistema?: string;
+  mostrar_evolucao?: boolean;
 }
 
 export interface Exam {
@@ -20,6 +21,7 @@ export interface Exam {
   observation?: string;
   isArchived?: boolean;
   sistema?: string;
+  mostrar_evolucao?: boolean;
 }
 
 export interface Medication {
@@ -33,6 +35,7 @@ export interface Medication {
   isArchived?: boolean;
   observacao?: string;
   sistema?: string;
+  mostrar_evolucao?: boolean;
 }
 
 export interface SurgicalProcedure {
@@ -43,6 +46,7 @@ export interface SurgicalProcedure {
   notes?: string;
   isArchived?: boolean;
   sistema?: string;
+  mostrar_evolucao?: boolean;
 }
 
 export interface ScaleScore {
@@ -61,6 +65,7 @@ export interface Culture {
   observation?: string; // observação (opcional)
   isArchived?: boolean;
   sistema?: string;
+  mostrar_evolucao?: boolean;
 }
 
 export interface Diet {
@@ -79,6 +84,7 @@ export interface Diet {
   observacao?: string; // Observações adicionais
   sistema?: string;
   isArchived?: boolean;
+  mostrar_evolucao?: boolean;
 }
 
 export interface DoencaPrecaucao {
@@ -220,6 +226,12 @@ export interface PatientsContextType {
   deleteDeviceFromPatient: (patientId: number | string, deviceId: number | string) => void;
   addEndDateToMedication: (patientId: number | string, medicationId: number | string, endDate: string) => void;
   deleteMedicationFromPatient: (patientId: number | string, medicationId: number | string) => void;
+  toggleMostrarEvolucao: (medicationId: number | string, value: boolean) => void;
+  toggleMostrarEvolucaoDispositivo: (deviceId: number | string, value: boolean) => void;
+  toggleMostrarEvolucaoExame: (examId: number | string, value: boolean) => void;
+  toggleMostrarEvolucaoCirurgia: (surgId: number | string, value: boolean) => void;
+  toggleMostrarEvolucaoCultura: (cultureId: number | string, value: boolean) => void;
+  toggleMostrarEvolucaoDieta: (dietId: number | string, value: boolean) => void;
   updateExamInPatient: (patientId: number | string, examData: Exam) => void;
   deleteExamFromPatient: (patientId: number | string, examId: number | string) => void;
   updateDeviceInPatient: (patientId: number | string, deviceData: Device) => void;

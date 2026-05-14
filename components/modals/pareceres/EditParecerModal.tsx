@@ -33,6 +33,7 @@ export type ParecerRow = {
     data_parecer: string;
     parecer: string | null;
     sistema?: string;
+    mostrar_evolucao?: boolean;
     created_by: string;
     created_at: string;
 };

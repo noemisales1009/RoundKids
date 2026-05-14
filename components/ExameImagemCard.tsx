@@ -15,6 +15,11 @@ export const ExameImagemCard: React.FC<ExameImagemCardProps> = ({ patientId }) =
     const [editingExame, setEditingExame] = useState<ExameImagemRow | null>(null);
     const [archivingExame, setArchivingExame] = useState<ExameImagemRow | null>(null);
 
+    const toggleMostrarEvolucao = async (id: string, value: boolean) => {
+        await supabase.from('exames_imagem_pacientes').update({ mostrar_evolucao: value }).eq('id', id);
+        setExames(prev => prev.map(ex => ex.id === id ? { ...ex, mostrar_evolucao: value } : ex));
+    };
+
     const loadExames = async () => {
         setLoading(true);
         try {
@@ -84,6 +89,10 @@ export const ExameImagemCard: React.FC<ExameImagemCardProps> = ({ patientId }) =
                                                 💬 {ex.observacao}
                                             </p>
                                         )}
+                                        <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
+                                            <input type="checkbox" checked={ex.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucao(ex.id, e.target.checked)} className="w-3.5 h-3.5 accent-blue-500" />
+                                            <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
+                                        </label>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0 ml-2">

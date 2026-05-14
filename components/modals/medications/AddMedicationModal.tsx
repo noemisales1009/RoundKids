@@ -285,24 +285,6 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                         </>
                     )}
 
-                    {/* Campo 4a: Unidade opcional para medicamento da lista sem unidade predefinida */}
-                    {selectedMedicamento && !isOther && !selectedMedData?.unidade_dose_principal && (
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                Unidade de Dosagem <span className="text-gray-400 font-normal">(opcional)</span>
-                            </label>
-                            <input
-                                type="text"
-                                value={customUnidade}
-                                onChange={e => setCustomUnidade(e.target.value)}
-                                placeholder="Ex: mg/kg/dia, ug/h, UI/ml..."
-                                className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
-                            />
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                💡 Se deixar em branco, a medicação será salva sem unidade padronizada
-                            </p>
-                        </div>
-                    )}
 
                     {/* Campo 4b: Valor da dosagem (quando há unidade — lista ou manual) */}
                     {(selectedMedicamento || isCategoriaManual) && temUnidadeDose && (

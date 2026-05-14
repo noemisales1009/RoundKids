@@ -115,6 +115,7 @@ export type PainelViralRow = {
     valor: string | null;
     sistema: string | null;
     observacao: string | null;
+    mostrar_evolucao?: boolean;
     created_by: string;
     created_at: string;
 };

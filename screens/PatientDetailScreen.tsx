@@ -94,7 +94,7 @@ const EditSurgicalProcedureModal = lazy(() => import('../components/modals').the
 
 const PatientDetailScreen: React.FC = () => {
     const { patientId } = useParams<{ patientId: string }>();
-    const { patients, addRemovalDateToDevice, deleteDeviceFromPatient, addEndDateToMedication, deleteMedicationFromPatient, deleteExamFromPatient, deleteSurgicalProcedureFromPatient, addScaleScoreToPatient, addCultureToPatient, deleteCultureFromPatient, addDietToPatient, updateDietInPatient, deleteDietFromPatient } = useContext(PatientsContext)!;
+    const { patients, addRemovalDateToDevice, deleteDeviceFromPatient, addEndDateToMedication, deleteMedicationFromPatient, toggleMostrarEvolucao, toggleMostrarEvolucaoDispositivo, toggleMostrarEvolucaoExame, toggleMostrarEvolucaoCirurgia, toggleMostrarEvolucaoCultura, toggleMostrarEvolucaoDieta, deleteExamFromPatient, deleteSurgicalProcedureFromPatient, addScaleScoreToPatient, addCultureToPatient, deleteCultureFromPatient, addDietToPatient, updateDietInPatient, deleteDietFromPatient } = useContext(PatientsContext)!;
     const { user } = useContext(UserContext)!;
     const patient = patients.find(p => p.id.toString() === patientId);
 
@@ -133,6 +133,28 @@ const PatientDetailScreen: React.FC = () => {
     const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'vni-cnaf' | 'fss' | 'abstinencia' | 'sos-pd' | 'consciousness' | 'respiratory' | 'phoenix-sepsis' | 'avaliacao-respiratoria' | 'kdigo'>('list');
     const [calculationsRefresh, setCalculationsRefresh] = useState(0);
     const scalesSectionRef = useRef<HTMLDivElement>(null);
+
+    const [extraCounts, setExtraCounts] = useState({ aportes: 0, pareceres: 0, examesImagem: 0, paPercentis: 0, paineisVirais: 0 });
+
+    useEffect(() => {
+        if (!patient?.id) return;
+        const pid = patient.id;
+        Promise.all([
+            supabase.from('aportes_pacientes').select('id', { count: 'exact', head: true }).eq('paciente_id', pid).is('archived_at', null),
+            supabase.from('pareceres_pacientes').select('id', { count: 'exact', head: true }).eq('paciente_id', pid).is('archived_at', null),
+            supabase.from('exames_imagem_pacientes').select('id', { count: 'exact', head: true }).eq('paciente_id', pid).is('archived_at', null),
+            supabase.from('pa_medicoes_pacientes').select('id', { count: 'exact', head: true }).eq('paciente_id', pid),
+            supabase.from('paineis_virais_pacientes').select('id', { count: 'exact', head: true }).eq('paciente_id', pid).is('archived_at', null),
+        ]).then(([apt, par, img, pa, pnl]) => {
+            setExtraCounts({
+                aportes: apt.count ?? 0,
+                pareceres: par.count ?? 0,
+                examesImagem: img.count ?? 0,
+                paPercentis: pa.count ?? 0,
+                paineisVirais: pnl.count ?? 0,
+            });
+        });
+    }, [patient?.id]);
 
     const navigate = useNavigate();
     const { showNotification } = useContext(NotificationContext)!
@@ -395,12 +417,12 @@ const PatientDetailScreen: React.FC = () => {
                     { id: 'surgical' as const, label: 'Cirúrgico', icon: ScalpelIcon, count: patient.surgicalProcedures.filter(p => !p.isArchived).length, gradient: 'from-orange-500 to-red-600' },
                     { id: 'exams' as const, label: 'Exames', icon: FileTextIcon, count: patient.exams.filter(e => !e.isArchived).length, gradient: 'from-teal-400 to-cyan-600' },
                     { id: 'diets' as const, label: 'Dietas', icon: AppleIcon, count: patient.diets.filter(d => !d.isArchived).length, gradient: 'from-amber-400 to-orange-500' },
-                    { id: 'aportes' as const, label: 'Aportes', icon: DropletIcon, count: null, gradient: 'from-sky-400 to-blue-500' },
+                    { id: 'aportes' as const, label: 'Aportes', icon: DropletIcon, count: extraCounts.aportes, gradient: 'from-sky-400 to-blue-500' },
                     { id: 'scales' as const, label: 'Escalas', icon: BarChartIcon, count: patient.scaleScores?.length ?? 0, gradient: 'from-indigo-500 to-purple-600' },
-                    { id: 'pareceres' as const, label: 'Pareceres', icon: ClipboardIcon, count: null, gradient: 'from-pink-500 to-rose-600' },
-                    { id: 'examesImagem' as const, label: 'Exame de Imagem', icon: CameraIcon, count: null, gradient: 'from-violet-600 to-fuchsia-600' },
-                    { id: 'paPercentis' as const, label: 'PA Percentis', icon: HeartPulseIcon, count: null, gradient: 'from-red-500 to-rose-700' },
-                    { id: 'paineisVirais' as const, label: 'Painéis Virais / Sorologia', icon: VirusIcon, count: null, gradient: 'from-cyan-600 to-teal-700' },
+                    { id: 'pareceres' as const, label: 'Pareceres', icon: ClipboardIcon, count: extraCounts.pareceres, gradient: 'from-pink-500 to-rose-600' },
+                    { id: 'examesImagem' as const, label: 'Exame de Imagem', icon: CameraIcon, count: extraCounts.examesImagem, gradient: 'from-violet-600 to-fuchsia-600' },
+                    { id: 'paPercentis' as const, label: 'PA Percentis', icon: HeartPulseIcon, count: extraCounts.paPercentis, gradient: 'from-red-500 to-rose-700' },
+                    { id: 'paineisVirais' as const, label: 'Painéis Virais / Sorologia', icon: VirusIcon, count: extraCounts.paineisVirais, gradient: 'from-cyan-600 to-teal-700' },
                 ] as const).map(({ id, label, icon: Icon, count, gradient }) => (
                     <button
                         key={id}
@@ -687,6 +709,15 @@ const PatientDetailScreen: React.FC = () => {
                                                         {device.removalDate ? <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Retirada: {formatDateToBRL(device.removalDate)}</p> : <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(device.startDate)}</p>}
                                                         {(device as any).sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{(device as any).sistema}</span>}
                                                         {device.observacao && <p className="text-sm text-slate-600 dark:text-slate-400 italic mt-1.5 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded">💬 {device.observacao}</p>}
+                                                        <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={device.mostrar_evolucao !== false}
+                                                                onChange={e => toggleMostrarEvolucaoDispositivo(device.id, e.target.checked)}
+                                                                className="w-3.5 h-3.5 accent-blue-500"
+                                                            />
+                                                            <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
+                                                        </label>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0 ml-2">
@@ -710,6 +741,10 @@ const PatientDetailScreen: React.FC = () => {
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(exam.date)}</p>
                                                         {exam.sistema && <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800">{exam.sistema}</span>}
                                                         {exam.observation && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 italic">Obs: {exam.observation}</p>}
+                                                        <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
+                                                            <input type="checkbox" checked={exam.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucaoExame(exam.id, e.target.checked)} className="w-3.5 h-3.5 accent-blue-500" />
+                                                            <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
+                                                        </label>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-1 shrink-0 ml-2">
@@ -733,6 +768,15 @@ const PatientDetailScreen: React.FC = () => {
                                                         {medication.endDate ? <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Fim: {formatDateToBRL(medication.endDate)}</p> : <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(medication.startDate)}</p>}
                                                         {medication.sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{medication.sistema}</span>}
                                                         {medication.observacao && <p className="text-sm text-slate-600 dark:text-slate-400 italic mt-1.5 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded">💬 {medication.observacao}</p>}
+                                                        <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={medication.mostrar_evolucao !== false}
+                                                                onChange={e => toggleMostrarEvolucao(medication.id, e.target.checked)}
+                                                                className="w-3.5 h-3.5 accent-blue-500"
+                                                            />
+                                                            <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
+                                                        </label>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0 ml-2">
@@ -757,6 +801,10 @@ const PatientDetailScreen: React.FC = () => {
                                                         <p className="text-sm text-blue-600 dark:text-blue-400 font-semibold mt-1">Dia Pós-Operatório: +{calculateDays(procedure.date)} dias</p>
                                                         {(procedure as any).sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{(procedure as any).sistema}</span>}
                                                         {procedure.notes && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 italic">Obs: {procedure.notes}</p>}
+                                                        <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
+                                                            <input type="checkbox" checked={procedure.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucaoCirurgia(procedure.id, e.target.checked)} className="w-3.5 h-3.5 accent-blue-500" />
+                                                            <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
+                                                        </label>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-1 shrink-0 ml-2">
@@ -780,6 +828,10 @@ const PatientDetailScreen: React.FC = () => {
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(culture.collectionDate)}</p>
                                                         {culture.sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{culture.sistema}</span>}
                                                         {culture.observation && <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 font-medium">Observação: {culture.observation}</p>}
+                                                        <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
+                                                            <input type="checkbox" checked={culture.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucaoCultura(culture.id, e.target.checked)} className="w-3.5 h-3.5 accent-blue-500" />
+                                                            <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
+                                                        </label>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-1 shrink-0 ml-2">
@@ -816,6 +868,10 @@ const PatientDetailScreen: React.FC = () => {
                                                         )}
                                                         {diet.observacao && <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 font-medium">Observação: {diet.observacao}</p>}
                                                         {diet.sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{diet.sistema}</span>}
+                                                        <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
+                                                            <input type="checkbox" checked={diet.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucaoDieta(diet.id, e.target.checked)} className="w-3.5 h-3.5 accent-blue-500" />
+                                                            <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
+                                                        </label>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0 ml-2">

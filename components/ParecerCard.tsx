@@ -16,6 +16,11 @@ export const ParecerCard: React.FC<ParecerCardProps> = ({ patientId }) => {
     const [archivingParecer, setArchivingParecer] = useState<ParecerRow | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+    const toggleMostrarEvolucao = async (id: string, value: boolean) => {
+        await supabase.from('pareceres_pacientes').update({ mostrar_evolucao: value }).eq('id', id);
+        setPareceres(prev => prev.map(p => p.id === id ? { ...p, mostrar_evolucao: value } : p));
+    };
+
     const loadPareceres = async () => {
         setLoading(true);
         setErrorMsg(null);
@@ -86,6 +91,10 @@ export const ParecerCard: React.FC<ParecerCardProps> = ({ patientId }) => {
                                             </p>
                                         )}
                                         {p.sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{p.sistema}</span>}
+                                        <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
+                                            <input type="checkbox" checked={p.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucao(p.id, e.target.checked)} className="w-3.5 h-3.5 accent-blue-500" />
+                                            <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
+                                        </label>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0 ml-2">

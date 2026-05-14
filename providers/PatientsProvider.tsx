@@ -43,6 +43,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 isArchived: d.is_archived,
                 observacao: d.observacao,
                 sistema: d.sistema,
+                mostrar_evolucao: d.mostrar_evolucao !== false,
             });
             return acc;
         }, {});
@@ -56,6 +57,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 result: e.resultado || 'Pendente',
                 observation: e.observacao,
                 sistema: e.sistema || undefined,
+                mostrar_evolucao: e.mostrar_evolucao !== false,
             });
             return acc;
         }, {});
@@ -75,6 +77,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 isArchived: m.is_archived,
                 observacao: m.observacao,
                 sistema: m.sistema || undefined,
+                mostrar_evolucao: m.mostrar_evolucao !== false,
             });
             return acc;
         }, {});
@@ -90,6 +93,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 notes: s.notas,
                 isArchived: s.is_archived,
                 sistema: s.sistema,
+                mostrar_evolucao: s.mostrar_evolucao !== false,
             });
             return acc;
         }, {});
@@ -117,6 +121,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 observation: c.observacao || undefined,
                 isArchived: c.is_archived,
                 sistema: c.sistema,
+                mostrar_evolucao: c.mostrar_evolucao !== false,
             });
             return acc;
         }, {});
@@ -138,7 +143,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 th: d.th || undefined,
                 observacao: d.observacao || undefined,
                 sistema: d.sistema,
-                isArchived: d.is_archived
+                isArchived: d.is_archived,
+                mostrar_evolucao: d.mostrar_evolucao !== false,
             });
             return acc;
         }, {});
@@ -645,6 +651,48 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (!error) fetchPatients();
     };
 
+    const toggleMostrarEvolucao = async (medicationId: number | string, value: boolean) => {
+        const { error } = await supabase.from('medicacoes_pacientes')
+            .update({ mostrar_evolucao: value })
+            .eq('id', medicationId);
+        if (!error) fetchPatients();
+    };
+
+    const toggleMostrarEvolucaoDispositivo = async (deviceId: number | string, value: boolean) => {
+        const { error } = await supabase.from('dispositivos_pacientes')
+            .update({ mostrar_evolucao: value })
+            .eq('id', deviceId);
+        if (!error) fetchPatients();
+    };
+
+    const toggleMostrarEvolucaoExame = async (examId: number | string, value: boolean) => {
+        const { error } = await supabase.from('exames_pacientes')
+            .update({ mostrar_evolucao: value })
+            .eq('id', examId);
+        if (!error) fetchPatients();
+    };
+
+    const toggleMostrarEvolucaoCirurgia = async (surgId: number | string, value: boolean) => {
+        const { error } = await supabase.from('procedimentos_pacientes')
+            .update({ mostrar_evolucao: value })
+            .eq('id', surgId);
+        if (!error) fetchPatients();
+    };
+
+    const toggleMostrarEvolucaoCultura = async (cultureId: number | string, value: boolean) => {
+        const { error } = await supabase.from('culturas_pacientes')
+            .update({ mostrar_evolucao: value })
+            .eq('id', cultureId);
+        if (!error) fetchPatients();
+    };
+
+    const toggleMostrarEvolucaoDieta = async (dietId: number | string, value: boolean) => {
+        const { error } = await supabase.from('dietas_pacientes')
+            .update({ mostrar_evolucao: value })
+            .eq('id', dietId);
+        if (!error) fetchPatients();
+    };
+
     const updateExamInPatient = async (patientId: number | string, examData: Exam) => {
         const { error } = await supabase.from('exames_pacientes')
             .update({
@@ -976,6 +1024,12 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         deleteDeviceFromPatient,
         addEndDateToMedication,
         deleteMedicationFromPatient,
+        toggleMostrarEvolucao,
+        toggleMostrarEvolucaoDispositivo,
+        toggleMostrarEvolucaoExame,
+        toggleMostrarEvolucaoCirurgia,
+        toggleMostrarEvolucaoCultura,
+        toggleMostrarEvolucaoDieta,
         updateExamInPatient,
         deleteExamFromPatient,
         updateDeviceInPatient,

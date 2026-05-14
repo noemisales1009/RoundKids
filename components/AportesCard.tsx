@@ -15,6 +15,7 @@ type AporteRow = {
   medicacoes_ml_kg_h: number;
   tht_ml_kg_h: number;
   sistema?: string;
+  mostrar_evolucao?: boolean;
   created_by: string;
   created_at: string;
 };
@@ -25,6 +26,11 @@ export const AportesCard: React.FC<AportesCardProps> = ({ patientId }) => {
   const [editingAporte, setEditingAporte] = useState<AporteRow | null>(null);
   const [archivingAporte, setArchivingAporte] = useState<AporteRow | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+
+  const toggleMostrarEvolucao = async (aporteId: string, value: boolean) => {
+    await supabase.from('aportes_pacientes').update({ mostrar_evolucao: value }).eq('id', aporteId);
+    setAportes(prev => prev.map(a => a.id === aporteId ? { ...a, mostrar_evolucao: value } : a));
+  };
 
   const loadAportes = async () => {
     setLoading(true);
@@ -87,6 +93,10 @@ export const AportesCard: React.FC<AportesCardProps> = ({ patientId }) => {
                       </p>
                       {aporte.sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{aporte.sistema}</span>}
                     </div>
+                    <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
+                      <input type="checkbox" checked={aporte.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucao(aporte.id, e.target.checked)} className="w-3.5 h-3.5 accent-blue-500" />
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
+                    </label>
                   </div>
                 </div>
 
