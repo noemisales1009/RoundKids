@@ -1,8 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { PatientsContext, NotificationContext, UserContext } from '../../../contexts';
-import { CloseIcon, ChevronDownIcon } from '../../icons';
-import { ALERT_SYSTEMS } from '../../../constants';
-
+import { CloseIcon } from '../../icons';
 const getTodayDateString = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -23,8 +21,6 @@ export const AddDietModal: React.FC<{ patientId: number | string; onClose: () =>
     const [pt, setPt] = useState('');
     const [ptGDia, setPtGDia] = useState('');
     const [th, setTh] = useState('');
-    const [sistema, setSistema] = useState('');
-    const [sistemaOutros, setSistemaOutros] = useState('');
     const [observacao, setObservacao] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -41,7 +37,7 @@ export const AddDietModal: React.FC<{ patientId: number | string; onClose: () =>
             pt: pt || undefined,
             pt_g_dia: ptGDia || undefined,
             th: th || undefined,
-            sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined,
+            sistema: 'Avaliação nutricional e metabólica',
             observacao: observacao || undefined
         }, user?.id);  // 🟢 Passar o ID do usuário autenticado
         showNotification({ message: 'Dieta cadastrada com sucesso!', type: 'success' });
@@ -150,19 +146,6 @@ export const AddDietModal: React.FC<{ patientId: number | string; onClose: () =>
                             />
                         </div>
 
-                        <div>
-                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Sistema <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
-                            <div className="relative">
-                                <select value={sistema} onChange={e => setSistema(e.target.value)} className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200 appearance-none">
-                                    <option value="">Selecione...</option>
-                                    {ALERT_SYSTEMS.map(s => <option key={s} value={s}>{s}</option>)}
-                                </select>
-                                <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
-                            </div>
-                            {sistema === 'Outros' && (
-                                <input type="text" value={sistemaOutros} onChange={e => setSistemaOutros(e.target.value)} placeholder="Especifique o sistema..." className="mt-2 w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200" />
-                            )}
-                        </div>
 
                         {/* Divisor Visual */}
                         <div className="border-t border-slate-200 dark:border-slate-700 my-2"></div>

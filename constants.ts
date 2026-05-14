@@ -372,6 +372,7 @@ export const ALERT_SYSTEMS: string[] = [
     'Avaliação cirúrgica',
     'Avaliação hematológica/ oncológica',
     'Avaliação neurológica',
+    'Sedação /Analgesia',
     'Avaliação nutricional e metabólica',
     'Avaliação imunológica',
     'Avaliação genética',
@@ -381,10 +382,7 @@ export const ALERT_SYSTEMS: string[] = [
     'Avaliação psicológica',
     'Avaliação odontológica',
     'Serviço Social',
-    'Infecções Relacionadas à Assistência à Saúde (IRAS)',
-    'Outras infecções',
     'Gestão de riscos assistenciais',
-    'Precauções e controle de infecção',
     'Notificação de eventos adversos',
     'Outros',
 ];

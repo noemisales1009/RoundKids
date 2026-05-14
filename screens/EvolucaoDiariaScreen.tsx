@@ -3,7 +3,7 @@ import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { PatientsContext } from '../contexts';
 import { useHeader } from '../hooks/useHeader';
 import { CheckCircleIcon, AlertIcon, WarningIcon } from '../components/icons';
-import { formatDateToBRL } from '../constants';
+import { formatDateToBRL, ALERT_SYSTEMS } from '../constants';
 import { Patient } from '../types';
 import { supabase } from '../supabaseClient';
 import { ControlesSaidasSection } from '../components/ControlesSaidasSection';
@@ -189,7 +189,7 @@ const STATUS_CONFIG = {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const SECTION_SISTEMAS: Record<string, string[]> = {
-  respiratoria:     ['Avaliação respiratória'],
+  respiratoria:     ['Avaliação respiratória', 'Sist. respiratório'],
   cardiovascular:   ['Avaliação cardiovascular'],
   infecciosa:       ['Infecções Relacionadas à Assistência à Saúde (IRAS)', 'Outras infecções'],
   renal:            ['Avaliação renal'],
@@ -204,6 +204,10 @@ const SECTION_SISTEMAS: Record<string, string[]> = {
   gerenciamento:    ['Gestão de riscos assistenciais', 'Precauções e controle de infecção', 'Avaliação cirúrgica'],
   eventos:          ['Notificação de eventos adversos'],
   outras_av:        ['Outros', 'Avaliação nutricional e metabólica', 'Avaliação dermatológica', 'Avaliação odontológica', 'Serviço Social'],
+};
+
+const SYSTEM_EXTRA_MATCHES: Record<string, string[]> = {
+  'Avaliação respiratória': ['Sist. respiratório'],
 };
 
 const ESPECIALISTA_TO_SISTEMAS: Record<string, string[]> = {
@@ -406,6 +410,26 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
   const selectedPatient = patients.find(p => String(p.id) === patientId);
 
+  const apSystems = useMemo(() => {
+    const custom = new Set<string>();
+    const known = new Set(ALERT_SYSTEMS);
+    const add = (s: string | undefined | null) => { if (s && !known.has(s)) custom.add(s); };
+    diagItems.forEach(d => add(d.sistema));
+    (selectedPatient?.medications ?? []).filter(m => !m.isArchived).forEach(m => add(m.sistema));
+    (selectedPatient?.exams ?? []).filter(e => !e.isArchived).forEach(e => add(e.sistema));
+    (selectedPatient?.surgicalProcedures ?? []).filter(s => !s.isArchived).forEach(s => add(s.sistema));
+    (selectedPatient?.cultures ?? []).filter(c => !c.isArchived).forEach(c => add(c.sistema));
+    (selectedPatient?.diets ?? []).filter(d => !d.isArchived).forEach(d => add(d.sistema));
+    examesImagemList.forEach(ei => add(ei.sistema));
+    paineisViraisList.forEach(pn => add(pn.sistema));
+    alertasList.forEach(a => a.sistemas.forEach(s => add(s)));
+    return [
+      ...ALERT_SYSTEMS.filter(s => s !== 'Outros'),
+      ...[...custom].sort(),
+      'Outros',
+    ];
+  }, [diagItems, selectedPatient, examesImagemList, paineisViraisList, alertasList]);
+
   useEffect(() => {
     if (!patientId) { setDiagItems([]); return; }
     const fetch = async () => {
@@ -420,17 +444,26 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         (optsRes.data || []).forEach((o: any) => { opts[o.id] = { label: o.label, pergunta_id: o.pergunta_id }; });
         const qTipo: Record<number, 'principal' | 'secundario'> = {};
         (qsRes.data || []).forEach((q: any) => { qTipo[q.id] = q.tipo; });
-        const items: DiagItem[] = (diagRes.data || []).map((d: any) => ({
-          opcao_id: d.opcao_id,
-          label: opts[d.opcao_id]?.label ?? '—',
-          texto_digitado: d.texto_digitado,
-          status: d.status,
-          tipo: qTipo[opts[d.opcao_id]?.pergunta_id] ?? 'principal',
-          sistema: d.sistema,
-          created_at: d.created_at,
-          resolved_at: d.resolved_at,
-        }));
-        setDiagItems(items);
+        // Apenas ativos (não resolvidos), sem repetir opcao_id
+        const byOpcao = new Map<number, DiagItem>();
+        (diagRes.data || [])
+          .filter((d: any) => d.status !== 'resolvido')
+          .forEach((d: any) => {
+            const existing = byOpcao.get(d.opcao_id);
+            if (!existing || new Date(d.created_at) < new Date(existing.created_at!)) {
+              byOpcao.set(d.opcao_id, {
+                opcao_id: d.opcao_id,
+                label: opts[d.opcao_id]?.label ?? '—',
+                texto_digitado: d.texto_digitado,
+                status: d.status,
+                tipo: qTipo[opts[d.opcao_id]?.pergunta_id] ?? 'principal',
+                sistema: d.sistema,
+                created_at: d.created_at,
+                resolved_at: d.resolved_at,
+              });
+            }
+          });
+        setDiagItems(Array.from(byOpcao.values()));
       } catch (e) {
         console.error('Erro ao carregar diagnósticos:', e);
       } finally {
@@ -800,19 +833,17 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     AVALIACAO_SECTIONS.forEach(sec => {
       const sistemas = SECTION_SISTEMAS[sec.id] ?? [];
       const diags = diagItems.filter(d => d.sistema && sistemas.includes(d.sistema) && !we.has(`diag_${d.opcao_id}`));
-      const disps = (p.devices ?? []).filter(d => !d.isArchived && d.mostrar_evolucao !== false && d.sistema && sistemas.includes(d.sistema) && !we.has(`disp_${d.id}`));
       const cirgs = (p.surgicalProcedures ?? []).filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && sistemas.includes(c.sistema) && !we.has(`cir_${c.id}`));
       const cults = (p.cultures ?? []).filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && sistemas.includes(c.sistema) && !we.has(`cult_${c.id}`));
       const diets = (p.diets ?? []).filter(d => !d.isArchived && d.mostrar_evolucao !== false && d.sistema && sistemas.includes(d.sistema) && !we.has(`diet_${d.id}`));
-      const apts  = aportesList.filter(a => a.mostrar_evolucao !== false && a.sistema && sistemas.includes(a.sistema) && !we.has(`apt_${a.id}`));
       const _today = new Date(); _today.setHours(0, 0, 0, 0);
       const meds  = (p.medications ?? []).filter(m => !m.isArchived && m.mostrar_evolucao !== false && m.sistema && sistemas.includes(m.sistema) && !we.has(`med_${m.id}`) && (!m.endDate || new Date(m.endDate + 'T00:00:00') >= _today));
       const exs   = (p.exams ?? []).filter(e => !e.isArchived && e.mostrar_evolucao !== false && e.sistema && sistemas.includes(e.sistema) && !we.has(`exam_${e.id}`));
       const imgs  = examesImagemList.filter(ei => ei.mostrar_evolucao !== false && ei.sistema && sistemas.includes(ei.sistema) && !we.has(`img_${ei.id}`));
       const pnls  = paineisViraisList.filter(pn => pn.mostrar_evolucao !== false && pn.sistema && sistemas.includes(pn.sistema) && !we.has(`pnl_${pn.id}`));
       const pars  = pareceresList.filter(par => par.mostrar_evolucao !== false && (ESPECIALISTA_TO_SISTEMAS[par.especialista] ?? []).some(s => sistemas.includes(s)) && !we.has(`par_${par.id}`));
-      const alts  = alertasList.filter(a => sistemas.length > 0 && a.sistemas.some(s => sistemas.includes(s)) && !we.has(`alt_${a.id}`));
-      if (diags.length + disps.length + cirgs.length + cults.length + diets.length + apts.length + meds.length + exs.length + imgs.length + pnls.length + pars.length + alts.length === 0) return;
+      const alts  = alertasList.filter(a => sistemas.length > 0 && a.sistemas.some(s => sistemas.includes(s)) && !we.has(`alt_${a.id}`) && a.created_at.split('T')[0] === date);
+      if (diags.length + cirgs.length + cults.length + diets.length + meds.length + exs.length + imgs.length + pnls.length + pars.length + alts.length === 0) return;
       apLines.push('');
       apLines.push(sec.label.replace(/^[\d./]+\s*/, ''));
       if (diags.length) {
@@ -822,19 +853,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           const dt = d.created_at ? ` — ${formatDateToBRL(d.created_at)}` : '';
           apLines.push(`  • ${lbl}${det}${dt}`);
         });
-        apLines.push('');
-      }
-      if (disps.length) {
-        apLines.push('  DISPOSITIVOS:');
-        apLines.push('');
-        disps.forEach(d => {
-          apLines.push(`    • ${d.name}${d.location ? ` (${d.location})` : ''} — ${formatDateToBRL(d.startDate)} (${calcDias(d.startDate)})`);
-          if (d.observacao) apLines.push(`      ${d.observacao}`);
-        });
       }
       if (cirgs.length) {
         apLines.push('  CIRURGIAS:');
-        apLines.push('');
         cirgs.forEach(c => {
           apLines.push(`    • ${c.name} — ${formatDateToBRL(c.date)} (${calcDias(c.date)})`);
           if (c.notes) apLines.push(`      ${c.notes}`);
@@ -842,7 +863,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       }
       if (cults.length) {
         apLines.push('  CULTURAS:');
-        apLines.push('');
         cults.forEach(c => {
           apLines.push(`    • ${c.site}${c.microorganism ? ` — ${c.microorganism}` : ''} — ${formatDateToBRL(c.collectionDate)} (${calcDias(c.collectionDate)})`);
           if (c.observation) apLines.push(`      ${c.observation}`);
@@ -850,20 +870,13 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       }
       if (diets.length) {
         apLines.push('  DIETAS:');
-        apLines.push('');
         diets.forEach(d => {
           apLines.push(`    • ${d.type}${d.volume ? ` ${d.volume}ml` : ''} — Início: ${formatDateToBRL(d.data_inicio.split('T')[0])} (${calcDias(d.data_inicio)})`);
           if (d.observacao) apLines.push(`      ${d.observacao}`);
         });
       }
-      if (apts.length) {
-        apLines.push('  APORTES:');
-        apLines.push('');
-        apts.forEach(a => apLines.push(`    • THT ${a.tht_ml_kg_h.toFixed(2)} mL/kg/h — ${formatDateToBRL(a.data_referencia)} (${calcDias(a.data_referencia)})`));
-      }
       if (meds.length) {
         apLines.push('  MEDICAÇÕES:');
-        apLines.push('');
         meds.forEach(m => {
           const medDias = m.endDate
             ? `${Math.max(1, Math.floor((new Date(m.endDate + 'T00:00:00').getTime() - new Date(m.startDate + 'T00:00:00').getTime()) / 86400000) + 1)}d`
@@ -877,7 +890,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       }
       if (exs.length) {
         apLines.push('  EXAMES:');
-        apLines.push('');
         exs.forEach(e => {
           apLines.push(`    • ${e.name} — ${formatDateToBRL(e.date)}`);
           if (e.observation) apLines.push(`      ${e.observation}`);
@@ -885,7 +897,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       }
       if (imgs.length) {
         apLines.push('  IMAGEM:');
-        apLines.push('');
         imgs.forEach(i => {
           apLines.push(`    • ${i.exame} — ${formatDateToBRL(i.data_exame)}${i.resultado ? ` — ${i.resultado}` : ''}`);
           if (i.observacao) apLines.push(`      ${i.observacao}`);
@@ -893,7 +904,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       }
       if (pnls.length) {
         apLines.push('  PAINÉIS VIRAIS:');
-        apLines.push('');
         pnls.forEach(pn => {
           apLines.push(`    • ${pn.categoria} — ${pn.painel} — ${formatDateToBRL(pn.data_coleta)}${pn.resultado ? ` — ${pn.resultado}` : ''}${pn.valor ? ` (${pn.valor})` : ''}`);
           if (pn.observacao) apLines.push(`      ${pn.observacao}`);
@@ -901,14 +911,12 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       }
       if (pars.length) {
         apLines.push('  PARECERES:');
-        apLines.push('');
         pars.forEach(par => apLines.push(`    • ${par.especialista} — ${formatDateToBRL(par.data_parecer)}: ${par.parecer ?? '—'}`));
       }
       const activeAlts = alts.filter(a => { const st = (a.status || '').toLowerCase(); return !st.includes('concluí') && !st.includes('concluido') && !st.includes('resolvido') && !st.includes('arquivado'); });
       if (activeAlts.length) {
         apLines.push('  CONDUTAS:');
-        apLines.push('');
-        activeAlts.forEach(a => apLines.push(`    • ${a.alerta_descricao} — ${formatDateToBRL(a.created_at.split('T')[0])}`));
+        activeAlts.forEach(a => apLines.push(`    • ${a.alerta_descricao}`));
       }
     });
     if (apLines.length > 0) {
@@ -1480,42 +1488,39 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           <div className="flex justify-center py-6"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" /></div>
         ) : (
           <div className="space-y-2">
-            {AVALIACAO_SECTIONS.map(sec => {
-              const sistemas = SECTION_SISTEMAS[sec.id] ?? [];
+            {apSystems.map(system => {
+              const allNames = [system, ...(SYSTEM_EXTRA_MATCHES[system] ?? [])];
 
-              const secDiags = diagItems.filter(d => d.sistema && sistemas.includes(d.sistema));
-              const secDispositivos = (selectedPatient?.devices ?? [])
-                .filter(d => !d.isArchived && d.mostrar_evolucao !== false && d.sistema && sistemas.includes(d.sistema));
+              const secDiags = diagItems.filter(d => d.sistema && allNames.includes(d.sistema));
               const secCirurgias = (selectedPatient?.surgicalProcedures ?? [])
-                .filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && sistemas.includes(c.sistema));
+                .filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && allNames.includes(c.sistema));
               const secCulturas = (selectedPatient?.cultures ?? [])
-                .filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && sistemas.includes(c.sistema));
+                .filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && allNames.includes(c.sistema));
               const secDietas = (selectedPatient?.diets ?? [])
-                .filter(d => !d.isArchived && d.mostrar_evolucao !== false && d.sistema && sistemas.includes(d.sistema));
-              const secAportes = aportesList.filter(a => a.mostrar_evolucao !== false && a.sistema && sistemas.includes(a.sistema));
+                .filter(d => !d.isArchived && d.mostrar_evolucao !== false && d.sistema && allNames.includes(d.sistema));
               const secMedicacoes = (selectedPatient?.medications ?? [])
-                .filter(m => !m.isArchived && m.mostrar_evolucao !== false && m.sistema && sistemas.includes(m.sistema));
+                .filter(m => !m.isArchived && m.mostrar_evolucao !== false && m.sistema && allNames.includes(m.sistema));
               const secExames = (selectedPatient?.exams ?? [])
-                .filter(e => !e.isArchived && e.mostrar_evolucao !== false && e.sistema && sistemas.includes(e.sistema));
+                .filter(e => !e.isArchived && e.mostrar_evolucao !== false && e.sistema && allNames.includes(e.sistema));
               const secExamesImagem = examesImagemList
-                .filter(ei => ei.mostrar_evolucao !== false && ei.sistema && sistemas.includes(ei.sistema));
+                .filter(ei => ei.mostrar_evolucao !== false && ei.sistema && allNames.includes(ei.sistema));
               const secPaineisVirais = paineisViraisList
-                .filter(pn => pn.mostrar_evolucao !== false && pn.sistema && sistemas.includes(pn.sistema));
+                .filter(pn => pn.mostrar_evolucao !== false && pn.sistema && allNames.includes(pn.sistema));
               const secPareceres = pareceresList
-                .filter(p => p.mostrar_evolucao !== false && (ESPECIALISTA_TO_SISTEMAS[p.especialista] ?? []).some(s => sistemas.includes(s)));
+                .filter(p => p.mostrar_evolucao !== false && (ESPECIALISTA_TO_SISTEMAS[p.especialista] ?? []).some(s => allNames.includes(s)));
               const secAlertas = alertasList.filter(a =>
-                sistemas.length > 0 && a.sistemas.some(s => sistemas.includes(s))
+                a.sistemas.some(s => allNames.includes(s))
               );
 
-              const total = secDiags.length + secDispositivos.length + secCirurgias.length + secCulturas.length + secDietas.length + secAportes.length + secMedicacoes.length + secExames.length + secExamesImagem.length + secPaineisVirais.length + secPareceres.length + secAlertas.length;
+              const total = secDiags.length + secCirurgias.length + secCulturas.length + secDietas.length + secMedicacoes.length + secExames.length + secExamesImagem.length + secPaineisVirais.length + secPareceres.length + secAlertas.length;
               if (total === 0) return null;
 
               return (
                 <SubSection
-                  key={sec.id}
-                  title={`${sec.label} (${total})`}
-                  open={openAvaliacoes.has(sec.id)}
-                  onToggle={() => toggleAv(sec.id)}
+                  key={system}
+                  title={`${system} (${total})`}
+                  open={openAvaliacoes.has(system)}
+                  onToggle={() => toggleAv(system)}
                 >
                   <div className="space-y-3">
 
@@ -1532,25 +1537,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                               <div key={i} className={`relative p-2 pr-10 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
                                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{lbl}{det}</p>
                                 {d.created_at && <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(d.created_at).toLocaleDateString('pt-BR')}</p>}
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {secDispositivos.length > 0 && (
-                      <div>
-                        <p className="text-xs font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wide mb-1.5">Dispositivos</p>
-                        <div className="space-y-1">
-                          {secDispositivos.map(d => {
-                            const wk = `disp_${d.id}`; const off = wordExcluded.has(wk);
-                            return (
-                              <div key={d.id} className={`relative p-2 pr-10 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg border border-cyan-200 dark:border-cyan-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
-                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{d.name}</p>
-                                {d.location && <p className="text-xs text-slate-500 dark:text-slate-400">{d.location}</p>}
-                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(d.startDate).toLocaleDateString('pt-BR')}</p>
                                 <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
@@ -1616,23 +1602,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                       </div>
                     )}
 
-                    {secAportes.length > 0 && (
-                      <div>
-                        <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide mb-1.5">Aportes</p>
-                        <div className="space-y-1">
-                          {secAportes.map(a => {
-                            const wk = `apt_${a.id}`; const off = wordExcluded.has(wk);
-                            return (
-                              <div key={a.id} className={`relative p-2 pr-10 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">THT: {a.tht_ml_kg_h.toFixed(2)} mL/kg/h</p>
-                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(a.data_referencia + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
 
                     {secMedicacoes.length > 0 && (
                       <div>

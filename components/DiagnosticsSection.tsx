@@ -32,6 +32,7 @@ interface PatientDiagnostic {
   status: 'resolvido' | 'nao_resolvido';
   created_at?: string;
   resolved_at?: string | null;
+  data_inicio?: string | null;
 }
 
 interface DiagnosticsSectionProps {
@@ -86,6 +87,11 @@ interface OptionRowProps {
   onStatusChange: (optionId: number, value: 'resolvido' | 'nao_resolvido') => void;
   onSistemaChange: (optionId: number, value: string) => void;
   onArchive: (optionId: number) => void;
+  dataInicioValues: Record<number, string>;
+  onDataInicioChange: (optionId: number, value: string) => void;
+  resolvedAtValues: Record<number, string>;
+  onResolvedAtChange: (optionId: number, value: string) => void;
+  onEdit: (optionId: number) => void;
 }
 
 const OptionRow: React.FC<OptionRowProps> = ({
@@ -104,6 +110,11 @@ const OptionRow: React.FC<OptionRowProps> = ({
   onStatusChange,
   onSistemaChange,
   onArchive,
+  dataInicioValues,
+  onDataInicioChange,
+  resolvedAtValues,
+  onResolvedAtChange,
+  onEdit,
 }) => {
   const isChecked = diagnostics.some(d => d.opcao_id === option.id);
   const isCurrentlyChecked = checkedOptions[option.id] !== undefined ? checkedOptions[option.id] : isChecked;
@@ -208,10 +219,42 @@ const OptionRow: React.FC<OptionRowProps> = ({
                     : 'bg-white border-slate-300 text-slate-700'
                 }`}
               >
-                <option value="">— Opcional —</option>
+                <option value="" disabled>— Selecione o sistema —</option>
                 {SISTEMAS.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
+            <div className="flex items-center gap-2">
+              <span className={`text-[10px] font-medium shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                Início:
+              </span>
+              <input
+                type="date"
+                value={dataInicioValues[option.id] || ''}
+                onChange={(e) => onDataInicioChange(option.id, e.target.value)}
+                className={`flex-1 px-2 py-0.5 text-xs rounded-md border cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                  isDark
+                    ? 'bg-slate-900 border-slate-700 text-slate-300'
+                    : 'bg-white border-slate-300 text-slate-700'
+                }`}
+              />
+            </div>
+            {isResolved && (
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] font-medium shrink-0 ${isDark ? 'text-emerald-500' : 'text-emerald-600'}`}>
+                  Resolução:
+                </span>
+                <input
+                  type="date"
+                  value={resolvedAtValues[option.id] || ''}
+                  onChange={(e) => onResolvedAtChange(option.id, e.target.value)}
+                  className={`flex-1 px-2 py-0.5 text-xs rounded-md border cursor-pointer focus:outline-none focus:ring-1 focus:ring-emerald-500 ${
+                    isDark
+                      ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300'
+                      : 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                  }`}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -300,9 +343,24 @@ const OptionRow: React.FC<OptionRowProps> = ({
                               : 'bg-white border-slate-300 text-slate-700'
                           }`}
                         >
-                          <option value="">— Opcional —</option>
+                          <option value="" disabled>— Selecione o sistema —</option>
                           {SISTEMAS.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-medium shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Início:
+                        </span>
+                        <input
+                          type="date"
+                          value={dataInicioValues[childOption.id] || ''}
+                          onChange={(e) => onDataInicioChange(childOption.id, e.target.value)}
+                          className={`flex-1 px-2 py-0.5 text-xs rounded-md border cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                            isDark
+                              ? 'bg-slate-900 border-slate-700 text-slate-300'
+                              : 'bg-white border-slate-300 text-slate-700'
+                          }`}
+                        />
                       </div>
                     </div>
                   )}
@@ -335,6 +393,11 @@ interface QuestionBlockProps {
   onStatusChange: (optionId: number, value: 'resolvido' | 'nao_resolvido') => void;
   onSistemaChange: (optionId: number, value: string) => void;
   onArchive: (optionId: number) => void;
+  dataInicioValues: Record<number, string>;
+  onDataInicioChange: (optionId: number, value: string) => void;
+  resolvedAtValues: Record<number, string>;
+  onResolvedAtChange: (optionId: number, value: string) => void;
+  onEdit: (optionId: number) => void;
 }
 
 const QuestionBlock: React.FC<QuestionBlockProps> = ({
@@ -356,6 +419,11 @@ const QuestionBlock: React.FC<QuestionBlockProps> = ({
   onStatusChange,
   onSistemaChange,
   onArchive,
+  dataInicioValues,
+  onDataInicioChange,
+  resolvedAtValues,
+  onResolvedAtChange,
+  onEdit,
 }) => {
   const questionOptions = allOptions.filter(opt => opt.pergunta_id === question.id && !opt.parent_id);
   const isExpanded = expandedQuestion === question.id;
@@ -409,6 +477,11 @@ const QuestionBlock: React.FC<QuestionBlockProps> = ({
               onStatusChange={onStatusChange}
               onSistemaChange={onSistemaChange}
               onArchive={onArchive}
+              dataInicioValues={dataInicioValues}
+              onDataInicioChange={onDataInicioChange}
+              resolvedAtValues={resolvedAtValues}
+              onResolvedAtChange={onResolvedAtChange}
+              onEdit={onEdit}
             />
           ))}
         </div>
@@ -446,6 +519,8 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const [expandedParentOption, setExpandedParentOption] = useState<number | null>(null);
   const [inputValues, setInputValues] = useState<Record<number, string>>({});
   const [sistemaValues, setSistemaValues] = useState<Record<number, string>>({});
+  const [dataInicioValues, setDataInicioValues] = useState<Record<number, string>>({});
+  const [resolvedAtValues, setResolvedAtValues] = useState<Record<number, string>>({});
   const [selectedStatus, setSelectedStatus] = useState<Record<number, 'resolvido' | 'nao_resolvido'>>({});
   const [checkedOptions, setCheckedOptions] = useState<Record<number, boolean>>({});
 
@@ -478,18 +553,24 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         const checked: Record<number, boolean> = {};
         const inputs: Record<number, string> = {};
         const sistemas: Record<number, string> = {};
+        const dataInicio: Record<number, string> = {};
+        const resolvedAt: Record<number, string> = {};
         const statuses: Record<number, 'resolvido' | 'nao_resolvido'> = {};
 
         (diagnosticsRes.data || []).forEach(diag => {
           checked[diag.opcao_id] = true;
           if (diag.texto_digitado) inputs[diag.opcao_id] = diag.texto_digitado;
           if (diag.sistema) sistemas[diag.opcao_id] = diag.sistema;
+          if (diag.data_inicio) dataInicio[diag.opcao_id] = diag.data_inicio;
+          if (diag.resolved_at) resolvedAt[diag.opcao_id] = diag.resolved_at.split('T')[0];
           statuses[diag.opcao_id] = diag.status;
         });
 
         setCheckedOptions(checked);
         setInputValues(inputs);
         setSistemaValues(sistemas);
+        setDataInicioValues(dataInicio);
+        setResolvedAtValues(resolvedAt);
         setSelectedStatus(statuses);
       } catch (error) {
         console.error('Erro ao carregar diagnósticos:', error);
@@ -519,6 +600,14 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
   const handleSistemaChange = useCallback((optionId: number, value: string) => {
     setSistemaValues(prev => ({ ...prev, [optionId]: value }));
+  }, []);
+
+  const handleDataInicioChange = useCallback((optionId: number, value: string) => {
+    setDataInicioValues(prev => ({ ...prev, [optionId]: value }));
+  }, []);
+
+  const handleResolvedAtChange = useCallback((optionId: number, value: string) => {
+    setResolvedAtValues(prev => ({ ...prev, [optionId]: value }));
   }, []);
 
   const handleRemoveDiagnostic = useCallback((optionId: number) => {
@@ -555,6 +644,9 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       setDiagnostics(prev => prev.filter(d => d.opcao_id !== optionToArchive));
       setCheckedOptions(prev => { const n = { ...prev }; delete n[optionToArchive]; return n; });
       setInputValues(prev => { const n = { ...prev }; delete n[optionToArchive]; return n; });
+      setSistemaValues(prev => { const n = { ...prev }; delete n[optionToArchive]; return n; });
+      setDataInicioValues(prev => { const n = { ...prev }; delete n[optionToArchive]; return n; });
+      setResolvedAtValues(prev => { const n = { ...prev }; delete n[optionToArchive]; return n; });
       setSelectedStatus(prev => { const n = { ...prev }; delete n[optionToArchive]; return n; });
 
       setArchiveModalOpen(false);
@@ -584,6 +676,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           opcao_label: option.label,
           texto_digitado: inputValues[option.id] || null,
           sistema: sistemaValues[option.id] || null,
+          data_inicio: dataInicioValues[option.id] || null,
           status: selectedStatus[option.id] || 'nao_resolvido' as const
         }));
 
@@ -592,9 +685,10 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       if (existingInDb.length > 0) {
         await Promise.all(existingInDb.map(d => {
           const newStatus = selectedStatus[d.opcao_id] || 'nao_resolvido';
+          const manualDate = resolvedAtValues[d.opcao_id];
           const resolvedAt =
             newStatus === 'resolvido'
-              ? (d.resolved_at || now)
+              ? (manualDate ? `${manualDate}T00:00:00` : d.resolved_at || now)
               : null;
           return supabase
             .from('paciente_diagnosticos')
@@ -603,15 +697,8 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         }));
       }
 
-      // Insere apenas diagnósticos novos (não existentes hoje)
-      const { data: existingDiagnostics } = await supabase
-        .from('paciente_diagnosticos')
-        .select('opcao_id')
-        .eq('patient_id', patientId)
-        .gte('created_at', `${today}T00:00:00`)
-        .lte('created_at', `${today}T23:59:59`);
-
-      const existingOpcaoIds = new Set((existingDiagnostics || []).map(d => d.opcao_id));
+      // Insere apenas diagnósticos que ainda não existem (não arquivados)
+      const existingOpcaoIds = new Set(diagnostics.map(d => d.opcao_id));
       const newDiagnostics = allDiagnostics.filter(d => !existingOpcaoIds.has(d.opcao_id));
 
       if (newDiagnostics.length > 0) {
@@ -678,6 +765,8 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     selectedStatus,
     inputValues,
     sistemaValues,
+    dataInicioValues,
+    resolvedAtValues,
     isDark,
     onToggle: handleToggle,
     onToggleParent: handleToggleParent,
@@ -685,6 +774,9 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     onStatusChange: handleStatusChange,
     onSistemaChange: handleSistemaChange,
     onArchive: handleRemoveDiagnostic,
+    onDataInicioChange: handleDataInicioChange,
+    onResolvedAtChange: handleResolvedAtChange,
+    onEdit: () => {},
   };
 
   return (

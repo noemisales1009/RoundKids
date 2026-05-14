@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { supabase } from '../../../supabaseClient';
 import { NotificationContext, UserContext } from '../../../contexts';
 import { CloseIcon } from '../../icons';
+import { ALERT_SYSTEMS } from '../../../constants';
 
 const PAINEIS_POR_CATEGORIA: Record<string, string[]> = {
     'Painel Multiplex Respiratório': [
@@ -102,7 +103,6 @@ const PAINEIS_POR_CATEGORIA: Record<string, string[]> = {
     ],
 };
 
-const SISTEMAS = ['Sist. respiratório', 'Avaliação motora', 'Avaliação neurológica', 'Outras infecções'];
 
 const RESULTADOS = ['Reagente', 'Não Reagente', 'Positivo', 'Negativo', 'Indeterminado', 'Em andamento', 'Detectado', 'Não Detectado'];
 
@@ -276,7 +276,7 @@ export const AddPainelViralModal: React.FC<{
                             className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 dark:text-slate-200"
                         >
                             <option value="">Selecione...</option>
-                            {SISTEMAS.map(s => (
+                            {ALERT_SYSTEMS.map(s => (
                                 <option key={s} value={s}>{s}</option>
                             ))}
                         </select>
