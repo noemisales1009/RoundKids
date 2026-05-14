@@ -159,7 +159,8 @@ const AVALIACAO_SECTIONS = [
   { id: 'dhe_metabolica', label: '14.5 Avaliação DHE / Metabólica' },
   { id: 'endocrinologia', label: '14.6 Avaliação Endocrinologia' },
   { id: 'gastrointestinal', label: '14.7 Avaliação Gastrointestinal' },
-  { id: 'hematologica',   label: '14.8/14.9 Avaliação Hematológica / Oncológica' },
+  { id: 'nutricional',      label: '14.8 Avaliação Nutricional e Metabólica' },
+  { id: 'hematologica',   label: '14.9/14.10 Avaliação Hematológica / Oncológica' },
   { id: 'genetica',       label: '14.10 Avaliação Genética' },
   { id: 'imunologica',    label: '14.11 Avaliação Imunológica' },
   { id: 'neurologica_av', label: '14.12 Avaliação Neurológica' },
@@ -196,6 +197,7 @@ const SECTION_SISTEMAS: Record<string, string[]> = {
   dhe_metabolica:   ['Distúrbios hidroeletrolíticos e metabólicos'],
   endocrinologia:   [],
   gastrointestinal: ['Avaliação gastrointestinal'],
+  nutricional:      ['Avaliação nutricional e metabólica'],
   hematologica:     ['Avaliação hematológica/ oncológica'],
   genetica:         ['Avaliação genética'],
   imunologica:      ['Avaliação imunológica'],
@@ -203,7 +205,7 @@ const SECTION_SISTEMAS: Record<string, string[]> = {
   psiquiatrica:     ['Avaliação psiquiátrica', 'Avaliação psicológica'],
   gerenciamento:    ['Gestão de riscos assistenciais', 'Precauções e controle de infecção', 'Avaliação cirúrgica'],
   eventos:          ['Notificação de eventos adversos'],
-  outras_av:        ['Outros', 'Avaliação nutricional e metabólica', 'Avaliação dermatológica', 'Avaliação odontológica', 'Serviço Social'],
+  outras_av:        ['Outros', 'Avaliação dermatológica', 'Avaliação odontológica', 'Serviço Social'],
 };
 
 const SYSTEM_EXTRA_MATCHES: Record<string, string[]> = {
