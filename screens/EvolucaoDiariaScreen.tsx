@@ -807,20 +807,32 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       });
     }
 
+    const dietasWord = (p.diets ?? []).filter(d => !d.isArchived && d.mostrar_evolucao !== false && (d.vet_at != null || d.pt_at != null));
+    if (dietasWord.length > 0) {
+      title('11. DIETAS');
+      dietasWord.forEach(d => {
+        const parts: string[] = [d.type];
+        if (d.vet_at != null) parts.push(`VET atual: ${d.vet_at.toFixed(0)}%`);
+        if (d.pt_at != null) parts.push(`PT atual: ${d.pt_at.toFixed(0)}%`);
+        add(parts.join(' | '));
+      });
+      blank();
+    }
+
     const activeDevicesWord = (p.devices ?? []).filter(d => !d.isArchived);
     if (activeDevicesWord.length > 0) {
-      title('11. DISPOSITIVOS');
+      title('12. DISPOSITIVOS');
       add('@@DEVICES_TABLE@@');
       blank();
     }
 
     if (situacaoRec) {
-      title('12. SITUAÇÃO CLÍNICA');
+      title('13. SITUAÇÃO CLÍNICA');
       add(situacaoRec.situacao_texto);
     }
 
     if (Object.values(exameFisico).some(v => v.trim())) {
-      title('13. EXAME FÍSICO');
+      title('14. EXAME FÍSICO');
       EXAME_SECTIONS.forEach(s => {
         const val = exameFisico[s.key as keyof ExameFisicoState];
         if (val?.trim()) add(`${s.label.replace(/^[\d./ ]+/, '')}: ${val}`);
@@ -924,11 +936,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       }
     });
     if (apLines.length > 0) {
-      title('14. AP — AVALIAÇÃO x PROPEDÊUTICA');
+      title('15. AP — AVALIAÇÃO x PROPEDÊUTICA');
       apLines.forEach(l => add(l));
     }
 
-    title('15. CONDUTAS CRÍTICAS — PRÓXIMAS 24H');
+    title('16. CONDUTAS CRÍTICAS — PRÓXIMAS 24H');
     if (condutasCriticas.trim()) add(condutasCriticas);
 
     blank();
@@ -949,6 +961,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 <table border="1" style="border-collapse:collapse;width:100%;margin:6px 0;font-family:Arial,sans-serif;font-size:11pt;">
   <thead><tr style="background:#e8e8e8;">
     <th style="padding:4px 8px;text-align:left;">Dispositivo</th>
+    <th style="padding:4px 8px;text-align:left;">Descrição</th>
     <th style="padding:4px 8px;text-align:left;">Inserção</th>
     <th style="padding:4px 8px;text-align:left;">Dias</th>
   </tr></thead>
@@ -957,6 +970,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const days = Math.floor((Date.now() - new Date(d.startDate + 'T12:00:00').getTime()) / 86400000) + 1;
       return `<tr>
         <td style="padding:4px 8px;">${escHtml(d.name)}</td>
+        <td style="padding:4px 8px;">${d.observacao ? escHtml(d.observacao) : ''}</td>
         <td style="padding:4px 8px;">${formatDateToBRL(d.startDate)}</td>
         <td style="padding:4px 8px;">${days} dia${days !== 1 ? 's' : ''}</td>
       </tr>`;
