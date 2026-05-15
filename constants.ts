@@ -366,8 +366,9 @@ export const ALERT_DEADLINES: string[] = [
 export const ALERT_SYSTEMS: string[] = [
     'Avaliação respiratória',
     'Avaliação cardiovascular',
+    'Avaliação infecciosa',
     'Avaliação renal',
-    'Distúrbios hidroeletrolíticos e metabólicos',
+    'Distúrbios hidroeletrolíticos/metabólicos e DAB',
     'Avaliação gastrointestinal',
     'Avaliação cirúrgica',
     'Avaliação hematológica/ oncológica',
