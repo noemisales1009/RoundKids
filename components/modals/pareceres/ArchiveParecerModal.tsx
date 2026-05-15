@@ -75,7 +75,7 @@ export const ArchiveParecerModal: React.FC<ArchiveParecerModalProps> = ({
 
                 <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                     <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
-                        {especialista} — {new Date(dataParecer).toLocaleDateString('pt-BR')}
+                        {especialista} — {new Date(dataParecer.split('T')[0] + 'T12:00:00').toLocaleDateString('pt-BR')}
                     </p>
                 </div>
 

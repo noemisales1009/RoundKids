@@ -83,7 +83,7 @@ export const ParecerCard: React.FC<ParecerCardProps> = ({ patientId }) => {
                                     <div className="flex-1 min-w-0">
                                         <p className="font-bold text-slate-800 dark:text-slate-200">{p.especialista}</p>
                                         <p className="text-sm text-slate-500 dark:text-slate-400">
-                                            {new Date(p.data_parecer).toLocaleDateString('pt-BR')}
+                                            {new Date(p.data_parecer + 'T12:00:00').toLocaleDateString('pt-BR')}
                                         </p>
                                         {p.parecer && (
                                             <p className="text-sm text-slate-600 dark:text-slate-300 mt-1.5 whitespace-pre-wrap">

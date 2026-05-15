@@ -47,7 +47,7 @@ export const EditParecerModal: React.FC<{
     const { user } = useContext(UserContext)!;
 
     const [especialista, setEspecialista] = useState(parecerData.especialista);
-    const [dataParecer, setDataParecer] = useState(parecerData.data_parecer);
+    const [dataParecer, setDataParecer] = useState(parecerData.data_parecer?.split('T')[0] ?? '');
     const [parecer, setParecer] = useState(parecerData.parecer ?? '');
     const [sistema, setSistema] = useState(
         parecerData.sistema && !ALERT_SYSTEMS.includes(parecerData.sistema) ? 'Outros' : (parecerData.sistema || '')
