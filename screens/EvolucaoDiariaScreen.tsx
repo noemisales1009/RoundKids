@@ -66,6 +66,7 @@ interface AlertaRecord {
   status: string;
   created_at: string;
   hora_selecionada: string;
+  mostrar_evolucao?: boolean;
 }
 
 interface PropedeuticaExameImagem {
@@ -621,7 +622,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       try {
         const { data } = await supabase
           .from('alertas_paciente')
-          .select('id, alerta_descricao, sistemas, responsavel, status, created_at, hora_selecionada')
+          .select('id, alerta_descricao, sistemas, responsavel, status, created_at, hora_selecionada, mostrar_evolucao')
           .eq('patient_id', patientId)
           .is('archived_at', null);
         setAlertasList((data ?? []).map((r: any) => ({
@@ -632,6 +633,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           status: r.status ?? '',
           created_at: r.created_at,
           hora_selecionada: r.hora_selecionada ?? '',
+          mostrar_evolucao: r.mostrar_evolucao !== false,
         })));
       } catch (e) {
         console.error('Erro ao carregar alertas:', e);
@@ -844,7 +846,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const imgs  = examesImagemList.filter(ei => ei.mostrar_evolucao !== false && ei.sistema && sistemas.includes(ei.sistema) && !we.has(`img_${ei.id}`));
       const pnls  = paineisViraisList.filter(pn => pn.mostrar_evolucao !== false && pn.sistema && sistemas.includes(pn.sistema) && !we.has(`pnl_${pn.id}`));
       const pars  = pareceresList.filter(par => par.mostrar_evolucao !== false && (ESPECIALISTA_TO_SISTEMAS[par.especialista] ?? []).some(s => sistemas.includes(s)) && !we.has(`par_${par.id}`));
-      const alts  = alertasList.filter(a => sistemas.length > 0 && a.sistemas.some(s => sistemas.includes(s)) && !we.has(`alt_${a.id}`) && a.created_at.split('T')[0] === date);
+      const alts  = alertasList.filter(a => sistemas.length > 0 && a.mostrar_evolucao !== false && a.sistemas.some(s => sistemas.includes(s)) && !we.has(`alt_${a.id}`) && a.created_at.split('T')[0] === date);
       if (diags.length + cirgs.length + cults.length + diets.length + meds.length + exs.length + imgs.length + pnls.length + pars.length + alts.length === 0) return;
       apLines.push('');
       apLines.push(sec.label.replace(/^[\d./]+\s*/, ''));
@@ -1511,7 +1513,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               const secPareceres = pareceresList
                 .filter(p => p.mostrar_evolucao !== false && (ESPECIALISTA_TO_SISTEMAS[p.especialista] ?? []).some(s => allNames.includes(s)));
               const secAlertas = alertasList.filter(a =>
-                a.sistemas.some(s => allNames.includes(s))
+                a.mostrar_evolucao !== false && a.sistemas.some(s => allNames.includes(s))
               );
 
               const total = secDiags.length + secCirurgias.length + secCulturas.length + secDietas.length + secMedicacoes.length + secExames.length + secExamesImagem.length + secPaineisVirais.length + secPareceres.length + secAlertas.length;

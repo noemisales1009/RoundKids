@@ -48,6 +48,7 @@ interface Alert {
     justificativa?: string | null;
     justification?: string | null;
     sistemas?: string[] | null;
+    mostrar_evolucao?: boolean;
 }
 
 export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) => {
@@ -124,7 +125,8 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                                 deadline: alert.deadline,
                                 source: 'alertas',
                                 justificativa: alert.justificativa,
-                                sistemas: alert.sistemas
+                                sistemas: alert.sistemas,
+                                mostrar_evolucao: alert.mostrar_evolucao !== false
                             });
                         }
                     });
@@ -172,6 +174,11 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
             };
         }
     }, [patientId]);
+
+    const toggleMostrarEvolucao = async (alertId: string, value: boolean) => {
+        await supabase.from('alertas_paciente').update({ mostrar_evolucao: value }).eq('id', alertId);
+        setAlertas(prev => prev.map(a => a.id === alertId ? { ...a, mostrar_evolucao: value } : a));
+    };
 
     const handleConcluir = async (alertId: string, source?: 'tasks' | 'alertas') => {
         try {
@@ -459,6 +466,17 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                                                     <p className="text-xs font-semibold">📝 Justificativa:</p>
                                                     <p className="text-xs">{alerta.source === 'alertas' ? alerta.justificativa : alerta.justification}</p>
                                                 </div>
+                                            )}
+                                            {alerta.source === 'alertas' && (
+                                                <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={alerta.mostrar_evolucao !== false}
+                                                        onChange={e => toggleMostrarEvolucao(alerta.id, e.target.checked)}
+                                                        className="w-3.5 h-3.5 accent-blue-500"
+                                                    />
+                                                    <span className="text-xs text-slate-600 dark:text-slate-400">Exibir na Evolução Diária</span>
+                                                </label>
                                             )}
                                         </div>
                                         <div className="flex flex-col gap-2 shrink-0">
