@@ -43,6 +43,7 @@ export const PaineisViraisCard: React.FC<PaineisViraisCardProps> = ({ patientId 
 
             if (error) throw error;
             setPaineis(data || []);
+            window.dispatchEvent(new CustomEvent('extra-counts-changed'));
         } catch (error) {
             console.error('Erro ao carregar painéis virais:', error);
         } finally {

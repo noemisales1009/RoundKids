@@ -34,6 +34,7 @@ export const ParecerCard: React.FC<ParecerCardProps> = ({ patientId }) => {
 
             if (error) throw error;
             setPareceres(data || []);
+            window.dispatchEvent(new CustomEvent('extra-counts-changed'));
         } catch (error: any) {
             console.error('Erro ao carregar pareceres:', error);
             setErrorMsg(error?.message || 'Erro ao carregar pareceres');

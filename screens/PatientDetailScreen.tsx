@@ -136,25 +136,46 @@ const PatientDetailScreen: React.FC = () => {
 
     const [extraCounts, setExtraCounts] = useState({ aportes: 0, pareceres: 0, examesImagem: 0, paPercentis: 0, paineisVirais: 0 });
 
-    useEffect(() => {
+    const loadExtraCounts = React.useCallback(async () => {
         if (!patient?.id) return;
         const pid = patient.id;
-        Promise.all([
-            supabase.from('aportes_pacientes').select('id', { count: 'exact', head: true }).eq('paciente_id', pid).is('archived_at', null),
-            supabase.from('pareceres_pacientes').select('id', { count: 'exact', head: true }).eq('paciente_id', pid).is('archived_at', null),
-            supabase.from('exames_imagem_pacientes').select('id', { count: 'exact', head: true }).eq('paciente_id', pid).is('archived_at', null),
-            supabase.from('pa_medicoes_pacientes').select('id', { count: 'exact', head: true }).eq('paciente_id', pid),
-            supabase.from('paineis_virais_pacientes').select('id', { count: 'exact', head: true }).eq('paciente_id', pid).is('archived_at', null),
-        ]).then(([apt, par, img, pa, pnl]) => {
-            setExtraCounts({
-                aportes: apt.count ?? 0,
-                pareceres: par.count ?? 0,
-                examesImagem: img.count ?? 0,
-                paPercentis: pa.count ?? 0,
-                paineisVirais: pnl.count ?? 0,
-            });
-        });
+
+        // Cada query é executada independentemente; se uma falhar, as outras continuam
+        const safeCount = (promise: Promise<any>, label: string) =>
+            promise
+                .then((res: any) => {
+                    if (res?.error) {
+                        console.warn(`[extraCounts] erro em ${label}:`, res.error.message);
+                        return 0;
+                    }
+                    return res?.count ?? 0;
+                })
+                .catch((err) => {
+                    console.warn(`[extraCounts] exceção em ${label}:`, err?.message);
+                    return 0;
+                });
+
+        const [aportes, pareceres, examesImagem, paPercentis, paineisVirais] = await Promise.all([
+            safeCount(supabase.from('aportes_pacientes').select('id', { count: 'exact', head: true }).eq('paciente_id', pid).is('archived_at', null) as any, 'aportes'),
+            safeCount(supabase.from('pareceres_pacientes').select('id', { count: 'exact', head: true }).eq('paciente_id', pid).is('archived_at', null) as any, 'pareceres'),
+            safeCount(supabase.from('exames_imagem_pacientes').select('id', { count: 'exact', head: true }).eq('paciente_id', pid).is('archived_at', null) as any, 'examesImagem'),
+            safeCount(supabase.from('pa_medicoes_pacientes').select('id', { count: 'exact', head: true }).eq('paciente_id', pid) as any, 'paPercentis'),
+            safeCount(supabase.from('paineis_virais_pacientes').select('id', { count: 'exact', head: true }).eq('paciente_id', pid).is('archived_at', null) as any, 'paineisVirais'),
+        ]);
+
+        setExtraCounts({ aportes, pareceres, examesImagem, paPercentis, paineisVirais });
     }, [patient?.id]);
+
+    useEffect(() => {
+        loadExtraCounts();
+    }, [loadExtraCounts]);
+
+    // Recarrega os contadores quando algum item das categorias extras é adicionado/editado/removido
+    useEffect(() => {
+        const handler = () => loadExtraCounts();
+        window.addEventListener('extra-counts-changed', handler);
+        return () => window.removeEventListener('extra-counts-changed', handler);
+    }, [loadExtraCounts]);
 
     const navigate = useNavigate();
     const { showNotification } = useContext(NotificationContext)!

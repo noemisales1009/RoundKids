@@ -77,6 +77,7 @@ export const PAPercentisCard: React.FC<PAPercentisCardProps> = ({ patientId, sex
         .order('data_medicao', { ascending: false });
       if (error) throw error;
       setMedicoes(data || []);
+      window.dispatchEvent(new CustomEvent('extra-counts-changed'));
     } catch (e: any) {
       console.error('Erro ao carregar medições de PA:', e.message);
     } finally {

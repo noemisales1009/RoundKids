@@ -32,6 +32,7 @@ export const ExameImagemCard: React.FC<ExameImagemCardProps> = ({ patientId }) =
 
             if (error) throw error;
             setExames(data || []);
+            window.dispatchEvent(new CustomEvent('extra-counts-changed'));
         } catch (error) {
             console.error('Erro ao carregar exames de imagem:', error);
         } finally {

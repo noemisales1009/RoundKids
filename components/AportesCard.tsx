@@ -44,6 +44,7 @@ export const AportesCard: React.FC<AportesCardProps> = ({ patientId }) => {
 
       if (error) throw error;
       setAportes(data || []);
+      window.dispatchEvent(new CustomEvent('extra-counts-changed'));
     } catch (error) {
       console.error('Erro ao carregar aportes:', error);
     } finally {
