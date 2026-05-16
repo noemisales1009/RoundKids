@@ -68,6 +68,59 @@ const PatientHistoryScreen: React.FC = () => {
     const [archivedProcedures, setArchivedProcedures] = React.useState<any[]>([]);
     const [archivedCultures, setArchivedCultures] = React.useState<any[]>([]);
     const [archivedDiets, setArchivedDiets] = React.useState<any[]>([]);
+    const [reactivatingId, setReactivatingId] = React.useState<string | null>(null);
+    const [reactivateModal, setReactivateModal] = React.useState<{ type: string; itemId: string } | null>(null);
+
+    const handleReactivateItem = async (
+        type: 'device' | 'exam' | 'medication' | 'procedure' | 'culture' | 'diet' | 'diagnostic',
+        itemId: string
+    ) => {
+        const tableMap: Record<string, { table: string; column: string; trueValue: any; falseValue: any }> = {
+            device:     { table: 'dispositivos_pacientes',  column: 'is_archived', trueValue: true,  falseValue: false },
+            exam:       { table: 'exames_pacientes',         column: 'is_archived', trueValue: true,  falseValue: false },
+            medication: { table: 'medicacoes_pacientes',     column: 'is_archived', trueValue: true,  falseValue: false },
+            procedure:  { table: 'procedimentos_pacientes',  column: 'is_archived', trueValue: true,  falseValue: false },
+            culture:    { table: 'culturas_pacientes',       column: 'is_archived', trueValue: true,  falseValue: false },
+            diet:       { table: 'dietas_pacientes',         column: 'is_archived', trueValue: true,  falseValue: false },
+            diagnostic: { table: 'paciente_diagnosticos',    column: 'arquivado',   trueValue: true,  falseValue: false },
+        };
+
+        const cfg = tableMap[type];
+        if (!cfg) return;
+
+        setReactivatingId(itemId);
+        try {
+            const { error } = await supabase
+                .from(cfg.table)
+                .update({ [cfg.column]: cfg.falseValue })
+                .eq('id', itemId);
+
+            if (error) {
+                console.error('Erro ao reativar:', error);
+                alert(`Erro ao reativar: ${error.message}`);
+                return;
+            }
+
+            // Remover do estado local de arquivados
+            const removeFromState = (setter: React.Dispatch<React.SetStateAction<any[]>>) =>
+                setter(prev => prev.filter(item => item.id !== itemId));
+
+            if (type === 'device')     removeFromState(setArchivedDevices);
+            if (type === 'exam')       removeFromState(setArchivedExams);
+            if (type === 'medication') removeFromState(setArchivedMedications);
+            if (type === 'procedure')  removeFromState(setArchivedProcedures);
+            if (type === 'culture')    removeFromState(setArchivedCultures);
+            if (type === 'diet')       removeFromState(setArchivedDiets);
+            if (type === 'diagnostic') removeFromState(setArchivedDiagnostics);
+
+            alert('Item reativado com sucesso!');
+        } catch (err: any) {
+            console.error('Erro ao reativar:', err);
+            alert(`Erro: ${err.message || 'Erro desconhecido'}`);
+        } finally {
+            setReactivatingId(null);
+        }
+    };
     const [clinicalSituations24h, setClinicalSituations24h] = React.useState<any[]>([]);
     const [aportesHistorico, setAportesHistorico] = React.useState<any[]>([]);
     const [pareceres, setPareceres] = React.useState<any[]>([]);
@@ -679,11 +732,17 @@ const PatientHistoryScreen: React.FC = () => {
         fetchExamesImagem();
     }, [patientId]);
 
+    type ArchivableType = 'device' | 'exam' | 'medication' | 'procedure' | 'culture' | 'diet' | 'diagnostic';
     type TimelineEvent = {
         timestamp: string;
         icon: React.FC<{ className?: string; }>;
         description: string;
         hasTime: boolean;
+        archiveInfo?: {
+            type: ArchivableType;
+            itemId: string;
+            reason?: string;
+        };
     };
 
     const patientHistory = useMemo(() => {
@@ -798,6 +857,7 @@ const PatientHistoryScreen: React.FC = () => {
                 icon: ClipboardIcon,
                 description: description,
                 hasTime: true,
+                archiveInfo: { type: 'diagnostic', itemId: diagnostic.id, reason: diagnostic.motivo_arquivamento },
             });
         });
 
@@ -948,6 +1008,7 @@ const PatientHistoryScreen: React.FC = () => {
                 icon: CpuIcon,
                 description: `[DISPOSITIVO_ARQUIVADO] 🔌 Dispositivo Arquivado\n📋 Dispositivo: ${device.tipo_dispositivo} - ${device.localizacao}\n📝 Motivo do Arquivamento: ${device.motivo_arquivamento || 'Não informado'}\n👨‍⚕️ Arquivado por: ${device.nome_arquivador || 'Sistema'}\n📅 Arquivado em: ${dataArquivamento ? new Date(dataArquivamento).toLocaleString('pt-BR') : 'N/A'}`,
                 hasTime: true,
+                archiveInfo: { type: 'device', itemId: device.id, reason: device.motivo_arquivamento },
             });
         });
 
@@ -959,6 +1020,7 @@ const PatientHistoryScreen: React.FC = () => {
                 icon: FileTextIcon,
                 description: `[EXAME_ARQUIVADO] 📄 Exame Arquivado\n📋 Exame: ${exam.nome_exame}\n📝 Motivo do Arquivamento: ${exam.motivo_arquivamento || 'Não informado'}\n👨‍⚕️ Arquivado por: ${exam.nome_arquivador || 'Sistema'}\n📅 Arquivado em: ${dataArquivamento ? new Date(dataArquivamento).toLocaleString('pt-BR') : 'N/A'}`,
                 hasTime: true,
+                archiveInfo: { type: 'exam', itemId: exam.id, reason: exam.motivo_arquivamento },
             });
         });
 
@@ -971,6 +1033,7 @@ const PatientHistoryScreen: React.FC = () => {
                 icon: PillIcon,
                 description: `[MEDICACAO_ARQUIVADA] 💊 Medicação Arquivada\n📋 Medicação: ${medication.nome_medicacao} - ${dosagem}\n📝 Motivo do Arquivamento: ${medication.motivo_arquivamento || 'Não informado'}\n👨‍⚕️ Arquivado por: ${medication.nome_arquivador || 'Sistema'}\n📅 Arquivado em: ${dataArquivamento ? new Date(dataArquivamento).toLocaleString('pt-BR') : 'N/A'}`,
                 hasTime: true,
+                archiveInfo: { type: 'medication', itemId: medication.id, reason: medication.motivo_arquivamento },
             });
         });
 
@@ -982,6 +1045,7 @@ const PatientHistoryScreen: React.FC = () => {
                 icon: ScalpelIcon,
                 description: `[PROCEDIMENTO_ARQUIVADO] ⚒️ Procedimento Cirúrgico Arquivado\n📋 Procedimento: ${procedure.nome_procedimento}\n👨‍⚕️ Cirurgião: ${procedure.nome_cirurgiao || 'Não informado'}\n📝 Motivo do Arquivamento: ${procedure.motivo_arquivamento || 'Não informado'}\n👨‍⚕️ Arquivado por: ${procedure.nome_arquivador || 'Sistema'}\n📅 Arquivado em: ${dataArquivamento ? new Date(dataArquivamento).toLocaleString('pt-BR') : 'N/A'}`,
                 hasTime: true,
+                archiveInfo: { type: 'procedure', itemId: procedure.id, reason: procedure.motivo_arquivamento },
             });
         });
 
@@ -1031,6 +1095,7 @@ const PatientHistoryScreen: React.FC = () => {
                 icon: BeakerIcon,
                 description: `[CULTURA_ARQUIVADA] 🧪 Cultura Arquivada\n📋 Local: ${culture.local}\n🦠 Microorganismo: ${culture.microorganismo}\n📝 Motivo do Arquivamento: ${culture.motivo_arquivamento || 'Não informado'}\n👨‍⚕️ Arquivado por: ${culture.nome_arquivador || 'Sistema'}\n📅 Arquivado em: ${dataArquivamento ? new Date(dataArquivamento).toLocaleString('pt-BR') : 'N/A'}`,
                 hasTime: true,
+                archiveInfo: { type: 'culture', itemId: culture.id, reason: culture.motivo_arquivamento },
             });
         });
 
@@ -1042,6 +1107,7 @@ const PatientHistoryScreen: React.FC = () => {
                 icon: AppleIcon,
                 description: `[DIETA_ARQUIVADA] 🍽️ Dieta Arquivada\n📋 Tipo: ${diet.tipo}\n${diet.volume ? `💧 Volume: ${diet.volume} ml\n` : ''}${diet.vet ? `⚡ VET: ${diet.vet} kcal/dia\n` : ''}📝 Motivo do Arquivamento: ${diet.motivo_arquivamento || 'Não informado'}\n👨‍⚕️ Arquivado por: ${diet.nome_arquivador || 'Sistema'}\n📅 Arquivado em: ${dataArquivamento ? new Date(dataArquivamento).toLocaleString('pt-BR') : 'N/A'}`,
                 hasTime: true,
+                archiveInfo: { type: 'diet', itemId: diet.id, reason: diet.motivo_arquivamento },
             });
         });
 
@@ -1836,6 +1902,40 @@ const PatientHistoryScreen: React.FC = () => {
                 )}
             </div>
 
+            {/* Modal de Confirmação de Reativação */}
+            {reactivateModal && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-sm w-full shadow-2xl border-2 border-slate-300 dark:border-slate-600">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                            <span>♻️</span> Reativar item?
+                        </h3>
+                        <p className="text-slate-600 dark:text-slate-400 mb-6">
+                            Tem certeza que deseja reativar este item? Ele voltará a aparecer na lista ativa do paciente.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setReactivateModal(null)}
+                                disabled={!!reactivatingId}
+                                className="flex-1 px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white rounded font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 transition disabled:opacity-50"
+                            >
+                                Não
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    const { type, itemId } = reactivateModal;
+                                    await handleReactivateItem(type as any, itemId);
+                                    setReactivateModal(null);
+                                }}
+                                disabled={!!reactivatingId}
+                                className="flex-1 px-4 py-2 bg-green-600 text-white rounded font-semibold hover:bg-green-700 transition disabled:opacity-50"
+                            >
+                                {reactivatingId ? 'Reativando...' : 'Sim'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Histórico Filtrado */}
             <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm">
                 {Object.keys(displayedHistory).length > 0 ? (
@@ -1844,7 +1944,9 @@ const PatientHistoryScreen: React.FC = () => {
                             <div key={date}>
                                 <h3 className="font-semibold text-slate-600 dark:text-slate-400 mb-2">{formatHistoryDate(date)}</h3>
                                 <div className="space-y-3">
-                                    {(eventsOnDate as TimelineEvent[]).map((event, index) => (
+                                    {(eventsOnDate as TimelineEvent[]).map((event, index) => {
+                                        const canReactivate = event.archiveInfo && /conclu[ií]do/i.test(event.archiveInfo.reason || '');
+                                        return (
                                         <div key={index} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                                             <div className="shrink-0 w-8 h-8 flex items-center justify-center bg-blue-100 dark:bg-blue-900/80 rounded-full mt-1">
                                                 <event.icon className="w-5 h-5 text-blue-600 dark:text-blue-300" />
@@ -1856,9 +1958,19 @@ const PatientHistoryScreen: React.FC = () => {
                                                         Horário: {new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })}
                                                     </p>
                                                 )}
+                                                {canReactivate && (
+                                                    <button
+                                                        onClick={() => setReactivateModal({ type: event.archiveInfo!.type, itemId: event.archiveInfo!.itemId })}
+                                                        disabled={reactivatingId === event.archiveInfo!.itemId}
+                                                        className="mt-2 inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold bg-green-100 hover:bg-green-200 dark:bg-green-900/40 dark:hover:bg-green-900/60 text-green-700 dark:text-green-300 rounded transition disabled:opacity-50"
+                                                    >
+                                                        {reactivatingId === event.archiveInfo!.itemId ? '⏳ Reativando...' : '♻️ Reativar'}
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         ))}
