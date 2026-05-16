@@ -528,59 +528,71 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const [optionToArchive, setOptionToArchive] = useState<number | null>(null);
   const [archiveReason, setArchiveReason] = useState('');
 
+  const loadDiagnosticsData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [questionsRes, optionsRes, diagnosticsRes] = await Promise.all([
+        supabase.from('perguntas_diagnistico').select('*').order('id'),
+        supabase.from('pergunta_opcoes_diagnostico').select('*').order('pergunta_id').order('ordem'),
+        supabase
+          .from('paciente_diagnosticos')
+          .select('*')
+          .eq('patient_id', patientId)
+          .eq('arquivado', false)
+      ]);
+
+      if (questionsRes.error) throw questionsRes.error;
+      if (optionsRes.error) throw optionsRes.error;
+      if (diagnosticsRes.error) throw diagnosticsRes.error;
+
+      setQuestions(questionsRes.data || []);
+      setOptions(optionsRes.data || []);
+      setDiagnostics(diagnosticsRes.data || []);
+
+      const checked: Record<number, boolean> = {};
+      const inputs: Record<number, string> = {};
+      const sistemas: Record<number, string> = {};
+      const dataInicio: Record<number, string> = {};
+      const resolvedAt: Record<number, string> = {};
+      const statuses: Record<number, 'resolvido' | 'nao_resolvido'> = {};
+
+      (diagnosticsRes.data || []).forEach(diag => {
+        checked[diag.opcao_id] = true;
+        if (diag.texto_digitado) inputs[diag.opcao_id] = diag.texto_digitado;
+        if (diag.sistema) sistemas[diag.opcao_id] = diag.sistema;
+        if (diag.data_inicio) dataInicio[diag.opcao_id] = diag.data_inicio;
+        if (diag.resolved_at) resolvedAt[diag.opcao_id] = diag.resolved_at.split('T')[0];
+        statuses[diag.opcao_id] = diag.status;
+      });
+
+      setCheckedOptions(checked);
+      setInputValues(inputs);
+      setSistemaValues(sistemas);
+      setDataInicioValues(dataInicio);
+      setResolvedAtValues(resolvedAt);
+      setSelectedStatus(statuses);
+    } catch (error) {
+      console.error('Erro ao carregar diagnósticos:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [patientId]);
+
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        const [questionsRes, optionsRes, diagnosticsRes] = await Promise.all([
-          supabase.from('perguntas_diagnistico').select('*').order('id'),
-          supabase.from('pergunta_opcoes_diagnostico').select('*').order('pergunta_id').order('ordem'),
-          supabase
-            .from('paciente_diagnosticos')
-            .select('*')
-            .eq('patient_id', patientId)
-            .eq('arquivado', false)
-        ]);
+    loadDiagnosticsData();
+  }, [loadDiagnosticsData]);
 
-        if (questionsRes.error) throw questionsRes.error;
-        if (optionsRes.error) throw optionsRes.error;
-        if (diagnosticsRes.error) throw diagnosticsRes.error;
-
-        setQuestions(questionsRes.data || []);
-        setOptions(optionsRes.data || []);
-        setDiagnostics(diagnosticsRes.data || []);
-
-        const checked: Record<number, boolean> = {};
-        const inputs: Record<number, string> = {};
-        const sistemas: Record<number, string> = {};
-        const dataInicio: Record<number, string> = {};
-        const resolvedAt: Record<number, string> = {};
-        const statuses: Record<number, 'resolvido' | 'nao_resolvido'> = {};
-
-        (diagnosticsRes.data || []).forEach(diag => {
-          checked[diag.opcao_id] = true;
-          if (diag.texto_digitado) inputs[diag.opcao_id] = diag.texto_digitado;
-          if (diag.sistema) sistemas[diag.opcao_id] = diag.sistema;
-          if (diag.data_inicio) dataInicio[diag.opcao_id] = diag.data_inicio;
-          if (diag.resolved_at) resolvedAt[diag.opcao_id] = diag.resolved_at.split('T')[0];
-          statuses[diag.opcao_id] = diag.status;
-        });
-
-        setCheckedOptions(checked);
-        setInputValues(inputs);
-        setSistemaValues(sistemas);
-        setDataInicioValues(dataInicio);
-        setResolvedAtValues(resolvedAt);
-        setSelectedStatus(statuses);
-      } catch (error) {
-        console.error('Erro ao carregar diagnósticos:', error);
-      } finally {
-        setLoading(false);
+  // Recarrega quando um diagnóstico arquivado é reativado no histórico
+  useEffect(() => {
+    const handleReactivated = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (detail?.type === 'diagnostic') {
+        loadDiagnosticsData();
       }
     };
-
-    loadData();
-  }, [patientId]);
+    window.addEventListener('item-reactivated', handleReactivated);
+    return () => window.removeEventListener('item-reactivated', handleReactivated);
+  }, [loadDiagnosticsData]);
 
   const handleToggle = useCallback((optionId: number, checked: boolean) => {
     setCheckedOptions(prev => ({ ...prev, [optionId]: checked }));

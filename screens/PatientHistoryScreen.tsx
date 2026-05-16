@@ -116,6 +116,9 @@ const PatientHistoryScreen: React.FC = () => {
             // Atualiza a lista global de pacientes pra refletir nos cards do detalhe
             await refreshPatients();
 
+            // Dispara evento global para componentes que mantêm cache próprio (ex: DiagnosticsSection)
+            window.dispatchEvent(new CustomEvent('item-reactivated', { detail: { type, itemId, patientId } }));
+
             alert('Item reativado com sucesso!');
         } catch (err: any) {
             console.error('Erro ao reativar:', err);
