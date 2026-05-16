@@ -251,6 +251,7 @@ export interface PatientsContextType {
   deletePrecautionFromPatient: (patientId: number | string, precautionId: number | string, motivo?: string) => void;
   updatePrecautionInPatient: (patientId: number | string, precautionData: Precaution) => void;
   addEndDateToPrecaution: (patientId: number | string, precautionId: number | string, endDate: string) => void;
+  refreshPatients: () => Promise<void>;
 }
 
 // --- NOTIFICATION TYPES ---

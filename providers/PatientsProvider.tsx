@@ -1049,6 +1049,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         deletePrecautionFromPatient,
         updatePrecautionInPatient,
         addEndDateToPrecaution,
+        refreshPatients: fetchPatients,
     };
 
     return <PatientsContext.Provider value={value as PatientsContextType}>{children}</PatientsContext.Provider>;

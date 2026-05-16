@@ -49,7 +49,7 @@ const formatHistoryDate = (dateString: string) => {
 
 const PatientHistoryScreen: React.FC = () => {
     const { patientId } = useParams<{ patientId: string }>();
-    const { patients } = useContext(PatientsContext)!;
+    const { patients, refreshPatients } = useContext(PatientsContext)!;
     const { tasks } = useContext(TasksContext)!;
     const patient = patients.find(p => p.id.toString() === patientId);
     const [diagnostics, setDiagnostics] = React.useState<any[]>([]);
@@ -112,6 +112,9 @@ const PatientHistoryScreen: React.FC = () => {
             if (type === 'culture')    removeFromState(setArchivedCultures);
             if (type === 'diet')       removeFromState(setArchivedDiets);
             if (type === 'diagnostic') removeFromState(setArchivedDiagnostics);
+
+            // Atualiza a lista global de pacientes pra refletir nos cards do detalhe
+            await refreshPatients();
 
             alert('Item reativado com sucesso!');
         } catch (err: any) {
