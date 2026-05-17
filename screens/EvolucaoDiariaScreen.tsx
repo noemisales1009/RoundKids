@@ -193,16 +193,16 @@ const STATUS_CONFIG = {
 const SECTION_SISTEMAS: Record<string, string[]> = {
   respiratoria:     ['Avaliação respiratória', 'Sist. respiratório'],
   cardiovascular:   ['Avaliação cardiovascular'],
-  infecciosa:       ['Infecções Relacionadas à Assistência à Saúde (IRAS)', 'Outras infecções'],
+  infecciosa:       ['Avaliação infecciosa', 'Infecções Relacionadas à Assistência à Saúde (IRAS)', 'Outras infecções'],
   renal:            ['Avaliação renal'],
-  dhe_metabolica:   ['Distúrbios hidroeletrolíticos e metabólicos'],
+  dhe_metabolica:   ['Distúrbios hidroeletrolíticos/metabólicos e DAB', 'Distúrbios hidroeletrolíticos e metabólicos'],
   endocrinologia:   [],
   gastrointestinal: ['Avaliação gastrointestinal'],
   nutricional:      ['Avaliação nutricional e metabólica'],
   hematologica:     ['Avaliação hematológica/ oncológica'],
   genetica:         ['Avaliação genética'],
-  imunologica:      ['Avaliação imunológica'],
-  neurologica_av:   ['Avaliação neurológica'],
+  imunologica:      ['Avaliação imunológica', 'Avaliação reumatológica'],
+  neurologica_av:   ['Avaliação neurológica', 'Sedação /Analgesia'],
   psiquiatrica:     ['Avaliação psiquiátrica', 'Avaliação psicológica'],
   gerenciamento:    ['Gestão de riscos assistenciais', 'Precauções e controle de infecção', 'Avaliação cirúrgica'],
   eventos:          ['Notificação de eventos adversos'],
@@ -845,20 +845,32 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       return `${Math.max(1, Math.floor((t.getTime() - s.getTime()) / 86400000) + 1)}d`;
     };
 
+    const ALL_KNOWN_SISTEMAS = new Set(Object.values(SECTION_SISTEMAS).flat());
     const apLines: string[] = [];
     AVALIACAO_SECTIONS.forEach(sec => {
       const sistemas = SECTION_SISTEMAS[sec.id] ?? [];
-      const diags = diagItems.filter(d => d.sistema && sistemas.includes(d.sistema) && !we.has(`diag_${d.opcao_id}`));
-      const cirgs = (p.surgicalProcedures ?? []).filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && sistemas.includes(c.sistema) && !we.has(`cir_${c.id}`));
-      const cults = (p.cultures ?? []).filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && sistemas.includes(c.sistema) && !we.has(`cult_${c.id}`));
-      const diets = (p.diets ?? []).filter(d => !d.isArchived && d.mostrar_evolucao !== false && d.sistema && sistemas.includes(d.sistema) && !we.has(`diet_${d.id}`));
+      const matchSistema = (s: string | undefined | null): boolean =>
+        !!s && (sistemas.includes(s) || (sec.id === 'outras_av' && !ALL_KNOWN_SISTEMAS.has(s)));
+      const diags = diagItems.filter(d => matchSistema(d.sistema) && !we.has(`diag_${d.opcao_id}`));
+      const cirgs = (p.surgicalProcedures ?? []).filter(c => !c.isArchived && c.mostrar_evolucao !== false && matchSistema(c.sistema) && !we.has(`cir_${c.id}`));
+      const cults = (p.cultures ?? []).filter(c => !c.isArchived && c.mostrar_evolucao !== false && matchSistema(c.sistema) && !we.has(`cult_${c.id}`));
+      const diets = (p.diets ?? []).filter(d => !d.isArchived && d.mostrar_evolucao !== false && matchSistema(d.sistema) && !we.has(`diet_${d.id}`));
       const _today = new Date(); _today.setHours(0, 0, 0, 0);
-      const meds  = (p.medications ?? []).filter(m => !m.isArchived && m.mostrar_evolucao !== false && m.sistema && sistemas.includes(m.sistema) && !we.has(`med_${m.id}`) && (!m.endDate || new Date(m.endDate + 'T00:00:00') >= _today));
-      const exs   = (p.exams ?? []).filter(e => !e.isArchived && e.mostrar_evolucao !== false && e.sistema && sistemas.includes(e.sistema) && !we.has(`exam_${e.id}`));
-      const imgs  = examesImagemList.filter(ei => ei.mostrar_evolucao !== false && ei.sistema && sistemas.includes(ei.sistema) && !we.has(`img_${ei.id}`));
-      const pnls  = paineisViraisList.filter(pn => pn.mostrar_evolucao !== false && pn.sistema && sistemas.includes(pn.sistema) && !we.has(`pnl_${pn.id}`));
-      const pars  = pareceresList.filter(par => par.mostrar_evolucao !== false && (ESPECIALISTA_TO_SISTEMAS[par.especialista] ?? []).some(s => sistemas.includes(s)) && !we.has(`par_${par.id}`));
-      const alts  = alertasList.filter(a => sistemas.length > 0 && a.mostrar_evolucao !== false && a.sistemas.some(s => sistemas.includes(s)) && !we.has(`alt_${a.id}`) && a.created_at.split('T')[0] === date);
+      const meds  = (p.medications ?? []).filter(m => !m.isArchived && m.mostrar_evolucao !== false && matchSistema(m.sistema) && !we.has(`med_${m.id}`) && (!m.endDate || new Date(m.endDate + 'T00:00:00') >= _today));
+      const exs   = (p.exams ?? []).filter(e => !e.isArchived && e.mostrar_evolucao !== false && matchSistema(e.sistema) && !we.has(`exam_${e.id}`));
+      const imgs  = examesImagemList.filter(ei => ei.mostrar_evolucao !== false && matchSistema(ei.sistema) && !we.has(`img_${ei.id}`));
+      const pnls  = paineisViraisList.filter(pn => pn.mostrar_evolucao !== false && matchSistema(pn.sistema) && !we.has(`pnl_${pn.id}`));
+      const pars  = pareceresList.filter(par => {
+        if (par.mostrar_evolucao === false || we.has(`par_${par.id}`)) return false;
+        const mapped = ESPECIALISTA_TO_SISTEMAS[par.especialista] ?? [];
+        if (mapped.some(s => sistemas.includes(s))) return true;
+        return sec.id === 'outras_av' && mapped.length === 0;
+      });
+      const alts  = alertasList.filter(a => {
+        if (a.mostrar_evolucao === false || we.has(`alt_${a.id}`) || a.created_at.split('T')[0] !== date) return false;
+        if (a.sistemas.some(s => sistemas.includes(s))) return true;
+        return sec.id === 'outras_av' && a.sistemas.some(s => !ALL_KNOWN_SISTEMAS.has(s));
+      });
       if (diags.length + cirgs.length + cults.length + diets.length + meds.length + exs.length + imgs.length + pnls.length + pars.length + alts.length === 0) return;
       apLines.push('');
       apLines.push(sec.label.replace(/^[\d./]+\s*/, ''));
@@ -963,6 +975,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     <th style="padding:4px 8px;text-align:left;">Dispositivo</th>
     <th style="padding:4px 8px;text-align:left;">Descrição</th>
     <th style="padding:4px 8px;text-align:left;">Inserção</th>
+    <th style="padding:4px 8px;text-align:left;">Retirada</th>
     <th style="padding:4px 8px;text-align:left;">Dias</th>
   </tr></thead>
   <tbody>
@@ -972,6 +985,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         <td style="padding:4px 8px;">${escHtml(d.name)}</td>
         <td style="padding:4px 8px;">${d.observacao ? escHtml(d.observacao) : ''}</td>
         <td style="padding:4px 8px;">${formatDateToBRL(d.startDate)}</td>
+        <td style="padding:4px 8px;">${d.removalDate ? formatDateToBRL(d.removalDate) : '—'}</td>
         <td style="padding:4px 8px;">${days} dia${days !== 1 ? 's' : ''}</td>
       </tr>`;
     }).join('')}

@@ -151,7 +151,7 @@ const PatientHistoryScreen: React.FC = () => {
         'Dietas': 'Dieta',
         'Alertas': 'Alerta',
         'Comorbidades': 'Comorbidade',
-        'Completações': 'Completação de Alerta',
+        'Alertas Concluídos': 'Completação de Alerta',
         'Justificativas': 'Justificativa Adicionada',
         'Arquivamentos': 'Alerta Arquivado',
         'Arquivamentos Dispositivos': 'Dispositivo Arquivado',
@@ -403,20 +403,43 @@ const PatientHistoryScreen: React.FC = () => {
         const fetchAlertCompletions = async () => {
             if (!patientId) return;
             try {
-                const { data, error } = await supabase
+                // Fonte 1: tabela alert_completions (legado)
+                const legacyRes = await supabase
                     .from('alert_completions_with_user')
                     .select('*')
                     .eq('patient_id', patientId);
-                    // Nota: patient_id vem do JOIN com tasks na view
 
-                if (error) {
-                    return;
-                }
+                // Fonte 2: alertas_paciente que foram concluídos diretamente (status alterado)
+                const directRes = await supabase
+                    .from('alertas_paciente')
+                    .select('id, alerta_descricao, status, concluded_at, concluded_by, created_at, users:concluded_by(name)')
+                    .eq('patient_id', patientId)
+                    .not('concluded_at', 'is', null);
 
-                if (data) {
-                    setAlertCompletions(data);
-                }
+                const legacyData = legacyRes.data || [];
+                const directData = (directRes.data || []).map((alert: any) => ({
+                    id: `direct-${alert.id}`,
+                    alert_id: alert.id,
+                    source: 'alertas_paciente',
+                    completed_at: alert.concluded_at,
+                    completed_by: alert.concluded_by,
+                    completed_by_name: alert.users?.name || 'Não informado',
+                    alert_description: alert.alerta_descricao,
+                    description: alert.alerta_descricao,
+                    created_at: alert.created_at,
+                    patient_id: patientId,
+                }));
+
+                // Mescla evitando duplicatas (se já existir em alert_completions, ignora a direta)
+                const legacyAlertIds = new Set(legacyData.map((c: any) => c.alert_id));
+                const mergedData = [
+                    ...legacyData,
+                    ...directData.filter((d: any) => !legacyAlertIds.has(d.alert_id)),
+                ];
+
+                setAlertCompletions(mergedData);
             } catch (err) {
+                console.error('Erro ao buscar completações de alertas:', err);
             }
         };
 
@@ -1627,7 +1650,7 @@ const PatientHistoryScreen: React.FC = () => {
             '[BALANÇO]': 'Balanço Hídrico',
             '[ALERTA]': 'Alertas',
             '[COMORBIDADE]': 'Comorbidades',
-            '[COMPLETACAO_ALERTA]': 'Completações',
+            '[COMPLETACAO_ALERTA]': 'Alertas Concluídos',
             '[DIETA]': 'Dietas',
             '[JUSTIFICATIVA_ADICIONADA]': 'Justificativas',
             '[ALERTA_ARQUIVADO]': 'Arquivamentos',
@@ -1702,7 +1725,7 @@ const PatientHistoryScreen: React.FC = () => {
         setSelectedCategories(new Set());
     };
 
-    const mainCategories = ['Dispositivos', 'Medicações', 'Exames', 'Cirúrgico', 'Escalas', 'Diagnósticos', 'Culturas', 'Diurese', 'Balanço Hídrico', 'Dietas', 'Alertas', 'Comorbidades', 'Completações', 'Justificativas', 'Situação Clínica 24h', 'Aportes', 'Precauções', 'Transferência', 'Pareceres', 'Exames de Imagem', 'Controles e Saídas'];
+    const mainCategories = ['Dispositivos', 'Medicações', 'Exames', 'Cirúrgico', 'Escalas', 'Diagnósticos', 'Culturas', 'Diurese', 'Balanço Hídrico', 'Dietas', 'Alertas', 'Comorbidades', 'Alertas Concluídos', 'Justificativas', 'Situação Clínica 24h', 'Aportes', 'Precauções', 'Transferência', 'Pareceres', 'Exames de Imagem', 'Controles e Saídas'];
     const archiveCategories = ['Arquivamentos', 'Arquivamentos Dispositivos', 'Arquivamentos Exames', 'Arquivamentos Medicações', 'Arquivamentos Procedimentos', 'Arquivamentos Culturas', 'Arquivamentos Dietas', 'Arquivamentos Diagnósticos'];
 
     const categoryIcons: Record<string, React.FC<{ className?: string }>> = {
@@ -1718,7 +1741,7 @@ const PatientHistoryScreen: React.FC = () => {
         'Dietas': AppleIcon,
         'Alertas': BellIcon,
         'Comorbidades': HeartPulseIcon,
-        'Completações': CheckCircleIcon,
+        'Alertas Concluídos': CheckCircleIcon,
         'Justificativas': ClipboardIcon,
         'Situação Clínica 24h': HeartPulseIcon,
         'Aportes': DropletIcon,
