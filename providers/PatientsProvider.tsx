@@ -81,6 +81,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 diagnosticoId: m.diagnostico_id || undefined,
                 diagnosticoLabel: m.diagnostico_label || undefined,
                 diagnosticoDataInicio: m.diagnostico_data_inicio || undefined,
+                categoria: m.categoria || undefined,
             });
             return acc;
         }, {});
@@ -518,6 +519,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             data_inicio: medication.startDate,
             observacao: sanitizeTextOrNull(medication.observacao),
             criado_por_id: userId || null,
+            categoria: medication.categoria || null,
             ...(medication.sistema ? { sistema: medication.sistema } : {}),
             ...(medication.diagnosticoId ? { diagnostico_id: medication.diagnosticoId, diagnostico_label: medication.diagnosticoLabel, diagnostico_data_inicio: medication.diagnosticoDataInicio || null } : {}),
         };

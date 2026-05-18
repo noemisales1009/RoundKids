@@ -261,6 +261,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                     diagnosticoId: diagSelecionado?.id,
                     diagnosticoLabel: diagSelecionado?.label,
                     diagnosticoDataInicio: diagSelecionado?.created_at?.split('T')[0],
+                    categoria: isCategoriaManual ? undefined : (selectedCategoria || undefined),
                 },
                 user.id
             );

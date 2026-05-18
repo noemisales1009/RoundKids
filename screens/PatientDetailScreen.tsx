@@ -118,6 +118,7 @@ const PatientDetailScreen: React.FC = () => {
     const [isAddMedicationModalOpen, setAddMedicationModalOpen] = useState(false);
     const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
     const [editingMedicationEndDate, setEditingMedicationEndDate] = useState<Medication | null>(null);
+    const [medCategoriaOrdem, setMedCategoriaOrdem] = useState<Map<string, number>>(new Map());
     const [archiveMedicationModal, setArchiveMedicationModal] = useState<Medication | null>(null);
     const [isAddSurgicalModalOpen, setAddSurgicalModalOpen] = useState(false);
     const [editingSurgicalProcedure, setEditingSurgicalProcedure] = useState<SurgicalProcedure | null>(null);
@@ -139,6 +140,16 @@ const PatientDetailScreen: React.FC = () => {
     const scalesSectionRef = useRef<HTMLDivElement>(null);
 
     const [extraCounts, setExtraCounts] = useState({ aportes: 0, pareceres: 0, examesImagem: 0, paPercentis: 0, paineisVirais: 0 });
+
+    useEffect(() => {
+        if (openCategoryModal !== 'medications') return;
+        supabase.from('medicamentos').select('categoria, ordem_exibicao').order('ordem_exibicao', { ascending: true }).then(({ data }) => {
+            if (!data) return;
+            const map = new Map<string, number>();
+            data.forEach((row: any) => { if (!map.has(row.categoria)) map.set(row.categoria, row.ordem_exibicao ?? 999); });
+            setMedCategoriaOrdem(map);
+        });
+    }, [openCategoryModal]);
 
     const loadExtraCounts = React.useCallback(async () => {
         if (!patient?.id) return;
@@ -836,8 +847,20 @@ const PatientDetailScreen: React.FC = () => {
                                             </div>
                                         );
                                     })()}
-                                    {patient.medications.filter(m => !m.isArchived).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).map(medication => (
+                                    {patient.medications.filter(m => !m.isArchived).sort((a, b) => {
+                                            const dateA = new Date(a.startDate).getTime();
+                                            const dateB = new Date(b.startDate).getTime();
+                                            if (dateB !== dateA) return dateB - dateA;
+                                            const ordemA = medCategoriaOrdem.get(a.categoria ?? '') ?? 999;
+                                            const ordemB = medCategoriaOrdem.get(b.categoria ?? '') ?? 999;
+                                            return ordemA - ordemB;
+                                        }).map(medication => (
                                         <div key={medication.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                                            {medication.categoria && (
+                                                <div className="flex justify-start mb-1.5">
+                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium">{medication.categoria}</span>
+                                                </div>
+                                            )}
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
                                                     <PillIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />

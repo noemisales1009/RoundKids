@@ -39,6 +39,7 @@ export interface Medication {
   diagnosticoId?: number;
   diagnosticoLabel?: string;
   diagnosticoDataInicio?: string;
+  categoria?: string;
 }
 
 export interface SurgicalProcedure {
