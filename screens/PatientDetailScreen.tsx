@@ -428,6 +428,10 @@ const PatientDetailScreen: React.FC = () => {
                 </div>
             </Link>
 
+            <Suspense fallback={<LoadingSpinner />}>
+                <DiagnosticsSection patientId={patient.id.toString()} />
+            </Suspense>
+
             {/* Category Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {([
@@ -588,10 +592,6 @@ const PatientDetailScreen: React.FC = () => {
                     </div>
                 )}
             </div>
-
-            <Suspense fallback={<LoadingSpinner />}>
-                <DiagnosticsSection patientId={patient.id.toString()} />
-            </Suspense>
 
             <Suspense fallback={<LoadingSpinner />}>
                 <ControlesSaidasSection patientId={patient.id.toString()} />
