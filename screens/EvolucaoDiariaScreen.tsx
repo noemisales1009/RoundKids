@@ -878,8 +878,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         diags.forEach(d => {
           const lbl = d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label;
           const det = d.label !== 'Outros' && d.texto_digitado ? ` (${d.texto_digitado})` : '';
-          const dt = d.created_at ? ` — ${formatDateToBRL(d.created_at)}` : '';
-          apLines.push(`  • ${lbl}${det}${dt}`);
+          apLines.push(`  • ${lbl}${det}`);
         });
       }
       if (cirgs.length) {
@@ -892,7 +891,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       if (cults.length) {
         apLines.push('  CULTURAS:');
         cults.forEach(c => {
-          apLines.push(`    • ${c.site}${c.microorganism ? ` — ${c.microorganism}` : ''} — ${formatDateToBRL(c.collectionDate)} (${calcDias(c.collectionDate)})`);
+          apLines.push(`    • ${c.site}${c.microorganism ? ` — ${c.microorganism}` : ''} — ${formatDateToBRL(c.collectionDate)}`);
           if (c.observation) apLines.push(`      ${c.observation}`);
         });
       }
@@ -980,7 +979,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   </tr></thead>
   <tbody>
     ${activeDevicesDoc.map(d => {
-      const days = Math.floor((Date.now() - new Date(d.startDate + 'T12:00:00').getTime()) / 86400000) + 1;
+      const nowSP = new Date(Date.now() - 3 * 60 * 60 * 1000);
+      const todaySP = Date.UTC(nowSP.getUTCFullYear(), nowSP.getUTCMonth(), nowSP.getUTCDate());
+      const [sy, sm, sd] = d.startDate.split('-').map(Number);
+      const startSP = Date.UTC(sy, sm - 1, sd);
+      const days = Math.floor((todaySP - startSP) / 86400000);
       return `<tr>
         <td style="padding:4px 8px;">${escHtml(d.name)}</td>
         <td style="padding:4px 8px;">${d.observacao ? escHtml(d.observacao) : ''}</td>
@@ -1275,11 +1278,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                     {d.label !== 'Outros' && d.texto_digitado && (
                       <p className="text-xs text-slate-500 dark:text-slate-400 italic mt-0.5">{d.texto_digitado}</p>
                     )}
-                    {d.created_at && (
-                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                        Registrado em {new Date(d.created_at).toLocaleDateString('pt-BR')}
-                      </p>
-                    )}
                   </div>
                   <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${
                     d.status === 'resolvido'
@@ -1315,11 +1313,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                     </p>
                     {d.label !== 'Outros' && d.texto_digitado && (
                       <p className="text-xs text-slate-500 dark:text-slate-400 italic mt-0.5">{d.texto_digitado}</p>
-                    )}
-                    {d.created_at && (
-                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                        Registrado em {new Date(d.created_at).toLocaleDateString('pt-BR')}
-                      </p>
                     )}
                   </div>
                   <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${
@@ -1462,7 +1455,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           return (
             <div className="space-y-2">
               {activeDevices.map(d => {
-                const days = Math.floor((Date.now() - new Date(d.startDate + 'T12:00:00').getTime()) / 86400000) + 1;
+                const nowSP = new Date(Date.now() - 3 * 60 * 60 * 1000);
+      const todaySP = Date.UTC(nowSP.getUTCFullYear(), nowSP.getUTCMonth(), nowSP.getUTCDate());
+      const [sy, sm, sd] = d.startDate.split('-').map(Number);
+      const startSP = Date.UTC(sy, sm - 1, sd);
+      const days = Math.floor((todaySP - startSP) / 86400000);
                 return (
                   <div key={d.id} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
                     <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{d.name}</p>
