@@ -1,4 +1,4 @@
-import React, { useState, useContext, useMemo, useEffect } from 'react';
+import React, { useState, useContext, useMemo, useEffect, useRef } from 'react';
 import { PatientsContext, NotificationContext, UserContext } from '../../../contexts';
 import { Medication } from '../../../types';
 import { CloseIcon, ChevronDownIcon } from '../../icons';
@@ -28,9 +28,10 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
     const [categorias, setCategorias] = useState<string[]>([]);
     const [medicamentos, setMedicamentos] = useState<Medicamento[]>([]);
     const [loading, setLoading] = useState(true);
-    
+    const didInitMed = useRef(false);
+
     // State para o formulário
-    const [selectedCategoria, setSelectedCategoria] = useState('');
+    const [selectedCategoria, setSelectedCategoria] = useState(medication.categoria || '');
     const [selectedMedicamento, setSelectedMedicamento] = useState('');
     const [customMedicamento, setCustomMedicamento] = useState('');
     const [customUnidade, setCustomUnidade] = useState('');
@@ -142,77 +143,74 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                 
                 categoriasUnicas.sort((a, b) => a.ordem - b.ordem);
                 setCategorias(categoriasUnicas.map(c => c.categoria));
+
+                // Se não tem categoria salva, já inicializa como customizado
+                if (!medication.categoria) {
+                    didInitMed.current = true;
+                    setSelectedMedicamento('outro');
+                    setCustomMedicamento(medication.name);
+                    if (medication.dosage && medication.dosage !== medication.name) {
+                        setDosageValue(medication.dosage.split(' ')[0]);
+                    }
+                }
+
                 setLoading(false);
             } catch (err) {
                 console.error('Erro ao buscar categorias:', err);
                 setLoading(false);
             }
         };
-        
+
         fetchCategorias();
     }, []);
-
-    // Pré-carregar medicamento atual
-    const [currentMedData, setCurrentMedData] = useState<any>(null);
-    
-    useEffect(() => {
-        const loadCurrentMed = async () => {
-            try {
-                // Encontrar qual medicamento é o atual
-                const { data, error } = await supabase
-                    .from('medicamentos')
-                    .select('*')
-                    .ilike('nome', `%${medication.name}%`)
-                    .limit(1);
-                
-                if (data && data.length > 0) {
-                    const med = data[0];
-                    setCurrentMedData(med);
-                    setSelectedCategoria(med.categoria);
-                    setSelectedMedicamento(med.id.toString());
-                    
-                    // Parse dosageValue from medication.dosage
-                    if (medication.dosage) {
-                        const value = medication.dosage.split(' ')[0];
-                        setDosageValue(value);
-                    }
-                } else {
-                    // Medicamento customizado
-                    setSelectedMedicamento('outro');
-                }
-            } catch (err) {
-                console.error('Erro ao carregar medicamento atual:', err);
-            }
-        };
-        
-        if (categorias.length > 0) {
-            loadCurrentMed();
-        }
-    }, [categorias]);
 
     // Buscar medicamentos quando categoria muda
     useEffect(() => {
         const fetchMedicamentos = async () => {
             if (!selectedCategoria) {
                 setMedicamentos([]);
-                setSelectedMedicamento('');
+                if (didInitMed.current) setSelectedMedicamento('');
                 return;
             }
-            
+
             try {
                 const { data, error } = await supabase
                     .from('medicamentos')
                     .select('*')
                     .eq('categoria', selectedCategoria)
                     .order('nome', { ascending: true });
-                
+
                 if (error) throw error;
-                setMedicamentos(data || []);
+                const lista = data || [];
+                setMedicamentos(lista);
+
+                if (!didInitMed.current) {
+                    // Primeira carga: pré-selecionar o medicamento atual
+                    didInitMed.current = true;
+                    const match = lista.find((m: Medicamento) =>
+                        m.nome.toLowerCase() === medication.name.toLowerCase()
+                    );
+                    if (match) {
+                        setSelectedMedicamento(match.id.toString());
+                        if (medication.dosage && medication.dosage !== medication.name) {
+                            setDosageValue(medication.dosage.split(' ')[0]);
+                        }
+                    } else {
+                        setSelectedMedicamento('outro');
+                        setCustomMedicamento(medication.name);
+                        if (medication.dosage && medication.dosage !== medication.name) {
+                            setDosageValue(medication.dosage.split(' ')[0]);
+                        }
+                    }
+                } else {
+                    // Usuário mudou de categoria: limpa a seleção anterior
+                    setSelectedMedicamento('');
+                }
             } catch (err) {
                 console.error('Erro ao buscar medicamentos:', err);
             }
         };
-        
+
         fetchMedicamentos();
     }, [selectedCategoria]);
 

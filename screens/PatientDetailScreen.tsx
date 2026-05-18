@@ -848,6 +848,9 @@ const PatientDetailScreen: React.FC = () => {
                                         );
                                     })()}
                                     {patient.medications.filter(m => !m.isArchived).sort((a, b) => {
+                                            const aFim = a.endDate ? 1 : 0;
+                                            const bFim = b.endDate ? 1 : 0;
+                                            if (aFim !== bFim) return aFim - bFim;
                                             const dateA = new Date(a.startDate).getTime();
                                             const dateB = new Date(b.startDate).getTime();
                                             if (dateB !== dateA) return dateB - dateA;
