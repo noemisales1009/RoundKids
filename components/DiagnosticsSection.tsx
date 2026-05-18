@@ -120,6 +120,7 @@ const OptionRow: React.FC<OptionRowProps> = ({
   const isCurrentlyChecked = checkedOptions[option.id] !== undefined ? checkedOptions[option.id] : isChecked;
   const childOptions = allOptions.filter(opt => opt.parent_id === option.id);
   const hasChildren = childOptions.length > 0;
+  const hasCheckedChild = childOptions.some(child => checkedOptions[child.id]);
   const isParentExpanded = expandedParentOption === option.id;
   const isResolved = selectedStatus[option.id] === 'resolvido';
 
@@ -191,7 +192,7 @@ const OptionRow: React.FC<OptionRowProps> = ({
           )}
         </div>
 
-        {isCurrentlyChecked && (
+        {isCurrentlyChecked && !hasCheckedChild && (
           <div className={`px-3 pb-2.5 pt-0 border-t space-y-2 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
             {option.has_input && (
               <input
@@ -769,6 +770,14 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     secundario: selectedOptions.filter(opt => questions.find(q => q.id === opt.pergunta_id)?.tipo === 'secundario'),
   };
 
+  // Contagem real: pai com filho selecionado não conta (aparece fundido no filho)
+  const displayCountPrincipal = selectedByGroup.principal.filter(opt =>
+    opt.parent_id ? true : !selectedByGroup.principal.some(o => o.parent_id === opt.id)
+  ).length;
+  const displayCountSecundario = selectedByGroup.secundario.filter(opt =>
+    opt.parent_id ? true : !selectedByGroup.secundario.some(o => o.parent_id === opt.id)
+  ).length;
+
   const sharedRowProps = {
     allOptions: options,
     diagnostics,
@@ -827,13 +836,13 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
             {selectedByGroup.principal.length > 0 && (
               <div className={`flex items-center gap-1.5 px-3 py-1.5 border-r ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
                 <span className="material-symbols-rounded text-[12px] text-blue-500">local_hospital</span>
-                Principais ({selectedByGroup.principal.length})
+                Principais ({displayCountPrincipal})
               </div>
             )}
             {selectedByGroup.secundario.length > 0 && (
               <div className="flex items-center gap-1.5 px-3 py-1.5">
                 <span className="material-symbols-rounded text-[12px] text-blue-500">description</span>
-                Secundários ({selectedByGroup.secundario.length})
+                Secundários ({displayCountSecundario})
               </div>
             )}
           </div>
@@ -841,6 +850,20 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
             {selectedByGroup.principal.length > 0 && (
               <ul className={`px-3 py-2 divide-y text-xs border-r ${isDark ? 'border-slate-700 divide-slate-700/60' : 'border-slate-200 divide-slate-100'}`}>
                 {selectedByGroup.principal.map(opt => {
+                  // Pai com filho selecionado → não renderizar (aparece via filho)
+                  const temFilhoSelecionado = selectedByGroup.principal.some(o => o.parent_id === opt.id);
+                  if (!opt.parent_id && temFilhoSelecionado) return null;
+
+                  // Label final: filho combina com pai; "Outros" usa texto digitado
+                  let displayLabel: string;
+                  if (opt.parent_id) {
+                    const pai = options.find(o => o.id === opt.parent_id);
+                    const texto = inputValues[opt.id] ? `: ${inputValues[opt.id]}` : '';
+                    displayLabel = `${pai?.label ?? ''} ${opt.label}${texto}`.trim();
+                  } else {
+                    displayLabel = opt.label?.startsWith('Outr') && inputValues[opt.id] ? inputValues[opt.id] : opt.label;
+                  }
+
                   const diag = diagnostics.find(d => d.opcao_id === opt.id);
                   const isResolved = selectedStatus[opt.id] === 'resolvido';
                   return (
@@ -851,7 +874,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                       <span className={`material-symbols-rounded text-[14px] mt-0.5 shrink-0 ${isDark ? 'text-blue-400' : 'text-blue-500'}`}>radio_button_unchecked</span>
                     )}
                     <span className={`flex-1 min-w-0 leading-snug ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-                      <span className="block font-medium">{opt.label}</span>
+                      <span className="block font-medium">{displayLabel}</span>
                       {sistemaValues[opt.id] && (
                         <span className="block mt-1">
                           <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
@@ -859,11 +882,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                           }`}>
                             {sistemaValues[opt.id]}
                           </span>
-                        </span>
-                      )}
-                      {inputValues[opt.id] && (
-                        <span className={`block italic text-[10px] mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                          "{inputValues[opt.id]}"
                         </span>
                       )}
                       {diag?.created_at && (
@@ -890,6 +908,18 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
             {selectedByGroup.secundario.length > 0 && (
               <ul className={`px-3 py-2 divide-y text-xs ${isDark ? 'divide-slate-700/60' : 'divide-slate-100'}`}>
                 {selectedByGroup.secundario.map(opt => {
+                  const temFilhoSelecionado = selectedByGroup.secundario.some(o => o.parent_id === opt.id);
+                  if (!opt.parent_id && temFilhoSelecionado) return null;
+
+                  let displayLabel: string;
+                  if (opt.parent_id) {
+                    const pai = options.find(o => o.id === opt.parent_id);
+                    const texto = inputValues[opt.id] ? `: ${inputValues[opt.id]}` : '';
+                    displayLabel = `${pai?.label ?? ''} ${opt.label}${texto}`.trim();
+                  } else {
+                    displayLabel = opt.label?.startsWith('Outr') && inputValues[opt.id] ? inputValues[opt.id] : opt.label;
+                  }
+
                   const diag = diagnostics.find(d => d.opcao_id === opt.id);
                   const isResolved = selectedStatus[opt.id] === 'resolvido';
                   return (
@@ -900,7 +930,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                       <span className={`material-symbols-rounded text-[14px] mt-0.5 shrink-0 ${isDark ? 'text-blue-400' : 'text-blue-500'}`}>radio_button_unchecked</span>
                     )}
                     <span className={`flex-1 min-w-0 leading-snug ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-                      <span className="block font-medium">{opt.label}</span>
+                      <span className="block font-medium">{displayLabel}</span>
                       {sistemaValues[opt.id] && (
                         <span className="block mt-1">
                           <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
@@ -908,11 +938,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                           }`}>
                             {sistemaValues[opt.id]}
                           </span>
-                        </span>
-                      )}
-                      {inputValues[opt.id] && (
-                        <span className={`block italic text-[10px] mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                          "{inputValues[opt.id]}"
                         </span>
                       )}
                       {diag?.created_at && (
@@ -964,9 +989,9 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                 <span className={`font-bold text-sm sm:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                   Diagnósticos Principais
                 </span>
-                {selectedByGroup.principal.length > 0 && (
+                {displayCountPrincipal > 0 && (
                   <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-500 text-white">
-                    {selectedByGroup.principal.length}
+                    {displayCountPrincipal}
                   </span>
                 )}
               </div>
@@ -1015,9 +1040,9 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                 <span className={`font-bold text-sm sm:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                   Diagnósticos Secundários
                 </span>
-                {selectedByGroup.secundario.length > 0 && (
+                {displayCountSecundario > 0 && (
                   <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-500 text-white">
-                    {selectedByGroup.secundario.length}
+                    {displayCountSecundario}
                   </span>
                 )}
               </div>

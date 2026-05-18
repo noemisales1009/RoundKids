@@ -67,9 +67,11 @@ const DiagnosticsResultsCard: React.FC<DiagnosticsResultsCardProps> = ({
                                 className={`${activeBg} rounded-lg p-3 border ${borderColor}`}
                             >
                                 <p className={`${textColor} font-medium`}>
-                                    {diagnostic.opcao_label || 'Diagnóstico sem título'}
+                                    {diagnostic.opcao_label?.startsWith('Outr') && diagnostic.texto_digitado
+                                        ? diagnostic.texto_digitado
+                                        : diagnostic.opcao_label || 'Diagnóstico sem título'}
                                 </p>
-                                {diagnostic.texto_digitado && (
+                                {diagnostic.texto_digitado && !diagnostic.opcao_label?.startsWith('Outr') && (
                                     <p className={`${subtleText} text-sm mt-1`}>
                                         Observação: {diagnostic.texto_digitado}
                                     </p>
@@ -101,9 +103,11 @@ const DiagnosticsResultsCard: React.FC<DiagnosticsResultsCardProps> = ({
                                 className={`${resolvedBg} rounded-lg p-3 border ${borderColor}`}
                             >
                                 <p className={`${textColor} font-medium line-through opacity-75`}>
-                                    {diagnostic.opcao_label || 'Diagnóstico sem título'}
+                                    {diagnostic.opcao_label?.startsWith('Outr') && diagnostic.texto_digitado
+                                        ? diagnostic.texto_digitado
+                                        : diagnostic.opcao_label || 'Diagnóstico sem título'}
                                 </p>
-                                {diagnostic.texto_digitado && (
+                                {diagnostic.texto_digitado && !diagnostic.opcao_label?.startsWith('Outr') && (
                                     <p className={`${subtleText} text-sm mt-1`}>
                                         Observação: {diagnostic.texto_digitado}
                                     </p>
@@ -135,9 +139,11 @@ const DiagnosticsResultsCard: React.FC<DiagnosticsResultsCardProps> = ({
                                 className={`${archivedBg} rounded-lg p-3 border ${borderColor}`}
                             >
                                 <p className={`${textColor} font-medium opacity-50`}>
-                                    {diagnostic.opcao_label || 'Diagnóstico sem título'}
+                                    {diagnostic.opcao_label?.startsWith('Outr') && diagnostic.texto_digitado
+                                        ? diagnostic.texto_digitado
+                                        : diagnostic.opcao_label || 'Diagnóstico sem título'}
                                 </p>
-                                {diagnostic.texto_digitado && (
+                                {diagnostic.texto_digitado && !diagnostic.opcao_label?.startsWith('Outr') && (
                                     <p className={`${subtleText} text-sm mt-1`}>
                                         Observação: {diagnostic.texto_digitado}
                                     </p>
