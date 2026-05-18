@@ -69,13 +69,10 @@ const DiagnosticsResultsCard: React.FC<DiagnosticsResultsCardProps> = ({
                                 <p className={`${textColor} font-medium`}>
                                     {diagnostic.opcao_label?.startsWith('Outr') && diagnostic.texto_digitado
                                         ? diagnostic.texto_digitado
-                                        : diagnostic.opcao_label || 'Diagnóstico sem título'}
+                                        : diagnostic.texto_digitado
+                                          ? `${diagnostic.opcao_label} ${diagnostic.texto_digitado}`.trim()
+                                          : diagnostic.opcao_label || 'Diagnóstico sem título'}
                                 </p>
-                                {diagnostic.texto_digitado && !diagnostic.opcao_label?.startsWith('Outr') && (
-                                    <p className={`${subtleText} text-sm mt-1`}>
-                                        Observação: {diagnostic.texto_digitado}
-                                    </p>
-                                )}
                                 <div className={`${subtleText} text-xs mt-2 space-y-1`}>
                                     <p>👤 Criado por: {diagnostic.nome_criador || 'Desconhecido'}</p>
                                     <p>📅 Data: {formatDate(diagnostic.data_criacao)}</p>
@@ -105,13 +102,10 @@ const DiagnosticsResultsCard: React.FC<DiagnosticsResultsCardProps> = ({
                                 <p className={`${textColor} font-medium line-through opacity-75`}>
                                     {diagnostic.opcao_label?.startsWith('Outr') && diagnostic.texto_digitado
                                         ? diagnostic.texto_digitado
-                                        : diagnostic.opcao_label || 'Diagnóstico sem título'}
+                                        : diagnostic.texto_digitado
+                                          ? `${diagnostic.opcao_label} ${diagnostic.texto_digitado}`.trim()
+                                          : diagnostic.opcao_label || 'Diagnóstico sem título'}
                                 </p>
-                                {diagnostic.texto_digitado && !diagnostic.opcao_label?.startsWith('Outr') && (
-                                    <p className={`${subtleText} text-sm mt-1`}>
-                                        Observação: {diagnostic.texto_digitado}
-                                    </p>
-                                )}
                                 <div className={`${subtleText} text-xs mt-2 space-y-1`}>
                                     <p>👤 Criado por: {diagnostic.nome_criador || 'Desconhecido'}</p>
                                     <p>📅 Data: {formatDate(diagnostic.data_criacao)}</p>
@@ -141,13 +135,10 @@ const DiagnosticsResultsCard: React.FC<DiagnosticsResultsCardProps> = ({
                                 <p className={`${textColor} font-medium opacity-50`}>
                                     {diagnostic.opcao_label?.startsWith('Outr') && diagnostic.texto_digitado
                                         ? diagnostic.texto_digitado
-                                        : diagnostic.opcao_label || 'Diagnóstico sem título'}
+                                        : diagnostic.texto_digitado
+                                          ? `${diagnostic.opcao_label} ${diagnostic.texto_digitado}`.trim()
+                                          : diagnostic.opcao_label || 'Diagnóstico sem título'}
                                 </p>
-                                {diagnostic.texto_digitado && !diagnostic.opcao_label?.startsWith('Outr') && (
-                                    <p className={`${subtleText} text-sm mt-1`}>
-                                        Observação: {diagnostic.texto_digitado}
-                                    </p>
-                                )}
                                 <div className={`${subtleText} text-xs mt-2 space-y-1`}>
                                     <p>👤 Criado por: {diagnostic.nome_criador || 'Desconhecido'}</p>
                                     <p>📅 Criação: {formatDate(diagnostic.data_criacao)}</p>

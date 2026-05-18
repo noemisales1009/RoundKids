@@ -861,7 +861,11 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                     const texto = inputValues[opt.id] ? `: ${inputValues[opt.id]}` : '';
                     displayLabel = `${pai?.label ?? ''} ${opt.label}${texto}`.trim();
                   } else {
-                    displayLabel = opt.label?.startsWith('Outr') && inputValues[opt.id] ? inputValues[opt.id] : opt.label;
+                    displayLabel = opt.label?.startsWith('Outr') && inputValues[opt.id]
+                      ? inputValues[opt.id]
+                      : inputValues[opt.id]
+                        ? `${opt.label} ${inputValues[opt.id]}`.trim()
+                        : opt.label;
                   }
 
                   const diag = diagnostics.find(d => d.opcao_id === opt.id);
@@ -917,7 +921,11 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                     const texto = inputValues[opt.id] ? `: ${inputValues[opt.id]}` : '';
                     displayLabel = `${pai?.label ?? ''} ${opt.label}${texto}`.trim();
                   } else {
-                    displayLabel = opt.label?.startsWith('Outr') && inputValues[opt.id] ? inputValues[opt.id] : opt.label;
+                    displayLabel = opt.label?.startsWith('Outr') && inputValues[opt.id]
+                      ? inputValues[opt.id]
+                      : inputValues[opt.id]
+                        ? `${opt.label} ${inputValues[opt.id]}`.trim()
+                        : opt.label;
                   }
 
                   const diag = diagnostics.find(d => d.opcao_id === opt.id);
