@@ -418,7 +418,6 @@ const PatientDetailScreen: React.FC = () => {
                 <ClinicalSituation24hCard
                     patientId={patient.id}
                     userId={user?.id}
-                    accessLevel={user?.access_level}
                 />
             </Suspense>
 
@@ -787,7 +786,8 @@ const PatientDetailScreen: React.FC = () => {
                                                         <p className="font-bold text-slate-800 dark:text-slate-200 wrap-break-word">{medication.name} - {medication.dosage}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(medication.startDate)}</p>
                                                         {medication.endDate ? <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Fim: {formatDateToBRL(medication.endDate)}</p> : <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(medication.startDate)}</p>}
-                                                        {medication.sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{medication.sistema}</span>}
+                                                        {medication.diagnosticoLabel && <span className="inline-block mt-1.5 mr-1 text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">Diagnóstico: {medication.diagnosticoLabel}</span>}
+                                                        {medication.sistema && <span className="block mt-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 w-fit">{medication.sistema}</span>}
                                                         {medication.observacao && <p className="text-sm text-slate-600 dark:text-slate-400 italic mt-1.5 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded">💬 {medication.observacao}</p>}
                                                         <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
                                                             <input

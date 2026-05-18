@@ -736,16 +736,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       });
     }
 
-    const secundarios = diagItems.filter(d => d.tipo === 'secundario');
-    if (secundarios.length > 0) {
-      title('6. DIAGNÓSTICOS SECUNDÁRIOS');
-      secundarios.forEach(d => {
-        const lbl = d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label;
-        const det = d.label !== 'Outros' && d.texto_digitado ? ` (${d.texto_digitado})` : '';
-        const dataCriacao = d.created_at ? `  Em ${formatDateToBRL(d.created_at)}` : '';
-        add(`• ${lbl}${det}${dataCriacao}`);
-      });
-    }
 
     if (controlesSaidasRec || diureseRec) {
       const cs = controlesSaidasRec;
@@ -819,7 +809,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       blank();
     }
 
-    const activeDevicesWord = (p.devices ?? []).filter(d => !d.isArchived);
+    const activeDevicesWord = (p.devices ?? []).filter(d => !d.isArchived).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
     if (activeDevicesWord.length > 0) {
       title('12. DISPOSITIVOS');
       add('@@DEVICES_TABLE@@');
@@ -871,16 +861,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         if (a.sistemas.some(s => sistemas.includes(s))) return true;
         return sec.id === 'outras_av' && a.sistemas.some(s => !ALL_KNOWN_SISTEMAS.has(s));
       });
-      if (diags.length + cirgs.length + cults.length + diets.length + meds.length + exs.length + imgs.length + pnls.length + pars.length + alts.length === 0) return;
+      if (cirgs.length + cults.length + diets.length + meds.length + exs.length + imgs.length + pnls.length + pars.length + alts.length === 0) return;
       apLines.push('');
       apLines.push(sec.label.replace(/^[\d./]+\s*/, ''));
-      if (diags.length) {
-        diags.forEach(d => {
-          const lbl = d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label;
-          const det = d.label !== 'Outros' && d.texto_digitado ? ` (${d.texto_digitado})` : '';
-          apLines.push(`  • ${lbl}${det}`);
-        });
-      }
       if (cirgs.length) {
         apLines.push('  CIRURGIAS:');
         cirgs.forEach(c => {
@@ -912,6 +895,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           if (m.endDate) line += ` | Fim: ${formatDateToBRL(m.endDate)}`;
           line += ` (${medDias})`;
           apLines.push(line);
+          if (m.diagnosticoLabel) {
+            let diagLine = `      ▪ Diag: ${m.diagnosticoLabel}`;
+            if (m.diagnosticoDataInicio) diagLine += ` em ${formatDateToBRL(m.diagnosticoDataInicio)} (${calcDias(m.diagnosticoDataInicio)})`;
+            apLines.push(diagLine);
+          }
           if (m.observacao) apLines.push(`      ${m.observacao}`);
         });
       }
@@ -967,15 +955,15 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       .filter(line => !/^─+$/.test(line.trim()))
       .join('\n');
     const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const activeDevicesDoc = (selectedPatient!.devices ?? []).filter(d => !d.isArchived);
+    const activeDevicesDoc = (selectedPatient!.devices ?? []).filter(d => !d.isArchived).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
     const devicesTableHtml = activeDevicesDoc.length > 0 ? `
-<table border="1" style="border-collapse:collapse;width:100%;margin:6px 0;font-family:Arial,sans-serif;font-size:11pt;">
-  <thead><tr style="background:#e8e8e8;">
-    <th style="padding:4px 8px;text-align:left;">Dispositivo</th>
-    <th style="padding:4px 8px;text-align:left;">Descrição</th>
-    <th style="padding:4px 8px;text-align:left;">Inserção</th>
-    <th style="padding:4px 8px;text-align:left;">Retirada</th>
-    <th style="padding:4px 8px;text-align:left;">Dias</th>
+<table style="border-collapse:collapse;width:100%;margin:4px 0;font-family:Arial,sans-serif;font-size:11pt;">
+  <thead><tr style="border-bottom:1px solid #ccc;">
+    <th style="padding:4px 14px 4px 0;text-align:left;font-weight:bold;">Dispositivo</th>
+    <th style="padding:4px 14px 4px 0;text-align:left;font-weight:bold;">Descrição</th>
+    <th style="padding:4px 14px 4px 0;text-align:left;font-weight:bold;white-space:nowrap;">Inserção</th>
+    <th style="padding:4px 14px 4px 0;text-align:left;font-weight:bold;white-space:nowrap;">Retirada</th>
+    <th style="padding:4px 0;text-align:left;font-weight:bold;white-space:nowrap;">Dias</th>
   </tr></thead>
   <tbody>
     ${activeDevicesDoc.map(d => {
@@ -985,11 +973,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const startSP = Date.UTC(sy, sm - 1, sd);
       const days = Math.floor((todaySP - startSP) / 86400000);
       return `<tr>
-        <td style="padding:4px 8px;">${escHtml(d.name)}</td>
-        <td style="padding:4px 8px;">${d.observacao ? escHtml(d.observacao) : ''}</td>
-        <td style="padding:4px 8px;">${formatDateToBRL(d.startDate)}</td>
-        <td style="padding:4px 8px;">${d.removalDate ? formatDateToBRL(d.removalDate) : '—'}</td>
-        <td style="padding:4px 8px;">${days} dia${days !== 1 ? 's' : ''}</td>
+        <td style="padding:3px 14px 3px 0;vertical-align:top;">${escHtml(d.name)}</td>
+        <td style="padding:3px 14px 3px 0;vertical-align:top;">${d.observacao ? escHtml(d.observacao) : ''}</td>
+        <td style="padding:3px 14px 3px 0;vertical-align:top;white-space:nowrap;">${formatDateToBRL(d.startDate)}</td>
+        <td style="padding:3px 14px 3px 0;vertical-align:top;white-space:nowrap;">${d.removalDate ? formatDateToBRL(d.removalDate) : '—'}</td>
+        <td style="padding:3px 0;vertical-align:top;white-space:nowrap;">${days} dia${days !== 1 ? 's' : ''}</td>
       </tr>`;
     }).join('')}
   </tbody>
@@ -1449,7 +1437,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       {/* 12. Dispositivos */}
       <Section title="12. Dispositivos" id="dispositivos" open={openSections.has('dispositivos')} onToggle={() => toggle('dispositivos')}>
         {(() => {
-          const activeDevices = (selectedPatient?.devices ?? []).filter(d => !d.isArchived);
+          const activeDevices = (selectedPatient?.devices ?? []).filter(d => !d.isArchived).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
           if (activeDevices.length === 0)
             return <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum dispositivo ativo.</p>;
           return (

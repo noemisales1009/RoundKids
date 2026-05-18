@@ -78,6 +78,9 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 observacao: m.observacao,
                 sistema: m.sistema || undefined,
                 mostrar_evolucao: m.mostrar_evolucao !== false,
+                diagnosticoId: m.diagnostico_id || undefined,
+                diagnosticoLabel: m.diagnostico_label || undefined,
+                diagnosticoDataInicio: m.diagnostico_data_inicio || undefined,
             });
             return acc;
         }, {});
@@ -513,6 +516,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             observacao: sanitizeTextOrNull(medication.observacao),
             criado_por_id: userId || null,
             ...(medication.sistema ? { sistema: medication.sistema } : {}),
+            ...(medication.diagnosticoId ? { diagnostico_id: medication.diagnosticoId, diagnostico_label: medication.diagnosticoLabel, diagnostico_data_inicio: medication.diagnosticoDataInicio || null } : {}),
         };
 
 
@@ -521,54 +525,10 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         if (error) {
             console.error('Erro ao inserir medicação:', error);
-            console.error('Código do erro:', error.code);
-            console.error('Mensagem completa:', error.message);
-            console.error('Detalhes:', error.details);
-        } else {
-
-            // ✅ ATUALIZAR IMEDIATAMENTE sem aguardar completamente
-            // Buscar apenas medicações desse paciente
-            const { data: novasMeds, error: erroMeds } = await supabase
-                .from('medicacoes_pacientes')
-                .select('*')
-                .eq('paciente_id', patientId);
-
-            if (!erroMeds && novasMeds) {
-
-                // Atualizar o state dos pacientes com as novas medicações
-                setPatients(prev => prev.map(p => {
-                    if (p.id === patientId) {
-                        // Processar as medicações novas
-                        const medsProcessadas = (novasMeds || []).map((m: any) => ({
-                            id: m.id,
-                            name: m.nome_medicacao,
-                            dosage: m.unidade_medida
-                                ? `${m.dosagem_valor} ${m.unidade_medida}`
-                                : m.dosagem_valor,
-                            startDate: m.data_inicio,
-                            endDate: m.data_fim,
-                            isArchived: m.is_archived,
-                            observacao: m.observacao,
-                            sistema: m.sistema || undefined,
-                        }));
-
-                        console.log('📝 Retornando paciente atualizado:', {
-                            ...p,
-                            medications: medsProcessadas
-                        });
-
-                        return {
-                            ...p,
-                            medications: medsProcessadas
-                        };
-                    }
-                    return p;
-                }));
-            }
+            throw new Error(error.message);
         }
 
-        // ✅ FIX: Removido setTimeout + fetchPatients() que causava race condition
-        // A atualização otimista acima já mostra os dados corretos na UI
+        await fetchPatients();
     };
 
     const addSurgicalProcedureToPatient = async (patientId: number | string, procedure: Omit<SurgicalProcedure, 'id'>, userId?: string) => {
@@ -740,6 +700,9 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 data_fim: medicationData.endDate || null,
                 observacao: sanitizeTextOrNull(medicationData.observacao),
                 sistema: medicationData.sistema || null,
+                diagnostico_id: medicationData.diagnosticoId || null,
+                diagnostico_label: medicationData.diagnosticoLabel || null,
+                diagnostico_data_inicio: medicationData.diagnosticoDataInicio || null,
             })
             .eq('id', medicationData.id);
         if (!error) fetchPatients();

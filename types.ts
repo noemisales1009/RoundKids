@@ -36,6 +36,9 @@ export interface Medication {
   observacao?: string;
   sistema?: string;
   mostrar_evolucao?: boolean;
+  diagnosticoId?: number;
+  diagnosticoLabel?: string;
+  diagnosticoDataInicio?: string;
 }
 
 export interface SurgicalProcedure {
@@ -220,7 +223,7 @@ export interface PatientsContextType {
   checklistAnswers: Record<string, Record<number, Answer>>; // patientId -> questionId -> Answer
   addDeviceToPatient: (patientId: number | string, device: Omit<Device, 'id'>, userId?: string) => void;
   addExamToPatient: (patientId: number | string, exam: Omit<Exam, 'id'>, userId?: string) => void;
-  addMedicationToPatient: (patientId: number | string, medication: Omit<Medication, 'id'>, userId?: string) => void;
+  addMedicationToPatient: (patientId: number | string, medication: Omit<Medication, 'id'>, userId?: string) => Promise<void>;
   addSurgicalProcedureToPatient: (patientId: number | string, procedure: Omit<SurgicalProcedure, 'id'>, userId?: string) => void;
   addRemovalDateToDevice: (patientId: number | string, deviceId: number | string, removalDate: string) => void;
   deleteDeviceFromPatient: (patientId: number | string, deviceId: number | string) => void;

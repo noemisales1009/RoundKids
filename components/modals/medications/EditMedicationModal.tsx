@@ -12,6 +12,12 @@ interface Medicamento {
     unidade_dose_principal: string | null;
 }
 
+interface DiagnosticoAtivo {
+    id: number;
+    label: string;
+    created_at: string;
+}
+
 export const EditMedicationModal: React.FC<{ medication: Medication; patientId: number | string; onClose: () => void; }> = ({ medication, patientId, onClose }) => {
     const { updateMedicationInPatient } = useContext(PatientsContext)!;
     const { showNotification } = useContext(NotificationContext)!;
@@ -36,6 +42,78 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
     const [sistemaOutros, setSistemaOutros] = useState(
         medication.sistema && !ALERT_SYSTEMS.includes(medication.sistema) ? medication.sistema : ''
     );
+    const [diagnosticosAtivos, setDiagnosticosAtivos] = useState<DiagnosticoAtivo[]>([]);
+    const [selectedDiagnosticoId, setSelectedDiagnosticoId] = useState<number | ''>(medication.diagnosticoId ?? '');
+
+    // Buscar diagnósticos ativos do paciente
+    useEffect(() => {
+        const fetchDiagnosticos = async () => {
+            const { data: diagData, error } = await supabase
+                .from('paciente_diagnosticos')
+                .select('id, opcao_id, opcao_label, texto_digitado, created_at')
+                .eq('patient_id', patientId)
+                .eq('arquivado', false)
+                .eq('status', 'nao_resolvido');
+
+            if (error || !diagData || diagData.length === 0) return;
+
+            const opcaoIds = diagData.map((d: any) => d.opcao_id);
+            const { data: optData } = await supabase
+                .from('pergunta_opcoes_diagnostico')
+                .select('id, parent_id, label')
+                .in('id', opcaoIds);
+
+            if (!optData) return;
+
+            const parentIds = optData.filter((o: any) => o.parent_id !== null).map((o: any) => o.parent_id);
+            let parentMap = new Map<number, string>();
+            if (parentIds.length > 0) {
+                const { data: parentData } = await supabase
+                    .from('pergunta_opcoes_diagnostico')
+                    .select('id, label')
+                    .in('id', parentIds);
+                (parentData || []).forEach((p: any) => parentMap.set(p.id, p.label));
+            }
+
+            const optMap = new Map((optData as any[]).map((o: any) => [o.id, o]));
+
+            const paiComFilho = new Set<number>();
+            diagData.forEach((d: any) => {
+                const opt = optMap.get(d.opcao_id) as any;
+                if (opt?.parent_id !== null && opt?.parent_id !== undefined) {
+                    paiComFilho.add(opt.parent_id);
+                }
+            });
+
+            const labelsVistos = new Set<string>();
+            const unicos: DiagnosticoAtivo[] = [];
+
+            for (const d of diagData as any[]) {
+                const opt = optMap.get(d.opcao_id) as any;
+                if (!opt) continue;
+
+                let label: string;
+                if (opt.parent_id !== null && opt.parent_id !== undefined) {
+                    const labelPai = parentMap.get(opt.parent_id) || '';
+                    const textoPart = d.texto_digitado ? `: ${d.texto_digitado}` : '';
+                    label = `${labelPai} ${opt.label}${textoPart}`.trim();
+                } else {
+                    if (paiComFilho.has(opt.id)) continue;
+                    label = d.texto_digitado
+                        ? (d.opcao_label === 'Outros' ? d.texto_digitado : `${d.opcao_label} ${d.texto_digitado}`.trim())
+                        : d.opcao_label;
+                }
+
+                if (!labelsVistos.has(label)) {
+                    labelsVistos.add(label);
+                    unicos.push({ id: d.id, label, created_at: d.created_at });
+                }
+            }
+
+            setDiagnosticosAtivos(unicos);
+        };
+        fetchDiagnosticos();
+    }, [patientId]);
 
     // Carregar categorias ao montar
     useEffect(() => {
@@ -168,6 +246,10 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
             dosageFormatted = finalMedicationName;
         }
 
+        const diagSelecionado = selectedDiagnosticoId !== ''
+            ? diagnosticosAtivos.find(d => d.id === selectedDiagnosticoId)
+            : undefined;
+
         updateMedicationInPatient(patientId, {
             ...medication,
             name: finalMedicationName,
@@ -175,6 +257,9 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
             startDate,
             observacao,
             sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined,
+            diagnosticoId: diagSelecionado?.id,
+            diagnosticoLabel: diagSelecionado?.label,
+            diagnosticoDataInicio: diagSelecionado?.created_at?.split('T')[0] ?? medication.diagnosticoDataInicio,
         });
         showNotification({ message: 'Medicação atualizada com sucesso!', type: 'success' });
         onClose();
@@ -317,6 +402,34 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                             className="block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" 
                         />
                     </div>
+
+                    {/* Diagnóstico relacionado */}
+                    {diagnosticosAtivos.length > 0 && (
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                Diagnóstico relacionado <span className="text-slate-400 font-normal">(opcional)</span>
+                            </label>
+                            <div className="border border-slate-300 dark:border-slate-700 rounded-md overflow-hidden max-h-48 overflow-y-auto">
+                                <div
+                                    onClick={() => setSelectedDiagnosticoId('')}
+                                    className={`flex items-start gap-2 px-3 py-2 cursor-pointer text-sm ${selectedDiagnosticoId === '' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                >
+                                    <span className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${selectedDiagnosticoId === '' ? 'border-blue-500 bg-blue-500' : 'border-slate-400'}`} />
+                                    Nenhum
+                                </div>
+                                {diagnosticosAtivos.map(d => (
+                                    <div
+                                        key={d.id}
+                                        onClick={() => setSelectedDiagnosticoId(d.id)}
+                                        className={`flex items-start gap-2 px-3 py-2 cursor-pointer text-sm border-t border-slate-200 dark:border-slate-700 ${selectedDiagnosticoId === d.id ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                    >
+                                        <span className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${selectedDiagnosticoId === d.id ? 'border-blue-500 bg-blue-500' : 'border-slate-400'}`} />
+                                        {d.label}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Sistema */}
                     <div>
