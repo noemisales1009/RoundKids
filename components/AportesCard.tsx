@@ -5,6 +5,7 @@ import { AddAporteModal, EditAporteModal, ArchiveAporteModal } from './modals/ap
 
 interface AportesCardProps {
   patientId: number | string;
+  addTrigger?: number;
 }
 
 type AporteRow = {
@@ -20,7 +21,7 @@ type AporteRow = {
   created_at: string;
 };
 
-export const AportesCard: React.FC<AportesCardProps> = ({ patientId }) => {
+export const AportesCard: React.FC<AportesCardProps> = ({ patientId, addTrigger }) => {
   const [aportes, setAportes] = useState<AporteRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingAporte, setEditingAporte] = useState<AporteRow | null>(null);
@@ -56,6 +57,10 @@ export const AportesCard: React.FC<AportesCardProps> = ({ patientId }) => {
     loadAportes();
   }, [patientId]);
 
+  useEffect(() => {
+    if (addTrigger) setShowAddModal(true);
+  }, [addTrigger]);
+
   if (loading) {
     return <div className="text-center text-slate-500">Carregando aportes...</div>;
   }
@@ -63,16 +68,8 @@ export const AportesCard: React.FC<AportesCardProps> = ({ patientId }) => {
   return (
     <>
       {aportes.length === 0 ? (
-        <div className="space-y-2">
-          <div className="text-center text-slate-500 dark:text-slate-400 py-4">
-            Nenhum aporte registrado
-          </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition"
-          >
-            Cadastrar Aporte
-          </button>
+        <div className="text-center text-slate-500 dark:text-slate-400 py-4">
+          Nenhum aporte registrado
         </div>
       ) : (
         <div className="space-y-3">
@@ -121,12 +118,6 @@ export const AportesCard: React.FC<AportesCardProps> = ({ patientId }) => {
               </div>
             </div>
           ))}
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="w-full mt-2 text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition"
-          >
-            Cadastrar Aporte
-          </button>
         </div>
       )}
 

@@ -9,6 +9,7 @@ interface DiagnosticoAtivo {
     id: number;
     label: string;
     created_at: string;
+    sistema?: string;
 }
 
 export const EditCultureModal: React.FC<{ culture: Culture; patientId: number | string; onClose: () => void; }> = ({ culture, patientId, onClose }) => {
@@ -34,7 +35,7 @@ export const EditCultureModal: React.FC<{ culture: Culture; patientId: number | 
         const fetchDiagnosticos = async () => {
             const { data: diagData, error } = await supabase
                 .from('paciente_diagnosticos')
-                .select('id, opcao_id, opcao_label, texto_digitado, created_at')
+                .select('id, opcao_id, opcao_label, texto_digitado, created_at, sistema')
                 .eq('patient_id', patientId)
                 .eq('arquivado', false)
                 .eq('status', 'nao_resolvido');
@@ -87,7 +88,7 @@ export const EditCultureModal: React.FC<{ culture: Culture; patientId: number | 
 
                 if (!labelsVistos.has(label)) {
                     labelsVistos.add(label);
-                    unicos.push({ id: d.id, label, created_at: d.created_at });
+                    unicos.push({ id: d.id, label, created_at: d.created_at, sistema: d.sistema || undefined });
                 }
             }
 
@@ -195,6 +196,25 @@ export const EditCultureModal: React.FC<{ culture: Culture; patientId: number | 
                         <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
                         <input type="date" value={collectionDate} onChange={e => setCollectionDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-sm sm:text-base text-slate-800 dark:text-slate-200" required />
                     </div>
+                    {diagnosticosAtivos.length > 0 && (
+                        <div>
+                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                Diagnóstico relacionado <span className="text-slate-400 font-normal">(opcional)</span>
+                            </label>
+                            <div className="border border-slate-300 dark:border-slate-700 rounded-md overflow-hidden max-h-48 overflow-y-auto">
+                                <div onClick={() => { setSelectedDiagnosticoId(''); setSistema(''); setSistemaOutros(''); }} className={`flex items-start gap-2 px-3 py-2 cursor-pointer text-sm ${selectedDiagnosticoId === '' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>
+                                    <span className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${selectedDiagnosticoId === '' ? 'border-blue-500 bg-blue-500' : 'border-slate-400'}`} />
+                                    Nenhum
+                                </div>
+                                {diagnosticosAtivos.map(d => (
+                                    <div key={d.id} onClick={() => { setSelectedDiagnosticoId(d.id); if (d.sistema) { if (ALERT_SYSTEMS.includes(d.sistema)) { setSistema(d.sistema); setSistemaOutros(''); } else { setSistema('Outros'); setSistemaOutros(d.sistema); } } }} className={`flex items-start gap-2 px-3 py-2 cursor-pointer text-sm border-t border-slate-200 dark:border-slate-700 ${selectedDiagnosticoId === d.id ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>
+                                        <span className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${selectedDiagnosticoId === d.id ? 'border-blue-500 bg-blue-500' : 'border-slate-400'}`} />
+                                        {d.label}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                     <div>
                         <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Sistema <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
                         <div className="relative mt-1">
@@ -208,25 +228,6 @@ export const EditCultureModal: React.FC<{ culture: Culture; patientId: number | 
                             <input type="text" value={sistemaOutros} onChange={e => setSistemaOutros(e.target.value)} placeholder="Especifique o sistema..." className="mt-2 block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-slate-800 dark:text-slate-200" />
                         )}
                     </div>
-                    {diagnosticosAtivos.length > 0 && (
-                        <div>
-                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                Diagnóstico relacionado <span className="text-slate-400 font-normal">(opcional)</span>
-                            </label>
-                            <div className="border border-slate-300 dark:border-slate-700 rounded-md overflow-hidden max-h-48 overflow-y-auto">
-                                <div onClick={() => setSelectedDiagnosticoId('')} className={`flex items-start gap-2 px-3 py-2 cursor-pointer text-sm ${selectedDiagnosticoId === '' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>
-                                    <span className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${selectedDiagnosticoId === '' ? 'border-blue-500 bg-blue-500' : 'border-slate-400'}`} />
-                                    Nenhum
-                                </div>
-                                {diagnosticosAtivos.map(d => (
-                                    <div key={d.id} onClick={() => setSelectedDiagnosticoId(d.id)} className={`flex items-start gap-2 px-3 py-2 cursor-pointer text-sm border-t border-slate-200 dark:border-slate-700 ${selectedDiagnosticoId === d.id ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>
-                                        <span className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${selectedDiagnosticoId === d.id ? 'border-blue-500 bg-blue-500' : 'border-slate-400'}`} />
-                                        {d.label}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
                     <div>
                         <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Observações <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
                         <textarea value={observation} onChange={e => setObservation(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-sm sm:text-base text-slate-800 dark:text-slate-200 resize-none" placeholder="Adicionar observações sobre a cultura..." rows={3} />

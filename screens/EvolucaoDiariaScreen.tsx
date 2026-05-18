@@ -843,7 +843,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const sistemas = SECTION_SISTEMAS[sec.id] ?? [];
       const matchSistema = (s: string | undefined | null): boolean =>
         !!s && (sistemas.includes(s) || (sec.id === 'outras_av' && !ALL_KNOWN_SISTEMAS.has(s)));
-      const diags = diagItems.filter(d => matchSistema(d.sistema) && !we.has(`diag_${d.opcao_id}`));
       const cirgs = (p.surgicalProcedures ?? []).filter(c => !c.isArchived && c.mostrar_evolucao !== false && matchSistema(c.sistema) && !we.has(`cir_${c.id}`));
       const cults = (p.cultures ?? []).filter(c => !c.isArchived && c.mostrar_evolucao !== false && matchSistema(c.sistema) && !we.has(`cult_${c.id}`));
       const diets = (p.diets ?? []).filter(d => !d.isArchived && d.mostrar_evolucao !== false && matchSistema(d.sistema) && !we.has(`diet_${d.id}`));

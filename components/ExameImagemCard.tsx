@@ -6,9 +6,10 @@ import type { ExameImagemRow } from './modals/examesImagem';
 
 interface ExameImagemCardProps {
     patientId: number | string;
+    addTrigger?: number;
 }
 
-export const ExameImagemCard: React.FC<ExameImagemCardProps> = ({ patientId }) => {
+export const ExameImagemCard: React.FC<ExameImagemCardProps> = ({ patientId, addTrigger }) => {
     const [exames, setExames] = useState<ExameImagemRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
@@ -44,6 +45,10 @@ export const ExameImagemCard: React.FC<ExameImagemCardProps> = ({ patientId }) =
         loadExames();
     }, [patientId]);
 
+    useEffect(() => {
+        if (addTrigger) setShowAddModal(true);
+    }, [addTrigger]);
+
     if (loading) {
         return <div className="text-center text-slate-500">Carregando exames de imagem...</div>;
     }
@@ -51,16 +56,8 @@ export const ExameImagemCard: React.FC<ExameImagemCardProps> = ({ patientId }) =
     return (
         <>
             {exames.length === 0 ? (
-                <div className="space-y-2">
-                    <div className="text-center text-slate-500 dark:text-slate-400 py-4">
-                        Nenhum exame de imagem registrado
-                    </div>
-                    <button
-                        onClick={() => setShowAddModal(true)}
-                        className="w-full text-center bg-violet-600 hover:bg-violet-700 text-white font-semibold py-2.5 rounded-lg transition"
-                    >
-                        Cadastrar Exame de Imagem
-                    </button>
+                <div className="text-center text-slate-500 dark:text-slate-400 py-4">
+                    Nenhum exame de imagem registrado
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -115,12 +112,6 @@ export const ExameImagemCard: React.FC<ExameImagemCardProps> = ({ patientId }) =
                             </div>
                         </div>
                     ))}
-                    <button
-                        onClick={() => setShowAddModal(true)}
-                        className="w-full mt-2 text-center bg-violet-600 hover:bg-violet-700 text-white font-semibold py-2.5 rounded-lg transition"
-                    >
-                        Cadastrar Exame de Imagem
-                    </button>
                 </div>
             )}
 

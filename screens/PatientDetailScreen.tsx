@@ -104,6 +104,10 @@ const PatientDetailScreen: React.FC = () => {
     const [notifRefresh, setNotifRefresh] = useState(0);
     const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'scales' | 'pareceres' | 'examesImagem' | 'paPercentis' | 'paineisVirais' | null>(null);
     const [showPAForm, setShowPAForm] = useState(false);
+    const [painelAddTrigger, setPainelAddTrigger] = useState(0);
+    const [aporteAddTrigger, setAporteAddTrigger] = useState(0);
+    const [exameImagemAddTrigger, setExameImagemAddTrigger] = useState(0);
+    const [parecerAddTrigger, setParecerAddTrigger] = useState(0);
     const [isAddDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
     const [editingDevice, setEditingDevice] = useState<Device | null>(null);
     const [editingDeviceRemovalDate, setEditingDeviceRemovalDate] = useState<Device | null>(null);
@@ -710,6 +714,10 @@ const PatientDetailScreen: React.FC = () => {
                                     {openCategoryModal === 'cultures' && <button onClick={() => { setOpenCategoryModal(null); setAddCultureModalOpen(true); }} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
                                     {openCategoryModal === 'diets' && <button onClick={() => { setOpenCategoryModal(null); setAddDietModalOpen(true); }} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
                                     {openCategoryModal === 'paPercentis' && <button onClick={() => setShowPAForm(v => !v)} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Nova Medição</button>}
+                                    {openCategoryModal === 'aportes' && <button onClick={() => setAporteAddTrigger(v => v + 1)} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
+                                    {openCategoryModal === 'examesImagem' && <button onClick={() => setExameImagemAddTrigger(v => v + 1)} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
+                                    {openCategoryModal === 'pareceres' && <button onClick={() => setParecerAddTrigger(v => v + 1)} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
+                                    {openCategoryModal === 'paineisVirais' && <button onClick={() => setPainelAddTrigger(v => v + 1)} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
                                     <button onClick={() => { setOpenCategoryModal(null); setShowPAForm(false); }} className="text-white/80 hover:text-white transition p-1">
                                         <CloseIcon className="w-6 h-6" />
                                     </button>
@@ -904,15 +912,15 @@ const PatientDetailScreen: React.FC = () => {
                                         </div>
                                     ))}
                                 </>)}
-                                {openCategoryModal === 'aportes' && <AportesCard patientId={patient.id} />}
+                                {openCategoryModal === 'aportes' && <AportesCard patientId={patient.id} addTrigger={aporteAddTrigger} />}
                                 {openCategoryModal === 'pareceres' && (
                                     <Suspense fallback={<LoadingSpinner />}>
-                                        <ParecerCard patientId={patient.id} />
+                                        <ParecerCard patientId={patient.id} addTrigger={parecerAddTrigger} />
                                     </Suspense>
                                 )}
                                 {openCategoryModal === 'examesImagem' && (
                                     <Suspense fallback={<LoadingSpinner />}>
-                                        <ExameImagemCard patientId={patient.id} />
+                                        <ExameImagemCard patientId={patient.id} addTrigger={exameImagemAddTrigger} />
                                     </Suspense>
                                 )}
                                 {openCategoryModal === 'paPercentis' && (
@@ -922,7 +930,7 @@ const PatientDetailScreen: React.FC = () => {
                                 )}
                                 {openCategoryModal === 'paineisVirais' && (
                                     <Suspense fallback={<LoadingSpinner />}>
-                                        <PaineisViraisCard patientId={patient.id} />
+                                        <PaineisViraisCard patientId={patient.id} addTrigger={painelAddTrigger} />
                                     </Suspense>
                                 )}
                                 {openCategoryModal === 'scales' && (<>

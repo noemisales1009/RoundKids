@@ -8,6 +8,7 @@ interface DiagnosticoAtivo {
   id: number;
   label: string;
   created_at: string;
+  sistema?: string;
 }
 
 const PAINEIS_POR_CATEGORIA: Record<string, string[]> = {
@@ -143,7 +144,12 @@ export const EditPainelViralModal: React.FC<{
     const [dataColeta, setDataColeta] = useState(painelData.data_coleta);
     const [resultado, setResultado] = useState(painelData.resultado);
     const [valor, setValor] = useState(painelData.valor ?? '');
-    const [sistema, setSistema] = useState(painelData.sistema ?? '');
+    const [sistema, setSistema] = useState(
+        painelData.sistema && !ALERT_SYSTEMS.includes(painelData.sistema) ? 'Outros' : (painelData.sistema ?? '')
+    );
+    const [sistemaOutros, setSistemaOutros] = useState(
+        painelData.sistema && !ALERT_SYSTEMS.includes(painelData.sistema) ? painelData.sistema : ''
+    );
     const [observacao, setObservacao] = useState(painelData.observacao ?? '');
     const [loading, setLoading] = useState(false);
     const [diagnosticosAtivos, setDiagnosticosAtivos] = useState<DiagnosticoAtivo[]>([]);
@@ -153,7 +159,7 @@ export const EditPainelViralModal: React.FC<{
         const fetchDiagnosticos = async () => {
             const { data } = await supabase
                 .from('paciente_diagnosticos')
-                .select('id, opcao_label, texto_digitado, created_at')
+                .select('id, opcao_label, texto_digitado, created_at, sistema')
                 .eq('patient_id', painelData.paciente_id)
                 .eq('arquivado', false)
                 .eq('status', 'nao_resolvido')
@@ -167,7 +173,7 @@ export const EditPainelViralModal: React.FC<{
                     : d.opcao_label;
                 if (!label || visto.has(label)) continue;
                 visto.add(label);
-                unicos.push({ id: d.id, label, created_at: d.created_at });
+                unicos.push({ id: d.id, label, created_at: d.created_at, sistema: d.sistema || undefined });
             }
             setDiagnosticosAtivos(unicos);
         };
@@ -206,7 +212,7 @@ export const EditPainelViralModal: React.FC<{
                     data_coleta: dataColeta,
                     resultado,
                     valor: valor.trim() || null,
-                    sistema: sistema || null,
+                    sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || null,
                     observacao: observacao.trim() || null,
                     updated_by: user.id,
                     diagnostico_id: diagSelecionado?.id ?? null,
@@ -326,7 +332,7 @@ export const EditPainelViralModal: React.FC<{
                             </label>
                             <div className="mt-1 border border-slate-300 dark:border-slate-700 rounded-md overflow-hidden divide-y divide-slate-200 dark:divide-slate-700 max-h-40 overflow-y-auto">
                                 <div
-                                    onClick={() => setSelectedDiagnosticoId('')}
+                                    onClick={() => { setSelectedDiagnosticoId(''); setSistema(''); setSistemaOutros(''); }}
                                     className={`flex items-center gap-2 px-3 py-2 cursor-pointer text-sm ${selectedDiagnosticoId === '' ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
                                 >
                                     <span className={`w-3 h-3 rounded-full border-2 shrink-0 ${selectedDiagnosticoId === '' ? 'border-cyan-500 bg-cyan-500' : 'border-slate-400'}`} />
@@ -335,7 +341,7 @@ export const EditPainelViralModal: React.FC<{
                                 {diagnosticosAtivos.map(d => (
                                     <div
                                         key={d.id}
-                                        onClick={() => setSelectedDiagnosticoId(d.id)}
+                                        onClick={() => { setSelectedDiagnosticoId(d.id); if (d.sistema) { if (ALERT_SYSTEMS.includes(d.sistema)) { setSistema(d.sistema); setSistemaOutros(''); } else { setSistema('Outros'); setSistemaOutros(d.sistema); } } }}
                                         className={`flex items-center gap-2 px-3 py-2 cursor-pointer text-sm ${selectedDiagnosticoId === d.id ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
                                     >
                                         <span className={`w-3 h-3 rounded-full border-2 shrink-0 ${selectedDiagnosticoId === d.id ? 'border-cyan-500 bg-cyan-500' : 'border-slate-400'}`} />
@@ -360,6 +366,15 @@ export const EditPainelViralModal: React.FC<{
                                 <option key={s} value={s}>{s}</option>
                             ))}
                         </select>
+                        {sistema === 'Outros' && (
+                            <input
+                                type="text"
+                                value={sistemaOutros}
+                                onChange={(e) => setSistemaOutros(e.target.value)}
+                                placeholder="Especifique o sistema..."
+                                className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 dark:text-slate-200"
+                            />
+                        )}
                     </div>
 
                     <div>

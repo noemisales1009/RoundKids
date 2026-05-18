@@ -17,9 +17,10 @@ const RESULTADO_COLORS: Record<string, string> = {
 
 interface PaineisViraisCardProps {
     patientId: number | string;
+    addTrigger?: number;
 }
 
-export const PaineisViraisCard: React.FC<PaineisViraisCardProps> = ({ patientId }) => {
+export const PaineisViraisCard: React.FC<PaineisViraisCardProps> = ({ patientId, addTrigger }) => {
     const [paineis, setPaineis] = useState<PainelViralRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
@@ -55,6 +56,10 @@ export const PaineisViraisCard: React.FC<PaineisViraisCardProps> = ({ patientId 
         loadPaineis();
     }, [patientId]);
 
+    useEffect(() => {
+        if (addTrigger) setShowAddModal(true);
+    }, [addTrigger]);
+
     if (loading) {
         return <div className="text-center text-slate-500">Carregando painéis virais...</div>;
     }
@@ -62,16 +67,8 @@ export const PaineisViraisCard: React.FC<PaineisViraisCardProps> = ({ patientId 
     return (
         <>
             {paineis.length === 0 ? (
-                <div className="space-y-2">
-                    <div className="text-center text-slate-500 dark:text-slate-400 py-4">
-                        Nenhum painel viral / sorologia registrado
-                    </div>
-                    <button
-                        onClick={() => setShowAddModal(true)}
-                        className="w-full text-center bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2.5 rounded-lg transition"
-                    >
-                        Cadastrar Painel Viral / Sorologia
-                    </button>
+                <div className="text-center text-slate-500 dark:text-slate-400 py-4">
+                    Nenhum painel viral / sorologia registrado
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -136,12 +133,6 @@ export const PaineisViraisCard: React.FC<PaineisViraisCardProps> = ({ patientId 
                             </div>
                         </div>
                     ))}
-                    <button
-                        onClick={() => setShowAddModal(true)}
-                        className="w-full mt-2 text-center bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2.5 rounded-lg transition"
-                    >
-                        Cadastrar Painel Viral / Sorologia
-                    </button>
                 </div>
             )}
 

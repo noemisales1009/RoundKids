@@ -6,9 +6,10 @@ import type { ParecerRow } from './modals/pareceres';
 
 interface ParecerCardProps {
     patientId: number | string;
+    addTrigger?: number;
 }
 
-export const ParecerCard: React.FC<ParecerCardProps> = ({ patientId }) => {
+export const ParecerCard: React.FC<ParecerCardProps> = ({ patientId, addTrigger }) => {
     const [pareceres, setPareceres] = useState<ParecerRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
@@ -47,6 +48,10 @@ export const ParecerCard: React.FC<ParecerCardProps> = ({ patientId }) => {
         loadPareceres();
     }, [patientId]);
 
+    useEffect(() => {
+        if (addTrigger) setShowAddModal(true);
+    }, [addTrigger]);
+
     if (loading) {
         return <div className="text-center text-slate-500">Carregando pareceres...</div>;
     }
@@ -63,16 +68,8 @@ export const ParecerCard: React.FC<ParecerCardProps> = ({ patientId }) => {
     return (
         <>
             {pareceres.length === 0 ? (
-                <div className="space-y-2">
-                    <div className="text-center text-slate-500 dark:text-slate-400 py-4">
-                        Nenhum parecer registrado
-                    </div>
-                    <button
-                        onClick={() => setShowAddModal(true)}
-                        className="w-full text-center bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2.5 rounded-lg transition"
-                    >
-                        Cadastrar Parecer
-                    </button>
+                <div className="text-center text-slate-500 dark:text-slate-400 py-4">
+                    Nenhum parecer registrado
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -117,12 +114,6 @@ export const ParecerCard: React.FC<ParecerCardProps> = ({ patientId }) => {
                             </div>
                         </div>
                     ))}
-                    <button
-                        onClick={() => setShowAddModal(true)}
-                        className="w-full mt-2 text-center bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2.5 rounded-lg transition"
-                    >
-                        Cadastrar Parecer
-                    </button>
                 </div>
             )}
 

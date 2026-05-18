@@ -207,22 +207,34 @@ const OptionRow: React.FC<OptionRowProps> = ({
                 }`}
               />
             )}
-            <div className={`flex items-center gap-2 ${option.has_input ? '' : 'mt-2'}`}>
-              <span className={`text-[10px] font-medium shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                Sistema:
-              </span>
-              <select
-                value={sistemaValues[option.id] || ''}
-                onChange={(e) => onSistemaChange(option.id, e.target.value)}
-                className={`flex-1 px-2 py-0.5 text-xs rounded-md border appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                  isDark
-                    ? 'bg-slate-900 border-slate-700 text-slate-300'
-                    : 'bg-white border-slate-300 text-slate-700'
-                }`}
-              >
-                <option value="" disabled>— Selecione o sistema —</option>
-                {SISTEMAS.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
+            <div className={`flex flex-col gap-1 ${option.has_input ? '' : 'mt-2'}`}>
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] font-medium shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                  Sistema:
+                </span>
+                <select
+                  value={SISTEMAS.includes(sistemaValues[option.id]) ? sistemaValues[option.id] : (sistemaValues[option.id] ? 'Outros' : '')}
+                  onChange={(e) => onSistemaChange(option.id, e.target.value)}
+                  className={`flex-1 px-2 py-0.5 text-xs rounded-md border appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                    isDark ? 'bg-slate-900 border-slate-700 text-slate-300' : 'bg-white border-slate-300 text-slate-700'
+                  }`}
+                >
+                  <option value="" disabled>— Selecione o sistema —</option>
+                  {SISTEMAS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              {(sistemaValues[option.id] === 'Outros' || (sistemaValues[option.id] && !SISTEMAS.includes(sistemaValues[option.id]))) && (
+                <input
+                  type="text"
+                  value={sistemaValues[option.id] === 'Outros' ? '' : (sistemaValues[option.id] || '')}
+                  onChange={(e) => onSistemaChange(option.id, e.target.value || 'Outros')}
+                  placeholder="Especifique o sistema..."
+                  autoFocus
+                  className={`w-full px-2 py-0.5 text-xs rounded-md border focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                    isDark ? 'bg-slate-900 border-slate-700 text-slate-300' : 'bg-white border-slate-300 text-slate-700'
+                  }`}
+                />
+              )}
             </div>
             <div className="flex items-center gap-2">
               <span className={`text-[10px] font-medium shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -331,22 +343,34 @@ const OptionRow: React.FC<OptionRowProps> = ({
                           }`}
                         />
                       )}
-                      <div className={`flex items-center gap-2 ${childOption.has_input ? '' : 'mt-2'}`}>
-                        <span className={`text-[10px] font-medium shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                          Sistema:
-                        </span>
-                        <select
-                          value={sistemaValues[childOption.id] || ''}
-                          onChange={(e) => onSistemaChange(childOption.id, e.target.value)}
-                          className={`flex-1 px-2 py-0.5 text-xs rounded-md border appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                            isDark
-                              ? 'bg-slate-900 border-slate-700 text-slate-300'
-                              : 'bg-white border-slate-300 text-slate-700'
-                          }`}
-                        >
-                          <option value="" disabled>— Selecione o sistema —</option>
-                          {SISTEMAS.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
+                      <div className={`flex flex-col gap-1 ${childOption.has_input ? '' : 'mt-2'}`}>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-medium shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                            Sistema:
+                          </span>
+                          <select
+                            value={SISTEMAS.includes(sistemaValues[childOption.id]) ? sistemaValues[childOption.id] : (sistemaValues[childOption.id] ? 'Outros' : '')}
+                            onChange={(e) => onSistemaChange(childOption.id, e.target.value)}
+                            className={`flex-1 px-2 py-0.5 text-xs rounded-md border appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                              isDark ? 'bg-slate-900 border-slate-700 text-slate-300' : 'bg-white border-slate-300 text-slate-700'
+                            }`}
+                          >
+                            <option value="" disabled>— Selecione o sistema —</option>
+                            {SISTEMAS.map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        </div>
+                        {(sistemaValues[childOption.id] === 'Outros' || (sistemaValues[childOption.id] && !SISTEMAS.includes(sistemaValues[childOption.id]))) && (
+                          <input
+                            type="text"
+                            value={sistemaValues[childOption.id] === 'Outros' ? '' : (sistemaValues[childOption.id] || '')}
+                            onChange={(e) => onSistemaChange(childOption.id, e.target.value || 'Outros')}
+                            placeholder="Especifique o sistema..."
+                            autoFocus
+                            className={`w-full px-2 py-0.5 text-xs rounded-md border focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                              isDark ? 'bg-slate-900 border-slate-700 text-slate-300' : 'bg-white border-slate-300 text-slate-700'
+                            }`}
+                          />
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <span className={`text-[10px] font-medium shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
