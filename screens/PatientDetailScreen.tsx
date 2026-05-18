@@ -224,6 +224,15 @@ const PatientDetailScreen: React.FC = () => {
         }
     }, [scaleView]);
 
+    useEffect(() => {
+        if (!openCategoryModal) {
+            setAporteAddTrigger(0);
+            setExameImagemAddTrigger(0);
+            setParecerAddTrigger(0);
+            setPainelAddTrigger(0);
+        }
+    }, [openCategoryModal]);
+
     if (!patient) {
         return <p>Paciente não encontrado.</p>;
     }
@@ -726,6 +735,20 @@ const PatientDetailScreen: React.FC = () => {
                             <div className="flex-1 overflow-y-auto p-4 space-y-3">
                                 {openCategoryModal === 'devices' && (<>
                                     {patient.devices.filter(d => !d.isArchived).length === 0 && <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhum dispositivo cadastrado.</p>}
+                                    {patient.devices.filter(d => !d.isArchived).length > 0 && (() => {
+                                        const items = patient.devices.filter(d => !d.isArchived);
+                                        const allChecked = items.every(item => item.mostrar_evolucao !== false);
+                                        return (
+                                            <div className="flex justify-end mb-1">
+                                                <button
+                                                    onClick={() => items.forEach(item => toggleMostrarEvolucaoDispositivo(item.id, !allChecked))}
+                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                                >
+                                                    {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
+                                                </button>
+                                            </div>
+                                        );
+                                    })()}
                                     {patient.devices.filter(d => !d.isArchived).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).map(device => (
                                         <div key={device.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
@@ -759,6 +782,20 @@ const PatientDetailScreen: React.FC = () => {
                                 </>)}
                                 {openCategoryModal === 'exams' && (<>
                                     {patient.exams.filter(e => !e.isArchived).length === 0 && <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhum exame cadastrado.</p>}
+                                    {patient.exams.filter(e => !e.isArchived).length > 0 && (() => {
+                                        const items = patient.exams.filter(e => !e.isArchived);
+                                        const allChecked = items.every(item => item.mostrar_evolucao !== false);
+                                        return (
+                                            <div className="flex justify-end mb-1">
+                                                <button
+                                                    onClick={() => items.forEach(item => toggleMostrarEvolucaoExame(item.id, !allChecked))}
+                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                                >
+                                                    {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
+                                                </button>
+                                            </div>
+                                        );
+                                    })()}
                                     {patient.exams.filter(e => !e.isArchived).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(exam => (
                                         <div key={exam.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
@@ -785,6 +822,20 @@ const PatientDetailScreen: React.FC = () => {
                                 </>)}
                                 {openCategoryModal === 'medications' && (<>
                                     {patient.medications.filter(m => !m.isArchived).length === 0 && <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhuma medicação cadastrada.</p>}
+                                    {patient.medications.filter(m => !m.isArchived).length > 0 && (() => {
+                                        const meds = patient.medications.filter(m => !m.isArchived);
+                                        const allChecked = meds.every(m => m.mostrar_evolucao !== false);
+                                        return (
+                                            <div className="flex justify-end mb-1">
+                                                <button
+                                                    onClick={() => meds.forEach(m => toggleMostrarEvolucao(m.id, !allChecked))}
+                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                                >
+                                                    {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
+                                                </button>
+                                            </div>
+                                        );
+                                    })()}
                                     {patient.medications.filter(m => !m.isArchived).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).map(medication => (
                                         <div key={medication.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
@@ -819,6 +870,20 @@ const PatientDetailScreen: React.FC = () => {
                                 </>)}
                                 {openCategoryModal === 'surgical' && (<>
                                     {patient.surgicalProcedures.filter(p => !p.isArchived).length === 0 && <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhum procedimento cadastrado.</p>}
+                                    {patient.surgicalProcedures.filter(p => !p.isArchived).length > 0 && (() => {
+                                        const items = patient.surgicalProcedures.filter(p => !p.isArchived);
+                                        const allChecked = items.every(item => item.mostrar_evolucao !== false);
+                                        return (
+                                            <div className="flex justify-end mb-1">
+                                                <button
+                                                    onClick={() => items.forEach(item => toggleMostrarEvolucaoCirurgia(item.id, !allChecked))}
+                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                                >
+                                                    {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
+                                                </button>
+                                            </div>
+                                        );
+                                    })()}
                                     {patient.surgicalProcedures.filter(p => !p.isArchived).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(procedure => (
                                         <div key={procedure.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
@@ -846,6 +911,20 @@ const PatientDetailScreen: React.FC = () => {
                                 </>)}
                                 {openCategoryModal === 'cultures' && (<>
                                     {patient.cultures.filter(c => !c.isArchived).length === 0 && <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhuma cultura cadastrada.</p>}
+                                    {patient.cultures.filter(c => !c.isArchived).length > 0 && (() => {
+                                        const items = patient.cultures.filter(c => !c.isArchived);
+                                        const allChecked = items.every(item => item.mostrar_evolucao !== false);
+                                        return (
+                                            <div className="flex justify-end mb-1">
+                                                <button
+                                                    onClick={() => items.forEach(item => toggleMostrarEvolucaoCultura(item.id, !allChecked))}
+                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                                >
+                                                    {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
+                                                </button>
+                                            </div>
+                                        );
+                                    })()}
                                     {patient.cultures.filter(c => !c.isArchived).sort((a, b) => new Date(b.collectionDate).getTime() - new Date(a.collectionDate).getTime()).map(culture => (
                                         <div key={culture.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
@@ -873,6 +952,20 @@ const PatientDetailScreen: React.FC = () => {
                                 </>)}
                                 {openCategoryModal === 'diets' && (<>
                                     {patient.diets.filter(d => !d.isArchived).length === 0 && <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhuma dieta cadastrada.</p>}
+                                    {patient.diets.filter(d => !d.isArchived).length > 0 && (() => {
+                                        const items = patient.diets.filter(d => !d.isArchived);
+                                        const allChecked = items.every(item => item.mostrar_evolucao !== false);
+                                        return (
+                                            <div className="flex justify-end mb-1">
+                                                <button
+                                                    onClick={() => items.forEach(item => toggleMostrarEvolucaoDieta(item.id, !allChecked))}
+                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                                >
+                                                    {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
+                                                </button>
+                                            </div>
+                                        );
+                                    })()}
                                     {patient.diets.filter(d => !d.isArchived).sort((a, b) => new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime()).map(diet => (
                                         <div key={diet.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">

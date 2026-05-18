@@ -72,6 +72,19 @@ export const PaineisViraisCard: React.FC<PaineisViraisCardProps> = ({ patientId,
                 </div>
             ) : (
                 <div className="space-y-3">
+                    {(() => {
+                        const allChecked = paineis.every(p => p.mostrar_evolucao !== false);
+                        return (
+                            <div className="flex justify-end mb-1">
+                                <button
+                                    onClick={() => paineis.forEach(p => toggleMostrarEvolucao(p.id, !allChecked))}
+                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                >
+                                    {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
+                                </button>
+                            </div>
+                        );
+                    })()}
                     {paineis.map(p => (
                         <div key={p.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                             <div className="flex justify-between items-start">

@@ -73,6 +73,19 @@ export const ParecerCard: React.FC<ParecerCardProps> = ({ patientId, addTrigger 
                 </div>
             ) : (
                 <div className="space-y-3">
+                    {(() => {
+                        const allChecked = pareceres.every(p => p.mostrar_evolucao !== false);
+                        return (
+                            <div className="flex justify-end mb-1">
+                                <button
+                                    onClick={() => pareceres.forEach(p => toggleMostrarEvolucao(p.id, !allChecked))}
+                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                >
+                                    {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
+                                </button>
+                            </div>
+                        );
+                    })()}
                     {pareceres.map(p => (
                         <div key={p.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                             <div className="flex justify-between items-start">

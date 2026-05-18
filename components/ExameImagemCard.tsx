@@ -61,6 +61,19 @@ export const ExameImagemCard: React.FC<ExameImagemCardProps> = ({ patientId, add
                 </div>
             ) : (
                 <div className="space-y-3">
+                    {(() => {
+                        const allChecked = exames.every(ex => ex.mostrar_evolucao !== false);
+                        return (
+                            <div className="flex justify-end mb-1">
+                                <button
+                                    onClick={() => exames.forEach(ex => toggleMostrarEvolucao(ex.id, !allChecked))}
+                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                >
+                                    {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
+                                </button>
+                            </div>
+                        );
+                    })()}
                     {exames.map(ex => (
                         <div key={ex.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                             <div className="flex justify-between items-start">
