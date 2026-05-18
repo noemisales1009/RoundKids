@@ -139,7 +139,7 @@ const DashboardScreen: React.FC = () => {
                 colors: professionalColorMap[professional] || {
                     border: 'border-gray-400',
                     icon: '👤',
-                    bg: 'bg-gray-50 dark:bg-gray-900/30'
+                    badge: 'bg-gray-500'
                 }
             }))
             .sort((a, b) => b.count - a.count);
