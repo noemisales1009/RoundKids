@@ -125,6 +125,9 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 isArchived: c.is_archived,
                 sistema: c.sistema,
                 mostrar_evolucao: c.mostrar_evolucao !== false,
+                diagnosticoId: c.diagnostico_id || undefined,
+                diagnosticoLabel: c.diagnostico_label || undefined,
+                diagnosticoDataInicio: c.diagnostico_data_inicio || undefined,
             });
             return acc;
         }, {});
@@ -751,16 +754,17 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             observacao: sanitizeTextOrNull(culture.observation),
             criado_por_id: userId || null,
             ...(culture.sistema ? { sistema: culture.sistema } : {}),
+            ...(culture.diagnosticoId ? { diagnostico_id: culture.diagnosticoId, diagnostico_label: culture.diagnosticoLabel, diagnostico_data_inicio: culture.diagnosticoDataInicio || null } : {}),
         };
 
-        const { data, error } = await supabase.from('culturas_pacientes').insert([payload]);
+        const { error } = await supabase.from('culturas_pacientes').insert([payload]);
 
         if (error) {
             console.error('Erro ao inserir cultura:', error);
-        } else {
+            throw new Error(error.message);
         }
 
-        if (!error) fetchPatients();
+        await fetchPatients();
     };
 
     const deleteCultureFromPatient = async (patientId: number | string, cultureId: number | string) => {
@@ -778,6 +782,9 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 data_coleta: cultureData.collectionDate,
                 observacao: sanitizeTextOrNull(cultureData.observation),
                 sistema: cultureData.sistema || null,
+                diagnostico_id: cultureData.diagnosticoId || null,
+                diagnostico_label: cultureData.diagnosticoLabel || null,
+                diagnostico_data_inicio: cultureData.diagnosticoDataInicio || null,
             })
             .eq('id', cultureData.id);
         if (!error) fetchPatients();

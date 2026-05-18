@@ -69,6 +69,9 @@ export interface Culture {
   isArchived?: boolean;
   sistema?: string;
   mostrar_evolucao?: boolean;
+  diagnosticoId?: number;
+  diagnosticoLabel?: string;
+  diagnosticoDataInicio?: string;
 }
 
 export interface Diet {
@@ -244,7 +247,7 @@ export interface PatientsContextType {
   addScaleScoreToPatient: (patientId: number | string, score: Omit<ScaleScore, 'id'>) => void;
   updatePatientDetails: (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number; sc?: number; sexo?: string; prontuario?: string }) => void;
   saveChecklistAnswer: (patientId: number | string, categoryId: number, questionId: number, answer: Answer) => Promise<void>;
-  addCultureToPatient: (patientId: number | string, culture: Omit<Culture, 'id'>, userId?: string) => void;
+  addCultureToPatient: (patientId: number | string, culture: Omit<Culture, 'id'>, userId?: string) => Promise<void>;
   deleteCultureFromPatient: (patientId: number | string, cultureId: number | string) => void;
   updateCultureInPatient: (patientId: number | string, cultureData: Culture) => void;
   addDietToPatient: (patientId: number | string, diet: Omit<Diet, 'id'>, userId?: string) => void;

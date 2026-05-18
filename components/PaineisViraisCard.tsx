@@ -86,8 +86,13 @@ export const PaineisViraisCard: React.FC<PaineisViraisCardProps> = ({ patientId 
                                         <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                                             {new Date(p.data_coleta).toLocaleDateString('pt-BR')}
                                         </p>
+                                        {p.diagnostico_label && (
+                                            <span className="block mt-1 w-fit text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                                                Diagnóstico: {p.diagnostico_label}
+                                            </span>
+                                        )}
                                         {p.sistema && (
-                                            <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+                                            <span className="block mt-1 w-fit text-xs px-2 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
                                                 {p.sistema}
                                             </span>
                                         )}

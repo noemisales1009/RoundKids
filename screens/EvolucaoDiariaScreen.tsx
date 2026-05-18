@@ -98,6 +98,8 @@ interface PainelViralRecord {
   sistema: string | null;
   observacao: string | null;
   mostrar_evolucao?: boolean;
+  diagnostico_label?: string | null;
+  diagnostico_data_inicio?: string | null;
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -601,7 +603,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
             .is('archived_at', null),
           supabase
             .from('paineis_virais_pacientes')
-            .select('id, categoria, painel, data_coleta, resultado, valor, sistema, observacao, mostrar_evolucao')
+            .select('id, categoria, painel, data_coleta, resultado, valor, sistema, observacao, mostrar_evolucao, diagnostico_label, diagnostico_data_inicio')
             .eq('paciente_id', patientId)
             .is('archived_at', null),
         ]);
@@ -875,6 +877,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         apLines.push('  CULTURAS:');
         cults.forEach(c => {
           apLines.push(`    • ${c.site}${c.microorganism ? ` — ${c.microorganism}` : ''} — ${formatDateToBRL(c.collectionDate)}`);
+          if (c.diagnosticoLabel) {
+            let diagLine = `      ▪ Diag: ${c.diagnosticoLabel}`;
+            if (c.diagnosticoDataInicio) diagLine += ` em ${formatDateToBRL(c.diagnosticoDataInicio)} (${calcDias(c.diagnosticoDataInicio)})`;
+            apLines.push(diagLine);
+          }
           if (c.observation) apLines.push(`      ${c.observation}`);
         });
       }
@@ -921,6 +928,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         apLines.push('  PAINÉIS VIRAIS:');
         pnls.forEach(pn => {
           apLines.push(`    • ${pn.categoria} — ${pn.painel} — ${formatDateToBRL(pn.data_coleta)}${pn.resultado ? ` — ${pn.resultado}` : ''}${pn.valor ? ` (${pn.valor})` : ''}`);
+          if (pn.diagnostico_label) {
+            let diagLine = `      ▪ Diag: ${pn.diagnostico_label}`;
+            if (pn.diagnostico_data_inicio) diagLine += ` em ${formatDateToBRL(pn.diagnostico_data_inicio)} (${calcDias(pn.diagnostico_data_inicio)})`;
+            apLines.push(diagLine);
+          }
           if (pn.observacao) apLines.push(`      ${pn.observacao}`);
         });
       }

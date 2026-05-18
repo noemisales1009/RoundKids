@@ -1,8 +1,14 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { supabase } from '../../../supabaseClient';
 import { NotificationContext, UserContext } from '../../../contexts';
 import { CloseIcon } from '../../icons';
 import { ALERT_SYSTEMS } from '../../../constants';
+
+interface DiagnosticoAtivo {
+  id: number;
+  label: string;
+  created_at: string;
+}
 
 const PAINEIS_POR_CATEGORIA: Record<string, string[]> = {
     'Painel Multiplex Respiratório': [
@@ -127,6 +133,33 @@ export const AddPainelViralModal: React.FC<{
     const [sistema, setSistema] = useState('');
     const [observacao, setObservacao] = useState('');
     const [loading, setLoading] = useState(false);
+    const [diagnosticosAtivos, setDiagnosticosAtivos] = useState<DiagnosticoAtivo[]>([]);
+    const [selectedDiagnosticoId, setSelectedDiagnosticoId] = useState<number | ''>('');
+
+    useEffect(() => {
+        const fetchDiagnosticos = async () => {
+            const { data } = await supabase
+                .from('paciente_diagnosticos')
+                .select('id, opcao_label, texto_digitado, created_at')
+                .eq('patient_id', patientId)
+                .eq('arquivado', false)
+                .eq('status', 'nao_resolvido')
+                .order('created_at', { ascending: false });
+
+            const unicos: DiagnosticoAtivo[] = [];
+            const visto = new Set<string>();
+            for (const d of data ?? []) {
+                let label = d.texto_digitado
+                    ? (d.opcao_label?.startsWith('Outr') ? d.texto_digitado : `${d.opcao_label} ${d.texto_digitado}`.trim())
+                    : d.opcao_label;
+                if (!label || visto.has(label)) continue;
+                visto.add(label);
+                unicos.push({ id: d.id, label, created_at: d.created_at });
+            }
+            setDiagnosticosAtivos(unicos);
+        };
+        fetchDiagnosticos();
+    }, [patientId]);
 
     const handleCategoriaChange = (cat: string) => {
         setCategoria(cat);
@@ -151,6 +184,7 @@ export const AddPainelViralModal: React.FC<{
 
         setLoading(true);
         try {
+            const diagSelecionado = diagnosticosAtivos.find(d => d.id === selectedDiagnosticoId);
             const { error } = await supabase
                 .from('paineis_virais_pacientes')
                 .insert([{
@@ -163,6 +197,9 @@ export const AddPainelViralModal: React.FC<{
                     sistema: sistema || null,
                     observacao: observacao.trim() || null,
                     created_by: user.id,
+                    diagnostico_id: diagSelecionado?.id ?? null,
+                    diagnostico_label: diagSelecionado?.label ?? null,
+                    diagnostico_data_inicio: diagSelecionado?.created_at?.split('T')[0] ?? null,
                 }]);
 
             if (error) throw error;
@@ -264,6 +301,35 @@ export const AddPainelViralModal: React.FC<{
                             placeholder="Ex: 1:16, 250 UI/mL, indetectável..."
                             className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 dark:text-slate-200"
                         />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Diagnóstico vinculado <span className="text-slate-400 font-normal">(opcional)</span>
+                        </label>
+                        {diagnosticosAtivos.length === 0 ? (
+                            <p className="mt-1 text-xs text-slate-400 dark:text-slate-500 italic">Nenhum diagnóstico ativo para este paciente.</p>
+                        ) : (
+                            <div className="mt-1 border border-slate-300 dark:border-slate-700 rounded-md overflow-hidden divide-y divide-slate-200 dark:divide-slate-700 max-h-40 overflow-y-auto">
+                                <div
+                                    onClick={() => setSelectedDiagnosticoId('')}
+                                    className={`flex items-center gap-2 px-3 py-2 cursor-pointer text-sm ${selectedDiagnosticoId === '' ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+                                >
+                                    <span className={`w-3 h-3 rounded-full border-2 shrink-0 ${selectedDiagnosticoId === '' ? 'border-cyan-500 bg-cyan-500' : 'border-slate-400'}`} />
+                                    Nenhum
+                                </div>
+                                {diagnosticosAtivos.map(d => (
+                                    <div
+                                        key={d.id}
+                                        onClick={() => setSelectedDiagnosticoId(d.id)}
+                                        className={`flex items-center gap-2 px-3 py-2 cursor-pointer text-sm ${selectedDiagnosticoId === d.id ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+                                    >
+                                        <span className={`w-3 h-3 rounded-full border-2 shrink-0 ${selectedDiagnosticoId === d.id ? 'border-cyan-500 bg-cyan-500' : 'border-slate-400'}`} />
+                                        {d.label}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <div>
