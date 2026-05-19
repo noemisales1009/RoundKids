@@ -743,6 +743,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           .from('paciente_diagnosticos')
           .insert(newDiagnostics.map(d => ({
             ...d,
+            created_at: now,
             created_by: userId,
             resolved_at: d.status === 'resolvido' ? now : null,
           })));

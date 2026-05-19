@@ -868,7 +868,7 @@ const PatientDetailScreen: React.FC = () => {
                                                 <div className="flex items-start gap-3">
                                                     <PillIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
                                                     <div>
-                                                        <p className="font-bold text-slate-800 dark:text-slate-200 wrap-break-word">{medication.name} - {medication.dosage}</p>
+                                                        <p className="font-bold text-slate-800 dark:text-slate-200 wrap-break-word">{medication.name}{medication.dosage && medication.dosage !== medication.name ? ` - ${medication.dosage}` : ''}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(medication.startDate)}</p>
                                                         {medication.endDate ? <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Fim: {formatDateToBRL(medication.endDate)}</p> : <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(medication.startDate)}</p>}
                                                         {medication.diagnosticoLabel && <span className="inline-block mt-1.5 mr-1 text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">Diagnóstico: {medication.diagnosticoLabel}</span>}
