@@ -586,6 +586,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         if (diag.texto_digitado) inputs[diag.opcao_id] = diag.texto_digitado;
         if (diag.sistema) sistemas[diag.opcao_id] = diag.sistema;
         if (diag.data_inicio) dataInicio[diag.opcao_id] = diag.data_inicio;
+        else if (diag.created_at) dataInicio[diag.opcao_id] = diag.created_at.split('T')[0];
         if (diag.resolved_at) resolvedAt[diag.opcao_id] = diag.resolved_at.split('T')[0];
         statuses[diag.opcao_id] = diag.status;
       });
@@ -729,7 +730,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
               : null;
           return supabase
             .from('paciente_diagnosticos')
-            .update({ status: newStatus, resolved_at: resolvedAt, sistema: sistemaValues[d.opcao_id] || null })
+            .update({ status: newStatus, resolved_at: resolvedAt, sistema: sistemaValues[d.opcao_id] || null, data_inicio: dataInicioValues[d.opcao_id] || null })
             .eq('id', d.id!);
         }));
       }
