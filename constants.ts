@@ -374,7 +374,7 @@ export const ALERT_SYSTEMS: string[] = [
     'Avaliação hematológica/ oncológica',
     'Avaliação neurológica',
     'Sedação /Analgesia',
-    'Avaliação nutricional e metabólica',
+    'Avaliação nutricional / metabólica / hídrico',
     'Avaliação imunológica',
     'Avaliação genética',
     'Avaliação reumatológica',

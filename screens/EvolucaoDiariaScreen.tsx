@@ -10,6 +10,8 @@ import { ControlesSaidasSection } from '../components/ControlesSaidasSection';
 
 interface DiagItem {
   opcao_id: number;
+  id: number;
+  allIds: number[];
   label: string;
   texto_digitado?: string;
   status: 'resolvido' | 'nao_resolvido';
@@ -98,6 +100,7 @@ interface PainelViralRecord {
   sistema: string | null;
   observacao: string | null;
   mostrar_evolucao?: boolean;
+  diagnostico_id?: number | null;
   diagnostico_label?: string | null;
   diagnostico_data_inicio?: string | null;
 }
@@ -162,7 +165,7 @@ const AVALIACAO_SECTIONS = [
   { id: 'dhe_metabolica', label: '14.5 Avaliação DHE / Metabólica' },
   { id: 'endocrinologia', label: '14.6 Avaliação Endocrinologia' },
   { id: 'gastrointestinal', label: '14.7 Avaliação Gastrointestinal' },
-  { id: 'nutricional',      label: '14.8 Avaliação Nutricional e Metabólica' },
+  { id: 'nutricional',      label: '14.8 Avaliação Nutricional / Metabólica / Hídrico' },
   { id: 'hematologica',   label: '14.9/14.10 Avaliação Hematológica / Oncológica' },
   { id: 'genetica',       label: '14.10 Avaliação Genética' },
   { id: 'imunologica',    label: '14.11 Avaliação Imunológica' },
@@ -451,13 +454,19 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         (qsRes.data || []).forEach((q: any) => { qTipo[q.id] = q.tipo; });
         // Apenas ativos (não resolvidos), sem repetir opcao_id
         const byOpcao = new Map<number, DiagItem>();
+        const opcaoToIds = new Map<number, number[]>();
         (diagRes.data || [])
           .filter((d: any) => d.status !== 'resolvido')
           .forEach((d: any) => {
+            const ids = opcaoToIds.get(d.opcao_id) ?? [];
+            ids.push(Number(d.id));
+            opcaoToIds.set(d.opcao_id, ids);
             const existing = byOpcao.get(d.opcao_id);
             if (!existing || new Date(d.created_at) < new Date(existing.created_at!)) {
               byOpcao.set(d.opcao_id, {
                 opcao_id: d.opcao_id,
+                id: Number(d.id),
+                allIds: [],
                 label: opts[d.opcao_id]?.label ?? '—',
                 texto_digitado: d.texto_digitado,
                 status: d.status,
@@ -468,6 +477,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               });
             }
           });
+        byOpcao.forEach((item, opcao_id) => {
+          item.allIds = opcaoToIds.get(opcao_id) ?? [item.id];
+        });
         setDiagItems(Array.from(byOpcao.values()));
       } catch (e) {
         console.error('Erro ao carregar diagnósticos:', e);
@@ -603,7 +615,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
             .is('archived_at', null),
           supabase
             .from('paineis_virais_pacientes')
-            .select('id, categoria, painel, data_coleta, resultado, valor, sistema, observacao, mostrar_evolucao, diagnostico_label, diagnostico_data_inicio')
+            .select('id, categoria, painel, data_coleta, resultado, valor, sistema, observacao, mostrar_evolucao, diagnostico_id, diagnostico_label, diagnostico_data_inicio')
             .eq('paciente_id', patientId)
             .is('archived_at', null),
         ]);
@@ -769,39 +781,27 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       }
       if (diureseRec) saidasLines.push(`  Diurese: ${((diureseRec.volume / diureseRec.horas) / diureseRec.peso).toFixed(2)} mL/kg/h | Volume: ${diureseRec.volume} mL`);
       if (vitaisLines.length > 0 || saidasLines.length > 0) {
-        title('7. CONTROLES E SAÍDAS');
+        title('6. CONTROLES E SAÍDAS');
         if (vitaisLines.length > 0) { add('Controles:'); vitaisLines.forEach(l => add(l)); }
         if (saidasLines.length > 0) { if (vitaisLines.length > 0) blank(); add('Saídas:'); saidasLines.forEach(l => add(l)); }
       }
     }
 
     if (bhBalance) {
-      title('8. BH DIÁRIO');
+      title('7. BH DIÁRIO');
       const pct = bhBalance.volume / (bhBalance.peso * 10);
       add(`${pct.toFixed(2)}% — ${bhBalance.volume > 0 ? 'Ganho' : 'Perda'} | Volume: ${bhBalance.volume > 0 ? '+' : ''}${bhBalance.volume} mL`);
     }
 
     if (bhCumul && bhCumul.registros_ultimas_24h > 0) {
-      title('9. BH CUMULATIVO');
+      title('8. BH CUMULATIVO');
       add(`Total: ${bhCumul.bh_cumulativo_total > 0 ? '+' : ''}${bhCumul.bh_cumulativo_total.toFixed(2)}% | BH Anterior: ${bhCumul.bh_historico_antigo.toFixed(2)}% | Últimas 24h: ${bhCumul.bh_ultimas_24h.toFixed(2)}%`);
     }
 
-    const aportesVisiveis = aportesList.filter(a => a.mostrar_evolucao !== false);
-    if (aportesVisiveis.length > 0) {
-      title('10. APORTES');
-      aportesVisiveis.forEach(a => {
-        add(new Date(a.data_referencia + 'T12:00:00').toLocaleDateString('pt-BR'));
-        add(`VO: ${a.vo_ml_kg_h.toFixed(2)} mL/kg/h`);
-        add(`HV/NPT: ${a.hv_npt_ml_kg_h.toFixed(2)} mL/kg/h`);
-        add(`MED: ${a.medicacoes_ml_kg_h.toFixed(2)} mL/kg/h`);
-        add(`THT: ${a.tht_ml_kg_h.toFixed(2)} mL/kg/h`);
-        blank();
-      });
-    }
 
     const dietasWord = (p.diets ?? []).filter(d => !d.isArchived && d.mostrar_evolucao !== false && (d.vet_at != null || d.pt_at != null));
     if (dietasWord.length > 0) {
-      title('11. DIETAS');
+      title('9. DIETAS');
       dietasWord.forEach(d => {
         const parts: string[] = [d.type];
         if (d.vet_at != null) parts.push(`VET atual: ${d.vet_at.toFixed(0)}%`);
@@ -813,18 +813,18 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
     const activeDevicesWord = (p.devices ?? []).filter(d => !d.isArchived).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
     if (activeDevicesWord.length > 0) {
-      title('12. DISPOSITIVOS');
+      title('10. DISPOSITIVOS');
       add('@@DEVICES_TABLE@@');
       blank();
     }
 
     if (situacaoRec) {
-      title('13. SITUAÇÃO CLÍNICA');
+      title('11. SITUAÇÃO CLÍNICA');
       add(situacaoRec.situacao_texto);
     }
 
     if (Object.values(exameFisico).some(v => v.trim())) {
-      title('14. EXAME FÍSICO');
+      title('12. EXAME FÍSICO');
       EXAME_SECTIONS.forEach(s => {
         const val = exameFisico[s.key as keyof ExameFisicoState];
         if (val?.trim()) add(`${s.label.replace(/^[\d./ ]+/, '')}: ${val}`);
@@ -839,18 +839,24 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
     const ALL_KNOWN_SISTEMAS = new Set(Object.values(SECTION_SISTEMAS).flat());
     const apLines: string[] = [];
+    const _today = new Date(); _today.setHours(0, 0, 0, 0);
+
     AVALIACAO_SECTIONS.forEach(sec => {
       const sistemas = SECTION_SISTEMAS[sec.id] ?? [];
       const matchSistema = (s: string | undefined | null): boolean =>
         !!s && (sistemas.includes(s) || (sec.id === 'outras_av' && !ALL_KNOWN_SISTEMAS.has(s)));
+
+      const secDiags = diagItems
+        .filter(d => matchSistema(d.sistema))
+        .sort((a, b) => (a.tipo === 'principal' ? 0 : 1) - (b.tipo === 'principal' ? 0 : 1));
+
+      const allSecMeds  = (p.medications ?? []).filter(m => !m.isArchived && m.mostrar_evolucao !== false && matchSistema(m.sistema) && !we.has(`med_${m.id}`) && (!m.endDate || new Date(m.endDate + 'T00:00:00') >= _today));
+      const allSecCults = (p.cultures ?? []).filter(c => !c.isArchived && c.mostrar_evolucao !== false && matchSistema(c.sistema) && !we.has(`cult_${c.id}`));
+      const allSecPnls  = paineisViraisList.filter(pn => pn.mostrar_evolucao !== false && matchSistema(pn.sistema) && !we.has(`pnl_${pn.id}`));
       const cirgs = (p.surgicalProcedures ?? []).filter(c => !c.isArchived && c.mostrar_evolucao !== false && matchSistema(c.sistema) && !we.has(`cir_${c.id}`));
-      const cults = (p.cultures ?? []).filter(c => !c.isArchived && c.mostrar_evolucao !== false && matchSistema(c.sistema) && !we.has(`cult_${c.id}`));
       const diets = (p.diets ?? []).filter(d => !d.isArchived && d.mostrar_evolucao !== false && matchSistema(d.sistema) && !we.has(`diet_${d.id}`));
-      const _today = new Date(); _today.setHours(0, 0, 0, 0);
-      const meds  = (p.medications ?? []).filter(m => !m.isArchived && m.mostrar_evolucao !== false && matchSistema(m.sistema) && !we.has(`med_${m.id}`) && (!m.endDate || new Date(m.endDate + 'T00:00:00') >= _today));
       const exs   = (p.exams ?? []).filter(e => !e.isArchived && e.mostrar_evolucao !== false && matchSistema(e.sistema) && !we.has(`exam_${e.id}`));
       const imgs  = examesImagemList.filter(ei => ei.mostrar_evolucao !== false && matchSistema(ei.sistema) && !we.has(`img_${ei.id}`));
-      const pnls  = paineisViraisList.filter(pn => pn.mostrar_evolucao !== false && matchSistema(pn.sistema) && !we.has(`pnl_${pn.id}`));
       const pars  = pareceresList.filter(par => {
         if (par.mostrar_evolucao === false || we.has(`par_${par.id}`)) return false;
         const mapped = ESPECIALISTA_TO_SISTEMAS[par.especialista] ?? [];
@@ -862,40 +868,70 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         if (a.sistemas.some(s => sistemas.includes(s))) return true;
         return sec.id === 'outras_av' && a.sistemas.some(s => !ALL_KNOWN_SISTEMAS.has(s));
       });
-      if (cirgs.length + cults.length + diets.length + meds.length + exs.length + imgs.length + pnls.length + pars.length + alts.length === 0) return;
+      const activeAlts = alts.filter(a => { const st = (a.status || '').toLowerCase(); return !st.includes('concluí') && !st.includes('concluido') && !st.includes('resolvido') && !st.includes('arquivado'); });
+
+      const secAportes = sec.id === 'nutricional' ? aportesList.filter(a => a.mostrar_evolucao !== false) : [];
+      const totalItems = secDiags.length + allSecMeds.length + allSecCults.length + allSecPnls.length + cirgs.length + diets.length + exs.length + imgs.length + pars.length + activeAlts.length + secAportes.length;
+      if (totalItems === 0) return;
+
       apLines.push('');
       apLines.push(sec.label.replace(/^[\d./]+\s*/, ''));
-      if (cirgs.length) {
-        apLines.push('  CIRURGIAS:');
-        cirgs.forEach(c => {
-          apLines.push(`    • ${c.name} — ${formatDateToBRL(c.date)} (${calcDias(c.date)})`);
-          if (c.notes) apLines.push(`      ${c.notes}`);
-        });
-      }
-      if (cults.length) {
-        apLines.push('  CULTURAS:');
-        cults.forEach(c => {
-          apLines.push(`    • ${c.site}${c.microorganism ? ` — ${c.microorganism}` : ''} — ${formatDateToBRL(c.collectionDate)}`);
-          if (c.diagnosticoLabel) {
-            let diagLine = `      ▪ Diag: ${c.diagnosticoLabel}`;
-            if (c.diagnosticoDataInicio) diagLine += ` em ${formatDateToBRL(c.diagnosticoDataInicio)} (${calcDias(c.diagnosticoDataInicio)})`;
-            apLines.push(diagLine);
-          }
-          if (c.observation) apLines.push(`      ${c.observation}`);
-        });
-      }
-      if (diets.length) {
-        apLines.push('  DIETAS:');
-        diets.forEach(d => {
-          apLines.push(`    • ${d.type}${d.volume ? ` ${d.volume}ml` : ''} — Início: ${formatDateToBRL(d.data_inicio.split('T')[0])} (${calcDias(d.data_inicio)})`);
-          if (d.vet_at != null) apLines.push(`      VET AT: ${d.vet_at.toFixed(0)}% (${d.vet} kcal/dia de ${d.vet_pleno} kcal/dia)`);
-          if (d.pt_at != null) apLines.push(`      PT AT: ${d.pt_at.toFixed(0)}% (${d.pt} g/dia de ${d.pt_g_dia} g/dia)`);
-          if (d.observacao) apLines.push(`      ${d.observacao}`);
-        });
-      }
-      if (meds.length) {
+
+      const usedMedIds  = new Set<string | number>();
+      const usedCultIds = new Set<string | number>();
+      const usedPnlIds  = new Set<string>();
+
+      // Agrupa medicações, culturas e painéis pelo diagnóstico vinculado
+      secDiags.forEach(diag => {
+        const lbl = diag.label === 'Outros' && diag.texto_digitado ? diag.texto_digitado : diag.label;
+        const det = diag.label !== 'Outros' && diag.texto_digitado ? ` (${diag.texto_digitado})` : '';
+        const tag = diag.tipo === 'principal' ? '★ ' : '';
+        apLines.push(`  ${tag}Diagnóstico: ${lbl}${det}`);
+
+        const diagMeds  = allSecMeds.filter(m => m.diagnosticoId != null && diag.allIds.includes(m.diagnosticoId));
+        const diagCults = allSecCults.filter(c => c.diagnosticoId != null && diag.allIds.includes(c.diagnosticoId));
+        const diagPnls  = allSecPnls.filter(pn => pn.diagnostico_id != null && diag.allIds.includes(pn.diagnostico_id!));
+
+        if (diagMeds.length) {
+          apLines.push('    MEDICAÇÕES:');
+          diagMeds.forEach(m => {
+            const medDias = m.endDate
+              ? `${Math.max(1, Math.floor((new Date(m.endDate + 'T00:00:00').getTime() - new Date(m.startDate + 'T00:00:00').getTime()) / 86400000) + 1)}d`
+              : calcDias(m.startDate);
+            let line = `      • ${m.name}${m.dosage ? ` (${m.dosage})` : ''} — Início: ${formatDateToBRL(m.startDate)}`;
+            if (m.endDate) line += ` | Fim: ${formatDateToBRL(m.endDate)}`;
+            line += ` (${medDias})`;
+            apLines.push(line);
+            if (m.observacao) apLines.push(`        ${m.observacao}`);
+            usedMedIds.add(m.id);
+          });
+        }
+
+        if (diagCults.length) {
+          apLines.push('    CULTURAS:');
+          diagCults.forEach(c => {
+            apLines.push(`      • ${c.site}${c.microorganism ? ` — ${c.microorganism}` : ''} — ${formatDateToBRL(c.collectionDate)}`);
+            if (c.observation) apLines.push(`        ${c.observation}`);
+            usedCultIds.add(c.id);
+          });
+        }
+
+        if (diagPnls.length) {
+          apLines.push('    PAINÉIS VIRAIS:');
+          diagPnls.forEach(pn => {
+            apLines.push(`      • ${pn.categoria} — ${pn.painel} — ${formatDateToBRL(pn.data_coleta)}${pn.resultado ? ` — ${pn.resultado}` : ''}${pn.valor ? ` (${pn.valor})` : ''}`);
+            if (pn.observacao) apLines.push(`        ${pn.observacao}`);
+            usedPnlIds.add(pn.id);
+          });
+        }
+      });
+
+      // Itens sem diagnóstico vinculado
+      // 2. Medicações sem diagnóstico
+      const orphanMeds  = allSecMeds.filter(m => !usedMedIds.has(m.id));
+      if (orphanMeds.length) {
         apLines.push('  MEDICAÇÕES:');
-        meds.forEach(m => {
+        orphanMeds.forEach(m => {
           const medDias = m.endDate
             ? `${Math.max(1, Math.floor((new Date(m.endDate + 'T00:00:00').getTime() - new Date(m.startDate + 'T00:00:00').getTime()) / 86400000) + 1)}d`
             : calcDias(m.startDate);
@@ -903,14 +939,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           if (m.endDate) line += ` | Fim: ${formatDateToBRL(m.endDate)}`;
           line += ` (${medDias})`;
           apLines.push(line);
-          if (m.diagnosticoLabel) {
-            let diagLine = `      ▪ Diag: ${m.diagnosticoLabel}`;
-            if (m.diagnosticoDataInicio) diagLine += ` em ${formatDateToBRL(m.diagnosticoDataInicio)} (${calcDias(m.diagnosticoDataInicio)})`;
-            apLines.push(diagLine);
-          }
           if (m.observacao) apLines.push(`      ${m.observacao}`);
         });
       }
+
+      // 3. Exames
       if (exs.length) {
         apLines.push('  EXAMES:');
         exs.forEach(e => {
@@ -918,6 +951,28 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           if (e.observation) apLines.push(`      ${e.observation}`);
         });
       }
+
+      // 4. Culturas sem diagnóstico
+      const orphanCults = allSecCults.filter(c => !usedCultIds.has(c.id));
+      if (orphanCults.length) {
+        apLines.push('  CULTURAS:');
+        orphanCults.forEach(c => {
+          apLines.push(`    • ${c.site}${c.microorganism ? ` — ${c.microorganism}` : ''} — ${formatDateToBRL(c.collectionDate)}`);
+          if (c.observation) apLines.push(`      ${c.observation}`);
+        });
+      }
+
+      // 5. Painéis Virais sem diagnóstico
+      const orphanPnls  = allSecPnls.filter(pn => !usedPnlIds.has(pn.id));
+      if (orphanPnls.length) {
+        apLines.push('  PAINÉIS VIRAIS:');
+        orphanPnls.forEach(pn => {
+          apLines.push(`    • ${pn.categoria} — ${pn.painel} — ${formatDateToBRL(pn.data_coleta)}${pn.resultado ? ` — ${pn.resultado}` : ''}${pn.valor ? ` (${pn.valor})` : ''}`);
+          if (pn.observacao) apLines.push(`      ${pn.observacao}`);
+        });
+      }
+
+      // 6. Imagem
       if (imgs.length) {
         apLines.push('  IMAGEM:');
         imgs.forEach(i => {
@@ -925,34 +980,55 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           if (i.observacao) apLines.push(`      ${i.observacao}`);
         });
       }
-      if (pnls.length) {
-        apLines.push('  PAINÉIS VIRAIS:');
-        pnls.forEach(pn => {
-          apLines.push(`    • ${pn.categoria} — ${pn.painel} — ${formatDateToBRL(pn.data_coleta)}${pn.resultado ? ` — ${pn.resultado}` : ''}${pn.valor ? ` (${pn.valor})` : ''}`);
-          if (pn.diagnostico_label) {
-            let diagLine = `      ▪ Diag: ${pn.diagnostico_label}`;
-            if (pn.diagnostico_data_inicio) diagLine += ` em ${formatDateToBRL(pn.diagnostico_data_inicio)} (${calcDias(pn.diagnostico_data_inicio)})`;
-            apLines.push(diagLine);
-          }
-          if (pn.observacao) apLines.push(`      ${pn.observacao}`);
-        });
-      }
+
+      // 7. Pareceres
       if (pars.length) {
         apLines.push('  PARECERES:');
         pars.forEach(par => apLines.push(`    • ${par.especialista} — ${formatDateToBRL(par.data_parecer)}: ${par.parecer ?? '—'}`));
       }
-      const activeAlts = alts.filter(a => { const st = (a.status || '').toLowerCase(); return !st.includes('concluí') && !st.includes('concluido') && !st.includes('resolvido') && !st.includes('arquivado'); });
+
+      // 8. Condutas
       if (activeAlts.length) {
         apLines.push('  CONDUTAS:');
         activeAlts.forEach(a => apLines.push(`    • ${a.alerta_descricao}`));
       }
+
+      // Cirurgias (específico da avaliação cirúrgica)
+      if (cirgs.length) {
+        apLines.push('  CIRURGIAS:');
+        cirgs.forEach(c => {
+          apLines.push(`    • ${c.name} — ${formatDateToBRL(c.date)} (${calcDias(c.date)})`);
+          if (c.notes) apLines.push(`      ${c.notes}`);
+        });
+      }
+
+      if (diets.length) {
+        apLines.push('  DIETAS:');
+        diets.forEach(d => {
+          if (d.vet_at != null) apLines.push(`    VET AT: ${d.vet_at.toFixed(0)}% (${d.vet} kcal/dia de ${d.vet_pleno} kcal/dia)`);
+          if (d.pt_at != null) apLines.push(`    PT AT: ${d.pt_at.toFixed(0)}% (${d.pt} g/dia de ${d.pt_g_dia} g/dia)`);
+          if (d.observacao) apLines.push(`    ${d.observacao}`);
+        });
+      }
+      if (secAportes.length) {
+        apLines.push('  APORTES:');
+        secAportes.forEach((a, idx) => {
+          if (idx > 0) apLines.push('');
+          apLines.push(`    ${new Date(a.data_referencia + 'T12:00:00').toLocaleDateString('pt-BR')}`);
+          apLines.push(`    VO: ${a.vo_ml_kg_h.toFixed(2)} mL/kg/h`);
+          apLines.push(`    HV/NPT: ${a.hv_npt_ml_kg_h.toFixed(2)} mL/kg/h`);
+          apLines.push(`    MED: ${a.medicacoes_ml_kg_h.toFixed(2)} mL/kg/h`);
+          apLines.push(`    THT: ${a.tht_ml_kg_h.toFixed(2)} mL/kg/h`);
+        });
+      }
     });
+
     if (apLines.length > 0) {
-      title('15. AP — AVALIAÇÃO x PROPEDÊUTICA');
+      title('13. AP — AVALIAÇÃO x PROPEDÊUTICA');
       apLines.forEach(l => add(l));
     }
 
-    title('16. CONDUTAS CRÍTICAS — PRÓXIMAS 24H');
+    title('14. CONDUTAS CRÍTICAS — PRÓXIMAS 24H');
     if (condutasCriticas.trim()) add(condutasCriticas);
 
     blank();
@@ -1513,7 +1589,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       </Section>
 
       {/* 14. AP — Avaliação x Propedêutica */}
-      <Section title="15. AP — Avaliação x Propedêutica (Alertas)" id="avaliacoes" open={openSections.has('avaliacoes')} onToggle={() => toggle('avaliacoes')}>
+      <Section title="13. AP — Avaliação x Propedêutica (Alertas)" id="avaliacoes" open={openSections.has('avaliacoes')} onToggle={() => toggle('avaliacoes')}>
         {alertasLoading ? (
           <div className="flex justify-center py-6"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" /></div>
         ) : (
@@ -1521,29 +1597,38 @@ export const EvolucaoDiariaScreen: React.FC = () => {
             {apSystems.map(system => {
               const allNames = [system, ...(SYSTEM_EXTRA_MATCHES[system] ?? [])];
 
-              const secDiags = diagItems.filter(d => d.sistema && allNames.includes(d.sistema));
-              const secCirurgias = (selectedPatient?.surgicalProcedures ?? [])
+              const secDiags = diagItems
+                .filter(d => d.sistema && allNames.includes(d.sistema))
+                .sort((a, b) => (a.tipo === 'principal' ? 0 : 1) - (b.tipo === 'principal' ? 0 : 1));
+
+              const allSecMeds = (selectedPatient?.medications ?? [])
+                .filter(m => !m.isArchived && m.mostrar_evolucao !== false && m.sistema && allNames.includes(m.sistema));
+              const allSecCults = (selectedPatient?.cultures ?? [])
                 .filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && allNames.includes(c.sistema));
-              const secCulturas = (selectedPatient?.cultures ?? [])
+              const allSecPnls = paineisViraisList
+                .filter(pn => pn.mostrar_evolucao !== false && pn.sistema && allNames.includes(pn.sistema));
+
+              const secCirurgias = (selectedPatient?.surgicalProcedures ?? [])
                 .filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && allNames.includes(c.sistema));
               const secDietas = (selectedPatient?.diets ?? [])
                 .filter(d => !d.isArchived && d.mostrar_evolucao !== false && d.sistema && allNames.includes(d.sistema));
-              const secMedicacoes = (selectedPatient?.medications ?? [])
-                .filter(m => !m.isArchived && m.mostrar_evolucao !== false && m.sistema && allNames.includes(m.sistema));
               const secExames = (selectedPatient?.exams ?? [])
                 .filter(e => !e.isArchived && e.mostrar_evolucao !== false && e.sistema && allNames.includes(e.sistema));
               const secExamesImagem = examesImagemList
                 .filter(ei => ei.mostrar_evolucao !== false && ei.sistema && allNames.includes(ei.sistema));
-              const secPaineisVirais = paineisViraisList
-                .filter(pn => pn.mostrar_evolucao !== false && pn.sistema && allNames.includes(pn.sistema));
               const secPareceres = pareceresList
                 .filter(p => p.mostrar_evolucao !== false && (ESPECIALISTA_TO_SISTEMAS[p.especialista] ?? []).some(s => allNames.includes(s)));
               const secAlertas = alertasList.filter(a =>
                 a.mostrar_evolucao !== false && a.sistemas.some(s => allNames.includes(s))
               );
 
-              const total = secDiags.length + secCirurgias.length + secCulturas.length + secDietas.length + secMedicacoes.length + secExames.length + secExamesImagem.length + secPaineisVirais.length + secPareceres.length + secAlertas.length;
+              const total = secDiags.length + allSecMeds.length + allSecCults.length + allSecPnls.length + secCirurgias.length + secDietas.length + secExames.length + secExamesImagem.length + secPareceres.length + secAlertas.length;
               if (total === 0) return null;
+
+              // Rastreia itens já exibidos sob um diagnóstico
+              const usedMedIds  = new Set<string | number>();
+              const usedCultIds = new Set<string | number>();
+              const usedPnlIds  = new Set<string>();
 
               return (
                 <SubSection
@@ -1554,19 +1639,112 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                 >
                   <div className="space-y-3">
 
-                    {secDiags.length > 0 && (
+                    {/* Diagnósticos como cabeçalho com itens aninhados */}
+                    {secDiags.map((diag, diagIdx) => {
+                      const wkDiag = `diag_${diag.opcao_id}`;
+                      const offDiag = wordExcluded.has(wkDiag);
+                      const lbl = diag.label === 'Outros' && diag.texto_digitado ? diag.texto_digitado : diag.label;
+                      const det = diag.label !== 'Outros' && diag.texto_digitado ? ` (${diag.texto_digitado})` : '';
+
+                      const diagMeds  = allSecMeds.filter(m => m.diagnosticoId != null && diag.allIds.includes(m.diagnosticoId));
+                      const diagCults = allSecCults.filter(c => c.diagnosticoId != null && diag.allIds.includes(c.diagnosticoId));
+                      const diagPnls  = allSecPnls.filter(pn => pn.diagnostico_id != null && diag.allIds.includes(pn.diagnostico_id!));
+
+                      diagMeds.forEach(m => usedMedIds.add(m.id));
+                      diagCults.forEach(c => usedCultIds.add(c.id));
+                      diagPnls.forEach(pn => usedPnlIds.add(pn.id));
+
+                      return (
+                        <div key={diagIdx} className={`border border-orange-200 dark:border-orange-700 rounded-lg overflow-hidden transition-opacity ${offDiag ? 'opacity-40' : ''}`}>
+                          {/* Cabeçalho do diagnóstico */}
+                          <div className="relative flex items-start justify-between px-3 py-2 bg-orange-50 dark:bg-orange-900/20 pr-10">
+                            <div>
+                              <p className="text-sm font-bold text-orange-700 dark:text-orange-300">
+                                {diag.tipo === 'principal' ? '★ ' : ''}{lbl}{det}
+                              </p>
+                              {diag.created_at && <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(diag.created_at).toLocaleDateString('pt-BR')}</p>}
+                            </div>
+                            <button onClick={() => toggleWordItem(wkDiag)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110">
+                              <span className={`material-symbols-rounded text-[20px] ${offDiag ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{offDiag ? 'check_box_outline_blank' : 'check_box'}</span>
+                            </button>
+                          </div>
+
+                          {/* Itens vinculados ao diagnóstico */}
+                          {(diagMeds.length > 0 || diagCults.length > 0 || diagPnls.length > 0) && (
+                            <div className="px-3 pb-3 pt-2 space-y-2 bg-white dark:bg-slate-900/50">
+                              {diagMeds.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-bold text-blue-500 dark:text-blue-400 uppercase tracking-wide mb-1">Medicações</p>
+                                  <div className="space-y-1">
+                                    {diagMeds.map(m => {
+                                      const wk = `med_${m.id}`; const off = wordExcluded.has(wk);
+                                      return (
+                                        <div key={m.id} className={`relative p-2 pr-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                          <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{m.name}</p>
+                                          {m.dosage && <p className="text-xs text-slate-500 dark:text-slate-400">{m.dosage}</p>}
+                                          <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(m.startDate).toLocaleDateString('pt-BR')}</p>
+                                          <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                              {diagCults.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-bold text-lime-600 dark:text-lime-400 uppercase tracking-wide mb-1">Culturas</p>
+                                  <div className="space-y-1">
+                                    {diagCults.map(c => {
+                                      const wk = `cult_${c.id}`; const off = wordExcluded.has(wk);
+                                      return (
+                                        <div key={c.id} className={`relative p-2 pr-10 bg-lime-50 dark:bg-lime-900/20 rounded-lg border border-lime-200 dark:border-lime-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                          <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{c.site}</p>
+                                          {c.microorganism && <p className="text-xs text-slate-500 dark:text-slate-400">{c.microorganism}</p>}
+                                          <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(c.collectionDate).toLocaleDateString('pt-BR')}</p>
+                                          <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                              {diagPnls.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-bold text-fuchsia-600 dark:text-fuchsia-400 uppercase tracking-wide mb-1">Painéis Virais</p>
+                                  <div className="space-y-1">
+                                    {diagPnls.map(pn => {
+                                      const wk = `pnl_${pn.id}`; const off = wordExcluded.has(wk);
+                                      return (
+                                        <div key={pn.id} className={`relative p-2 pr-10 bg-fuchsia-50 dark:bg-fuchsia-900/20 rounded-lg border border-fuchsia-200 dark:border-fuchsia-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                          <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{pn.painel}</p>
+                                          <p className="text-xs text-slate-500 dark:text-slate-400">{pn.categoria}</p>
+                                          {pn.resultado && <p className="text-xs text-slate-500 dark:text-slate-400">{pn.resultado}{pn.valor ? ` (${pn.valor})` : ''}</p>}
+                                          <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(pn.data_coleta + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
+                                          <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* 2. Medicações sem diagnóstico */}
+                    {allSecMeds.filter(m => !usedMedIds.has(m.id)).length > 0 && (
                       <div>
-                        <p className="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wide mb-1.5">Diagnósticos</p>
+                        <p className="text-xs font-bold text-blue-500 dark:text-blue-400 uppercase tracking-wide mb-1.5">Medicações</p>
                         <div className="space-y-1">
-                          {secDiags.map((d, i) => {
-                            const wk = `diag_${d.opcao_id}`;
-                            const off = wordExcluded.has(wk);
-                            const lbl = d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label;
-                            const det = d.label !== 'Outros' && d.texto_digitado ? ` (${d.texto_digitado})` : '';
+                          {allSecMeds.filter(m => !usedMedIds.has(m.id)).map(m => {
+                            const wk = `med_${m.id}`; const off = wordExcluded.has(wk);
                             return (
-                              <div key={i} className={`relative p-2 pr-10 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
-                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{lbl}{det}</p>
-                                {d.created_at && <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(d.created_at).toLocaleDateString('pt-BR')}</p>}
+                              <div key={m.id} className={`relative p-2 pr-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{m.name}</p>
+                                {m.dosage && <p className="text-xs text-slate-500 dark:text-slate-400">{m.dosage}</p>}
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(m.startDate).toLocaleDateString('pt-BR')}</p>
                                 <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
@@ -1575,6 +1753,126 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                       </div>
                     )}
 
+                    {/* 3. Exames */}
+                    {secExames.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wide mb-1.5">Exames</p>
+                        <div className="space-y-1">
+                          {secExames.map(e => {
+                            const wk = `exam_${e.id}`; const off = wordExcluded.has(wk);
+                            return (
+                              <div key={e.id} className={`relative p-2 pr-10 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{e.name}</p>
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(e.date).toLocaleDateString('pt-BR')}</p>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 4. Culturas sem diagnóstico */}
+                    {allSecCults.filter(c => !usedCultIds.has(c.id)).length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-lime-600 dark:text-lime-400 uppercase tracking-wide mb-1.5">Culturas</p>
+                        <div className="space-y-1">
+                          {allSecCults.filter(c => !usedCultIds.has(c.id)).map(c => {
+                            const wk = `cult_${c.id}`; const off = wordExcluded.has(wk);
+                            return (
+                              <div key={c.id} className={`relative p-2 pr-10 bg-lime-50 dark:bg-lime-900/20 rounded-lg border border-lime-200 dark:border-lime-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{c.site}</p>
+                                {c.microorganism && <p className="text-xs text-slate-500 dark:text-slate-400">{c.microorganism}</p>}
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(c.collectionDate).toLocaleDateString('pt-BR')}</p>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 5. Painéis Virais sem diagnóstico */}
+                    {allSecPnls.filter(pn => !usedPnlIds.has(pn.id)).length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-fuchsia-600 dark:text-fuchsia-400 uppercase tracking-wide mb-1.5">Painéis Virais</p>
+                        <div className="space-y-1">
+                          {allSecPnls.filter(pn => !usedPnlIds.has(pn.id)).map(pn => {
+                            const wk = `pnl_${pn.id}`; const off = wordExcluded.has(wk);
+                            return (
+                              <div key={pn.id} className={`relative p-2 pr-10 bg-fuchsia-50 dark:bg-fuchsia-900/20 rounded-lg border border-fuchsia-200 dark:border-fuchsia-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{pn.painel}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">{pn.categoria}</p>
+                                {pn.resultado && <p className="text-xs text-slate-500 dark:text-slate-400">{pn.resultado}{pn.valor ? ` (${pn.valor})` : ''}</p>}
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(pn.data_coleta + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 6. Exames de Imagem */}
+                    {secExamesImagem.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wide mb-1.5">Exames de Imagem</p>
+                        <div className="space-y-1">
+                          {secExamesImagem.map(ei => {
+                            const wk = `img_${ei.id}`; const off = wordExcluded.has(wk);
+                            return (
+                              <div key={ei.id} className={`relative p-2 pr-10 bg-violet-50 dark:bg-violet-900/20 rounded-lg border border-violet-200 dark:border-violet-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ei.exame}</p>
+                                {ei.resultado && <p className="text-xs text-slate-500 dark:text-slate-400">{ei.resultado}</p>}
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(ei.data_exame).toLocaleDateString('pt-BR')}</p>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 7. Pareceres */}
+                    {secPareceres.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-pink-600 dark:text-pink-400 uppercase tracking-wide mb-1.5">Pareceres</p>
+                        <div className="space-y-1">
+                          {secPareceres.map(p => {
+                            const wk = `par_${p.id}`; const off = wordExcluded.has(wk);
+                            return (
+                              <div key={p.id} className={`relative p-2 pr-10 bg-pink-50 dark:bg-pink-900/20 rounded-lg border border-pink-200 dark:border-pink-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{p.especialista}</p>
+                                {p.parecer && <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{p.parecer}</p>}
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(p.data_parecer).toLocaleDateString('pt-BR')}</p>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 8. Condutas */}
+                    {secAlertas.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-1.5">Condutas</p>
+                        <div className="space-y-2">
+                          {secAlertas.map(a => {
+                            const wk = `alt_${a.id}`; const off = wordExcluded.has(wk);
+                            return (
+                              <div key={a.id} className={`relative p-2 pr-10 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-sm text-slate-700 dark:text-slate-200">{a.alerta_descricao}</p>
+                                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{new Date(a.created_at).toLocaleDateString('pt-BR')}</p>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 9. Cirurgias */}
                     {secCirurgias.length > 0 && (
                       <div>
                         <p className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wide mb-1.5">Cirurgias</p>
@@ -1594,25 +1892,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                       </div>
                     )}
 
-                    {secCulturas.length > 0 && (
-                      <div>
-                        <p className="text-xs font-bold text-lime-600 dark:text-lime-400 uppercase tracking-wide mb-1.5">Culturas</p>
-                        <div className="space-y-1">
-                          {secCulturas.map(c => {
-                            const wk = `cult_${c.id}`; const off = wordExcluded.has(wk);
-                            return (
-                              <div key={c.id} className={`relative p-2 pr-10 bg-lime-50 dark:bg-lime-900/20 rounded-lg border border-lime-200 dark:border-lime-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
-                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{c.site}</p>
-                                {c.microorganism && <p className="text-xs text-slate-500 dark:text-slate-400">{c.microorganism}</p>}
-                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(c.collectionDate).toLocaleDateString('pt-BR')}</p>
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
+                    {/* 10. Dietas */}
                     {secDietas.length > 0 && (
                       <div>
                         <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide mb-1.5">Dietas</p>
@@ -1638,122 +1918,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                       </div>
                     )}
 
-
-                    {secMedicacoes.length > 0 && (
-                      <div>
-                        <p className="text-xs font-bold text-blue-500 dark:text-blue-400 uppercase tracking-wide mb-1.5">Medicações</p>
-                        <div className="space-y-1">
-                          {secMedicacoes.map(m => {
-                            const wk = `med_${m.id}`; const off = wordExcluded.has(wk);
-                            return (
-                              <div key={m.id} className={`relative p-2 pr-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
-                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{m.name}</p>
-                                {m.dosage && <p className="text-xs text-slate-500 dark:text-slate-400">{m.dosage}</p>}
-                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(m.startDate).toLocaleDateString('pt-BR')}</p>
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {secExames.length > 0 && (
-                      <div>
-                        <p className="text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wide mb-1.5">Exames</p>
-                        <div className="space-y-1">
-                          {secExames.map(e => {
-                            const wk = `exam_${e.id}`; const off = wordExcluded.has(wk);
-                            return (
-                              <div key={e.id} className={`relative p-2 pr-10 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
-                                <div className="flex items-center justify-between gap-2 pr-2">
-                                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{e.name}</p>
-                                </div>
-                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(e.date).toLocaleDateString('pt-BR')}</p>
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {secExamesImagem.length > 0 && (
-                      <div>
-                        <p className="text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wide mb-1.5">Exames de Imagem</p>
-                        <div className="space-y-1">
-                          {secExamesImagem.map(ei => {
-                            const wk = `img_${ei.id}`; const off = wordExcluded.has(wk);
-                            return (
-                              <div key={ei.id} className={`relative p-2 pr-10 bg-violet-50 dark:bg-violet-900/20 rounded-lg border border-violet-200 dark:border-violet-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
-                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ei.exame}</p>
-                                {ei.resultado && <p className="text-xs text-slate-500 dark:text-slate-400">{ei.resultado}</p>}
-                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(ei.data_exame).toLocaleDateString('pt-BR')}</p>
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {secPaineisVirais.length > 0 && (
-                      <div>
-                        <p className="text-xs font-bold text-fuchsia-600 dark:text-fuchsia-400 uppercase tracking-wide mb-1.5">Painéis Virais</p>
-                        <div className="space-y-1">
-                          {secPaineisVirais.map(pn => {
-                            const wk = `pnl_${pn.id}`; const off = wordExcluded.has(wk);
-                            return (
-                              <div key={pn.id} className={`relative p-2 pr-10 bg-fuchsia-50 dark:bg-fuchsia-900/20 rounded-lg border border-fuchsia-200 dark:border-fuchsia-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
-                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{pn.painel}</p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">{pn.categoria}</p>
-                                {pn.resultado && <p className="text-xs text-slate-500 dark:text-slate-400">{pn.resultado}{pn.valor ? ` (${pn.valor})` : ''}</p>}
-                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(pn.data_coleta + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {secPareceres.length > 0 && (
-                      <div>
-                        <p className="text-xs font-bold text-pink-600 dark:text-pink-400 uppercase tracking-wide mb-1.5">Pareceres</p>
-                        <div className="space-y-1">
-                          {secPareceres.map(p => {
-                            const wk = `par_${p.id}`; const off = wordExcluded.has(wk);
-                            return (
-                              <div key={p.id} className={`relative p-2 pr-10 bg-pink-50 dark:bg-pink-900/20 rounded-lg border border-pink-200 dark:border-pink-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
-                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{p.especialista}</p>
-                                {p.parecer && <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{p.parecer}</p>}
-                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(p.data_parecer).toLocaleDateString('pt-BR')}</p>
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {secAlertas.length > 0 && (
-                      <div>
-                        <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-1.5">Condutas</p>
-                        <div className="space-y-2">
-                          {secAlertas.map(a => {
-                            const wk = `alt_${a.id}`; const off = wordExcluded.has(wk);
-                            return (
-                              <div key={a.id} className={`relative p-2 pr-10 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
-                                <p className="text-sm text-slate-700 dark:text-slate-200">{a.alerta_descricao}</p>
-                                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{new Date(a.created_at).toLocaleDateString('pt-BR')}</p>
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
                   </div>
                 </SubSection>
               );
@@ -1763,7 +1927,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       </Section>
 
       {/* 15. Condutas Críticas */}
-      <Section title="16. Condutas Críticas — Próximas 24h" id="condutasCriticas" open={openSections.has('condutasCriticas')} onToggle={() => toggle('condutasCriticas')}>
+      <Section title="14. Condutas Críticas — Próximas 24h" id="condutasCriticas" open={openSections.has('condutasCriticas')} onToggle={() => toggle('condutasCriticas')}>
         <Field label="Condutas Críticas" value={condutasCriticas} onChange={setCondutasCriticas} rows={6} placeholder="Liste as condutas críticas para as próximas 24 horas..." />
       </Section>
 
