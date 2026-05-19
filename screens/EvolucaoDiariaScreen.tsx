@@ -895,13 +895,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           apLines.push('    MEDICAÇÕES:');
           diagMeds.forEach(m => {
             const medDias = m.endDate
-              ? `${Math.max(1, Math.floor((new Date(m.endDate + 'T00:00:00').getTime() - new Date(m.startDate + 'T00:00:00').getTime()) / 86400000) + 1)}d`
-              : calcDias(m.startDate);
-            let line = `      • ${m.name}${m.dosage ? ` (${m.dosage})` : ''} — Início: ${formatDateToBRL(m.startDate)}`;
-            if (m.endDate) line += ` | Fim: ${formatDateToBRL(m.endDate)}`;
-            line += ` (${medDias})`;
-            apLines.push(line);
-            if (m.observacao) apLines.push(`        ${m.observacao}`);
+              ? Math.max(0, Math.floor((new Date(m.endDate + 'T00:00:00').getTime() - new Date(m.startDate + 'T00:00:00').getTime()) / 86400000))
+              : Math.max(0, Math.floor((_today.getTime() - new Date(m.startDate + 'T00:00:00').getTime()) / 86400000));
+            const dosagePart = m.dosage && m.dosage !== m.name ? ` (${m.dosage})` : '';
+            apLines.push(`      • ${m.name}${dosagePart} — ${formatDateToBRL(m.startDate)} — Dia ${medDias}`);
             usedMedIds.add(m.id);
           });
         }
@@ -932,13 +929,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         apLines.push('  MEDICAÇÕES:');
         orphanMeds.forEach(m => {
           const medDias = m.endDate
-            ? `${Math.max(1, Math.floor((new Date(m.endDate + 'T00:00:00').getTime() - new Date(m.startDate + 'T00:00:00').getTime()) / 86400000) + 1)}d`
-            : calcDias(m.startDate);
-          let line = `    • ${m.name}${m.dosage ? ` (${m.dosage})` : ''} — Início: ${formatDateToBRL(m.startDate)}`;
-          if (m.endDate) line += ` | Fim: ${formatDateToBRL(m.endDate)}`;
-          line += ` (${medDias})`;
-          apLines.push(line);
-          if (m.observacao) apLines.push(`      ${m.observacao}`);
+            ? Math.max(0, Math.floor((new Date(m.endDate + 'T00:00:00').getTime() - new Date(m.startDate + 'T00:00:00').getTime()) / 86400000))
+            : Math.max(0, Math.floor((_today.getTime() - new Date(m.startDate + 'T00:00:00').getTime()) / 86400000));
+          const dosagePart = m.dosage && m.dosage !== m.name ? ` (${m.dosage})` : '';
+          apLines.push(`    • ${m.name}${dosagePart} — ${formatDateToBRL(m.startDate)} — Dia ${medDias}`);
         });
       }
 
@@ -946,8 +940,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       if (exs.length) {
         apLines.push('  EXAMES:');
         exs.forEach(e => {
-          apLines.push(`    • ${e.name} — ${formatDateToBRL(e.date)}`);
-          if (e.observation) apLines.push(`      ${e.observation}`);
+          apLines.push(`    • Em ${formatDateToBRL(e.date)} — ${e.name} — ${e.result}`);
         });
       }
 
