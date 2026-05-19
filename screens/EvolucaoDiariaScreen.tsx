@@ -702,10 +702,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   const buildTextContent = (): string => {
     const p = selectedPatient!;
     const lines: string[] = [];
-    const sep = '─'.repeat(60);
     const add = (l: string) => lines.push(l);
     const blank = () => lines.push('');
-    const title = (t: string) => { blank(); add(t); add(sep); };
+    const title = (t: string) => { blank(); add(t); };
 
     add('EVOLUÇÃO DIÁRIA');
     add(`Data: ${new Date(date + 'T12:00:00').toLocaleDateString('pt-BR')}`);
@@ -1032,17 +1031,13 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     if (condutasCriticas.trim()) add(condutasCriticas);
 
     blank();
-    add(sep);
     add(`Gerado em: ${new Date().toLocaleString('pt-BR')} | RoundKids`);
     return lines.join('\n');
   };
 
 
   const handleDownloadDoc = async () => {
-    const content = buildTextContent()
-      .split('\n')
-      .filter(line => !/^─+$/.test(line.trim()))
-      .join('\n');
+    const content = buildTextContent();
     const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const activeDevicesDoc = (selectedPatient!.devices ?? []).filter(d => !d.isArchived).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
     const devicesTableHtml = activeDevicesDoc.length > 0 ? `
