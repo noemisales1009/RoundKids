@@ -881,11 +881,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const usedPnlIds  = new Set<string>();
 
       // Agrupa medicações, culturas e painéis pelo diagnóstico vinculado
+      if (secDiags.length > 0) apLines.push('  Diagnóstico');
       secDiags.forEach(diag => {
         const lbl = diag.label === 'Outros' && diag.texto_digitado ? diag.texto_digitado : diag.label;
         const det = diag.label !== 'Outros' && diag.texto_digitado ? ` (${diag.texto_digitado})` : '';
-        const tag = diag.tipo === 'principal' ? '★ ' : '';
-        apLines.push(`  ${tag}${lbl}${det}`);
+        apLines.push(`  ★ ${lbl}${det}`);
 
         const diagMeds  = allSecMeds.filter(m => m.diagnosticoId != null && diag.allIds.includes(m.diagnosticoId));
         const diagCults = allSecCults.filter(c => c.diagnosticoId != null && diag.allIds.includes(c.diagnosticoId));
