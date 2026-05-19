@@ -423,7 +423,14 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                                         className={`flex items-start gap-2 px-3 py-2 cursor-pointer text-sm border-t border-slate-200 dark:border-slate-700 ${selectedDiagnosticoId === d.id ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
                                     >
                                         <span className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${selectedDiagnosticoId === d.id ? 'border-blue-500 bg-blue-500' : 'border-slate-400'}`} />
-                                        {d.label}
+                                        <span>
+                                            {d.label}
+                                            {d.created_at && (
+                                                <span className="block text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                                                    {new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'America/Sao_Paulo' }).format(new Date(d.created_at))}
+                                                </span>
+                                            )}
+                                        </span>
                                     </div>
                                 ))}
                             </div>
