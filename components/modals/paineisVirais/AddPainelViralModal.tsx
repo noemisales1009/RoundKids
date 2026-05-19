@@ -327,7 +327,14 @@ export const AddPainelViralModal: React.FC<{
                                         className={`flex items-center gap-2 px-3 py-2 cursor-pointer text-sm ${selectedDiagnosticoId === d.id ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
                                     >
                                         <span className={`w-3 h-3 rounded-full border-2 shrink-0 ${selectedDiagnosticoId === d.id ? 'border-cyan-500 bg-cyan-500' : 'border-slate-400'}`} />
-                                        {d.label}
+                                        <span>
+                                            {d.label}
+                                            {d.created_at && (
+                                                <span className="block text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                                                    {new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'America/Sao_Paulo' }).format(new Date(d.created_at))}
+                                                </span>
+                                            )}
+                                        </span>
                                     </div>
                                 ))}
                             </div>
