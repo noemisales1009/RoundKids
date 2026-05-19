@@ -915,8 +915,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         if (diagPnls.length) {
           apLines.push('    PAINÉIS VIRAIS:');
           diagPnls.forEach(pn => {
-            apLines.push(`      • ${pn.categoria} — ${pn.painel} — ${formatDateToBRL(pn.data_coleta)}${pn.resultado ? ` — ${pn.resultado}` : ''}${pn.valor ? ` (${pn.valor})` : ''}`);
-            if (pn.observacao) apLines.push(`        ${pn.observacao}`);
+            apLines.push(`      • ${pn.painel} — ${pn.categoria}${pn.resultado ? ` — ${pn.resultado}` : ''}${pn.valor ? ` (${pn.valor})` : ''} — Em ${formatDateToBRL(pn.data_coleta)}`);
             usedPnlIds.add(pn.id);
           });
         }
@@ -959,8 +958,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       if (orphanPnls.length) {
         apLines.push('  PAINÉIS VIRAIS:');
         orphanPnls.forEach(pn => {
-          apLines.push(`    • ${pn.categoria} — ${pn.painel} — ${formatDateToBRL(pn.data_coleta)}${pn.resultado ? ` — ${pn.resultado}` : ''}${pn.valor ? ` (${pn.valor})` : ''}`);
-          if (pn.observacao) apLines.push(`      ${pn.observacao}`);
+          apLines.push(`    • ${pn.painel} — ${pn.categoria}${pn.resultado ? ` — ${pn.resultado}` : ''}${pn.valor ? ` (${pn.valor})` : ''} — Em ${formatDateToBRL(pn.data_coleta)}`);
         });
       }
 
@@ -968,8 +966,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       if (imgs.length) {
         apLines.push('  IMAGEM:');
         imgs.forEach(i => {
-          apLines.push(`    • ${i.exame} — ${formatDateToBRL(i.data_exame)}${i.resultado ? ` — ${i.resultado}` : ''}`);
-          if (i.observacao) apLines.push(`      ${i.observacao}`);
+          apLines.push(`    • ${i.exame}${i.resultado ? ` — ${i.resultado}` : ''} — Em ${formatDateToBRL(i.data_exame)}`);
         });
       }
 
