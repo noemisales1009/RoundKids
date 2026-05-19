@@ -1269,6 +1269,23 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         </div>
         <div className="flex gap-2">
           <button
+            onClick={() => {
+              const content = buildTextContent().replace(/@@DEVICES_TABLE@@/g, '');
+              const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `evolucao_${selectedPatient!.name.replace(/\s+/g, '_')}_${date}.txt`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }}
+            className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold transition"
+          >
+            Baixar TXT
+          </button>
+          <button
             onClick={handleDownloadDoc}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
           >
