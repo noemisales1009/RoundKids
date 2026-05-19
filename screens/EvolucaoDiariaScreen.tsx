@@ -885,7 +885,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         const lbl = diag.label === 'Outros' && diag.texto_digitado ? diag.texto_digitado : diag.label;
         const det = diag.label !== 'Outros' && diag.texto_digitado ? ` (${diag.texto_digitado})` : '';
         const tag = diag.tipo === 'principal' ? '★ ' : '';
-        apLines.push(`  ${tag}Diagnóstico: ${lbl}${det}`);
+        apLines.push(`  ${tag}${lbl}${det}`);
 
         const diagMeds  = allSecMeds.filter(m => m.diagnosticoId != null && diag.allIds.includes(m.diagnosticoId));
         const diagCults = allSecCults.filter(c => c.diagnosticoId != null && diag.allIds.includes(c.diagnosticoId));
