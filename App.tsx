@@ -1,4 +1,4 @@
-import React, { useEffect, lazy, Suspense } from 'react';
+import React, { useEffect, lazy, Suspense, useState, useRef } from 'react';
 import { HashRouter, Routes, Route, useParams } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AdminRoute } from './components/AdminRoute';
@@ -6,6 +6,7 @@ import { AppLayout } from './components/AppLayout';
 import { NetworkBanner } from './components/NetworkBanner';
 import { NetworkProvider } from './contexts/NetworkContext';
 import { useHeader } from './hooks/useHeader';
+import { PreviewContext } from './contexts';
 
 // Providers
 import {
@@ -53,9 +54,97 @@ const ChecklistRedirector: React.FC = () => {
     return null;
 };
 
+// --- PREVIEW MODAL GLOBAL ---
+const PreviewModal: React.FC = () => {
+    const ctx = React.useContext(PreviewContext)!;
+    if (!ctx.showPreview) return null;
+
+    const { previewText, previewMinimized, setPreviewMinimized, setShowPreview, patientName, downloadWordRef } = ctx;
+
+    const handleClose = () => { setShowPreview(false); setPreviewMinimized(false); };
+
+    if (previewMinimized) {
+        return (
+            <div className="fixed bottom-0 right-4 z-50 w-72 bg-slate-800 rounded-t-xl shadow-2xl border border-slate-700">
+                <div className="flex items-center justify-between px-4 py-3">
+                    <span className="text-sm font-semibold text-white truncate">Evolução — {patientName}</span>
+                    <div className="flex items-center gap-2 ml-2 shrink-0">
+                        <button onClick={() => setPreviewMinimized(false)} title="Restaurar" className="text-slate-300 hover:text-white transition">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                        </button>
+                        <button onClick={handleClose} title="Fechar" className="text-slate-300 hover:text-red-400 transition">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-3xl flex flex-col" style={{ maxHeight: '90vh' }}>
+                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+                    <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Visualizar Evolução</h2>
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => setPreviewMinimized(true)} title="Minimizar" className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                        </button>
+                        <button onClick={handleClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-5">
+                    <pre className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-mono leading-relaxed">{previewText}</pre>
+                </div>
+                <div className="flex gap-3 px-5 py-4 border-t border-slate-200 dark:border-slate-700">
+                    <button
+                        onClick={() => navigator.clipboard.writeText(previewText)}
+                        className="flex-1 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold transition"
+                    >
+                        Copiar
+                    </button>
+                    <button
+                        onClick={() => {
+                            const blob = new Blob([previewText], { type: 'text/plain;charset=utf-8' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `evolucao_${patientName.replace(/\s+/g, '_')}.txt`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                        }}
+                        className="flex-1 px-4 py-2 bg-slate-500 hover:bg-slate-600 text-white rounded-lg text-sm font-semibold transition"
+                    >
+                        Baixar TXT
+                    </button>
+                    {downloadWordRef.current && (
+                        <button
+                            onClick={() => { handleClose(); downloadWordRef.current?.(); }}
+                            className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
+                        >
+                            Baixar Word
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // --- MAIN APP ---
 const App: React.FC = () => {
+    const [showPreview, setShowPreview] = useState(false);
+    const [previewText, setPreviewText] = useState('');
+    const [previewMinimized, setPreviewMinimized] = useState(false);
+    const [patientName, setPatientName] = useState('');
+    const downloadWordRef = useRef<(() => void) | null>(null);
+
     return (
+        <PreviewContext.Provider value={{ showPreview, setShowPreview, previewText, setPreviewText, previewMinimized, setPreviewMinimized, patientName, setPatientName, downloadWordRef }}>
         <NetworkProvider>
             <HashRouter>
                 <NotificationProvider>
@@ -91,7 +180,9 @@ const App: React.FC = () => {
                     </ThemeProvider>
                 </NotificationProvider>
             </HashRouter>
+            <PreviewModal />
         </NetworkProvider>
+        </PreviewContext.Provider>
     );
 }
 

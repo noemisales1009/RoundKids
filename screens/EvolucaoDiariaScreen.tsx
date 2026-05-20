@@ -1,6 +1,6 @@
 
 import React, { useState, useContext, useMemo, useEffect } from 'react';
-import { PatientsContext } from '../contexts';
+import { PatientsContext, PreviewContext } from '../contexts';
 import { useHeader } from '../hooks/useHeader';
 import { CheckCircleIcon, AlertIcon, WarningIcon } from '../components/icons';
 import { formatDateToBRL, ALERT_SYSTEMS } from '../constants';
@@ -379,6 +379,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   const [paineisViraisList, setPaineisViraisList] = useState<PainelViralRecord[]>([]);
   const [condutasCriticas, setCondutasCriticas] = useState('');
   const [wordExcluded, setWordExcluded] = useState<Set<string>>(new Set());
+  const previewCtx = useContext(PreviewContext)!;
   const toggleWordItem = (key: string) => setWordExcluded(prev => {
     const s = new Set(prev);
     s.has(key) ? s.delete(key) : s.add(key);
@@ -1253,6 +1254,18 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           />
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={() => {
+              const content = buildTextContent().replace(/@@DEVICES_TABLE@@/g, '');
+              previewCtx.setPreviewText(content);
+              previewCtx.setPatientName(selectedPatient?.name ?? '');
+              previewCtx.downloadWordRef.current = handleDownloadDoc;
+              previewCtx.setShowPreview(true);
+            }}
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition"
+          >
+            Visualizar
+          </button>
           <button
             onClick={() => {
               const content = buildTextContent().replace(/@@DEVICES_TABLE@@/g, '');
