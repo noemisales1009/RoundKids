@@ -54,6 +54,164 @@ export const ICON_MAP: Record<string, React.FC<{className?: string}>> = {
 
 // Remove static sample data - load from database instead
 
+export const DIAGNOSTICO_CATEGORIAS: Record<number, string> = {
+  // ── Principal (pergunta_id = 1) ──────────────────────────────────────────
+  // Cardiovascular
+  4: 'Cardiovascular', 8: 'Cardiovascular', 44: 'Cardiovascular', 49: 'Cardiovascular',
+  58: 'Cardiovascular', 67: 'Cardiovascular', 77: 'Cardiovascular', 83: 'Cardiovascular', 84: 'Cardiovascular',
+  // Choque / Distributivo
+  9: 'Choque / Distributivo', 10: 'Choque / Distributivo', 11: 'Choque / Distributivo',
+  12: 'Choque / Distributivo', 13: 'Choque / Distributivo',
+  // Gastrointestinal / Hepático
+  1: 'Gastrointestinal / Hepático', 2: 'Gastrointestinal / Hepático', 17: 'Gastrointestinal / Hepático',
+  20: 'Gastrointestinal / Hepático', 30: 'Gastrointestinal / Hepático', 42: 'Gastrointestinal / Hepático',
+  43: 'Gastrointestinal / Hepático', 47: 'Gastrointestinal / Hepático', 50: 'Gastrointestinal / Hepático',
+  // Hematológico / Oncológico
+  3: 'Hematológico / Oncológico', 14: 'Hematológico / Oncológico', 15: 'Hematológico / Oncológico',
+  16: 'Hematológico / Oncológico', 22: 'Hematológico / Oncológico', 59: 'Hematológico / Oncológico',
+  72: 'Hematológico / Oncológico', 73: 'Hematológico / Oncológico', 85: 'Hematológico / Oncológico',
+  86: 'Hematológico / Oncológico', 87: 'Hematológico / Oncológico',
+  // Infeccioso / Séptico
+  6: 'Infeccioso / Séptico', 24: 'Infeccioso / Séptico', 40: 'Infeccioso / Séptico',
+  46: 'Infeccioso / Séptico', 69: 'Infeccioso / Séptico', 70: 'Infeccioso / Séptico',
+  // Metabólico / Endócrino
+  7: 'Metabólico / Endócrino', 23: 'Metabólico / Endócrino', 26: 'Metabólico / Endócrino',
+  27: 'Metabólico / Endócrino', 28: 'Metabólico / Endócrino', 33: 'Metabólico / Endócrino',
+  38: 'Metabólico / Endócrino', 48: 'Metabólico / Endócrino', 71: 'Metabólico / Endócrino',
+  78: 'Metabólico / Endócrino', 88: 'Metabólico / Endócrino',
+  // Neurológico
+  18: 'Neurológico', 21: 'Neurológico', 32: 'Neurológico', 34: 'Neurológico',
+  36: 'Neurológico', 37: 'Neurológico', 45: 'Neurológico', 56: 'Neurológico', 57: 'Neurológico',
+  // Nutricional / Outros
+  25: 'Nutricional / Outros', 39: 'Nutricional / Outros', 54: 'Nutricional / Outros',
+  60: 'Nutricional / Outros', 61: 'Nutricional / Outros', 62: 'Nutricional / Outros', 63: 'Nutricional / Outros',
+  // Psiquiátrico / Social
+  31: 'Psiquiátrico / Social', 35: 'Psiquiátrico / Social', 55: 'Psiquiátrico / Social', 81: 'Psiquiátrico / Social',
+  // Renal
+  51: 'Renal', 52: 'Renal', 74: 'Renal', 75: 'Renal', 76: 'Renal', 89: 'Renal',
+  // Respiratório
+  5: 'Respiratório', 29: 'Respiratório', 41: 'Respiratório', 53: 'Respiratório',
+  64: 'Respiratório', 79: 'Respiratório', 80: 'Respiratório', 90: 'Respiratório',
+  91: 'Respiratório', 92: 'Respiratório', 93: 'Respiratório',
+  // Trauma / Cirúrgico
+  19: 'Trauma / Cirúrgico', 65: 'Trauma / Cirúrgico', 66: 'Trauma / Cirúrgico',
+  68: 'Trauma / Cirúrgico', 82: 'Trauma / Cirúrgico',
+
+  // ── Secundário (pergunta_id = 2) ─────────────────────────────────────────
+  // Cardiovascular
+  97: 'Cardiovascular', 138: 'Cardiovascular', 178: 'Cardiovascular', 180: 'Cardiovascular',
+  // Gastrointestinal / Hepático
+  104: 'Gastrointestinal / Hepático', 109: 'Gastrointestinal / Hepático', 120: 'Gastrointestinal / Hepático',
+  121: 'Gastrointestinal / Hepático', 124: 'Gastrointestinal / Hepático', 127: 'Gastrointestinal / Hepático',
+  131: 'Gastrointestinal / Hepático', 153: 'Gastrointestinal / Hepático', 166: 'Gastrointestinal / Hepático',
+  // Hematológico / Oncológico
+  96: 'Hematológico / Oncológico', 100: 'Hematológico / Oncológico', 102: 'Hematológico / Oncológico',
+  103: 'Hematológico / Oncológico', 158: 'Hematológico / Oncológico',
+  // Infeccioso / Séptico
+  101: 'Infeccioso / Séptico', 105: 'Infeccioso / Séptico', 108: 'Infeccioso / Séptico',
+  130: 'Infeccioso / Séptico', 148: 'Infeccioso / Séptico', 149: 'Infeccioso / Séptico',
+  150: 'Infeccioso / Séptico', 157: 'Infeccioso / Séptico', 161: 'Infeccioso / Séptico', 181: 'Infeccioso / Séptico',
+  // Metabólico / Endócrino
+  94: 'Metabólico / Endócrino', 95: 'Metabólico / Endócrino', 99: 'Metabólico / Endócrino',
+  111: 'Metabólico / Endócrino', 115: 'Metabólico / Endócrino', 116: 'Metabólico / Endócrino',
+  118: 'Metabólico / Endócrino', 119: 'Metabólico / Endócrino', 123: 'Metabólico / Endócrino',
+  126: 'Metabólico / Endócrino', 128: 'Metabólico / Endócrino', 132: 'Metabólico / Endócrino',
+  133: 'Metabólico / Endócrino', 134: 'Metabólico / Endócrino', 135: 'Metabólico / Endócrino',
+  136: 'Metabólico / Endócrino', 137: 'Metabólico / Endócrino', 139: 'Metabólico / Endócrino',
+  140: 'Metabólico / Endócrino', 141: 'Metabólico / Endócrino', 142: 'Metabólico / Endócrino',
+  143: 'Metabólico / Endócrino', 144: 'Metabólico / Endócrino', 145: 'Metabólico / Endócrino',
+  146: 'Metabólico / Endócrino', 147: 'Metabólico / Endócrino', 151: 'Metabólico / Endócrino',
+  152: 'Metabólico / Endócrino', 174: 'Metabólico / Endócrino',
+  // Neurológico
+  106: 'Neurológico', 110: 'Neurológico', 112: 'Neurológico', 113: 'Neurológico',
+  122: 'Neurológico', 169: 'Neurológico', 171: 'Neurológico', 172: 'Neurológico', 173: 'Neurológico',
+  // Nutricional / Outros
+  117: 'Nutricional / Outros', 125: 'Nutricional / Outros', 159: 'Nutricional / Outros',
+  160: 'Nutricional / Outros', 162: 'Nutricional / Outros', 163: 'Nutricional / Outros',
+  164: 'Nutricional / Outros', 165: 'Nutricional / Outros',
+  // Renal
+  154: 'Renal', 155: 'Renal', 175: 'Renal', 176: 'Renal', 177: 'Renal', 179: 'Renal',
+  // Respiratório
+  98: 'Respiratório', 114: 'Respiratório', 129: 'Respiratório', 156: 'Respiratório',
+  167: 'Respiratório', 168: 'Respiratório',
+  // Trauma / Cirúrgico
+  107: 'Trauma / Cirúrgico', 170: 'Trauma / Cirúrgico',
+};
+
+export interface StaticDiagnosticOption {
+  pergunta_id: 1 | 2;
+  codigo: string;
+  label: string;
+  categoria: string;
+  ordem: number;
+  has_input?: boolean;
+  input_placeholder?: string;
+}
+
+export const STATIC_DIAGNOSTICO_OPTIONS: StaticDiagnosticOption[] = [
+  // ── Novos Principal (pergunta_id = 1) ────────────────────────────────────
+  { pergunta_id: 1, codigo: 'PRIN_PARDS',       label: 'PARDS',                                 categoria: 'Respiratório',           ordem: 94 },
+  { pergunta_id: 1, codigo: 'PRIN_PAV',          label: 'PAV (Pneumonia Associada à Ventilação)', categoria: 'Respiratório',           ordem: 95 },
+  { pergunta_id: 1, codigo: 'PRIN_PNEUMO_HOSP',  label: 'Pneumonia Hospitalar',                  categoria: 'Respiratório',           ordem: 96 },
+  { pergunta_id: 1, codigo: 'PRIN_BRONCO_DISP',  label: 'Broncodisplasia',                       categoria: 'Respiratório',           ordem: 97 },
+  { pergunta_id: 1, codigo: 'PRIN_CORP_VIAS',    label: 'Corpo Estranho em Vias Aéreas',         categoria: 'Respiratório',           ordem: 98 },
+  { pergunta_id: 1, codigo: 'PRIN_FALHA_EXT',    label: 'Falha de Extubação',                    categoria: 'Respiratório',           ordem: 99 },
+  { pergunta_id: 1, codigo: 'PRIN_PNEUMO_VIR',   label: 'Pneumonia Viral',                       categoria: 'Respiratório',           ordem: 100 },
+  { pergunta_id: 1, codigo: 'PRIN_OUTROS_CHOQUE', label: 'Outros choques',                        categoria: 'Choque / Distributivo',  ordem: 101, has_input: true, input_placeholder: 'Especifique o tipo de choque' },
+  { pergunta_id: 1, codigo: 'PRIN_BRADIARR',     label: 'Bradicarritmias',                       categoria: 'Cardiovascular',         ordem: 102 },
+  { pergunta_id: 1, codigo: 'PRIN_TAQUIARR',     label: 'Taquiarritmias',                        categoria: 'Cardiovascular',         ordem: 102 },
+  { pergunta_id: 1, codigo: 'PRIN_PCR_ASSIST',   label: 'PCR – Assistolia',                      categoria: 'Cardiovascular',         ordem: 103 },
+  { pergunta_id: 1, codigo: 'PRIN_PCR_AESP',     label: 'PCR – AESP',                            categoria: 'Cardiovascular',         ordem: 104 },
+  { pergunta_id: 1, codigo: 'PRIN_PCR_FA',       label: 'PCR – FA (Fibrilação Atrial)',          categoria: 'Cardiovascular',         ordem: 105 },
+  { pergunta_id: 1, codigo: 'PRIN_PCR_TV',       label: 'PCR – TV (Taquicardia Ventricular)',    categoria: 'Cardiovascular',         ordem: 106 },
+  { pergunta_id: 1, codigo: 'PRIN_DELIRIUM',     label: 'Delírium',                              categoria: 'Neurológico',            ordem: 107 },
+  { pergunta_id: 1, codigo: 'PRIN_DIAB_CEN2',    label: 'Diabetes Insipidus Central',            categoria: 'Neurológico',            ordem: 108 },
+  { pergunta_id: 1, codigo: 'PRIN_POLINEURO',    label: 'Polineuropatia do Paciente Crítico',    categoria: 'Neurológico',            ordem: 109 },
+  { pergunta_id: 1, codigo: 'PRIN_SIHAD',        label: 'SIHAD',                                 categoria: 'Neurológico',            ordem: 110 },
+  { pergunta_id: 1, codigo: 'PRIN_SIND_ABS',     label: 'Síndrome de Abstinência',               categoria: 'Neurológico',            ordem: 111 },
+  { pergunta_id: 1, codigo: 'PRIN_SPSC_NEUR',    label: 'Síndrome Perdedora de Sal Cerebral',    categoria: 'Neurológico',            ordem: 112 },
+  { pergunta_id: 1, codigo: 'PRIN_GUILLAN',      label: 'Síndrome de Guillain-Barré',            categoria: 'Neurológico',            ordem: 113 },
+  { pergunta_id: 1, codigo: 'PRIN_ACID_MET',     label: 'Acidose Metabólica',                    categoria: 'Metabólico / Endócrino', ordem: 114 },
+  { pergunta_id: 1, codigo: 'PRIN_HIPOCALC',     label: 'Hipocalcemia',                          categoria: 'Metabólico / Endócrino', ordem: 115 },
+  { pergunta_id: 1, codigo: 'PRIN_HIPOCAL',      label: 'Hipocalemia (Hipopotassemia)',           categoria: 'Metabólico / Endócrino', ordem: 116 },
+  { pergunta_id: 1, codigo: 'PRIN_HIPOFOS',      label: 'Hipofosforemia',                        categoria: 'Metabólico / Endócrino', ordem: 117 },
+  { pergunta_id: 1, codigo: 'PRIN_HIPOGLICE',    label: 'Hipoglicemia',                          categoria: 'Metabólico / Endócrino', ordem: 118 },
+  { pergunta_id: 1, codigo: 'PRIN_HIPOMAGNES',   label: 'Hipomagnesemia',                        categoria: 'Metabólico / Endócrino', ordem: 119 },
+  { pergunta_id: 1, codigo: 'PRIN_HIPONATR',     label: 'Hiponatremia',                          categoria: 'Metabólico / Endócrino', ordem: 120 },
+  { pergunta_id: 1, codigo: 'PRIN_CONSTIP',      label: 'Constipação Intestinal',                categoria: 'Gastrointestinal / Hepático', ordem: 121 },
+  { pergunta_id: 1, codigo: 'PRIN_DIARR_AG',     label: 'Diarreia Aguda',                        categoria: 'Gastrointestinal / Hepático', ordem: 122 },
+  { pergunta_id: 1, codigo: 'PRIN_DIARR_CRO',    label: 'Diarreia Crônica',                      categoria: 'Gastrointestinal / Hepático', ordem: 123 },
+  { pergunta_id: 1, codigo: 'PRIN_PARASIT',      label: 'Parasitoses',                           categoria: 'Gastrointestinal / Hepático', ordem: 124 },
+  { pergunta_id: 1, codigo: 'PRIN_ACID_TUB',     label: 'Acidose Tubular Renal',                 categoria: 'Renal',                  ordem: 125 },
+  { pergunta_id: 1, codigo: 'PRIN_DIAB_NEF2',    label: 'Diabetes Insipidus Nefrogênico',        categoria: 'Renal',                  ordem: 126 },
+  { pergunta_id: 1, codigo: 'PRIN_SIND_COMP',    label: 'Síndrome Compartimental',               categoria: 'Trauma / Cirúrgico',     ordem: 127 },
+  { pergunta_id: 1, codigo: 'PRIN_OUTROS_TRAU',  label: 'Outros',                                categoria: 'Trauma / Cirúrgico',     ordem: 128, has_input: true, input_placeholder: 'Especifique' },
+  { pergunta_id: 1, codigo: 'PRIN_ALERGIA',      label: 'Alergias Alimentares',                  categoria: 'Nutricional / Outros',   ordem: 129 },
+  { pergunta_id: 1, codigo: 'PRIN_LESAO_DEC',    label: 'Lesão de Decúbito',                     categoria: 'Nutricional / Outros',   ordem: 130 },
+  // ── Novos Secundário (pergunta_id = 2) ──────────────────────────────────
+  { pergunta_id: 2, codigo: 'SEC_PARDS',         label: 'PARDS',                                 categoria: 'Respiratório',           ordem: 89 },
+  { pergunta_id: 2, codigo: 'SEC_PNEUMO_HOSP',   label: 'Pneumonia Hospitalar',                  categoria: 'Respiratório',           ordem: 90 },
+  { pergunta_id: 2, codigo: 'SEC_CORP_VIAS',     label: 'Corpo Estranho em Vias Aéreas',         categoria: 'Respiratório',           ordem: 91 },
+  { pergunta_id: 2, codigo: 'SEC_PNEUMO_VIR',    label: 'Pneumonia Viral',                       categoria: 'Respiratório',           ordem: 92 },
+  { pergunta_id: 2, codigo: 'SEC_BRADIARR',      label: 'Bradicarritmias',                       categoria: 'Cardiovascular',         ordem: 93 },
+  { pergunta_id: 2, codigo: 'SEC_TAQUIARR',      label: 'Taquiarritmias',                        categoria: 'Cardiovascular',         ordem: 94 },
+  { pergunta_id: 2, codigo: 'SEC_PCR_ASSIST',    label: 'PCR – Assistolia',                      categoria: 'Cardiovascular',         ordem: 95 },
+  { pergunta_id: 2, codigo: 'SEC_PCR_AESP',      label: 'PCR – AESP',                            categoria: 'Cardiovascular',         ordem: 96 },
+  { pergunta_id: 2, codigo: 'SEC_PCR_FA',        label: 'PCR – FA (Fibrilação Atrial)',          categoria: 'Cardiovascular',         ordem: 97 },
+  { pergunta_id: 2, codigo: 'SEC_PCR_TV',        label: 'PCR – TV (Taquicardia Ventricular)',    categoria: 'Cardiovascular',         ordem: 98 },
+  { pergunta_id: 2, codigo: 'SEC_DIAB_CEN',      label: 'Diabetes Insipidus Central',            categoria: 'Neurológico',            ordem: 99 },
+  { pergunta_id: 2, codigo: 'SEC_SPSC_NEUR',     label: 'Síndrome Perdedora de Sal Cerebral',    categoria: 'Neurológico',            ordem: 100 },
+  { pergunta_id: 2, codigo: 'SEC_GUILLAN',       label: 'Síndrome de Guillain-Barré',            categoria: 'Neurológico',            ordem: 101 },
+  { pergunta_id: 2, codigo: 'SEC_ACID_MET',      label: 'Acidose Metabólica',                    categoria: 'Metabólico / Endócrino', ordem: 102 },
+  { pergunta_id: 2, codigo: 'SEC_HIPOFOS',       label: 'Hipofosforemia',                        categoria: 'Metabólico / Endócrino', ordem: 103 },
+  { pergunta_id: 2, codigo: 'SEC_DIARR_CRO',     label: 'Diarreia Crônica',                      categoria: 'Gastrointestinal / Hepático', ordem: 104 },
+  { pergunta_id: 2, codigo: 'SEC_PARASITOSES',   label: 'Parasitoses',                           categoria: 'Gastrointestinal / Hepático', ordem: 105 },
+  { pergunta_id: 2, codigo: 'SEC_ACID_TUB',      label: 'Acidose Tubular Renal',                 categoria: 'Renal',                  ordem: 106 },
+  { pergunta_id: 2, codigo: 'SEC_DIAB_NEF',      label: 'Diabetes Insipidus Nefrogênico',        categoria: 'Renal',                  ordem: 107 },
+  { pergunta_id: 2, codigo: 'SEC_SIND_COMP',     label: 'Síndrome Compartimental',               categoria: 'Trauma / Cirúrgico',     ordem: 108 },
+  { pergunta_id: 2, codigo: 'SEC_ALERGIA',       label: 'Alergias Alimentares',                  categoria: 'Nutricional / Outros',   ordem: 109 },
+];
+
 export const DEVICE_TYPES: string[] = [
     'AVP1', 'AVP2', 'CNAF', 'CURATIVO À VÁCUO', 'CVC 1', 'CVC 2', 'CATETER DE SHILLY',
     'CATETER DE TENCKHOFF', 'DRENO TORÁXICO D', 'DRENO TORÁXICO E', 'DVE', 'GTT',

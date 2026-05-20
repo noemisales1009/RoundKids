@@ -2,14 +2,7 @@ import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { sanitizeTextOrNull } from '../lib/sanitize';
 import { ThemeContext } from '../contexts';
-import { ChevronRightIcon } from './icons';
-import { ALERT_SYSTEMS } from '../constants';
-
-interface DiagnosticQuestion {
-  id: number;
-  titulo: string;
-  tipo: 'principal' | 'secundario';
-}
+import { ALERT_SYSTEMS, DIAGNOSTICO_CATEGORIAS, STATIC_DIAGNOSTICO_OPTIONS } from '../constants';
 
 interface DiagnosticOption {
   id: number;
@@ -20,6 +13,7 @@ interface DiagnosticOption {
   input_placeholder?: string;
   ordem: number;
   parent_id?: number | null;
+  isStatic?: boolean;
 }
 
 interface PatientDiagnostic {
@@ -27,6 +21,7 @@ interface PatientDiagnostic {
   patient_id: string;
   pergunta_id: number;
   opcao_id: number;
+  opcao_label?: string;
   texto_digitado?: string;
   sistema?: string;
   status: 'resolvido' | 'nao_resolvido';
@@ -40,480 +35,34 @@ interface DiagnosticsSectionProps {
   onSave?: (data: PatientDiagnostic[]) => void;
 }
 
-const SISTEMAS = ALERT_SYSTEMS;
-
-// ── Sub-components defined OUTSIDE parent to keep stable references ──
-
-interface StatusSelectProps {
-  optionId: number;
+interface WorkingDiag {
+  tempId: string;
+  dbId?: number;
+  perguntaId: number;
+  opcaoId: number;
+  label: string;
+  categoria: string;
+  tipo: 'principal' | 'secundario';
+  dataInicio: string;
+  observacao: string;
+  inputComplement?: string;
+  sistema: string;
   status: 'resolvido' | 'nao_resolvido';
-  isDark: boolean;
-  onChange: (optionId: number, value: 'resolvido' | 'nao_resolvido') => void;
+  createdAt?: string;
+  resolvedAt?: string;
+  isNew: boolean;
+  isStatic?: boolean;
+  staticCodigo?: string;
 }
 
-const StatusSelect: React.FC<StatusSelectProps> = ({ optionId, status, isDark, onChange }) => {
-  const isResolved = status === 'resolvido';
-  return (
-    <select
-      value={status}
-      onChange={(e) => onChange(optionId, e.target.value as 'resolvido' | 'nao_resolvido')}
-      className={`px-2.5 py-1 text-xs rounded-full border font-semibold shrink-0 appearance-none cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 ${
-        isResolved
-          ? 'bg-emerald-500 border-emerald-400 text-white focus:ring-emerald-400'
-          : isDark
-            ? 'bg-rose-900/60 border-rose-700 text-rose-300 focus:ring-rose-500'
-            : 'bg-rose-50 border-rose-300 text-rose-700 focus:ring-rose-400'
-      }`}
-    >
-      <option value="nao_resolvido">Não Res.</option>
-      <option value="resolvido">Resolvido</option>
-    </select>
-  );
-};
+const CATEGORY_ORDER = [
+  'Cardiovascular', 'Choque / Distributivo', 'Gastrointestinal / Hepático',
+  'Hematológico / Oncológico', 'Infeccioso / Séptico', 'Metabólico / Endócrino',
+  'Neurológico', 'Nutricional / Outros', 'Psiquiátrico / Social', 'Renal',
+  'Respiratório', 'Trauma / Cirúrgico', 'Outros',
+];
 
-interface OptionRowProps {
-  option: DiagnosticOption;
-  allOptions: DiagnosticOption[];
-  diagnostics: PatientDiagnostic[];
-  checkedOptions: Record<number, boolean>;
-  expandedParentOption: number | null;
-  selectedStatus: Record<number, 'resolvido' | 'nao_resolvido'>;
-  inputValues: Record<number, string>;
-  sistemaValues: Record<number, string>;
-  isDark: boolean;
-  onToggle: (optionId: number, checked: boolean) => void;
-  onToggleParent: (optionId: number | null) => void;
-  onInputChange: (optionId: number, value: string) => void;
-  onStatusChange: (optionId: number, value: 'resolvido' | 'nao_resolvido') => void;
-  onSistemaChange: (optionId: number, value: string) => void;
-  onArchive: (optionId: number) => void;
-  dataInicioValues: Record<number, string>;
-  onDataInicioChange: (optionId: number, value: string) => void;
-  resolvedAtValues: Record<number, string>;
-  onResolvedAtChange: (optionId: number, value: string) => void;
-  onEdit: (optionId: number) => void;
-}
-
-const OptionRow: React.FC<OptionRowProps> = ({
-  option,
-  allOptions,
-  diagnostics,
-  checkedOptions,
-  expandedParentOption,
-  selectedStatus,
-  inputValues,
-  sistemaValues,
-  isDark,
-  onToggle,
-  onToggleParent,
-  onInputChange,
-  onStatusChange,
-  onSistemaChange,
-  onArchive,
-  dataInicioValues,
-  onDataInicioChange,
-  resolvedAtValues,
-  onResolvedAtChange,
-  onEdit,
-}) => {
-  const isChecked = diagnostics.some(d => d.opcao_id === option.id);
-  const isCurrentlyChecked = checkedOptions[option.id] !== undefined ? checkedOptions[option.id] : isChecked;
-  const childOptions = allOptions.filter(opt => opt.parent_id === option.id);
-  const hasChildren = childOptions.length > 0;
-  const hasCheckedChild = childOptions.some(child => checkedOptions[child.id]);
-  const isParentExpanded = expandedParentOption === option.id;
-  const isResolved = selectedStatus[option.id] === 'resolvido';
-
-  const rowBg = isCurrentlyChecked
-    ? isResolved
-      ? isDark
-        ? 'bg-emerald-950/60 border-l-4 border-l-emerald-500 border border-emerald-800/50'
-        : 'bg-emerald-50 border-l-4 border-l-emerald-500 border border-emerald-200'
-      : isDark
-        ? 'bg-blue-950/40 border-l-4 border-l-blue-500 border border-blue-800/40'
-        : 'bg-blue-50 border-l-4 border-l-blue-400 border border-blue-200'
-    : isDark
-      ? 'bg-slate-800/60 border border-slate-700/50'
-      : 'bg-white border border-slate-200';
-
-  return (
-    <div className="space-y-1.5">
-      <div className={`rounded-lg overflow-hidden transition-all duration-150 ${rowBg}`}>
-        <div className="flex items-center gap-2 px-3 py-2.5">
-          <input
-            type="checkbox"
-            checked={isCurrentlyChecked}
-            onChange={(e) => onToggle(option.id, e.target.checked)}
-            className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 shrink-0 accent-blue-500"
-          />
-          <span className={`flex-1 text-xs sm:text-sm leading-snug ${
-            isDark ? 'text-slate-200' : 'text-slate-800'
-          } `}>
-            {option.label}
-          </span>
-
-          {hasChildren && (
-            <button
-              onClick={() => onToggleParent(isParentExpanded ? null : option.id)}
-              className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold transition-colors shrink-0 ${
-                isDark
-                  ? 'bg-slate-700 hover:bg-slate-600 text-slate-300'
-                  : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
-              }`}
-              title="Ver sub-opções"
-            >
-              <span className="material-symbols-rounded text-[14px]">
-                {isParentExpanded ? 'expand_less' : 'expand_more'}
-              </span>
-              <span>{childOptions.length}</span>
-            </button>
-          )}
-
-          {isCurrentlyChecked && (
-            <>
-              <StatusSelect
-                optionId={option.id}
-                status={selectedStatus[option.id] || 'nao_resolvido'}
-                isDark={isDark}
-                onChange={onStatusChange}
-              />
-              <button
-                onClick={() => onArchive(option.id)}
-                className={`flex items-center justify-center w-6 h-6 rounded-full shrink-0 transition-colors ${
-                  isDark
-                    ? 'text-slate-500 hover:text-red-400 hover:bg-red-900/40'
-                    : 'text-slate-400 hover:text-red-600 hover:bg-red-50'
-                }`}
-                title="Arquivar diagnóstico"
-              >
-                <span className="material-symbols-rounded text-[16px]">close</span>
-              </button>
-            </>
-          )}
-        </div>
-
-        {isCurrentlyChecked && !hasCheckedChild && (
-          <div className={`px-3 pb-2.5 pt-0 border-t space-y-2 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-            {option.has_input && (
-              <input
-                type="text"
-                placeholder={option.input_placeholder || 'Digite aqui...'}
-                value={inputValues[option.id] || ''}
-                onChange={(e) => onInputChange(option.id, e.target.value)}
-                className={`mt-2 w-full px-3 py-1.5 text-xs sm:text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  isDark
-                    ? 'bg-slate-900 border-slate-600 text-slate-200 placeholder-slate-500'
-                    : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
-                }`}
-              />
-            )}
-            <div className={`flex flex-col gap-1 ${option.has_input ? '' : 'mt-2'}`}>
-              <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-medium shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                  Sistema:
-                </span>
-                <select
-                  value={SISTEMAS.includes(sistemaValues[option.id]) ? sistemaValues[option.id] : (sistemaValues[option.id] ? 'Outros' : '')}
-                  onChange={(e) => onSistemaChange(option.id, e.target.value)}
-                  className={`flex-1 px-2 py-0.5 text-xs rounded-md border appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                    isDark ? 'bg-slate-900 border-slate-700 text-slate-300' : 'bg-white border-slate-300 text-slate-700'
-                  }`}
-                >
-                  <option value="" disabled>— Selecione o sistema —</option>
-                  {SISTEMAS.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-              {(sistemaValues[option.id] === 'Outros' || (sistemaValues[option.id] && !SISTEMAS.includes(sistemaValues[option.id]))) && (
-                <input
-                  type="text"
-                  value={sistemaValues[option.id] === 'Outros' ? '' : (sistemaValues[option.id] || '')}
-                  onChange={(e) => onSistemaChange(option.id, e.target.value || 'Outros')}
-                  placeholder="Especifique o sistema..."
-                  autoFocus
-                  className={`w-full px-2 py-0.5 text-xs rounded-md border focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                    isDark ? 'bg-slate-900 border-slate-700 text-slate-300' : 'bg-white border-slate-300 text-slate-700'
-                  }`}
-                />
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className={`text-[10px] font-medium shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                Início:
-              </span>
-              <input
-                type="date"
-                value={dataInicioValues[option.id] || ''}
-                onChange={(e) => onDataInicioChange(option.id, e.target.value)}
-                className={`flex-1 px-2 py-0.5 text-xs rounded-md border cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                  isDark
-                    ? 'bg-slate-900 border-slate-700 text-slate-300'
-                    : 'bg-white border-slate-300 text-slate-700'
-                }`}
-              />
-            </div>
-            {isResolved && (
-              <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-medium shrink-0 ${isDark ? 'text-emerald-500' : 'text-emerald-600'}`}>
-                  Resolução:
-                </span>
-                <input
-                  type="date"
-                  value={resolvedAtValues[option.id] || ''}
-                  onChange={(e) => onResolvedAtChange(option.id, e.target.value)}
-                  className={`flex-1 px-2 py-0.5 text-xs rounded-md border cursor-pointer focus:outline-none focus:ring-1 focus:ring-emerald-500 ${
-                    isDark
-                      ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300'
-                      : 'bg-emerald-50 border-emerald-300 text-emerald-700'
-                  }`}
-                />
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {isParentExpanded && hasChildren && (
-        <div className={`ml-4 sm:ml-6 space-y-1.5 pl-3 border-l-2 ${isDark ? 'border-slate-600' : 'border-slate-300'}`}>
-          {childOptions.map(childOption => {
-            const isChildChecked = diagnostics.some(d => d.opcao_id === childOption.id);
-            const isChildCurrentlyChecked = checkedOptions[childOption.id] !== undefined ? checkedOptions[childOption.id] : isChildChecked;
-            const isChildResolved = selectedStatus[childOption.id] === 'resolvido';
-
-            const childRowBg = isChildCurrentlyChecked
-              ? isChildResolved
-                ? isDark
-                  ? 'bg-emerald-950/60 border-l-4 border-l-emerald-500 border border-emerald-800/50'
-                  : 'bg-emerald-50 border-l-4 border-l-emerald-500 border border-emerald-200'
-                : isDark
-                  ? 'bg-blue-950/40 border-l-4 border-l-blue-500 border border-blue-800/40'
-                  : 'bg-blue-50 border-l-4 border-l-blue-400 border border-blue-200'
-              : isDark
-                ? 'bg-slate-800/40 border border-slate-700/40'
-                : 'bg-slate-50 border border-slate-200';
-
-            return (
-              <div key={childOption.id} className="space-y-1.5">
-                <div className={`rounded-lg overflow-hidden transition-all duration-150 ${childRowBg}`}>
-                  <div className="flex items-center gap-2 px-3 py-2">
-                    <input
-                      type="checkbox"
-                      checked={isChildCurrentlyChecked}
-                      onChange={(e) => onToggle(childOption.id, e.target.checked)}
-                      className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 shrink-0 accent-blue-500"
-                    />
-                    <span className={`flex-1 text-xs sm:text-sm leading-snug ${
-                      isDark ? 'text-slate-200' : 'text-slate-800'
-                    } `}>
-                      {childOption.label}
-                    </span>
-                    {isChildCurrentlyChecked && (
-                      <>
-                        <StatusSelect
-                          optionId={childOption.id}
-                          status={selectedStatus[childOption.id] || 'nao_resolvido'}
-                          isDark={isDark}
-                          onChange={onStatusChange}
-                        />
-                        <button
-                          onClick={() => onArchive(childOption.id)}
-                          className={`flex items-center justify-center w-6 h-6 rounded-full shrink-0 transition-colors ${
-                            isDark
-                              ? 'text-slate-500 hover:text-red-400 hover:bg-red-900/40'
-                              : 'text-slate-400 hover:text-red-600 hover:bg-red-50'
-                          }`}
-                          title="Arquivar diagnóstico"
-                        >
-                          <span className="material-symbols-rounded text-[16px]">close</span>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                  {isChildCurrentlyChecked && (
-                    <div className={`px-3 pb-2.5 pt-0 border-t space-y-2 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-                      {childOption.has_input && (
-                        <input
-                          type="text"
-                          placeholder={childOption.input_placeholder || 'Digite aqui...'}
-                          value={inputValues[childOption.id] || ''}
-                          onChange={(e) => onInputChange(childOption.id, e.target.value)}
-                          className={`mt-2 w-full px-3 py-1.5 text-xs sm:text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            isDark
-                              ? 'bg-slate-900 border-slate-600 text-slate-200 placeholder-slate-500'
-                              : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
-                          }`}
-                        />
-                      )}
-                      <div className={`flex flex-col gap-1 ${childOption.has_input ? '' : 'mt-2'}`}>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-[10px] font-medium shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                            Sistema:
-                          </span>
-                          <select
-                            value={SISTEMAS.includes(sistemaValues[childOption.id]) ? sistemaValues[childOption.id] : (sistemaValues[childOption.id] ? 'Outros' : '')}
-                            onChange={(e) => onSistemaChange(childOption.id, e.target.value)}
-                            className={`flex-1 px-2 py-0.5 text-xs rounded-md border appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                              isDark ? 'bg-slate-900 border-slate-700 text-slate-300' : 'bg-white border-slate-300 text-slate-700'
-                            }`}
-                          >
-                            <option value="" disabled>— Selecione o sistema —</option>
-                            {SISTEMAS.map(s => <option key={s} value={s}>{s}</option>)}
-                          </select>
-                        </div>
-                        {(sistemaValues[childOption.id] === 'Outros' || (sistemaValues[childOption.id] && !SISTEMAS.includes(sistemaValues[childOption.id]))) && (
-                          <input
-                            type="text"
-                            value={sistemaValues[childOption.id] === 'Outros' ? '' : (sistemaValues[childOption.id] || '')}
-                            onChange={(e) => onSistemaChange(childOption.id, e.target.value || 'Outros')}
-                            placeholder="Especifique o sistema..."
-                            autoFocus
-                            className={`w-full px-2 py-0.5 text-xs rounded-md border focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                              isDark ? 'bg-slate-900 border-slate-700 text-slate-300' : 'bg-white border-slate-300 text-slate-700'
-                            }`}
-                          />
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[10px] font-medium shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                          Início:
-                        </span>
-                        <input
-                          type="date"
-                          value={dataInicioValues[childOption.id] || ''}
-                          onChange={(e) => onDataInicioChange(childOption.id, e.target.value)}
-                          className={`flex-1 px-2 py-0.5 text-xs rounded-md border cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                            isDark
-                              ? 'bg-slate-900 border-slate-700 text-slate-300'
-                              : 'bg-white border-slate-300 text-slate-700'
-                          }`}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-};
-
-interface QuestionBlockProps {
-  question: DiagnosticQuestion;
-  accentColor: 'blue' | 'secondary';
-  allOptions: DiagnosticOption[];
-  expandedQuestion: number | null;
-  isDark: boolean;
-  checkedOptions: Record<number, boolean>;
-  onToggleQuestion: (questionId: number | null) => void;
-  diagnostics: PatientDiagnostic[];
-  expandedParentOption: number | null;
-  selectedStatus: Record<number, 'resolvido' | 'nao_resolvido'>;
-  inputValues: Record<number, string>;
-  sistemaValues: Record<number, string>;
-  onToggle: (optionId: number, checked: boolean) => void;
-  onToggleParent: (optionId: number | null) => void;
-  onInputChange: (optionId: number, value: string) => void;
-  onStatusChange: (optionId: number, value: 'resolvido' | 'nao_resolvido') => void;
-  onSistemaChange: (optionId: number, value: string) => void;
-  onArchive: (optionId: number) => void;
-  dataInicioValues: Record<number, string>;
-  onDataInicioChange: (optionId: number, value: string) => void;
-  resolvedAtValues: Record<number, string>;
-  onResolvedAtChange: (optionId: number, value: string) => void;
-  onEdit: (optionId: number) => void;
-}
-
-const QuestionBlock: React.FC<QuestionBlockProps> = ({
-  question,
-  accentColor,
-  allOptions,
-  expandedQuestion,
-  isDark,
-  checkedOptions,
-  onToggleQuestion,
-  diagnostics,
-  expandedParentOption,
-  selectedStatus,
-  inputValues,
-  sistemaValues,
-  onToggle,
-  onToggleParent,
-  onInputChange,
-  onStatusChange,
-  onSistemaChange,
-  onArchive,
-  dataInicioValues,
-  onDataInicioChange,
-  resolvedAtValues,
-  onResolvedAtChange,
-  onEdit,
-}) => {
-  const questionOptions = allOptions.filter(opt => opt.pergunta_id === question.id && !opt.parent_id);
-  const isExpanded = expandedQuestion === question.id;
-  const checkedCount = questionOptions.filter(opt => checkedOptions[opt.id]).length;
-
-  const pillColors = isDark
-    ? 'bg-blue-900/50 text-blue-300 hover:bg-blue-900/80'
-    : 'bg-blue-50 text-blue-700 hover:bg-blue-100';
-
-  return (
-    <div>
-      <button
-        onClick={() => onToggleQuestion(isExpanded ? null : question.id)}
-        className={`w-full text-left px-3 py-2 rounded-lg transition-all flex items-center justify-between gap-2 ${pillColors}`}
-      >
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <span className={`material-symbols-rounded text-[18px] shrink-0 ${
-            isDark ? 'text-blue-400' : 'text-blue-600'
-          }`}>
-            {accentColor === 'blue' ? 'folder_open' : 'folder'}
-          </span>
-          <span className="font-semibold text-xs sm:text-sm truncate">{question.titulo}</span>
-          {checkedCount > 0 && (
-            <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold shrink-0 bg-blue-500 text-white">
-              {checkedCount}
-            </span>
-          )}
-        </div>
-        <ChevronRightIcon className={`w-4 h-4 transition-transform shrink-0 ${isExpanded ? 'rotate-90' : ''}`} />
-      </button>
-
-      {isExpanded && (
-        <div className={`mt-2 ml-1 sm:ml-2 space-y-1.5 p-2 sm:p-3 rounded-xl ${
-          isDark ? 'bg-slate-900/60' : 'bg-slate-50'
-        }`}>
-          {questionOptions.map(option => (
-            <OptionRow
-              key={option.id}
-              option={option}
-              allOptions={allOptions}
-              diagnostics={diagnostics}
-              checkedOptions={checkedOptions}
-              expandedParentOption={expandedParentOption}
-              selectedStatus={selectedStatus}
-              inputValues={inputValues}
-              sistemaValues={sistemaValues}
-              isDark={isDark}
-              onToggle={onToggle}
-              onToggleParent={onToggleParent}
-              onInputChange={onInputChange}
-              onStatusChange={onStatusChange}
-              onSistemaChange={onSistemaChange}
-              onArchive={onArchive}
-              dataInicioValues={dataInicioValues}
-              onDataInicioChange={onDataInicioChange}
-              resolvedAtValues={resolvedAtValues}
-              onResolvedAtChange={onResolvedAtChange}
-              onEdit={onEdit}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
+const SISTEMAS = ALERT_SYSTEMS;
 
 const formatDiagDate = (dateStr?: string | null) => {
   if (!dateStr) return null;
@@ -527,248 +76,341 @@ const formatDiagDate = (dateStr?: string | null) => {
   }
 };
 
-// ── Main component ──
+// IDs negativos para opções estáticas (não existem no banco ainda)
+const staticId = (codigo: string): number =>
+  -Math.abs(codigo.split('').reduce((a, c) => a + c.charCodeAt(0), 0));
+
+// Sentinel para a opção "Outros (especificar)"
+const OUTROS_ID = -99999;
 
 export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientId, onSave }) => {
   const themeContext = useContext(ThemeContext);
   const isDark = themeContext?.theme === 'dark';
 
-  const [questions, setQuestions] = useState<DiagnosticQuestion[]>([]);
-  const [options, setOptions] = useState<DiagnosticOption[]>([]);
-  const [diagnostics, setDiagnostics] = useState<PatientDiagnostic[]>([]);
+  const [dbOptions, setDbOptions] = useState<DiagnosticOption[]>([]);
+  const [workingDiags, setWorkingDiags] = useState<WorkingDiag[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [editingTempId, setEditingTempId] = useState<string | null>(null);
 
-  const [expandedGroup, setExpandedGroup] = useState<'principal' | 'secundario' | null>(null);
-  const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
-  const [expandedParentOption, setExpandedParentOption] = useState<number | null>(null);
-  const [inputValues, setInputValues] = useState<Record<number, string>>({});
-  const [sistemaValues, setSistemaValues] = useState<Record<number, string>>({});
-  const [dataInicioValues, setDataInicioValues] = useState<Record<number, string>>({});
-  const [resolvedAtValues, setResolvedAtValues] = useState<Record<number, string>>({});
-  const [selectedStatus, setSelectedStatus] = useState<Record<number, 'resolvido' | 'nao_resolvido'>>({});
-  const [checkedOptions, setCheckedOptions] = useState<Record<number, boolean>>({});
+  // Form
+  const [formTipo, setFormTipo] = useState<'principal' | 'secundario'>('principal');
+  const [formCategoria, setFormCategoria] = useState('');
+  const [formOpcaoId, setFormOpcaoId] = useState<number | ''>('');
+  const [formCustomLabel, setFormCustomLabel] = useState('');
+  const [formInputText, setFormInputText] = useState('');
+  const [formChildId, setFormChildId] = useState<number | ''>('');
+  const [formDataInicio, setFormDataInicio] = useState('');
+  const [formObservacao, setFormObservacao] = useState('');
+  const [formSistema, setFormSistema] = useState('');
+  const [formStatus, setFormStatus] = useState<'resolvido' | 'nao_resolvido'>('nao_resolvido');
 
+  // Archive modal
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
-  const [optionToArchive, setOptionToArchive] = useState<number | null>(null);
+  const [tempIdToArchive, setTempIdToArchive] = useState<string | null>(null);
   const [archiveReason, setArchiveReason] = useState('');
 
-  const loadDiagnosticsData = useCallback(async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [questionsRes, optionsRes, diagnosticsRes] = await Promise.all([
-        supabase.from('perguntas_diagnistico').select('*').order('id'),
+      const [optionsRes, diagnosticsRes] = await Promise.all([
         supabase.from('pergunta_opcoes_diagnostico').select('*').order('pergunta_id').order('ordem'),
-        supabase
-          .from('paciente_diagnosticos')
-          .select('*')
-          .eq('patient_id', patientId)
-          .eq('arquivado', false)
+        supabase.from('paciente_diagnosticos').select('*').eq('patient_id', patientId).eq('arquivado', false),
       ]);
 
-      if (questionsRes.error) throw questionsRes.error;
       if (optionsRes.error) throw optionsRes.error;
       if (diagnosticsRes.error) throw diagnosticsRes.error;
 
-      setQuestions(questionsRes.data || []);
-      setOptions(optionsRes.data || []);
-      setDiagnostics(diagnosticsRes.data || []);
+      const opts: DiagnosticOption[] = optionsRes.data || [];
+      setDbOptions(opts);
 
-      const checked: Record<number, boolean> = {};
-      const inputs: Record<number, string> = {};
-      const sistemas: Record<number, string> = {};
-      const dataInicio: Record<number, string> = {};
-      const resolvedAt: Record<number, string> = {};
-      const statuses: Record<number, 'resolvido' | 'nao_resolvido'> = {};
-
-      (diagnosticsRes.data || []).forEach(diag => {
-        checked[diag.opcao_id] = true;
-        if (diag.texto_digitado) inputs[diag.opcao_id] = diag.texto_digitado;
-        if (diag.sistema) sistemas[diag.opcao_id] = diag.sistema;
-        if (diag.data_inicio) dataInicio[diag.opcao_id] = diag.data_inicio;
-        else if (diag.created_at) dataInicio[diag.opcao_id] = diag.created_at.split('T')[0];
-        if (diag.resolved_at) resolvedAt[diag.opcao_id] = diag.resolved_at.split('T')[0];
-        statuses[diag.opcao_id] = diag.status;
+      const working: WorkingDiag[] = (diagnosticsRes.data || []).map(d => {
+        const opt = opts.find(o => o.id === d.opcao_id);
+        const staticOpt = STATIC_DIAGNOSTICO_OPTIONS.find(s => s.codigo === opt?.codigo);
+        // Filho (parent_id) → combina label do pai + filho
+        const parentOpt = opt?.parent_id ? opts.find(o => o.id === opt.parent_id) : null;
+        const baseLabel = parentOpt
+          ? `${parentOpt.label} ${opt?.label || ''}`.trim()
+          : (opt?.label || d.opcao_label || '');
+        const isOutrosOption = baseLabel.toLowerCase().startsWith('outro');
+        // has_input com complemento salvo: combina base + texto_digitado
+        const hasInputAndText = !!opt?.has_input && !!d.texto_digitado;
+        let resolvedLabel: string;
+        if (hasInputAndText) {
+          resolvedLabel = isOutrosOption
+            ? d.texto_digitado
+            : `${baseLabel} ${d.texto_digitado}`.trim();
+        } else {
+          resolvedLabel = d.opcao_label || baseLabel;
+        }
+        return {
+          tempId: `db-${d.id}`,
+          dbId: d.id,
+          perguntaId: d.pergunta_id,
+          opcaoId: d.opcao_id,
+          label: resolvedLabel,
+          categoria: DIAGNOSTICO_CATEGORIAS[d.opcao_id] || staticOpt?.categoria || 'Outros',
+          tipo: d.pergunta_id === 1 ? 'principal' : 'secundario',
+          dataInicio: d.data_inicio || d.created_at?.split('T')[0] || '',
+          observacao: hasInputAndText ? '' : (d.texto_digitado || ''),
+          inputComplement: hasInputAndText ? d.texto_digitado : undefined,
+          sistema: d.sistema || '',
+          status: d.status,
+          createdAt: d.created_at,
+          resolvedAt: d.resolved_at || undefined,
+          isNew: false,
+        };
       });
 
-      setCheckedOptions(checked);
-      setInputValues(inputs);
-      setSistemaValues(sistemas);
-      setDataInicioValues(dataInicio);
-      setResolvedAtValues(resolvedAt);
-      setSelectedStatus(statuses);
-    } catch (error) {
-      console.error('Erro ao carregar diagnósticos:', error);
+      setWorkingDiags(working);
+    } catch (err) {
+      console.error('Erro ao carregar diagnósticos:', err);
     } finally {
       setLoading(false);
     }
   }, [patientId]);
 
-  useEffect(() => {
-    loadDiagnosticsData();
-  }, [loadDiagnosticsData]);
+  useEffect(() => { loadData(); }, [loadData]);
 
-  // Recarrega quando um diagnóstico arquivado é reativado no histórico
   useEffect(() => {
     const handleReactivated = (event: Event) => {
       const detail = (event as CustomEvent).detail;
-      if (detail?.type === 'diagnostic') {
-        loadDiagnosticsData();
-      }
+      if (detail?.type === 'diagnostic') loadData();
     };
     window.addEventListener('item-reactivated', handleReactivated);
     return () => window.removeEventListener('item-reactivated', handleReactivated);
-  }, [loadDiagnosticsData]);
+  }, [loadData]);
 
-  const handleToggle = useCallback((optionId: number, checked: boolean) => {
-    setCheckedOptions(prev => ({ ...prev, [optionId]: checked }));
-  }, []);
+  // Mescla opções do banco com opções estáticas (para o dropdown)
+  const allOptionsForForm = (): DiagnosticOption[] => {
+    const perguntaId = formTipo === 'principal' ? 1 : 2;
+    const fromDb = dbOptions.filter(opt => opt.pergunta_id === perguntaId && !opt.parent_id);
+    const dbCodigos = new Set(fromDb.map(o => o.codigo));
+    const fromStatic = STATIC_DIAGNOSTICO_OPTIONS
+      .filter(s => s.pergunta_id === perguntaId && !dbCodigos.has(s.codigo))
+      .map(s => ({
+        id: staticId(s.codigo),
+        pergunta_id: s.pergunta_id,
+        codigo: s.codigo,
+        label: s.label,
+        has_input: s.has_input ?? false,
+        input_placeholder: s.input_placeholder,
+        ordem: s.ordem,
+        parent_id: null,
+        isStatic: true,
+      }));
+    return [...fromDb, ...fromStatic];
+  };
 
-  const handleToggleParent = useCallback((optionId: number | null) => {
-    setExpandedParentOption(optionId);
-  }, []);
+  const optionsInCategory: DiagnosticOption[] = formCategoria
+    ? [
+        ...allOptionsForForm().filter(opt =>
+          (DIAGNOSTICO_CATEGORIAS[opt.id] || (opt.isStatic
+            ? STATIC_DIAGNOSTICO_OPTIONS.find(s => s.codigo === opt.codigo)?.categoria
+            : undefined) || 'Outros') === formCategoria
+        ),
+        // "Outros" sempre disponível no final de cada categoria
+        { id: OUTROS_ID, pergunta_id: formTipo === 'principal' ? 1 : 2, codigo: 'OUTROS', label: 'Outros (especificar)', has_input: true, ordem: 9999, parent_id: null },
+      ]
+    : [];
 
-  const handleInputChange = useCallback((optionId: number, value: string) => {
-    setInputValues(prev => ({ ...prev, [optionId]: value }));
-  }, []);
+  const handleAdd = () => {
+    if (formOpcaoId === '') return;
 
-  const handleStatusChange = useCallback((optionId: number, value: 'resolvido' | 'nao_resolvido') => {
-    setSelectedStatus(prev => ({ ...prev, [optionId]: value }));
-  }, []);
+    const resetForm = () => {
+      setFormOpcaoId('');
+      setFormCustomLabel('');
+      setFormInputText('');
+      setFormChildId('');
+      setFormDataInicio('');
+      setFormObservacao('');
+      setFormSistema('');
+      setFormStatus('nao_resolvido');
+    };
 
-  const handleSistemaChange = useCallback((optionId: number, value: string) => {
-    setSistemaValues(prev => ({ ...prev, [optionId]: value }));
-  }, []);
+    // Caso "Outros (especificar)"
+    if (formOpcaoId === OUTROS_ID) {
+      const label = formCustomLabel.trim();
+      if (!label) return;
+      const uniqueCodigo = `OUTROS_${formTipo.toUpperCase()}_${Date.now()}`;
+      setWorkingDiags(prev => [...prev, {
+        tempId: `new-${Date.now()}`,
+        perguntaId: formTipo === 'principal' ? 1 : 2,
+        opcaoId: OUTROS_ID,
+        label,
+        categoria: formCategoria,
+        tipo: formTipo,
+        dataInicio: formDataInicio,
+        observacao: formObservacao,
+        sistema: formSistema,
+        status: formStatus,
+        isNew: true,
+        isStatic: true,
+        staticCodigo: uniqueCodigo,
+      }]);
+      resetForm();
+      return;
+    }
 
-  const handleDataInicioChange = useCallback((optionId: number, value: string) => {
-    setDataInicioValues(prev => ({ ...prev, [optionId]: value }));
-  }, []);
+    const allOpts = allOptionsForForm();
+    const opt = allOpts.find(o => o.id === formOpcaoId);
+    if (!opt) return;
+    if (workingDiags.some(d => d.opcaoId === formOpcaoId || (opt.isStatic && d.staticCodigo === opt.codigo))) return;
 
-  const handleResolvedAtChange = useCallback((optionId: number, value: string) => {
-    setResolvedAtValues(prev => ({ ...prev, [optionId]: value }));
-  }, []);
+    const categoria = DIAGNOSTICO_CATEGORIAS[opt.id]
+      || STATIC_DIAGNOSTICO_OPTIONS.find(s => s.codigo === opt.codigo)?.categoria
+      || 'Outros';
 
-  const handleRemoveDiagnostic = useCallback((optionId: number) => {
-    setOptionToArchive(optionId);
+    // Se tem filho selecionado, usa o filho como opção real
+    const childOpt = formChildId !== ''
+      ? dbOptions.find(o => o.id === formChildId)
+      : null;
+    const finalOpt = childOpt ?? opt;
+    const finalLabel = childOpt
+      ? `${opt.label} ${childOpt.label}`.trim()
+      : opt.has_input && formInputText.trim()
+        ? `${opt.label} ${formInputText.trim()}`.trim()
+        : opt.label;
+
+    setWorkingDiags(prev => [...prev, {
+      tempId: `new-${Date.now()}`,
+      perguntaId: finalOpt.pergunta_id,
+      opcaoId: finalOpt.id,
+      label: finalLabel,
+      categoria,
+      tipo: formTipo,
+      dataInicio: formDataInicio,
+      observacao: formObservacao,
+      inputComplement: !childOpt && opt.has_input ? formInputText.trim() : undefined,
+      sistema: formSistema,
+      status: formStatus,
+      isNew: true,
+      isStatic: finalOpt.isStatic,
+      staticCodigo: finalOpt.isStatic ? finalOpt.codigo : undefined,
+    }]);
+
+    resetForm();
+  };
+
+  const handleEditField = (tempId: string, field: keyof WorkingDiag, value: string) => {
+    setWorkingDiags(prev => prev.map(d =>
+      d.tempId === tempId ? { ...d, [field]: value } : d
+    ));
+  };
+
+  const handleArchiveRequest = (tempId: string) => {
+    setTempIdToArchive(tempId);
     setArchiveReason('');
     setArchiveModalOpen(true);
-  }, []);
+  };
 
   const handleConfirmArchive = async () => {
-    if (!optionToArchive) return;
+    if (!tempIdToArchive) return;
+    const diag = workingDiags.find(d => d.tempId === tempIdToArchive);
+    if (!diag) return;
 
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id || null;
-
-      const { error } = await supabase
-        .from('paciente_diagnosticos')
-        .update({
+    if (diag.dbId) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id || null;
+        const { error } = await supabase.from('paciente_diagnosticos').update({
           arquivado: true,
           archived_by: userId,
           archived_at: new Date().toISOString(),
-          motivo_arquivamento: sanitizeTextOrNull(archiveReason)
-        })
-        .eq('patient_id', patientId)
-        .eq('opcao_id', optionToArchive)
-        .eq('arquivado', false);
-
-      if (error) {
-        console.error('Erro ao arquivar diagnóstico:', error);
-        alert(`Erro ao remover diagnóstico: ${error.message}`);
+          motivo_arquivamento: sanitizeTextOrNull(archiveReason),
+        }).eq('id', diag.dbId);
+        if (error) throw error;
+      } catch (err) {
+        alert(`Erro ao remover: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
         return;
       }
-
-      setDiagnostics(prev => prev.filter(d => d.opcao_id !== optionToArchive));
-      setCheckedOptions(prev => { const n = { ...prev }; delete n[optionToArchive]; return n; });
-      setInputValues(prev => { const n = { ...prev }; delete n[optionToArchive]; return n; });
-      setSistemaValues(prev => { const n = { ...prev }; delete n[optionToArchive]; return n; });
-      setDataInicioValues(prev => { const n = { ...prev }; delete n[optionToArchive]; return n; });
-      setResolvedAtValues(prev => { const n = { ...prev }; delete n[optionToArchive]; return n; });
-      setSelectedStatus(prev => { const n = { ...prev }; delete n[optionToArchive]; return n; });
-
-      setArchiveModalOpen(false);
-      setOptionToArchive(null);
-      setArchiveReason('');
-      alert('✅ Diagnóstico removido com sucesso!');
-    } catch (error) {
-      console.error('Erro ao arquivar diagnóstico (catch):', error);
-      alert(`Erro ao arquivar diagnóstico: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
+
+    setWorkingDiags(prev => prev.filter(d => d.tempId !== tempIdToArchive));
+    setArchiveModalOpen(false);
+    setTempIdToArchive(null);
+    setArchiveReason('');
+  };
+
+  const resolveStaticOpcaoId = async (d: WorkingDiag): Promise<number> => {
+    if (!d.isStatic || !d.staticCodigo) return d.opcaoId;
+
+    // Verifica se já foi inserida (apenas para opções do catálogo, não "Outros" dinâmicos)
+    const isDynamicOutros = d.staticCodigo.startsWith('OUTROS_');
+    if (!isDynamicOutros) {
+      const { data: existing } = await supabase
+        .from('pergunta_opcoes_diagnostico')
+        .select('id')
+        .eq('codigo', d.staticCodigo)
+        .single();
+      if (existing) return existing.id;
+    }
+
+    // Insere no banco (opção do catálogo ou "Outros" com label digitado)
+    const staticDef = STATIC_DIAGNOSTICO_OPTIONS.find(s => s.codigo === d.staticCodigo);
+    const { data: inserted, error } = await supabase
+      .from('pergunta_opcoes_diagnostico')
+      .insert({
+        pergunta_id: d.perguntaId,
+        codigo: d.staticCodigo,
+        label: staticDef?.label ?? d.label,
+        has_input: false,
+        input_placeholder: staticDef?.input_placeholder || null,
+        ordem: staticDef?.ordem ?? 9999,
+        parent_id: null,
+      })
+      .select('id')
+      .single();
+    if (error) throw new Error(`Erro ao criar opção "${d.label}": ${error.message}`);
+    return inserted!.id;
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
       const now = new Date().toISOString();
-      const today = now.split('T')[0];
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id || null;
 
-      const allDiagnostics = options
-        .filter(option => checkedOptions[option.id])
-        .map(option => ({
+      // Atualiza existentes
+      const existing = workingDiags.filter(d => !d.isNew && d.dbId);
+      if (existing.length > 0) {
+        await Promise.all(existing.map(d =>
+          supabase.from('paciente_diagnosticos').update({
+            status: d.status,
+            sistema: d.sistema || null,
+            data_inicio: d.dataInicio || null,
+            texto_digitado: d.inputComplement ?? d.observacao ?? null,
+            resolved_at: d.status === 'resolvido' ? (d.resolvedAt || now) : null,
+          }).eq('id', d.dbId!)
+        ));
+      }
+
+      // Insere novos
+      const newOnes = workingDiags.filter(d => d.isNew);
+      for (const d of newOnes) {
+        const opcaoId = await resolveStaticOpcaoId(d);
+        const { error } = await supabase.from('paciente_diagnosticos').insert({
           patient_id: patientId,
-          pergunta_id: option.pergunta_id,
-          opcao_id: option.id,
-          opcao_label: option.label,
-          texto_digitado: inputValues[option.id] || null,
-          sistema: sistemaValues[option.id] || null,
-          data_inicio: dataInicioValues[option.id] || null,
-          status: selectedStatus[option.id] || 'nao_resolvido' as const
-        }));
-
-      // Atualiza status, sistema e resolved_at dos registros já existentes no banco
-      const existingInDb = diagnostics.filter(d => checkedOptions[d.opcao_id]);
-      if (existingInDb.length > 0) {
-        await Promise.all(existingInDb.map(d => {
-          const newStatus = selectedStatus[d.opcao_id] || 'nao_resolvido';
-          const manualDate = resolvedAtValues[d.opcao_id];
-          const resolvedAt =
-            newStatus === 'resolvido'
-              ? (manualDate ? `${manualDate}T00:00:00` : d.resolved_at || now)
-              : null;
-          return supabase
-            .from('paciente_diagnosticos')
-            .update({ status: newStatus, resolved_at: resolvedAt, sistema: sistemaValues[d.opcao_id] || null, data_inicio: dataInicioValues[d.opcao_id] || null })
-            .eq('id', d.id!);
-        }));
+          pergunta_id: d.perguntaId,
+          opcao_id: opcaoId,
+          opcao_label: d.label,
+          texto_digitado: d.inputComplement ?? d.observacao ?? null,
+          sistema: d.sistema || null,
+          data_inicio: d.dataInicio || null,
+          status: d.status,
+          created_at: now,
+          created_by: userId,
+          resolved_at: d.status === 'resolvido' ? now : null,
+        });
+        if (error) throw new Error(error.message);
       }
 
-      // Insere apenas diagnósticos que ainda não existem (não arquivados)
-      const existingOpcaoIds = new Set(diagnostics.map(d => d.opcao_id));
-      const newDiagnostics = allDiagnostics.filter(d => !existingOpcaoIds.has(d.opcao_id));
-
-      if (newDiagnostics.length > 0) {
-        const { error } = await supabase
-          .from('paciente_diagnosticos')
-          .insert(newDiagnostics.map(d => ({
-            ...d,
-            created_at: now,
-            created_by: userId,
-            resolved_at: d.status === 'resolvido' ? now : null,
-          })));
-
-        if (error) throw new Error(`Erro ao salvar: ${error.message}`);
-      }
-
-      const { data: diagnosticsData } = await supabase
-        .from('paciente_diagnosticos')
-        .select('*')
-        .eq('patient_id', patientId)
-        .eq('arquivado', false);
-
-      setDiagnostics(diagnosticsData || []);
-
-      if (onSave) onSave(allDiagnostics as PatientDiagnostic[]);
-
+      await loadData();
+      if (onSave) onSave([]);
       alert('✅ Diagnósticos salvos com sucesso!');
-      setExpandedGroup(null);
-      setExpandedQuestion(null);
-      setExpandedParentOption(null);
-    } catch (error: any) {
-      console.error('Erro ao salvar diagnósticos:', error);
-      alert(`❌ ${error.message || 'Erro ao salvar diagnósticos. Tente novamente.'}`);
+    } catch (err: any) {
+      alert(`❌ ${err.message || 'Erro ao salvar'}`);
     } finally {
       setSaving(false);
     }
@@ -778,7 +420,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     return (
       <div className="flex justify-center items-center py-12">
         <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-blue-200 border-t-blue-500"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-blue-200 border-t-blue-500" />
           <span className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             Carregando diagnósticos...
           </span>
@@ -787,333 +429,462 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     );
   }
 
-  const mainQuestions = questions.filter(q => q.tipo === 'principal');
-  const secondaryQuestions = questions.filter(q => q.tipo === 'secundario');
+  const selectedFormOpt = typeof formOpcaoId === 'number' && formOpcaoId !== OUTROS_ID
+    ? optionsInCategory.find(o => o.id === formOpcaoId) ?? null
+    : null;
+  const childOptions = selectedFormOpt
+    ? dbOptions.filter(o => o.parent_id === selectedFormOpt.id)
+    : [];
 
-  const selectedOptions = options.filter(opt => checkedOptions[opt.id]);
-  const selectedByGroup = {
-    principal: selectedOptions.filter(opt => questions.find(q => q.id === opt.pergunta_id)?.tipo === 'principal'),
-    secundario: selectedOptions.filter(opt => questions.find(q => q.id === opt.pergunta_id)?.tipo === 'secundario'),
-  };
+  const inputCls = `w-full px-3 py-2 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+    isDark
+      ? 'bg-slate-800 border-slate-600 text-slate-200 placeholder-slate-500'
+      : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
+  }`;
+  const selectCls = `w-full px-3 py-2 text-sm rounded-lg border appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+    isDark ? 'bg-slate-800 border-slate-600 text-slate-200' : 'bg-white border-slate-300 text-slate-800'
+  }`;
+  const labelCls = `block text-xs font-semibold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`;
 
-  // Contagem real: pai com filho selecionado não conta (aparece fundido no filho)
-  const displayCountPrincipal = selectedByGroup.principal.filter(opt =>
-    opt.parent_id ? true : !selectedByGroup.principal.some(o => o.parent_id === opt.id)
-  ).length;
-  const displayCountSecundario = selectedByGroup.secundario.filter(opt =>
-    opt.parent_id ? true : !selectedByGroup.secundario.some(o => o.parent_id === opt.id)
-  ).length;
+  const principalDiags = workingDiags.filter(d => d.tipo === 'principal');
+  const secundarioDiags = workingDiags.filter(d => d.tipo === 'secundario');
 
-  const sharedRowProps = {
-    allOptions: options,
-    diagnostics,
-    checkedOptions,
-    expandedParentOption,
-    selectedStatus,
-    inputValues,
-    sistemaValues,
-    dataInicioValues,
-    resolvedAtValues,
-    isDark,
-    onToggle: handleToggle,
-    onToggleParent: handleToggleParent,
-    onInputChange: handleInputChange,
-    onStatusChange: handleStatusChange,
-    onSistemaChange: handleSistemaChange,
-    onArchive: handleRemoveDiagnostic,
-    onDataInicioChange: handleDataInicioChange,
-    onResolvedAtChange: handleResolvedAtChange,
-    onEdit: () => {},
+  const renderCard = (diag: WorkingDiag) => {
+    const isEditing = editingTempId === diag.tempId;
+    const isResolved = diag.status === 'resolvido';
+    const isPrincipal = diag.tipo === 'principal';
+
+    const borderColor = isResolved ? 'border-l-emerald-500' : isPrincipal ? 'border-l-blue-500' : 'border-l-violet-400';
+    const cardBg = isResolved
+      ? isDark ? 'bg-emerald-950/40 border-emerald-800/40' : 'bg-emerald-50 border-emerald-200'
+      : isPrincipal
+        ? isDark ? 'bg-slate-800/60 border-slate-700' : 'bg-white border-slate-200'
+        : isDark ? 'bg-violet-950/20 border-slate-700' : 'bg-violet-50/50 border-violet-100';
+
+    return (
+      <div key={diag.tempId} className={`rounded-xl border border-l-4 overflow-hidden transition-all ${cardBg} ${borderColor}`}>
+        <div className="flex items-start gap-3 px-3 py-2.5">
+          <span className={`material-symbols-rounded text-[18px] mt-0.5 shrink-0 ${
+            isResolved ? 'text-emerald-500' : isPrincipal ? (isDark ? 'text-blue-400' : 'text-blue-500') : (isDark ? 'text-violet-400' : 'text-violet-500')
+          }`}>
+            {isResolved ? 'check_circle' : 'radio_button_unchecked'}
+          </span>
+
+          <div className="flex-1 min-w-0">
+            <p className={`text-sm font-semibold leading-snug ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+              {diag.label}
+            </p>
+            <div className="flex flex-wrap items-center gap-1.5 mt-1">
+              <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                isPrincipal
+                  ? isDark ? 'bg-blue-900/60 text-blue-300' : 'bg-blue-100 text-blue-700'
+                  : isDark ? 'bg-violet-900/60 text-violet-300' : 'bg-violet-100 text-violet-700'
+              }`}>
+                {isPrincipal ? 'Principal' : 'Secundário'}
+              </span>
+              <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-100 text-slate-600'
+              }`}>
+                {diag.categoria}
+              </span>
+              {diag.sistema && (
+                <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                  isDark ? 'bg-slate-700/60 text-slate-400' : 'bg-slate-50 text-slate-500'
+                }`}>
+                  {diag.sistema}
+                </span>
+              )}
+              {diag.dataInicio && (
+                <span className={`text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                  {formatDiagDate(diag.dataInicio)}
+                </span>
+              )}
+              {diag.isNew && (
+                <span className="inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
+                  Não salvo
+                </span>
+              )}
+            </div>
+            {!isEditing && diag.observacao && (
+              <p className={`text-xs mt-1.5 italic leading-snug ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                {diag.observacao}
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-0.5 shrink-0">
+            <button
+              onClick={() => setEditingTempId(isEditing ? null : diag.tempId)}
+              className={`p-1.5 rounded-lg transition-colors ${
+                isDark ? 'text-slate-500 hover:text-blue-400 hover:bg-blue-900/30' : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+              title={isEditing ? 'Fechar' : 'Editar'}
+            >
+              <span className="material-symbols-rounded text-[16px]">{isEditing ? 'expand_less' : 'edit'}</span>
+            </button>
+            <button
+              onClick={() => handleArchiveRequest(diag.tempId)}
+              className={`p-1.5 rounded-lg transition-colors ${
+                isDark ? 'text-slate-500 hover:text-amber-400 hover:bg-amber-900/30' : 'text-slate-400 hover:text-amber-600 hover:bg-amber-50'
+              }`}
+              title="Arquivar diagnóstico"
+            >
+              <span className="material-symbols-rounded text-[16px]">archive</span>
+            </button>
+          </div>
+        </div>
+
+        {isEditing && (
+          <div className={`px-3 pb-3 pt-0 border-t space-y-2.5 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2.5">
+              <div>
+                <label className={labelCls}>Data de início</label>
+                <input
+                  type="date"
+                  value={diag.dataInicio}
+                  onChange={e => handleEditField(diag.tempId, 'dataInicio', e.target.value)}
+                  className={inputCls}
+                />
+              </div>
+              <div>
+                <label className={labelCls}>Sistema</label>
+                <select
+                  value={diag.sistema}
+                  onChange={e => handleEditField(diag.tempId, 'sistema', e.target.value)}
+                  className={selectCls}
+                >
+                  <option value="">— Selecione —</option>
+                  {SISTEMAS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className={labelCls}>Observação</label>
+              <textarea
+                value={diag.observacao}
+                onChange={e => handleEditField(diag.tempId, 'observacao', e.target.value)}
+                rows={2}
+                className={`${inputCls} resize-none`}
+              />
+            </div>
+            <div className={`flex rounded-lg overflow-hidden border w-fit text-xs font-semibold ${isDark ? 'border-slate-600' : 'border-slate-200'}`}>
+              <button
+                onClick={() => handleEditField(diag.tempId, 'status', 'nao_resolvido')}
+                className={`px-3 py-2 transition-colors ${
+                  diag.status === 'nao_resolvido'
+                    ? 'bg-rose-500 text-white'
+                    : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-white text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                Não Resolvido
+              </button>
+              <button
+                onClick={() => handleEditField(diag.tempId, 'status', 'resolvido')}
+                className={`px-3 py-2 transition-colors ${
+                  diag.status === 'resolvido'
+                    ? 'bg-emerald-500 text-white'
+                    : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-white text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                Resolvido
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
-    <div className={`space-y-4 p-3 sm:p-4 rounded-xl border ${
-      isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
-    }`}>
+    <div className={`space-y-5 p-3 sm:p-4 rounded-xl border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className={`material-symbols-rounded text-[22px] ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
-            biotech
-          </span>
-          <h3 className={`font-bold text-lg sm:text-xl ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            Diagnósticos
-          </h3>
+          <span className={`material-symbols-rounded text-[22px] ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>biotech</span>
+          <h3 className={`font-bold text-lg sm:text-xl ${isDark ? 'text-white' : 'text-slate-900'}`}>Diagnósticos</h3>
         </div>
-        {selectedOptions.length > 0 && (
-          <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-            isDark ? 'bg-blue-900/50 text-blue-300 border border-blue-700' : 'bg-blue-100 text-blue-800 border border-blue-200'
-          }`}>
-            <span className="material-symbols-rounded text-[14px]">check_circle</span>
-            {selectedOptions.length} selecionado{selectedOptions.length !== 1 ? 's' : ''}
-          </span>
+        {workingDiags.length > 0 && (
+          <div className="flex items-center gap-1.5">
+            {principalDiags.length > 0 && (
+              <span className={`flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold ${
+                isDark ? 'bg-blue-900/50 text-blue-300 border border-blue-700' : 'bg-blue-100 text-blue-800 border border-blue-200'
+              }`}>
+                P: {principalDiags.length}
+              </span>
+            )}
+            {secundarioDiags.length > 0 && (
+              <span className={`flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold ${
+                isDark ? 'bg-violet-900/50 text-violet-300 border border-violet-700' : 'bg-violet-100 text-violet-800 border border-violet-200'
+              }`}>
+                S: {secundarioDiags.length}
+              </span>
+            )}
+          </div>
         )}
       </div>
 
-      {/* ── Summary strip ── */}
-      {selectedOptions.length > 0 && (
-        <div className={`rounded-xl border overflow-hidden ${
-          isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'
+      {/* Add form */}
+      <div className={`rounded-xl border p-3 sm:p-4 space-y-3 ${isDark ? 'bg-slate-800/60 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+        <p className={`text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+          Adicionar diagnóstico
+        </p>
+
+        {/* Tipo toggle */}
+        <div className={`flex rounded-lg overflow-hidden border text-sm font-semibold ${isDark ? 'border-slate-600' : 'border-slate-200'}`}>
+          <button
+            onClick={() => { setFormTipo('principal'); setFormOpcaoId(''); setFormCategoria(''); }}
+            className={`flex-1 py-2 transition-colors ${
+              formTipo === 'principal'
+                ? 'bg-blue-600 text-white'
+                : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-white text-slate-500 hover:bg-slate-50'
+            }`}
+          >
+            Principal
+          </button>
+          <button
+            onClick={() => { setFormTipo('secundario'); setFormOpcaoId(''); setFormCategoria(''); }}
+            className={`flex-1 py-2 transition-colors ${
+              formTipo === 'secundario'
+                ? 'bg-violet-600 text-white'
+                : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-white text-slate-500 hover:bg-slate-50'
+            }`}
+          >
+            Secundário
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls}>Categoria</label>
+            <select
+              value={formCategoria}
+              onChange={e => { setFormCategoria(e.target.value); setFormOpcaoId(''); setFormChildId(''); setFormInputText(''); }}
+              className={selectCls}
+            >
+              <option value="">— Selecione a categoria —</option>
+              {CATEGORY_ORDER.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className={labelCls}>Diagnóstico</label>
+            <select
+              value={formOpcaoId}
+              onChange={e => { const v = e.target.value; setFormOpcaoId(v === '' ? '' : Number(v)); setFormCustomLabel(''); setFormChildId(''); setFormInputText(''); }}
+              disabled={!formCategoria}
+              className={`${selectCls} disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              <option value="">— Selecione —</option>
+              {optionsInCategory.map(opt => {
+                const isOutros = opt.id === OUTROS_ID;
+                const alreadyAdded = !isOutros && workingDiags.some(d =>
+                  d.opcaoId === opt.id || (opt.isStatic && d.staticCodigo === opt.codigo)
+                );
+                return (
+                  <option key={opt.id} value={opt.id} disabled={alreadyAdded}>
+                    {opt.label}{alreadyAdded ? ' (já adicionado)' : ''}
+                  </option>
+                );
+              })}
+            </select>
+            {childOptions.length > 0 && (
+              <div className="mt-2 space-y-1.5">
+                <label className={labelCls}>Especificar</label>
+                <div className="flex flex-wrap gap-2">
+                  {childOptions.map(child => (
+                    <button
+                      key={child.id}
+                      type="button"
+                      onClick={() => setFormChildId(formChildId === child.id ? '' : child.id)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                        formChildId === child.id
+                          ? 'bg-blue-600 border-blue-500 text-white'
+                          : isDark
+                            ? 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
+                            : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      {child.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {selectedFormOpt?.has_input && (
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  type="text"
+                  value={formInputText}
+                  onChange={e => setFormInputText(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleAdd()}
+                  placeholder={selectedFormOpt.input_placeholder || 'Especifique...'}
+                  autoFocus
+                  className={`${inputCls} flex-1`}
+                />
+                <button
+                  onClick={() => { setFormOpcaoId(''); setFormInputText(''); }}
+                  title="Cancelar"
+                  className={`shrink-0 p-2 rounded-lg transition-colors ${
+                    isDark ? 'text-slate-400 hover:text-red-400 hover:bg-red-900/30' : 'text-slate-400 hover:text-red-600 hover:bg-red-50'
+                  }`}
+                >
+                  <span className="material-symbols-rounded text-[18px]">close</span>
+                </button>
+              </div>
+            )}
+            {formOpcaoId === OUTROS_ID && (
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  type="text"
+                  value={formCustomLabel}
+                  onChange={e => setFormCustomLabel(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleAdd()}
+                  placeholder="Especifique o diagnóstico..."
+                  autoFocus
+                  className={`${inputCls} flex-1`}
+                />
+                <button
+                  onClick={() => { setFormOpcaoId(''); setFormCustomLabel(''); }}
+                  title="Cancelar"
+                  className={`shrink-0 p-2 rounded-lg transition-colors ${
+                    isDark ? 'text-slate-400 hover:text-red-400 hover:bg-red-900/30' : 'text-slate-400 hover:text-red-600 hover:bg-red-50'
+                  }`}
+                >
+                  <span className="material-symbols-rounded text-[18px]">close</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {formOpcaoId !== '' && (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className={labelCls}>Data de início</label>
+                <input
+                  type="date"
+                  value={formDataInicio}
+                  onChange={e => setFormDataInicio(e.target.value)}
+                  className={inputCls}
+                />
+              </div>
+              <div>
+                <label className={labelCls}>Sistema</label>
+                <select
+                  value={formSistema}
+                  onChange={e => setFormSistema(e.target.value)}
+                  className={selectCls}
+                >
+                  <option value="">— Selecione —</option>
+                  {SISTEMAS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className={labelCls}>Observação</label>
+              <textarea
+                value={formObservacao}
+                onChange={e => setFormObservacao(e.target.value)}
+                placeholder="Observações clínicas..."
+                rows={2}
+                className={`${inputCls} resize-none`}
+              />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className={`flex rounded-lg overflow-hidden border text-xs font-semibold shrink-0 ${isDark ? 'border-slate-600' : 'border-slate-200'}`}>
+                <button
+                  onClick={() => setFormStatus('nao_resolvido')}
+                  className={`px-3 py-2 transition-colors ${
+                    formStatus === 'nao_resolvido'
+                      ? 'bg-rose-500 text-white'
+                      : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-white text-slate-500 hover:bg-slate-50'
+                  }`}
+                >
+                  Não Resolvido
+                </button>
+                <button
+                  onClick={() => setFormStatus('resolvido')}
+                  className={`px-3 py-2 transition-colors ${
+                    formStatus === 'resolvido'
+                      ? 'bg-emerald-500 text-white'
+                      : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-white text-slate-500 hover:bg-slate-50'
+                  }`}
+                >
+                  Resolvido
+                </button>
+              </div>
+              <button
+                onClick={handleAdd}
+                disabled={
+                  (formOpcaoId === OUTROS_ID && !formCustomLabel.trim()) ||
+                  (!!selectedFormOpt?.has_input && formChildId === '' && !formInputText.trim())
+                }
+                className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm transition-all"
+              >
+                <span className="material-symbols-rounded text-[18px]">add</span>
+                Adicionar
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Lista agrupada por Principal / Secundário */}
+      {workingDiags.length > 0 ? (
+        <div className="space-y-4">
+          {principalDiags.length > 0 && (
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 px-1">
+                <span className={`text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                  Principais
+                </span>
+                <div className={`flex-1 h-px ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`} />
+                <span className={`text-[11px] font-semibold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                  {principalDiags.length}
+                </span>
+              </div>
+              <div className="space-y-2">{principalDiags.map(renderCard)}</div>
+            </div>
+          )}
+
+          {secundarioDiags.length > 0 && (
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 px-1">
+                <span className={`text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
+                  Secundários
+                </span>
+                <div className={`flex-1 h-px ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`} />
+                <span className={`text-[11px] font-semibold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                  {secundarioDiags.length}
+                </span>
+              </div>
+              <div className="space-y-2">{secundarioDiags.map(renderCard)}</div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className={`text-center py-10 rounded-xl border-2 border-dashed ${
+          isDark ? 'border-slate-700 text-slate-500' : 'border-slate-200 text-slate-400'
         }`}>
-          <div className={`grid grid-cols-2 border-b text-[10px] font-bold uppercase tracking-wider ${
-            isDark ? 'border-slate-700 text-slate-400' : 'border-slate-200 text-slate-500'
-          }`}>
-            {selectedByGroup.principal.length > 0 && (
-              <div className={`flex items-center gap-1.5 px-3 py-1.5 border-r ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-                <span className="material-symbols-rounded text-[12px] text-blue-500">local_hospital</span>
-                Principais ({displayCountPrincipal})
-              </div>
-            )}
-            {selectedByGroup.secundario.length > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5">
-                <span className="material-symbols-rounded text-[12px] text-blue-500">description</span>
-                Secundários ({displayCountSecundario})
-              </div>
-            )}
-          </div>
-          <div className="grid grid-cols-2">
-            {selectedByGroup.principal.length > 0 && (
-              <ul className={`px-3 py-2 divide-y text-xs border-r ${isDark ? 'border-slate-700 divide-slate-700/60' : 'border-slate-200 divide-slate-100'}`}>
-                {selectedByGroup.principal.map(opt => {
-                  // Pai com filho selecionado → não renderizar (aparece via filho)
-                  const temFilhoSelecionado = selectedByGroup.principal.some(o => o.parent_id === opt.id);
-                  if (!opt.parent_id && temFilhoSelecionado) return null;
-
-                  // Label final: filho combina com pai; "Outros" usa texto digitado
-                  let displayLabel: string;
-                  if (opt.parent_id) {
-                    const pai = options.find(o => o.id === opt.parent_id);
-                    const texto = inputValues[opt.id] ? `: ${inputValues[opt.id]}` : '';
-                    displayLabel = `${pai?.label ?? ''} ${opt.label}${texto}`.trim();
-                  } else {
-                    displayLabel = opt.label?.startsWith('Outr') && inputValues[opt.id]
-                      ? inputValues[opt.id]
-                      : inputValues[opt.id]
-                        ? `${opt.label} ${inputValues[opt.id]}`.trim()
-                        : opt.label;
-                  }
-
-                  const diag = diagnostics.find(d => d.opcao_id === opt.id);
-                  const isResolved = selectedStatus[opt.id] === 'resolvido';
-                  return (
-                  <li key={opt.id} className="flex items-start gap-2 py-2 first:pt-1 last:pb-1">
-                    {isResolved ? (
-                      <span className="material-symbols-rounded text-[14px] text-emerald-500 mt-0.5 shrink-0">check_circle</span>
-                    ) : (
-                      <span className={`material-symbols-rounded text-[14px] mt-0.5 shrink-0 ${isDark ? 'text-blue-400' : 'text-blue-500'}`}>radio_button_unchecked</span>
-                    )}
-                    <span className={`flex-1 min-w-0 leading-snug ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-                      <span className="block font-medium">{displayLabel}</span>
-                      {sistemaValues[opt.id] && (
-                        <span className="block mt-1">
-                          <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                            isDark ? 'bg-blue-900/60 text-blue-300 border border-blue-800' : 'bg-blue-50 text-blue-600 border border-blue-200'
-                          }`}>
-                            {sistemaValues[opt.id]}
-                          </span>
-                        </span>
-                      )}
-                      {diag?.created_at && (
-                        <span className={`block text-[10px] mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                          {formatDiagDate(diag.created_at)}
-                          {isResolved && diag.resolved_at && (
-                            <> · Res.: {formatDiagDate(diag.resolved_at)}</>
-                          )}
-                        </span>
-                      )}
-                    </span>
-                    <button
-                      onClick={() => handleRemoveDiagnostic(opt.id)}
-                      title="Arquivar diagnóstico"
-                      className={`shrink-0 mt-0.5 transition-colors ${isDark ? 'text-slate-600 hover:text-red-400' : 'text-slate-300 hover:text-red-500'}`}
-                    >
-                      <span className="material-symbols-rounded text-[14px]">archive</span>
-                    </button>
-                  </li>
-                  );
-                })}
-              </ul>
-            )}
-            {selectedByGroup.secundario.length > 0 && (
-              <ul className={`px-3 py-2 divide-y text-xs ${isDark ? 'divide-slate-700/60' : 'divide-slate-100'}`}>
-                {selectedByGroup.secundario.map(opt => {
-                  const temFilhoSelecionado = selectedByGroup.secundario.some(o => o.parent_id === opt.id);
-                  if (!opt.parent_id && temFilhoSelecionado) return null;
-
-                  let displayLabel: string;
-                  if (opt.parent_id) {
-                    const pai = options.find(o => o.id === opt.parent_id);
-                    const texto = inputValues[opt.id] ? `: ${inputValues[opt.id]}` : '';
-                    displayLabel = `${pai?.label ?? ''} ${opt.label}${texto}`.trim();
-                  } else {
-                    displayLabel = opt.label?.startsWith('Outr') && inputValues[opt.id]
-                      ? inputValues[opt.id]
-                      : inputValues[opt.id]
-                        ? `${opt.label} ${inputValues[opt.id]}`.trim()
-                        : opt.label;
-                  }
-
-                  const diag = diagnostics.find(d => d.opcao_id === opt.id);
-                  const isResolved = selectedStatus[opt.id] === 'resolvido';
-                  return (
-                  <li key={opt.id} className="flex items-start gap-2 py-2 first:pt-1 last:pb-1">
-                    {isResolved ? (
-                      <span className="material-symbols-rounded text-[14px] text-emerald-500 mt-0.5 shrink-0">check_circle</span>
-                    ) : (
-                      <span className={`material-symbols-rounded text-[14px] mt-0.5 shrink-0 ${isDark ? 'text-blue-400' : 'text-blue-500'}`}>radio_button_unchecked</span>
-                    )}
-                    <span className={`flex-1 min-w-0 leading-snug ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-                      <span className="block font-medium">{displayLabel}</span>
-                      {sistemaValues[opt.id] && (
-                        <span className="block mt-1">
-                          <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                            isDark ? 'bg-blue-900/60 text-blue-300 border border-blue-800' : 'bg-blue-50 text-blue-600 border border-blue-200'
-                          }`}>
-                            {sistemaValues[opt.id]}
-                          </span>
-                        </span>
-                      )}
-                      {diag?.created_at && (
-                        <span className={`block text-[10px] mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                          {formatDiagDate(diag.created_at)}
-                          {isResolved && diag.resolved_at && (
-                            <> · Res.: {formatDiagDate(diag.resolved_at)}</>
-                          )}
-                        </span>
-                      )}
-                    </span>
-                    <button
-                      onClick={() => handleRemoveDiagnostic(opt.id)}
-                      title="Arquivar diagnóstico"
-                      className={`shrink-0 mt-px transition-colors ${isDark ? 'text-slate-600 hover:text-red-400' : 'text-slate-300 hover:text-red-500'}`}
-                    >
-                      <span className="material-symbols-rounded text-[14px]">archive</span>
-                    </button>
-                  </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
+          <span className="material-symbols-rounded text-[36px] block mb-1.5 opacity-50">biotech</span>
+          <p className="text-sm font-medium">Nenhum diagnóstico adicionado</p>
+          <p className="text-xs mt-0.5 opacity-70">Selecione o tipo e a categoria acima para começar</p>
         </div>
       )}
 
-      {/* ── Group panels ── */}
-      <div className="space-y-2">
-
-        {mainQuestions.length > 0 && (
-          <div className={`rounded-xl overflow-hidden border-l-4 border transition-all ${
-            expandedGroup === 'principal'
-              ? isDark
-                ? 'border-l-blue-500 border-blue-800/50 bg-slate-800'
-                : 'border-l-blue-500 border-blue-200 bg-blue-50/50'
-              : isDark
-                ? 'border-l-blue-700 border-slate-700 bg-slate-800'
-                : 'border-l-blue-300 border-slate-200 bg-slate-50'
-          }`}>
-            <button
-              onClick={() => setExpandedGroup(expandedGroup === 'principal' ? null : 'principal')}
-              className="w-full flex items-center justify-between px-3 sm:px-4 py-3 transition-colors text-left"
-            >
-              <div className="flex items-center gap-2.5">
-                <span className={`material-symbols-rounded text-[22px] ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
-                  local_hospital
-                </span>
-                <span className={`font-bold text-sm sm:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                  Diagnósticos Principais
-                </span>
-                {displayCountPrincipal > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-500 text-white">
-                    {displayCountPrincipal}
-                  </span>
-                )}
-              </div>
-              <ChevronRightIcon className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform shrink-0 ${
-                expandedGroup === 'principal' ? 'rotate-90' : ''
-              } ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
-            </button>
-
-            {expandedGroup === 'principal' && (
-              <div className={`px-3 sm:px-4 pb-4 space-y-2 border-t ${isDark ? 'border-slate-700' : 'border-blue-100'}`}>
-                <div className="pt-3 space-y-2">
-                  {mainQuestions.map(question => (
-                    <QuestionBlock
-                      key={question.id}
-                      question={question}
-                      accentColor="blue"
-                      expandedQuestion={expandedQuestion}
-                      onToggleQuestion={setExpandedQuestion}
-                      {...sharedRowProps}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {secondaryQuestions.length > 0 && (
-          <div className={`rounded-xl overflow-hidden border-l-4 border transition-all ${
-            expandedGroup === 'secundario'
-              ? isDark
-                ? 'border-l-blue-400 border-blue-800/50 bg-slate-800'
-                : 'border-l-blue-400 border-blue-200 bg-blue-50/30'
-              : isDark
-                ? 'border-l-blue-600 border-slate-700 bg-slate-800'
-                : 'border-l-blue-300 border-slate-200 bg-slate-50'
-          }`}>
-            <button
-              onClick={() => setExpandedGroup(expandedGroup === 'secundario' ? null : 'secundario')}
-              className="w-full flex items-center justify-between px-3 sm:px-4 py-3 transition-colors text-left"
-            >
-              <div className="flex items-center gap-2.5">
-                <span className={`material-symbols-rounded text-[22px] ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
-                  description
-                </span>
-                <span className={`font-bold text-sm sm:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                  Diagnósticos Secundários
-                </span>
-                {displayCountSecundario > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-500 text-white">
-                    {displayCountSecundario}
-                  </span>
-                )}
-              </div>
-              <ChevronRightIcon className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform shrink-0 ${
-                expandedGroup === 'secundario' ? 'rotate-90' : ''
-              } ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
-            </button>
-
-            {expandedGroup === 'secundario' && (
-              <div className={`px-3 sm:px-4 pb-4 space-y-2 border-t ${isDark ? 'border-slate-700' : 'border-blue-100'}`}>
-                <div className="pt-3 space-y-2">
-                  {secondaryQuestions.map(question => (
-                    <QuestionBlock
-                      key={question.id}
-                      question={question}
-                      accentColor="secondary"
-                      expandedQuestion={expandedQuestion}
-                      onToggleQuestion={setExpandedQuestion}
-                      {...sharedRowProps}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* ── Save button ── */}
+      {/* Save */}
       <button
         onClick={handleSave}
         disabled={saving}
         className={`w-full flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl font-bold text-sm sm:text-base transition-all duration-200 shadow-sm ${
           saving
-            ? isDark
-              ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-              : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+            ? isDark ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
             : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 active:scale-[0.98] text-white shadow-blue-500/30 hover:shadow-blue-500/50 hover:shadow-md'
         }`}
       >
@@ -1130,51 +901,45 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         )}
       </button>
 
-      {/* ── Archive modal ── */}
+      {/* Archive modal */}
       {archiveModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className={`${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-slate-200'} rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden`}>
             <div className={`flex items-center gap-3 px-5 py-4 border-b ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
               <span className="material-symbols-rounded text-[22px] text-amber-500">archive</span>
-              <h3 className={`text-base font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                Arquivar Diagnóstico
-              </h3>
+              <h3 className={`text-base font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Remover Diagnóstico</h3>
             </div>
-
             <div className="px-5 py-4 space-y-3">
               <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                Informe o motivo do arquivamento (opcional):
+                Motivo do arquivamento (opcional):
               </p>
               <textarea
                 value={archiveReason}
-                onChange={(e) => setArchiveReason(e.target.value)}
+                onChange={e => setArchiveReason(e.target.value)}
                 placeholder="Ex: Diagnóstico descartado após exame complementar..."
-                className={`w-full px-3 py-2.5 text-sm rounded-xl border resize-none transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+                className={`w-full px-3 py-2.5 text-sm rounded-xl border resize-none focus:outline-none focus:ring-2 focus:ring-amber-500 ${
                   isDark
                     ? 'bg-slate-700 border-slate-600 text-slate-100 placeholder-slate-400'
                     : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'
                 }`}
-                rows={4}
+                rows={3}
               />
             </div>
-
             <div className={`flex gap-2 px-5 py-4 border-t ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
               <button
-                onClick={() => { setArchiveModalOpen(false); setOptionToArchive(null); setArchiveReason(''); }}
+                onClick={() => { setArchiveModalOpen(false); setTempIdToArchive(null); setArchiveReason(''); }}
                 className={`flex-1 py-2 px-4 rounded-xl font-semibold text-sm transition-colors ${
-                  isDark
-                    ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                  isDark ? 'bg-slate-700 hover:bg-slate-600 text-slate-200' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                 }`}
               >
                 Cancelar
               </button>
               <button
                 onClick={handleConfirmArchive}
-                className="flex-1 py-2 px-4 rounded-xl font-semibold text-sm bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-white transition-colors flex items-center justify-center gap-2"
+                className="flex-1 py-2 px-4 rounded-xl font-semibold text-sm bg-amber-500 hover:bg-amber-400 text-white transition-colors flex items-center justify-center gap-2"
               >
                 <span className="material-symbols-rounded text-[16px]">archive</span>
-                Arquivar
+                Remover
               </button>
             </div>
           </div>
