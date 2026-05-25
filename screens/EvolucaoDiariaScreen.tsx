@@ -749,6 +749,17 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       });
     }
 
+    const secundarios = diagItems.filter(d => d.tipo === 'secundario' && d.status === 'resolvido');
+    if (secundarios.length > 0) {
+      title('6. DIAGNÓSTICOS SECUNDÁRIOS');
+      secundarios.forEach(d => {
+        const lbl = d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label;
+        const det = d.label !== 'Outros' && d.texto_digitado ? ` (${d.texto_digitado})` : '';
+        const dataResolvido = d.resolved_at ? `  Resolvido em ${formatDateToBRL(d.resolved_at)}` : '';
+        add(`• ${lbl}${det}${dataResolvido}`);
+      });
+    }
+
 
     if (controlesSaidasRec || diureseRec) {
       const cs = controlesSaidasRec;
@@ -780,27 +791,27 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       }
       if (diureseRec) saidasLines.push(`  Diurese: ${((diureseRec.volume / diureseRec.horas) / diureseRec.peso).toFixed(2)} mL/kg/h | Volume: ${diureseRec.volume} mL`);
       if (vitaisLines.length > 0 || saidasLines.length > 0) {
-        title('6. CONTROLES E SAÍDAS');
+        title('7. CONTROLES E SAÍDAS');
         if (vitaisLines.length > 0) { add('Controles:'); vitaisLines.forEach(l => add(l)); }
         if (saidasLines.length > 0) { if (vitaisLines.length > 0) blank(); add('Saídas:'); saidasLines.forEach(l => add(l)); }
       }
     }
 
     if (bhBalance) {
-      title('7. BH DIÁRIO');
+      title('8. BH DIÁRIO');
       const pct = bhBalance.volume / (bhBalance.peso * 10);
       add(`${pct.toFixed(2)}% — ${bhBalance.volume > 0 ? 'Ganho' : 'Perda'} | Volume: ${bhBalance.volume > 0 ? '+' : ''}${bhBalance.volume} mL`);
     }
 
     if (bhCumul && bhCumul.registros_ultimas_24h > 0) {
-      title('8. BH CUMULATIVO');
+      title('9. BH CUMULATIVO');
       add(`Total: ${bhCumul.bh_cumulativo_total > 0 ? '+' : ''}${bhCumul.bh_cumulativo_total.toFixed(2)}% | BH Anterior: ${bhCumul.bh_historico_antigo.toFixed(2)}% | Últimas 24h: ${bhCumul.bh_ultimas_24h.toFixed(2)}%`);
     }
 
 
     const dietasWord = (p.diets ?? []).filter(d => !d.isArchived && d.mostrar_evolucao !== false && (d.vet_at != null || d.pt_at != null));
     if (dietasWord.length > 0) {
-      title('9. DIETAS');
+      title('10. DIETAS');
       dietasWord.forEach(d => {
         const parts: string[] = [d.type];
         if (d.vet_at != null) parts.push(`VET atual: ${d.vet_at.toFixed(0)}%`);
@@ -812,18 +823,18 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
     const activeDevicesWord = (p.devices ?? []).filter(d => !d.isArchived).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
     if (activeDevicesWord.length > 0) {
-      title('10. DISPOSITIVOS');
+      title('11. DISPOSITIVOS');
       add('@@DEVICES_TABLE@@');
       blank();
     }
 
     if (situacaoRec) {
-      title('11. SITUAÇÃO CLÍNICA');
+      title('12. SITUAÇÃO CLÍNICA');
       add(situacaoRec.situacao_texto);
     }
 
     if (Object.values(exameFisico).some(v => v.trim())) {
-      title('12. EXAME FÍSICO');
+      title('13. EXAME FÍSICO');
       EXAME_SECTIONS.forEach(s => {
         const val = exameFisico[s.key as keyof ExameFisicoState];
         if (val?.trim()) add(`${s.label.replace(/^[\d./ ]+/, '')}: ${val}`);
@@ -1013,11 +1024,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     });
 
     if (apLines.length > 0) {
-      title('13. AP — AVALIAÇÃO x PROPEDÊUTICA');
+      title('14. AP — AVALIAÇÃO x PROPEDÊUTICA');
       apLines.forEach(l => add(l));
     }
 
-    title('14. CONDUTAS CRÍTICAS — PRÓXIMAS 24H');
+    title('15. CONDUTAS CRÍTICAS — PRÓXIMAS 24H');
     if (condutasCriticas.trim()) add(condutasCriticas);
 
     blank();
