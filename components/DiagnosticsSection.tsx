@@ -57,6 +57,7 @@ interface WorkingDiag {
   inputComplement?: string;
   sistema: string;
   status: 'resolvido' | 'nao_resolvido';
+  mostrarWord: boolean;
   createdAt?: string;
   resolvedAt?: string;
   isNew: boolean;
@@ -180,6 +181,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           inputComplement: hasInputAndText ? d.texto_digitado : undefined,
           sistema: d.sistema || '',
           status: d.status,
+          mostrarWord: d.mostrar_word !== false,
           createdAt: d.created_at,
           resolvedAt: d.resolved_at || undefined,
           isNew: false,
@@ -269,6 +271,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         observacao: formObservacao,
         sistema: formSistema,
         status: formStatus,
+        mostrarWord: true,
         resolvedAt: formStatus === 'resolvido' ? (formDataRetirada || undefined) : undefined,
         isNew: true,
         isStatic: true,
@@ -310,6 +313,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       inputComplement: !childOpt && opt.has_input ? formInputText.trim() : undefined,
       sistema: formSistema,
       status: formStatus,
+      mostrarWord: true,
       resolvedAt: formStatus === 'resolvido' ? (formDataRetirada || undefined) : undefined,
       isNew: true,
       isStatic: finalOpt.isStatic,
