@@ -863,7 +863,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         !!s && (sistemas.includes(s) || (sec.id === 'outras_av' && !ALL_KNOWN_SISTEMAS.has(s)));
 
       const secDiags = diagItems
-        .filter(d => matchSistema(d.sistema))
+        .filter(d => matchSistema(d.sistema) && d.status !== 'resolvido')
         .sort((a, b) => (a.tipo === 'principal' ? 0 : 1) - (b.tipo === 'principal' ? 0 : 1));
 
       const allSecMeds  = (p.medications ?? []).filter(m => !m.isArchived && m.mostrar_evolucao !== false && matchSistema(m.sistema) && !we.has(`med_${m.id}`) && (!m.endDate || new Date(m.endDate + 'T00:00:00') >= _today));
@@ -1681,7 +1681,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               const allNames = [system, ...(SYSTEM_EXTRA_MATCHES[system] ?? [])];
 
               const secDiags = diagItems
-                .filter(d => d.sistema && allNames.includes(d.sistema))
+                .filter(d => d.sistema && allNames.includes(d.sistema) && d.status !== 'resolvido')
                 .sort((a, b) => (a.tipo === 'principal' ? 0 : 1) - (b.tipo === 'principal' ? 0 : 1));
 
               const allSecMeds = (selectedPatient?.medications ?? [])
