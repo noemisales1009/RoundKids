@@ -752,11 +752,17 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     const secundarios = diagItems.filter(d => d.tipo === 'secundario' && d.status === 'resolvido');
     if (secundarios.length > 0) {
       title('6. DIAGNÓSTICOS SECUNDÁRIOS');
+      const allMedsExport = (p.medications ?? []).filter(m => !m.isArchived);
       secundarios.forEach(d => {
         const lbl = d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label;
         const det = d.label !== 'Outros' && d.texto_digitado ? ` (${d.texto_digitado})` : '';
         const dataResolvido = d.resolved_at ? `  Resolvido em ${formatDateToBRL(d.resolved_at)}` : '';
         add(`• ${lbl}${det}${dataResolvido}`);
+        const linkedMeds = allMedsExport.filter(m => m.diagnosticoId != null && d.allIds.includes(Number(m.diagnosticoId)));
+        linkedMeds.forEach(m => {
+          const dosagePart = m.dosage && m.dosage !== m.name ? ` (${m.dosage})` : '';
+          add(`    ◦ ${m.name}${dosagePart}`);
+        });
       });
     }
 
