@@ -453,11 +453,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         (optsRes.data || []).forEach((o: any) => { opts[o.id] = { label: o.label, pergunta_id: o.pergunta_id }; });
         const qTipo: Record<number, 'principal' | 'secundario'> = {};
         (qsRes.data || []).forEach((q: any) => { qTipo[q.id] = q.tipo; });
-        // Apenas ativos (não resolvidos), sem repetir opcao_id
+        // Sem repetir opcao_id (principal: todos; secundário: apenas resolvidos)
         const byOpcao = new Map<number, DiagItem>();
         const opcaoToIds = new Map<number, number[]>();
         (diagRes.data || [])
-          .filter((d: any) => d.status !== 'resolvido')
           .forEach((d: any) => {
             const ids = opcaoToIds.get(d.opcao_id) ?? [];
             ids.push(Number(d.id));
@@ -1357,29 +1356,51 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           </div>
         ) : (() => {
           const principais = diagItems.filter(d => d.tipo === 'principal');
+          const allMeds = (selectedPatient?.medications ?? []).filter(m => !m.isArchived);
           return principais.length === 0 ? (
             <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum diagnóstico principal registrado.</p>
           ) : (
             <div className="space-y-2">
-              {principais.map((d, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                      {d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label}
-                    </p>
-                    {d.label !== 'Outros' && d.texto_digitado && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 italic mt-0.5">{d.texto_digitado}</p>
+              {principais.map((d, i) => {
+                const linkedMeds = allMeds.filter(m => m.diagnosticoId != null && d.allIds.includes(Number(m.diagnosticoId)));
+                return (
+                  <div key={i} className="bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <div className="flex items-start gap-3 p-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                          {d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label}
+                        </p>
+                        {d.label !== 'Outros' && d.texto_digitado && (
+                          <p className="text-xs text-slate-500 dark:text-slate-400 italic mt-0.5">{d.texto_digitado}</p>
+                        )}
+                      </div>
+                      <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${
+                        d.status === 'resolvido'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                          : 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300'
+                      }`}>
+                        {d.status === 'resolvido' ? `Resolvido${d.resolved_at ? ` em ${formatDateToBRL(d.resolved_at)}` : ''}` : 'Não resolvido'}
+                      </span>
+                    </div>
+                    {linkedMeds.length > 0 && (
+                      <div className="border-t border-slate-200 dark:border-slate-700 px-3 py-2 space-y-1">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Medicações</p>
+                        {linkedMeds.map(m => (
+                          <div key={m.id} className="flex items-center gap-1.5">
+                            <span className="material-symbols-rounded text-[13px] text-slate-400">medication</span>
+                            <span className="text-xs text-slate-600 dark:text-slate-300">
+                              {m.name}{m.dosage && m.dosage !== m.name ? ` — ${m.dosage}` : ''}
+                            </span>
+                            {m.startDate && (
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500">{formatDateToBRL(m.startDate)}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
-                  <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${
-                    d.status === 'resolvido'
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
-                      : 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300'
-                  }`}>
-                    {d.status === 'resolvido' ? 'Resolvido' : 'Não resolvido'}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           );
         })()}
@@ -1392,30 +1413,48 @@ export const EvolucaoDiariaScreen: React.FC = () => {
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" />
           </div>
         ) : (() => {
-          const secundarios = diagItems.filter(d => d.tipo === 'secundario');
+          const secundarios = diagItems.filter(d => d.tipo === 'secundario' && d.status === 'resolvido');
+          const allMeds2 = (selectedPatient?.medications ?? []).filter(m => !m.isArchived);
           return secundarios.length === 0 ? (
             <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum diagnóstico secundário registrado.</p>
           ) : (
             <div className="space-y-2">
-              {secundarios.map((d, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                      {d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label}
-                    </p>
-                    {d.label !== 'Outros' && d.texto_digitado && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 italic mt-0.5">{d.texto_digitado}</p>
+              {secundarios.map((d, i) => {
+                const linkedMeds = allMeds2.filter(m => m.diagnosticoId != null && d.allIds.includes(Number(m.diagnosticoId)));
+                return (
+                  <div key={i} className="bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <div className="flex items-start gap-3 p-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                          {d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label}
+                        </p>
+                        {d.label !== 'Outros' && d.texto_digitado && (
+                          <p className="text-xs text-slate-500 dark:text-slate-400 italic mt-0.5">{d.texto_digitado}</p>
+                        )}
+                      </div>
+                      <span className="shrink-0 text-xs font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                        Resolvido{d.resolved_at ? ` em ${formatDateToBRL(d.resolved_at)}` : ''}
+                      </span>
+                    </div>
+                    {linkedMeds.length > 0 && (
+                      <div className="border-t border-slate-200 dark:border-slate-700 px-3 py-2 space-y-1">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Medicações</p>
+                        {linkedMeds.map(m => (
+                          <div key={m.id} className="flex items-center gap-1.5">
+                            <span className="material-symbols-rounded text-[13px] text-slate-400">medication</span>
+                            <span className="text-xs text-slate-600 dark:text-slate-300">
+                              {m.name}{m.dosage && m.dosage !== m.name ? ` — ${m.dosage}` : ''}
+                            </span>
+                            {m.startDate && (
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500">{formatDateToBRL(m.startDate)}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
-                  <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${
-                    d.status === 'resolvido'
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
-                      : 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300'
-                  }`}>
-                    {d.status === 'resolvido' ? 'Resolvido' : 'Não resolvido'}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           );
         })()}

@@ -35,6 +35,15 @@ interface DiagnosticsSectionProps {
   onSave?: (data: PatientDiagnostic[]) => void;
 }
 
+interface MedItem {
+  id: number;
+  nome: string;
+  dosagem?: string;
+  dataInicio?: string;
+  mostrarEvolucao: boolean;
+  diagnosticoId?: number;
+}
+
 interface WorkingDiag {
   tempId: string;
   dbId?: number;
@@ -89,6 +98,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
   const [dbOptions, setDbOptions] = useState<DiagnosticOption[]>([]);
   const [workingDiags, setWorkingDiags] = useState<WorkingDiag[]>([]);
+  const [medications, setMedications] = useState<MedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingTempId, setEditingTempId] = useState<string | null>(null);
@@ -114,9 +124,13 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [optionsRes, diagnosticsRes] = await Promise.all([
+      const [optionsRes, diagnosticsRes, medsRes] = await Promise.all([
         supabase.from('pergunta_opcoes_diagnostico').select('*').order('pergunta_id').order('ordem'),
         supabase.from('paciente_diagnosticos').select('*').eq('patient_id', patientId).eq('arquivado', false),
+        supabase.from('medicacoes_pacientes')
+          .select('id, nome_medicacao, dosagem_valor, unidade_medida, data_inicio, mostrar_evolucao, diagnostico_id')
+          .eq('patient_id', patientId)
+          .eq('arquivado', false),
       ]);
 
       if (optionsRes.error) throw optionsRes.error;
@@ -124,6 +138,15 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
       const opts: DiagnosticOption[] = optionsRes.data || [];
       setDbOptions(opts);
+
+      setMedications((medsRes.data || []).map(m => ({
+        id: m.id,
+        nome: m.nome_medicacao,
+        dosagem: m.dosagem_valor ? `${m.dosagem_valor}${m.unidade_medida ? ' ' + m.unidade_medida : ''}` : undefined,
+        dataInicio: m.data_inicio || undefined,
+        mostrarEvolucao: m.mostrar_evolucao !== false,
+        diagnosticoId: m.diagnostico_id ?? undefined,
+      })));
 
       const working: WorkingDiag[] = (diagnosticsRes.data || []).map(d => {
         const opt = opts.find(o => o.id === d.opcao_id);
@@ -336,6 +359,11 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     setArchiveReason('');
   };
 
+  const handleToggleMostrarEvolucao = async (medId: number, current: boolean) => {
+    const { error } = await supabase.from('medicacoes_pacientes').update({ mostrar_evolucao: !current }).eq('id', medId);
+    if (!error) setMedications(prev => prev.map(m => m.id === medId ? { ...m, mostrarEvolucao: !current } : m));
+  };
+
   const resolveStaticOpcaoId = async (d: WorkingDiag): Promise<number> => {
     if (!d.isStatic || !d.staticCodigo) return d.opcaoId;
 
@@ -451,7 +479,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const labelCls = `block text-xs font-semibold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`;
 
   const principalDiags = workingDiags.filter(d => d.tipo === 'principal');
-  const secundarioDiags = workingDiags.filter(d => d.tipo === 'secundario');
+  const secundarioDiags = workingDiags.filter(d => d.tipo === 'secundario' && d.status === 'resolvido');
 
   const renderCard = (diag: WorkingDiag) => {
     const isEditing = editingTempId === diag.tempId;
@@ -501,6 +529,13 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
               {diag.dataInicio && (
                 <span className={`text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                   {formatDiagDate(diag.dataInicio)}
+                </span>
+              )}
+              {isResolved && (
+                <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                  isDark ? 'bg-emerald-900/60 text-emerald-300' : 'bg-emerald-100 text-emerald-700'
+                }`}>
+                  Resolvido{diag.resolvedAt ? ` em ${formatDiagDate(diag.resolvedAt)}` : ''}
                 </span>
               )}
               {diag.isNew && (
@@ -608,6 +643,50 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
             </div>
           </div>
         )}
+
+        {/* Medicações vinculadas */}
+        {diag.dbId && (() => {
+          const linkedMeds = medications.filter(m => m.diagnosticoId === diag.dbId);
+          if (!linkedMeds.length) return null;
+          return (
+            <div className={`border-t px-3 py-2.5 space-y-1.5 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+              <p className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                Medicações
+              </p>
+              {linkedMeds.map(med => (
+                <div key={med.id} className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className={`material-symbols-rounded text-[14px] shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                      medication
+                    </span>
+                    <span className={`text-xs truncate ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                      {med.nome}{med.dosagem ? ` — ${med.dosagem}` : ''}
+                    </span>
+                    {med.dataInicio && (
+                      <span className={`text-[10px] shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                        {formatDiagDate(med.dataInicio)}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleToggleMostrarEvolucao(med.id, med.mostrarEvolucao)}
+                    title={med.mostrarEvolucao ? 'Remover do Word' : 'Incluir no Word'}
+                    className={`shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold transition-colors ${
+                      med.mostrarEvolucao
+                        ? isDark ? 'bg-blue-900/50 text-blue-300 border border-blue-700' : 'bg-blue-100 text-blue-700 border border-blue-200'
+                        : isDark ? 'bg-slate-700 text-slate-500 border border-slate-600' : 'bg-slate-100 text-slate-400 border border-slate-200'
+                    }`}
+                  >
+                    <span className="material-symbols-rounded text-[12px]">
+                      {med.mostrarEvolucao ? 'description' : 'description'}
+                    </span>
+                    {med.mostrarEvolucao ? 'No Word' : 'Fora do Word'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </div>
     );
   };
