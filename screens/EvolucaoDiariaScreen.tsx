@@ -758,7 +758,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         const det = d.label !== 'Outros' && d.texto_digitado ? ` (${d.texto_digitado})` : '';
         const dataResolvido = d.resolved_at ? `  Resolvido em ${formatDateToBRL(d.resolved_at)}` : '';
         add(`• ${lbl}${det}${dataResolvido}`);
-        const linkedMeds = allMedsExport.filter(m => m.diagnosticoId != null && d.allIds.includes(Number(m.diagnosticoId)));
+        const linkedMeds = allMedsExport.filter(m => m.diagnosticoId != null && d.allIds.includes(Number(m.diagnosticoId)) && !we.has(`med_${m.id}`));
         linkedMeds.forEach(m => {
           const dosagePart = m.dosage && m.dosage !== m.name ? ` (${m.dosage})` : '';
           add(`    ◦ ${m.name}${dosagePart}`);
@@ -1402,17 +1402,23 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                     {linkedMeds.length > 0 && (
                       <div className="border-t border-slate-200 dark:border-slate-700 px-3 py-2 space-y-1">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Medicações</p>
-                        {linkedMeds.map(m => (
-                          <div key={m.id} className="flex items-center gap-1.5">
-                            <span className="material-symbols-rounded text-[13px] text-slate-400">medication</span>
-                            <span className="text-xs text-slate-600 dark:text-slate-300">
-                              {m.name}{m.dosage && m.dosage !== m.name ? ` — ${m.dosage}` : ''}
-                            </span>
-                            {m.startDate && (
-                              <span className="text-[10px] text-slate-400 dark:text-slate-500">{formatDateToBRL(m.startDate)}</span>
-                            )}
-                          </div>
-                        ))}
+                        {linkedMeds.map(m => {
+                          const wk = `med_${m.id}`; const off = wordExcluded.has(wk);
+                          return (
+                            <div key={m.id} className={`relative flex items-center gap-1.5 pr-7 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                              <span className="material-symbols-rounded text-[13px] text-slate-400 shrink-0">medication</span>
+                              <span className="text-xs text-slate-600 dark:text-slate-300">
+                                {m.name}{m.dosage && m.dosage !== m.name ? ` — ${m.dosage}` : ''}
+                              </span>
+                              {m.startDate && (
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500">{formatDateToBRL(m.startDate)}</span>
+                              )}
+                              <button onClick={() => toggleWordItem(wk)} title={off ? 'Incluir no Word' : 'Remover do Word'} className="absolute right-0 p-0.5 rounded transition-all hover:scale-110">
+                                <span className={`material-symbols-rounded text-[18px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span>
+                              </button>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -1456,17 +1462,23 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                     {linkedMeds.length > 0 && (
                       <div className="border-t border-slate-200 dark:border-slate-700 px-3 py-2 space-y-1">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Medicações</p>
-                        {linkedMeds.map(m => (
-                          <div key={m.id} className="flex items-center gap-1.5">
-                            <span className="material-symbols-rounded text-[13px] text-slate-400">medication</span>
-                            <span className="text-xs text-slate-600 dark:text-slate-300">
-                              {m.name}{m.dosage && m.dosage !== m.name ? ` — ${m.dosage}` : ''}
-                            </span>
-                            {m.startDate && (
-                              <span className="text-[10px] text-slate-400 dark:text-slate-500">{formatDateToBRL(m.startDate)}</span>
-                            )}
-                          </div>
-                        ))}
+                        {linkedMeds.map(m => {
+                          const wk = `med_${m.id}`; const off = wordExcluded.has(wk);
+                          return (
+                            <div key={m.id} className={`relative flex items-center gap-1.5 pr-7 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                              <span className="material-symbols-rounded text-[13px] text-slate-400 shrink-0">medication</span>
+                              <span className="text-xs text-slate-600 dark:text-slate-300">
+                                {m.name}{m.dosage && m.dosage !== m.name ? ` — ${m.dosage}` : ''}
+                              </span>
+                              {m.startDate && (
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500">{formatDateToBRL(m.startDate)}</span>
+                              )}
+                              <button onClick={() => toggleWordItem(wk)} title={off ? 'Incluir no Word' : 'Remover do Word'} className="absolute right-0 p-0.5 rounded transition-all hover:scale-110">
+                                <span className={`material-symbols-rounded text-[18px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span>
+                              </button>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
