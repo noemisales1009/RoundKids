@@ -104,6 +104,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const [formObservacao, setFormObservacao] = useState('');
   const [formSistema, setFormSistema] = useState('');
   const [formStatus, setFormStatus] = useState<'resolvido' | 'nao_resolvido'>('nao_resolvido');
+  const [formDataRetirada, setFormDataRetirada] = useState('');
 
   // Archive modal
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
@@ -226,6 +227,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       setFormObservacao('');
       setFormSistema('');
       setFormStatus('nao_resolvido');
+      setFormDataRetirada('');
     };
 
     // Caso "Outros (especificar)"
@@ -244,6 +246,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         observacao: formObservacao,
         sistema: formSistema,
         status: formStatus,
+        resolvedAt: formStatus === 'resolvido' ? (formDataRetirada || undefined) : undefined,
         isNew: true,
         isStatic: true,
         staticCodigo: uniqueCodigo,
@@ -284,6 +287,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       inputComplement: !childOpt && opt.has_input ? formInputText.trim() : undefined,
       sistema: formSistema,
       status: formStatus,
+      resolvedAt: formStatus === 'resolvido' ? (formDataRetirada || undefined) : undefined,
       isNew: true,
       isStatic: finalOpt.isStatic,
       staticCodigo: finalOpt.isStatic ? finalOpt.codigo : undefined,
@@ -401,7 +405,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           status: d.status,
           created_at: now,
           created_by: userId,
-          resolved_at: d.status === 'resolvido' ? now : null,
+          resolved_at: d.status === 'resolvido' ? (d.resolvedAt || now) : null,
         });
         if (error) throw new Error(error.message);
       }
@@ -567,27 +571,40 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                 className={`${inputCls} resize-none`}
               />
             </div>
-            <div className={`flex rounded-lg overflow-hidden border w-fit text-xs font-semibold ${isDark ? 'border-slate-600' : 'border-slate-200'}`}>
-              <button
-                onClick={() => handleEditField(diag.tempId, 'status', 'nao_resolvido')}
-                className={`px-3 py-2 transition-colors ${
-                  diag.status === 'nao_resolvido'
-                    ? 'bg-rose-500 text-white'
-                    : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-white text-slate-500 hover:bg-slate-50'
-                }`}
-              >
-                Não Resolvido
-              </button>
-              <button
-                onClick={() => handleEditField(diag.tempId, 'status', 'resolvido')}
-                className={`px-3 py-2 transition-colors ${
-                  diag.status === 'resolvido'
-                    ? 'bg-emerald-500 text-white'
-                    : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-white text-slate-500 hover:bg-slate-50'
-                }`}
-              >
-                Resolvido
-              </button>
+            <div className="flex flex-wrap items-end gap-3">
+              <div className={`flex rounded-lg overflow-hidden border w-fit text-xs font-semibold ${isDark ? 'border-slate-600' : 'border-slate-200'}`}>
+                <button
+                  onClick={() => handleEditField(diag.tempId, 'status', 'nao_resolvido')}
+                  className={`px-3 py-2 transition-colors ${
+                    diag.status === 'nao_resolvido'
+                      ? 'bg-rose-500 text-white'
+                      : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-white text-slate-500 hover:bg-slate-50'
+                  }`}
+                >
+                  Não Resolvido
+                </button>
+                <button
+                  onClick={() => handleEditField(diag.tempId, 'status', 'resolvido')}
+                  className={`px-3 py-2 transition-colors ${
+                    diag.status === 'resolvido'
+                      ? 'bg-emerald-500 text-white'
+                      : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-white text-slate-500 hover:bg-slate-50'
+                  }`}
+                >
+                  Resolvido
+                </button>
+              </div>
+              {diag.status === 'resolvido' && (
+                <div>
+                  <label className={labelCls}>Data de retirada</label>
+                  <input
+                    type="date"
+                    value={(diag.resolvedAt || '').split('T')[0]}
+                    onChange={e => handleEditField(diag.tempId, 'resolvedAt', e.target.value)}
+                    className={inputCls}
+                  />
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -796,7 +813,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
               />
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-end gap-3">
               <div className={`flex rounded-lg overflow-hidden border text-xs font-semibold shrink-0 ${isDark ? 'border-slate-600' : 'border-slate-200'}`}>
                 <button
                   onClick={() => setFormStatus('nao_resolvido')}
@@ -819,6 +836,17 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                   Resolvido
                 </button>
               </div>
+              {formStatus === 'resolvido' && (
+                <div>
+                  <label className={labelCls}>Data de retirada</label>
+                  <input
+                    type="date"
+                    value={formDataRetirada}
+                    onChange={e => setFormDataRetirada(e.target.value)}
+                    className={inputCls}
+                  />
+                </div>
+              )}
               <button
                 onClick={handleAdd}
                 disabled={

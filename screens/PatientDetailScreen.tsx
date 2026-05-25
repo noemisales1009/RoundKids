@@ -3,7 +3,7 @@ import React, { useState, useContext, useEffect, useRef, lazy, Suspense } from '
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { Device, Exam, Medication, SurgicalProcedure, Culture, Diet } from '../types';
-import { formatDateToBRL } from '../constants';
+import { formatDateToBRL, ALERT_SYSTEMS } from '../constants';
 import { BackArrowIcon, WarningIcon, PencilIcon, ClipboardIcon, FileTextIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, BrainIcon, ShieldIcon, BeakerIcon, LungsIcon, DumbbellIcon, CloseIcon, ScalpelIcon, ChevronRightIcon, CalculatorIcon, ChevronDownIcon, CameraIcon, HeartPulseIcon, VirusIcon } from '../components/icons';
 import { PatientDetailSkeleton } from '../components/SkeletonLoader';
 import { ArchiveModal } from '../components/modals/ArchiveModal';
@@ -847,52 +847,72 @@ const PatientDetailScreen: React.FC = () => {
                                             </div>
                                         );
                                     })()}
-                                    {patient.medications.filter(m => !m.isArchived).sort((a, b) => {
-                                            const aFim = a.endDate ? 1 : 0;
-                                            const bFim = b.endDate ? 1 : 0;
-                                            if (aFim !== bFim) return aFim - bFim;
-                                            const dateA = new Date(a.startDate).getTime();
-                                            const dateB = new Date(b.startDate).getTime();
-                                            if (dateB !== dateA) return dateB - dateA;
-                                            const ordemA = medCategoriaOrdem.get(a.categoria ?? '') ?? 999;
-                                            const ordemB = medCategoriaOrdem.get(b.categoria ?? '') ?? 999;
-                                            return ordemA - ordemB;
-                                        }).map(medication => (
-                                        <div key={medication.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
-                                            {medication.categoria && (
-                                                <div className="flex justify-start mb-1.5">
-                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium">{medication.categoria}</span>
-                                                </div>
-                                            )}
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex items-start gap-3">
-                                                    <PillIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
-                                                    <div>
-                                                        <p className="font-bold text-slate-800 dark:text-slate-200 wrap-break-word">{medication.name}{medication.dosage && medication.dosage !== medication.name ? ` - ${medication.dosage}` : ''}</p>
-                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(medication.startDate)}</p>
-                                                        {medication.endDate ? <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Fim: {formatDateToBRL(medication.endDate)}</p> : <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(medication.startDate)}</p>}
-                                                        {medication.diagnosticoLabel && <span className="inline-block mt-1.5 mr-1 text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">Diagnóstico: {medication.diagnosticoLabel}</span>}
-                                                        {medication.sistema && <span className="block mt-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 w-fit">{medication.sistema}</span>}
-                                                        {medication.observacao && <p className="text-sm text-slate-600 dark:text-slate-400 italic mt-1.5 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded">💬 {medication.observacao}</p>}
-                                                        <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={medication.mostrar_evolucao !== false}
-                                                                onChange={e => toggleMostrarEvolucao(medication.id, e.target.checked)}
-                                                                className="w-3.5 h-3.5 accent-blue-500"
-                                                            />
-                                                            <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2 shrink-0 ml-2">
-                                                    {!medication.endDate && <button onClick={() => setEndDateModalOpen(medication.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Fim</button>}
-                                                    <button onClick={() => medication.endDate ? setEditingMedicationEndDate(medication) : setEditingMedication(medication)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
-                                                    <button onClick={() => setArchiveMedicationModal(medication)} className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"><CloseIcon className="w-4 h-4" /></button>
+                                    {(() => {
+                                        const activeMeds = patient.medications.filter(m => !m.isArchived);
+                                        // Lista de sistemas, na ordem de ALERT_SYSTEMS, que possuem ao menos uma medicação
+                                        const sistemasComMeds = ALERT_SYSTEMS.filter(sys => activeMeds.some(m => m.sistema === sys));
+                                        // Medicações sem sistema (ou com sistema fora da lista)
+                                        const semSistema = activeMeds.filter(m => !m.sistema || !ALERT_SYSTEMS.includes(m.sistema));
+                                        const grupos: { sistema: string; meds: typeof activeMeds }[] = sistemasComMeds.map(sys => ({
+                                            sistema: sys,
+                                            meds: activeMeds.filter(m => m.sistema === sys).sort((a, b) => {
+                                                const aFim = a.endDate ? 1 : 0;
+                                                const bFim = b.endDate ? 1 : 0;
+                                                if (aFim !== bFim) return aFim - bFim;
+                                                return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
+                                            }),
+                                        }));
+                                        if (semSistema.length > 0) {
+                                            grupos.push({
+                                                sistema: 'Sem sistema definido',
+                                                meds: semSistema.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()),
+                                            });
+                                        }
+                                        return grupos.map(grupo => (
+                                            <div key={grupo.sistema} className="mb-4">
+                                                <h4 className="text-sm font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 px-3 py-2 rounded-lg border-l-4 border-blue-500 mb-2">
+                                                    {grupo.sistema} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">({grupo.meds.length})</span>
+                                                </h4>
+                                                <div className="space-y-2">
+                                                    {grupo.meds.map(medication => (
+                                                        <div key={medication.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                                                            {medication.categoria && (
+                                                                <div className="flex justify-start mb-1.5">
+                                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium">{medication.categoria}</span>
+                                                                </div>
+                                                            )}
+                                                            <div className="flex justify-between items-start">
+                                                                <div className="flex items-start gap-3">
+                                                                    <PillIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
+                                                                    <div>
+                                                                        <p className="font-bold text-slate-800 dark:text-slate-200 wrap-break-word">{medication.name}{medication.dosage && medication.dosage !== medication.name ? ` - ${medication.dosage}` : ''}</p>
+                                                                        <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(medication.startDate)}</p>
+                                                                        {medication.endDate ? <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Fim: {formatDateToBRL(medication.endDate)}</p> : <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(medication.startDate)}</p>}
+                                                                        {medication.diagnosticoLabel && <span className="inline-block mt-1.5 mr-1 text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">Diagnóstico: {medication.diagnosticoLabel}</span>}
+                                                                        {medication.observacao && <p className="text-sm text-slate-600 dark:text-slate-400 italic mt-1.5 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded">💬 {medication.observacao}</p>}
+                                                                        <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={medication.mostrar_evolucao !== false}
+                                                                                onChange={e => toggleMostrarEvolucao(medication.id, e.target.checked)}
+                                                                                className="w-3.5 h-3.5 accent-blue-500"
+                                                                            />
+                                                                            <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center gap-2 shrink-0 ml-2">
+                                                                    {!medication.endDate && <button onClick={() => setEndDateModalOpen(medication.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Fim</button>}
+                                                                    <button onClick={() => medication.endDate ? setEditingMedicationEndDate(medication) : setEditingMedication(medication)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
+                                                                    <button onClick={() => setArchiveMedicationModal(medication)} className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"><CloseIcon className="w-4 h-4" /></button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ));
+                                    })()}
                                 </>)}
                                 {openCategoryModal === 'surgical' && (<>
                                     {patient.surgicalProcedures.filter(p => !p.isArchived).length === 0 && <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhum procedimento cadastrado.</p>}
