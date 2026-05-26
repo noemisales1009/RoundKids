@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { sanitizeTextOrNull } from '../lib/sanitize';
-import { ThemeContext } from '../contexts';
+import { ThemeContext, NotificationContext } from '../contexts';
 import { ALERT_SYSTEMS, DIAGNOSTICO_CATEGORIAS, STATIC_DIAGNOSTICO_OPTIONS } from '../constants';
 
 interface DiagnosticOption {
@@ -97,6 +97,7 @@ const OUTROS_ID = -99999;
 export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientId, onSave }) => {
   const themeContext = useContext(ThemeContext);
   const isDark = themeContext?.theme === 'dark';
+  const { showNotification } = useContext(NotificationContext)!;
 
   const [dbOptions, setDbOptions] = useState<DiagnosticOption[]>([]);
   const [workingDiags, setWorkingDiags] = useState<WorkingDiag[]>([]);
@@ -354,6 +355,20 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     ));
   };
 
+  const handleEditFieldSave = async (tempId: string, field: keyof WorkingDiag, value: string) => {
+    handleEditField(tempId, field, value);
+    const diag = workingDiags.find(d => d.tempId === tempId);
+    if (!diag?.dbId) return;
+    const dbField: Record<string, string> = {
+      dataInicio: 'data_inicio',
+      observacao: 'texto_digitado',
+      sistema: 'sistema',
+      resolvedAt: 'resolved_at',
+    };
+    const col = dbField[field as string];
+    if (col) await supabase.from('paciente_diagnosticos').update({ [col]: value || null }).eq('id', diag.dbId);
+  };
+
   const handleStatusChange = async (tempId: string, newStatus: 'resolvido' | 'nao_resolvido') => {
     const diag = workingDiags.find(d => d.tempId === tempId);
     if (!diag) return;
@@ -485,9 +500,9 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
       await loadData();
       if (onSave) onSave([]);
-      alert('✅ Diagnósticos salvos com sucesso!');
+      showNotification({ message: 'Diagnósticos salvos com sucesso!', type: 'success' });
     } catch (err: any) {
-      alert(`❌ ${err.message || 'Erro ao salvar'}`);
+      showNotification({ message: err.message || 'Erro ao salvar diagnósticos.', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -679,7 +694,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                 <input
                   type="date"
                   value={diag.dataInicio}
-                  onChange={e => handleEditField(diag.tempId, 'dataInicio', e.target.value)}
+                  onChange={e => handleEditFieldSave(diag.tempId, 'dataInicio', e.target.value)}
                   className={inputCls}
                 />
               </div>
@@ -687,7 +702,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                 <label className={labelCls}>Sistema</label>
                 <select
                   value={diag.sistema}
-                  onChange={e => handleEditField(diag.tempId, 'sistema', e.target.value)}
+                  onChange={e => handleEditFieldSave(diag.tempId, 'sistema', e.target.value)}
                   className={selectCls}
                 >
                   <option value="">— Selecione —</option>
@@ -700,6 +715,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
               <textarea
                 value={diag.observacao}
                 onChange={e => handleEditField(diag.tempId, 'observacao', e.target.value)}
+                onBlur={e => handleEditFieldSave(diag.tempId, 'observacao', e.target.value)}
                 rows={2}
                 className={`${inputCls} resize-none`}
               />
@@ -733,7 +749,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                   <input
                     type="date"
                     value={(diag.resolvedAt || '').split('T')[0]}
-                    onChange={e => handleEditField(diag.tempId, 'resolvedAt', e.target.value)}
+                    onChange={e => handleEditFieldSave(diag.tempId, 'resolvedAt', e.target.value)}
                     className={inputCls}
                   />
                 </div>
