@@ -849,36 +849,29 @@ const PatientDetailScreen: React.FC = () => {
                                     })()}
                                     {(() => {
                                         const activeMeds = patient.medications.filter(m => !m.isArchived);
-                                        // Lista de sistemas, na ordem de ALERT_SYSTEMS, que possuem ao menos uma medicação
-                                        const sistemasComMeds = ALERT_SYSTEMS.filter(sys => activeMeds.some(m => m.sistema === sys));
-                                        // Medicações sem sistema (ou com sistema fora da lista)
-                                        const semSistema = activeMeds.filter(m => !m.sistema || !ALERT_SYSTEMS.includes(m.sistema));
-                                        const grupos: { sistema: string; meds: typeof activeMeds }[] = sistemasComMeds.map(sys => ({
-                                            sistema: sys,
-                                            meds: activeMeds.filter(m => m.sistema === sys).sort((a, b) => {
-                                                const aFim = a.endDate ? 1 : 0;
-                                                const bFim = b.endDate ? 1 : 0;
-                                                if (aFim !== bFim) return aFim - bFim;
-                                                return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
-                                            }),
-                                        }));
-                                        if (semSistema.length > 0) {
-                                            grupos.push({
-                                                sistema: 'Sem sistema definido',
-                                                meds: semSistema.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()),
-                                            });
-                                        }
+                                        const sortMeds = (meds: typeof activeMeds) => meds.sort((a, b) => {
+                                            const aFim = a.endDate ? 1 : 0;
+                                            const bFim = b.endDate ? 1 : 0;
+                                            if (aFim !== bFim) return aFim - bFim;
+                                            return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
+                                        });
+                                        const categoriasUnicas = [...new Set(activeMeds.filter(m => m.categoria).map(m => m.categoria!))].sort();
+                                        const semCategoria = activeMeds.filter(m => !m.categoria);
+                                        const grupos: { label: string; meds: typeof activeMeds }[] = [
+                                            ...categoriasUnicas.map(cat => ({ label: cat, meds: sortMeds(activeMeds.filter(m => m.categoria === cat)) })),
+                                            ...(semCategoria.length > 0 ? [{ label: 'Sem categoria', meds: sortMeds(semCategoria) }] : []),
+                                        ];
                                         return grupos.map(grupo => (
-                                            <div key={grupo.sistema} className="mb-4">
+                                            <div key={grupo.label} className="mb-4">
                                                 <h4 className="text-sm font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 px-3 py-2 rounded-lg border-l-4 border-blue-500 mb-2">
-                                                    {grupo.sistema} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">({grupo.meds.length})</span>
+                                                    {grupo.label} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">({grupo.meds.length})</span>
                                                 </h4>
                                                 <div className="space-y-2">
                                                     {grupo.meds.map(medication => (
                                                         <div key={medication.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
-                                                            {medication.categoria && (
+                                                            {medication.sistema && (
                                                                 <div className="flex justify-start mb-1.5">
-                                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium">{medication.categoria}</span>
+                                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium">{medication.sistema}</span>
                                                                 </div>
                                                             )}
                                                             <div className="flex justify-between items-start">
