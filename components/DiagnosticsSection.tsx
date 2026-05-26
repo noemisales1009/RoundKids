@@ -544,7 +544,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const labelCls = `block text-xs font-semibold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`;
 
   const principalDiags = workingDiags.filter(d => d.tipo === 'principal');
-  const secundarioDiags = workingDiags.filter(d => d.tipo === 'secundario' && d.status === 'resolvido');
+  const secundarioDiags = workingDiags.filter(d => d.tipo === 'secundario');
 
   const renderCard = (diag: WorkingDiag) => {
     const isEditing = editingTempId === diag.tempId;
