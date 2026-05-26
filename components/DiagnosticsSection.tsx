@@ -189,7 +189,13 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         };
       });
 
-      setWorkingDiags(working);
+      // Deduplica por opcao_id mantendo o registro mais recente
+      const seen = new Map<number, WorkingDiag>();
+      working.forEach(d => {
+        const existing = seen.get(d.opcaoId);
+        if (!existing || (d.dbId ?? 0) > (existing.dbId ?? 0)) seen.set(d.opcaoId, d);
+      });
+      setWorkingDiags(Array.from(seen.values()));
     } catch (err) {
       console.error('Erro ao carregar diagnósticos:', err);
     } finally {
