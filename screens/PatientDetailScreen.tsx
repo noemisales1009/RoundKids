@@ -1123,7 +1123,6 @@ const PatientDetailScreen: React.FC = () => {
             )}
             {isAddMedicationModalOpen && (
                 <>
-                    {console.log('🎯 Renderizando AddMedicationModal com patientId:', patient.id)}
                     <AddMedicationModal patientId={patient.id} onClose={() => {
                         setAddMedicationModalOpen(false);
                     }} />

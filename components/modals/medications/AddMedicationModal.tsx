@@ -141,7 +141,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                 const seen = new Set<string>();
                 
                 (data || []).forEach((d: any) => {
-                    if (!seen.has(d.categoria)) {
+                    if (d.categoria && !seen.has(d.categoria)) {
                         seen.add(d.categoria);
                         categoriasUnicas.push({
                             categoria: d.categoria,
