@@ -243,6 +243,17 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const handleAdd = () => {
     if (formOpcaoId === '') return;
 
+    // Impede duplicata do mesmo diagnóstico
+    if (formOpcaoId !== OUTROS_ID) {
+      const jaExiste = workingDiags.some(
+        d => d.opcaoId === formOpcaoId && d.tipo === formTipo
+      );
+      if (jaExiste) {
+        alert('Este diagnóstico já foi adicionado à lista.');
+        return;
+      }
+    }
+
     const resetForm = () => {
       setFormOpcaoId('');
       setFormCustomLabel('');
@@ -259,6 +270,13 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     if (formOpcaoId === OUTROS_ID) {
       const label = formCustomLabel.trim();
       if (!label) return;
+      const jaExiste = workingDiags.some(
+        d => d.opcaoId === OUTROS_ID && d.label.toLowerCase() === label.toLowerCase() && d.tipo === formTipo
+      );
+      if (jaExiste) {
+        alert('Este diagnóstico já foi adicionado à lista.');
+        return;
+      }
       const uniqueCodigo = `OUTROS_${formTipo.toUpperCase()}_${Date.now()}`;
       setWorkingDiags(prev => [...prev, {
         tempId: `new-${Date.now()}`,
