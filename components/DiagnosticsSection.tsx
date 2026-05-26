@@ -358,7 +358,10 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const handleEditFieldSave = async (tempId: string, field: keyof WorkingDiag, value: string) => {
     handleEditField(tempId, field, value);
     const diag = workingDiags.find(d => d.tempId === tempId);
-    if (!diag?.dbId) return;
+    if (!diag?.dbId) {
+      showNotification({ message: 'Salve o diagnóstico primeiro antes de editar os campos.', type: 'info' });
+      return;
+    }
     const dbField: Record<string, string> = {
       dataInicio: 'data_inicio',
       observacao: 'texto_digitado',
@@ -366,7 +369,9 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       resolvedAt: 'resolved_at',
     };
     const col = dbField[field as string];
-    if (col) await supabase.from('paciente_diagnosticos').update({ [col]: value || null }).eq('id', diag.dbId);
+    if (!col) return;
+    const { error } = await supabase.from('paciente_diagnosticos').update({ [col]: value || null }).eq('id', diag.dbId);
+    if (error) showNotification({ message: 'Erro ao salvar: ' + error.message, type: 'error' });
   };
 
   const handleStatusChange = async (tempId: string, newStatus: 'resolvido' | 'nao_resolvido') => {
