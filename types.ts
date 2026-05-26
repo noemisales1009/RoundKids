@@ -251,9 +251,9 @@ export interface PatientsContextType {
   addCultureToPatient: (patientId: number | string, culture: Omit<Culture, 'id'>, userId?: string) => Promise<void>;
   deleteCultureFromPatient: (patientId: number | string, cultureId: number | string) => void;
   updateCultureInPatient: (patientId: number | string, cultureData: Culture) => void;
-  addDietToPatient: (patientId: number | string, diet: Omit<Diet, 'id'>, userId?: string) => void;
+  addDietToPatient: (patientId: number | string, diet: Omit<Diet, 'id'>, userId?: string) => Promise<void>;
   deleteDietFromPatient: (patientId: number | string, dietId: number | string, userId?: string) => void;
-  updateDietInPatient: (patientId: number | string, dietData: Diet) => void;
+  updateDietInPatient: (patientId: number | string, dietData: Diet) => Promise<void>;
   addPrecautionToPatient: (patientId: number | string, precaution: Omit<Precaution, 'id'>) => void;
   deletePrecautionFromPatient: (patientId: number | string, precautionId: number | string, motivo?: string) => void;
   updatePrecautionInPatient: (patientId: number | string, precautionData: Precaution) => void;

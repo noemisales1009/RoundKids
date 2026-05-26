@@ -23,25 +23,28 @@ export const AddDietModal: React.FC<{ patientId: number | string; onClose: () =>
     const [th, setTh] = useState('');
     const [observacao, setObservacao] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!type || !dataInicio) return;
-        
-        // vet_at e pt_at são calculados automaticamente pelo banco (GENERATED ALWAYS AS)
-        addDietToPatient(patientId, {
-            type,
-            data_inicio: dataInicio,
-            volume: volume || undefined,
-            vet: vet || undefined,
-            vet_pleno: vetPleno || undefined,
-            pt: pt || undefined,
-            pt_g_dia: ptGDia || undefined,
-            th: th || undefined,
-            sistema: 'Avaliação nutricional e metabólica',
-            observacao: observacao || undefined
-        }, user?.id);  // 🟢 Passar o ID do usuário autenticado
-        showNotification({ message: 'Dieta cadastrada com sucesso!', type: 'success' });
-        onClose();
+
+        try {
+            await addDietToPatient(patientId, {
+                type,
+                data_inicio: dataInicio,
+                volume: volume || undefined,
+                vet: vet || undefined,
+                vet_pleno: vetPleno || undefined,
+                pt: pt || undefined,
+                pt_g_dia: ptGDia || undefined,
+                th: th || undefined,
+                sistema: 'Avaliação nutricional e metabólica',
+                observacao: observacao || undefined
+            }, user?.id);
+            showNotification({ message: 'Dieta cadastrada com sucesso!', type: 'success' });
+            onClose();
+        } catch {
+            showNotification({ message: 'Erro ao cadastrar dieta. Tente novamente.', type: 'error' });
+        }
     };
 
     return (

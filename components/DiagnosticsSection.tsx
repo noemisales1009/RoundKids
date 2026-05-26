@@ -257,7 +257,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         d => d.opcaoId === formOpcaoId && d.tipo === formTipo
       );
       if (jaExiste) {
-        alert('Este diagnóstico já foi adicionado à lista.');
+        showNotification({ message: 'Este diagnóstico já foi adicionado à lista.', type: 'error' });
         return;
       }
     }
@@ -282,7 +282,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         d => d.opcaoId === OUTROS_ID && d.label.toLowerCase() === label.toLowerCase() && d.tipo === formTipo
       );
       if (jaExiste) {
-        alert('Este diagnóstico já foi adicionado à lista.');
+        showNotification({ message: 'Este diagnóstico já foi adicionado à lista.', type: 'error' });
         return;
       }
       const uniqueCodigo = `OUTROS_${formTipo.toUpperCase()}_${Date.now()}`;
@@ -408,7 +408,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         }).eq('id', diag.dbId);
         if (error) throw error;
       } catch (err) {
-        alert(`Erro ao remover: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+        showNotification({ message: `Erro ao remover: ${err instanceof Error ? err.message : 'Erro desconhecido'}`, type: 'error' });
         return;
       }
     }

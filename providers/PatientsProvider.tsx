@@ -836,7 +836,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         } else {
         }
 
-        if (!error) fetchPatients();
+        if (!error) await fetchPatients();
     };
 
     const updateDietInPatient = async (patientId: number | string, dietData: Diet) => {
@@ -856,7 +856,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 sistema: dietData.sistema || null
             })
             .eq('id', dietData.id);
-        if (!error) fetchPatients();
+        if (!error) await fetchPatients();
     };
 
     // Precautions Functions
