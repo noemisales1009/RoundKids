@@ -77,10 +77,11 @@ const SISTEMAS = ALERT_SYSTEMS;
 const formatDiagDate = (dateStr?: string | null) => {
   if (!dateStr) return null;
   try {
+    const normalized = dateStr.includes('T') ? dateStr : dateStr + 'T12:00:00-03:00';
     return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit', month: '2-digit', year: '2-digit',
+      day: '2-digit', month: '2-digit', year: 'numeric',
       timeZone: 'America/Sao_Paulo',
-    }).format(new Date(dateStr));
+    }).format(new Date(normalized));
   } catch {
     return null;
   }
@@ -345,6 +346,22 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     setWorkingDiags(prev => prev.map(d =>
       d.tempId === tempId ? { ...d, [field]: value } : d
     ));
+  };
+
+  const handleStatusChange = async (tempId: string, newStatus: 'resolvido' | 'nao_resolvido') => {
+    const diag = workingDiags.find(d => d.tempId === tempId);
+    if (!diag) return;
+    const now = new Date().toISOString();
+    const resolvedAt = newStatus === 'resolvido' ? (diag.resolvedAt || now) : undefined;
+    setWorkingDiags(prev => prev.map(d =>
+      d.tempId === tempId ? { ...d, status: newStatus, resolvedAt } : d
+    ));
+    if (diag.dbId) {
+      await supabase.from('paciente_diagnosticos').update({
+        status: newStatus,
+        resolved_at: newStatus === 'resolvido' ? (diag.resolvedAt || now) : null,
+      }).eq('id', diag.dbId);
+    }
   };
 
   const handleArchiveRequest = (tempId: string) => {
@@ -684,7 +701,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
             <div className="flex flex-wrap items-end gap-3">
               <div className={`flex rounded-lg overflow-hidden border w-fit text-xs font-semibold ${isDark ? 'border-slate-600' : 'border-slate-200'}`}>
                 <button
-                  onClick={() => handleEditField(diag.tempId, 'status', 'nao_resolvido')}
+                  onClick={() => handleStatusChange(diag.tempId, 'nao_resolvido')}
                   className={`px-3 py-2 transition-colors ${
                     diag.status === 'nao_resolvido'
                       ? 'bg-rose-500 text-white'
@@ -694,7 +711,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                   Não Resolvido
                 </button>
                 <button
-                  onClick={() => handleEditField(diag.tempId, 'status', 'resolvido')}
+                  onClick={() => handleStatusChange(diag.tempId, 'resolvido')}
                   className={`px-3 py-2 transition-colors ${
                     diag.status === 'resolvido'
                       ? 'bg-emerald-500 text-white'
