@@ -597,6 +597,52 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
         {isEditing && (
           <div className={`px-3 pb-3 pt-0 border-t space-y-2.5 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+            {(() => {
+              const currentOpt = dbOptions.find(o => o.id === diag.opcaoId);
+              if (!currentOpt?.parent_id) return null;
+              const parentOpt = dbOptions.find(o => o.id === currentOpt.parent_id);
+              const siblings = dbOptions.filter(o => o.parent_id === currentOpt.parent_id);
+              if (!siblings.length) return null;
+              return (
+                <div className="pt-2.5">
+                  <label className={labelCls}>Especificar</label>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {siblings.map(child => (
+                      <button
+                        key={child.id}
+                        type="button"
+                        onClick={() => {
+                          const newLabel = parentOpt ? `${parentOpt.label} ${child.label}`.trim() : child.label;
+                          setWorkingDiags(prev => prev.map(d =>
+                            d.tempId === diag.tempId ? { ...d, opcaoId: child.id, label: newLabel } : d
+                          ));
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                          diag.opcaoId === child.id
+                            ? 'bg-blue-600 border-blue-500 text-white'
+                            : isDark
+                              ? 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
+                              : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        {child.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+            {diag.inputComplement !== undefined && (
+              <div className="pt-2.5">
+                <label className={labelCls}>Complemento</label>
+                <input
+                  type="text"
+                  value={diag.inputComplement}
+                  onChange={e => handleEditField(diag.tempId, 'inputComplement', e.target.value)}
+                  className={inputCls}
+                />
+              </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2.5">
               <div>
                 <label className={labelCls}>Data de início</label>

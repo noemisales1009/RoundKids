@@ -188,6 +188,10 @@ export const STATIC_DIAGNOSTICO_OPTIONS: StaticDiagnosticOption[] = [
   { pergunta_id: 1, codigo: 'PRIN_OUTROS_TRAU',  label: 'Outros',                                categoria: 'Trauma / Cirúrgico',     ordem: 128, has_input: true, input_placeholder: 'Especifique' },
   { pergunta_id: 1, codigo: 'PRIN_ALERGIA',      label: 'Alergias Alimentares',                  categoria: 'Nutricional / Outros',   ordem: 129 },
   { pergunta_id: 1, codigo: 'PRIN_LESAO_DEC',    label: 'Lesão de Decúbito',                     categoria: 'Nutricional / Outros',   ordem: 130 },
+  { pergunta_id: 1, codigo: 'PRIN_SEPSE',         label: 'Sepse',                                 categoria: 'Infeccioso / Séptico',   ordem: 131 },
+  { pergunta_id: 1, codigo: 'PRIN_CHOQUE_SEP',    label: 'Choque Séptico',                        categoria: 'Infeccioso / Séptico',   ordem: 132 },
+  { pergunta_id: 1, codigo: 'PRIN_CHOQUE_SEP_REFR', label: 'Choque Séptico Refratário',           categoria: 'Infeccioso / Séptico',   ordem: 133 },
+  { pergunta_id: 1, codigo: 'PRIN_SOBRECARGA_HID', label: 'Sobrecarga Hídrica',                   categoria: 'Renal',                  ordem: 134 },
   // ── Novos Secundário (pergunta_id = 2) ──────────────────────────────────
   { pergunta_id: 2, codigo: 'SEC_PARDS',         label: 'PARDS',                                 categoria: 'Respiratório',           ordem: 89 },
   { pergunta_id: 2, codigo: 'SEC_PNEUMO_HOSP',   label: 'Pneumonia Hospitalar',                  categoria: 'Respiratório',           ordem: 90 },
@@ -210,6 +214,10 @@ export const STATIC_DIAGNOSTICO_OPTIONS: StaticDiagnosticOption[] = [
   { pergunta_id: 2, codigo: 'SEC_DIAB_NEF',      label: 'Diabetes Insipidus Nefrogênico',        categoria: 'Renal',                  ordem: 107 },
   { pergunta_id: 2, codigo: 'SEC_SIND_COMP',     label: 'Síndrome Compartimental',               categoria: 'Trauma / Cirúrgico',     ordem: 108 },
   { pergunta_id: 2, codigo: 'SEC_ALERGIA',       label: 'Alergias Alimentares',                  categoria: 'Nutricional / Outros',   ordem: 109 },
+  { pergunta_id: 2, codigo: 'SEC_SEPSE',          label: 'Sepse',                                 categoria: 'Infeccioso / Séptico',   ordem: 110 },
+  { pergunta_id: 2, codigo: 'SEC_CHOQUE_SEP',     label: 'Choque Séptico',                        categoria: 'Infeccioso / Séptico',   ordem: 111 },
+  { pergunta_id: 2, codigo: 'SEC_CHOQUE_SEP_REFR', label: 'Choque Séptico Refratário',            categoria: 'Infeccioso / Séptico',   ordem: 112 },
+  { pergunta_id: 2, codigo: 'SEC_SOBRECARGA_HID',  label: 'Sobrecarga Hídrica',                   categoria: 'Renal',                  ordem: 113 },
 ];
 
 export const DEVICE_TYPES: string[] = [
