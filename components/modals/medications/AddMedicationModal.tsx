@@ -191,6 +191,14 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
         fetchMedicamentos();
     }, [selectedCategoria]);
 
+    // Auto-preenche sistema quando categoria é Aportes
+    useEffect(() => {
+        if (selectedCategoria.toUpperCase().includes('APORTE')) {
+            setSistema('Avaliação nutricional / metabólica / hídrico');
+            setSistemaOutros('');
+        }
+    }, [selectedCategoria]);
+
     // Resetar customUnidade e dosagem ao trocar medicamento da lista
     useEffect(() => {
         setCustomUnidade('');
