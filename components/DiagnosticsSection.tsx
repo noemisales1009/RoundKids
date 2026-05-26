@@ -358,10 +358,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const handleEditFieldSave = async (tempId: string, field: keyof WorkingDiag, value: string) => {
     handleEditField(tempId, field, value);
     const diag = workingDiags.find(d => d.tempId === tempId);
-    if (!diag?.dbId) {
-      showNotification({ message: 'Salve o diagnóstico primeiro antes de editar os campos.', type: 'info' });
-      return;
-    }
+    if (!diag?.dbId) return; // novo diagnóstico: salva pelo botão "Salvar Diagnósticos"
     const dbField: Record<string, string> = {
       dataInicio: 'data_inicio',
       observacao: 'texto_digitado',
@@ -372,6 +369,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     if (!col) return;
     const { error } = await supabase.from('paciente_diagnosticos').update({ [col]: value || null }).eq('id', diag.dbId);
     if (error) showNotification({ message: 'Erro ao salvar: ' + error.message, type: 'error' });
+    else showNotification({ message: 'Salvo!', type: 'success' });
   };
 
   const handleStatusChange = async (tempId: string, newStatus: 'resolvido' | 'nao_resolvido') => {
@@ -543,8 +541,13 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   }`;
   const labelCls = `block text-xs font-semibold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`;
 
-  const principalDiags = workingDiags.filter(d => d.tipo === 'principal');
-  const secundarioDiags = workingDiags.filter(d => d.tipo === 'secundario');
+  const sortByDate = (a: WorkingDiag, b: WorkingDiag) => {
+    const da = a.dataInicio || a.createdAt || '';
+    const db = b.dataInicio || b.createdAt || '';
+    return da < db ? -1 : da > db ? 1 : 0;
+  };
+  const principalDiags = workingDiags.filter(d => d.tipo === 'principal').sort(sortByDate);
+  const secundarioDiags = workingDiags.filter(d => d.tipo === 'secundario').sort(sortByDate);
 
   const renderCard = (diag: WorkingDiag) => {
     const isEditing = editingTempId === diag.tempId;
