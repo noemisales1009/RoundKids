@@ -111,8 +111,6 @@ const PAINEIS_POR_CATEGORIA: Record<string, string[]> = {
 };
 
 
-const RESULTADOS = ['Reagente', 'Não Reagente', 'Positivo', 'Negativo', 'Indeterminado', 'Em andamento', 'Detectado', 'Não Detectado'];
-
 export type PainelViralRow = {
     id: string;
     paciente_id: number | string;
@@ -142,8 +140,7 @@ export const EditPainelViralModal: React.FC<{
     const [categoria, setCategoria] = useState(painelData.categoria);
     const [painel, setPainel] = useState(painelData.painel);
     const [dataColeta, setDataColeta] = useState(painelData.data_coleta);
-    const [resultado, setResultado] = useState(painelData.resultado);
-    const [valor, setValor] = useState(painelData.valor ?? '');
+
     const [sistema, setSistema] = useState(
         painelData.sistema && !ALERT_SYSTEMS.includes(painelData.sistema) ? 'Outros' : (painelData.sistema ?? '')
     );
@@ -192,10 +189,6 @@ export const EditPainelViralModal: React.FC<{
             showNotification({ message: 'Por favor, selecione o painel/exame', type: 'error' });
             return;
         }
-        if (!resultado) {
-            showNotification({ message: 'Por favor, selecione o resultado', type: 'error' });
-            return;
-        }
         if (!user?.id) {
             showNotification({ message: 'Erro: Usuário não autenticado', type: 'error' });
             return;
@@ -210,8 +203,7 @@ export const EditPainelViralModal: React.FC<{
                     categoria,
                     painel,
                     data_coleta: dataColeta,
-                    resultado,
-                    valor: valor.trim() || null,
+
                     sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || null,
                     observacao: observacao.trim() || null,
                     updated_by: user.id,
@@ -291,36 +283,6 @@ export const EditPainelViralModal: React.FC<{
                             type="date"
                             value={dataColeta}
                             onChange={(e) => setDataColeta(e.target.value)}
-                            className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 dark:text-slate-200"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Resultado <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            value={resultado}
-                            onChange={(e) => setResultado(e.target.value)}
-                            required
-                            className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 dark:text-slate-200"
-                        >
-                            <option value="">Selecione o resultado...</option>
-                            {RESULTADOS.map(r => (
-                                <option key={r} value={r}>{r}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Valor / Titulação <span className="text-slate-400 font-normal">(opcional)</span>
-                        </label>
-                        <input
-                            type="text"
-                            value={valor}
-                            onChange={(e) => setValor(e.target.value)}
-                            placeholder="Ex: 1:16, 250 UI/mL, indetectável..."
                             className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 dark:text-slate-200"
                         />
                     </div>

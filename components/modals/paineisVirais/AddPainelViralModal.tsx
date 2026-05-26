@@ -128,7 +128,6 @@ export const AddPainelViralModal: React.FC<{
     const [painel, setPainel] = useState('');
     const [dataColeta, setDataColeta] = useState(getTodayDateString());
 
-    const [valor, setValor] = useState('');
     const [sistema, setSistema] = useState('');
     const [sistemaOutros, setSistemaOutros] = useState('');
     const [observacao, setObservacao] = useState('');
@@ -188,7 +187,7 @@ export const AddPainelViralModal: React.FC<{
                     categoria,
                     painel,
                     data_coleta: dataColeta,
-                    valor: valor.trim() || null,
+
                     sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || null,
                     observacao: observacao.trim() || null,
                     created_by: user.id,
@@ -264,19 +263,6 @@ export const AddPainelViralModal: React.FC<{
                             type="date"
                             value={dataColeta}
                             onChange={(e) => setDataColeta(e.target.value)}
-                            className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 dark:text-slate-200"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Valor / Titulação <span className="text-slate-400 font-normal">(opcional)</span>
-                        </label>
-                        <input
-                            type="text"
-                            value={valor}
-                            onChange={(e) => setValor(e.target.value)}
-                            placeholder="Ex: 1:16, 250 UI/mL, indetectável..."
                             className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 dark:text-slate-200"
                         />
                     </div>
