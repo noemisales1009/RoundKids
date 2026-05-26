@@ -94,7 +94,7 @@ const EditSurgicalProcedureModal = lazy(() => import('../components/modals').the
 
 const PatientDetailScreen: React.FC = () => {
     const { patientId } = useParams<{ patientId: string }>();
-    const { patients, addRemovalDateToDevice, deleteDeviceFromPatient, addEndDateToMedication, deleteMedicationFromPatient, toggleMostrarEvolucao, toggleMostrarEvolucaoDispositivo, toggleMostrarEvolucaoExame, toggleMostrarEvolucaoCirurgia, toggleMostrarEvolucaoCultura, toggleMostrarEvolucaoDieta, deleteExamFromPatient, deleteSurgicalProcedureFromPatient, addScaleScoreToPatient, addCultureToPatient, deleteCultureFromPatient, addDietToPatient, updateDietInPatient, deleteDietFromPatient } = useContext(PatientsContext)!;
+    const { patients, addRemovalDateToDevice, deleteDeviceFromPatient, addEndDateToMedication, deleteMedicationFromPatient, toggleMostrarEvolucao, toggleMostrarEvolucaoDispositivo, toggleMostrarEvolucaoExame, toggleMostrarEvolucaoCirurgia, toggleMostrarEvolucaoCultura, toggleMostrarEvolucaoDieta, deleteExamFromPatient, deleteSurgicalProcedureFromPatient, addScaleScoreToPatient, addCultureToPatient, deleteCultureFromPatient, addDietToPatient, updateDietInPatient, deleteDietFromPatient, refreshPatients } = useContext(PatientsContext)!;
     const { user } = useContext(UserContext)!;
     const patient = patients.find(p => p.id.toString() === patientId);
 
@@ -727,12 +727,12 @@ const PatientDetailScreen: React.FC = () => {
                                     <h2 className="text-lg font-bold text-white">{config.label}</h2>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    {openCategoryModal === 'devices' && <button onClick={() => { setOpenCategoryModal(null); setAddDeviceModalOpen(true); }} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
-                                    {openCategoryModal === 'exams' && <button onClick={() => { setOpenCategoryModal(null); setAddExamModalOpen(true); }} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
-                                    {openCategoryModal === 'medications' && <button onClick={() => { setOpenCategoryModal(null); setAddMedicationModalOpen(true); }} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
-                                    {openCategoryModal === 'surgical' && <button onClick={() => { setOpenCategoryModal(null); setAddSurgicalModalOpen(true); }} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
-                                    {openCategoryModal === 'cultures' && <button onClick={() => { setOpenCategoryModal(null); setAddCultureModalOpen(true); }} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
-                                    {openCategoryModal === 'diets' && <button onClick={() => { setOpenCategoryModal(null); setAddDietModalOpen(true); }} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
+                                    {openCategoryModal === 'devices' && <button onClick={() => setAddDeviceModalOpen(true)} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
+                                    {openCategoryModal === 'exams' && <button onClick={() => setAddExamModalOpen(true)} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
+                                    {openCategoryModal === 'medications' && <button onClick={() => setAddMedicationModalOpen(true)} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
+                                    {openCategoryModal === 'surgical' && <button onClick={() => setAddSurgicalModalOpen(true)} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
+                                    {openCategoryModal === 'cultures' && <button onClick={() => setAddCultureModalOpen(true)} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
+                                    {openCategoryModal === 'diets' && <button onClick={() => setAddDietModalOpen(true)} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
                                     {openCategoryModal === 'paPercentis' && <button onClick={() => setShowPAForm(v => !v)} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Nova Medição</button>}
                                     {openCategoryModal === 'aportes' && <button onClick={() => setAporteAddTrigger(v => v + 1)} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
                                     {openCategoryModal === 'examesImagem' && <button onClick={() => setExameImagemAddTrigger(v => v + 1)} className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">+ Cadastrar</button>}
@@ -1105,7 +1105,7 @@ const PatientDetailScreen: React.FC = () => {
                     itemDate={archiveDeviceModal.startDate}
                     itemDateLabel="Inserido em"
                     onClose={() => setArchiveDeviceModal(null)}
-                    onSuccess={() => { setArchiveDeviceModal(null); window.location.reload(); }}
+                    onSuccess={() => { setArchiveDeviceModal(null); refreshPatients(); }}
                 />
             )}
             {isAddExamModalOpen && <AddExamModal patientId={patient.id} onClose={() => setAddExamModalOpen(false)} />}
@@ -1118,7 +1118,7 @@ const PatientDetailScreen: React.FC = () => {
                     itemDescription={archiveExamModal.name}
                     itemDate={archiveExamModal.date}
                     onClose={() => setArchiveExamModal(null)}
-                    onSuccess={() => { setArchiveExamModal(null); window.location.reload(); }}
+                    onSuccess={() => { setArchiveExamModal(null); refreshPatients(); }}
                 />
             )}
             {isAddMedicationModalOpen && (
@@ -1141,7 +1141,7 @@ const PatientDetailScreen: React.FC = () => {
                     itemDateLabel="Início"
                     extraInfo={archiveMedicationModal.endDate ? `Fim: ${new Date(archiveMedicationModal.endDate).toLocaleDateString('pt-BR')}` : undefined}
                     onClose={() => setArchiveMedicationModal(null)}
-                    onSuccess={() => { setArchiveMedicationModal(null); window.location.reload(); }}
+                    onSuccess={() => { setArchiveMedicationModal(null); refreshPatients(); }}
                 />
             )}
             {isAddSurgicalModalOpen && <AddSurgicalProcedureModal patientId={patient.id} onClose={() => setAddSurgicalModalOpen(false)} />}
@@ -1155,7 +1155,7 @@ const PatientDetailScreen: React.FC = () => {
                     itemDate={archiveSurgicalModal.date}
                     extraInfo={archiveSurgicalModal.surgeon ? `Cirurgião: ${archiveSurgicalModal.surgeon}` : undefined}
                     onClose={() => setArchiveSurgicalModal(null)}
-                    onSuccess={() => { setArchiveSurgicalModal(null); window.location.reload(); }}
+                    onSuccess={() => { setArchiveSurgicalModal(null); refreshPatients(); }}
                 />
             )}
             {isAddCultureModalOpen && <AddCultureModal patientId={patient.id} onClose={() => setAddCultureModalOpen(false)} />}
@@ -1169,7 +1169,7 @@ const PatientDetailScreen: React.FC = () => {
                     itemDate={archiveCultureModal.collectionDate}
                     itemDateLabel="Data de coleta"
                     onClose={() => setArchiveCultureModal(null)}
-                    onSuccess={() => { setArchiveCultureModal(null); window.location.reload(); }}
+                    onSuccess={() => { setArchiveCultureModal(null); refreshPatients(); }}
                 />
             )}
             {isAddDietModalOpen && <AddDietModal patientId={patient.id} onClose={() => setAddDietModalOpen(false)} />}
@@ -1183,7 +1183,7 @@ const PatientDetailScreen: React.FC = () => {
                     itemDate={archiveDietModal.data_inicio}
                     itemDateLabel="Início"
                     onClose={() => setArchiveDietModal(null)}
-                    onSuccess={() => { setArchiveDietModal(null); window.location.reload(); }}
+                    onSuccess={() => { setArchiveDietModal(null); refreshPatients(); }}
                 />
             )}
             {isDietRemovalModalOpen && <AddDietRemovalDateModal dietId={isDietRemovalModalOpen} patientId={patient.id} onClose={() => setDietRemovalModalOpen(null)} />}

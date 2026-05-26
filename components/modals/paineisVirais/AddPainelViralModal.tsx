@@ -111,8 +111,6 @@ const PAINEIS_POR_CATEGORIA: Record<string, string[]> = {
 };
 
 
-const RESULTADOS = ['Reagente', 'Não Reagente', 'Positivo', 'Negativo', 'Indeterminado', 'Em andamento', 'Detectado', 'Não Detectado'];
-
 const getTodayDateString = () => {
     const today = new Date();
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -129,7 +127,7 @@ export const AddPainelViralModal: React.FC<{
     const [categoria, setCategoria] = useState('');
     const [painel, setPainel] = useState('');
     const [dataColeta, setDataColeta] = useState(getTodayDateString());
-    const [resultado, setResultado] = useState('');
+
     const [valor, setValor] = useState('');
     const [sistema, setSistema] = useState('');
     const [sistemaOutros, setSistemaOutros] = useState('');
@@ -175,10 +173,6 @@ export const AddPainelViralModal: React.FC<{
             showNotification({ message: 'Por favor, selecione o painel/exame', type: 'error' });
             return;
         }
-        if (!resultado) {
-            showNotification({ message: 'Por favor, selecione o resultado', type: 'error' });
-            return;
-        }
         if (!user?.id) {
             showNotification({ message: 'Erro: Usuário não autenticado', type: 'error' });
             return;
@@ -194,7 +188,6 @@ export const AddPainelViralModal: React.FC<{
                     categoria,
                     painel,
                     data_coleta: dataColeta,
-                    resultado,
                     valor: valor.trim() || null,
                     sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || null,
                     observacao: observacao.trim() || null,
@@ -273,23 +266,6 @@ export const AddPainelViralModal: React.FC<{
                             onChange={(e) => setDataColeta(e.target.value)}
                             className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 dark:text-slate-200"
                         />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Resultado <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            value={resultado}
-                            onChange={(e) => setResultado(e.target.value)}
-                            required
-                            className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 dark:text-slate-200"
-                        >
-                            <option value="">Selecione o resultado...</option>
-                            {RESULTADOS.map(r => (
-                                <option key={r} value={r}>{r}</option>
-                            ))}
-                        </select>
                     </div>
 
                     <div>
