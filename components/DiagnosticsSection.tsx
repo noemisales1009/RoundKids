@@ -599,20 +599,27 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           <div className={`px-3 pb-3 pt-0 border-t space-y-2.5 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
             {(() => {
               const currentOpt = dbOptions.find(o => o.id === diag.opcaoId);
-              if (!currentOpt?.parent_id) return null;
-              const parentOpt = dbOptions.find(o => o.id === currentOpt.parent_id);
-              const siblings = dbOptions.filter(o => o.parent_id === currentOpt.parent_id);
-              if (!siblings.length) return null;
+              // Se é filho → pega irmãos e o pai; se é pai → pega seus filhos
+              const isChild = !!currentOpt?.parent_id;
+              const parentOpt = isChild
+                ? dbOptions.find(o => o.id === currentOpt!.parent_id)
+                : currentOpt;
+              const children = isChild
+                ? dbOptions.filter(o => o.parent_id === currentOpt!.parent_id)
+                : dbOptions.filter(o => o.parent_id === diag.opcaoId);
+              if (!children.length) return null;
               return (
                 <div className="pt-2.5">
                   <label className={labelCls}>Especificar</label>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {siblings.map(child => (
+                    {children.map(child => (
                       <button
                         key={child.id}
                         type="button"
                         onClick={() => {
-                          const newLabel = parentOpt ? `${parentOpt.label} ${child.label}`.trim() : child.label;
+                          const newLabel = parentOpt
+                            ? `${parentOpt.label} ${child.label}`.trim()
+                            : child.label;
                           setWorkingDiags(prev => prev.map(d =>
                             d.tempId === diag.tempId ? { ...d, opcaoId: child.id, label: newLabel } : d
                           ));
