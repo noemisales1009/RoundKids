@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient';
 import { sanitizeTextOrNull } from '../lib/sanitize';
 import { ThemeContext, NotificationContext } from '../contexts';
 import { ALERT_SYSTEMS, DIAGNOSTICO_CATEGORIAS, STATIC_DIAGNOSTICO_OPTIONS } from '../constants';
+import { ResolveDiagnosticModal } from './modals/diagnostics/ResolveDiagnosticModal';
 
 interface DiagnosticOption {
   id: number;
@@ -101,7 +102,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
   const [dbOptions, setDbOptions] = useState<DiagnosticOption[]>([]);
   const [workingDiags, setWorkingDiags] = useState<WorkingDiag[]>([]);
-  const [medications, setMedications] = useState<MedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingTempId, setEditingTempId] = useState<string | null>(null);
@@ -124,16 +124,16 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const [tempIdToArchive, setTempIdToArchive] = useState<string | null>(null);
   const [archiveReason, setArchiveReason] = useState('');
 
+  // Resolve modal
+  const [resolveModalTempId, setResolveModalTempId] = useState<string | null>(null);
+  const [resolveMeds, setResolveMeds] = useState<MedItem[]>([]);
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [optionsRes, diagnosticsRes, medsRes] = await Promise.all([
+      const [optionsRes, diagnosticsRes] = await Promise.all([
         supabase.from('pergunta_opcoes_diagnostico').select('*').order('pergunta_id').order('ordem'),
         supabase.from('paciente_diagnosticos').select('*').eq('patient_id', patientId).eq('arquivado', false),
-        supabase.from('medicacoes_pacientes')
-          .select('id, nome_medicacao, dosagem_valor, unidade_medida, data_inicio, mostrar_evolucao, diagnostico_id')
-          .eq('patient_id', patientId)
-          .eq('arquivado', false),
       ]);
 
       if (optionsRes.error) throw optionsRes.error;
@@ -141,15 +141,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
       const opts: DiagnosticOption[] = optionsRes.data || [];
       setDbOptions(opts);
-
-      setMedications((medsRes.data || []).map(m => ({
-        id: m.id,
-        nome: m.nome_medicacao,
-        dosagem: m.dosagem_valor ? `${m.dosagem_valor}${m.unidade_medida ? ' ' + m.unidade_medida : ''}` : undefined,
-        dataInicio: m.data_inicio || undefined,
-        mostrarEvolucao: m.mostrar_evolucao !== false,
-        diagnosticoId: m.diagnostico_id ?? undefined,
-      })));
 
       const working: WorkingDiag[] = (diagnosticsRes.data || []).map(d => {
         const opt = opts.find(o => o.id === d.opcao_id);
@@ -388,6 +379,49 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     }
   };
 
+  const handleResolveClick = async (tempId: string) => {
+    const diag = workingDiags.find(d => d.tempId === tempId);
+    if (!diag || !diag.dbId) { handleStatusChange(tempId, 'resolvido'); return; }
+
+    const { data } = await supabase
+      .from('medicacoes_pacientes')
+      .select('id, nome_medicacao, dosagem_valor, unidade_medida, mostrar_evolucao')
+      .eq('diagnostico_id', diag.dbId)
+      .eq('is_archived', false);
+
+    type MedRow = { id: number; nome_medicacao: string; dosagem_valor?: string | null; unidade_medida?: string | null; mostrar_evolucao?: boolean | null };
+    const freshMeds: MedItem[] = (data || []).map((m: MedRow) => ({
+      id: m.id,
+      nome: m.nome_medicacao,
+      dosagem: m.dosagem_valor ? `${m.dosagem_valor}${m.unidade_medida ? ' ' + m.unidade_medida : ''}` : undefined,
+      mostrarEvolucao: m.mostrar_evolucao !== false,
+      diagnosticoId: diag.dbId,
+    }));
+
+    if (freshMeds.length > 0) {
+      setResolveMeds(freshMeds);
+      setResolveModalTempId(tempId);
+    } else {
+      handleStatusChange(tempId, 'resolvido');
+    }
+  };
+
+  const handleConfirmResolve = async (checkedMedIds: Set<number>) => {
+    if (!resolveModalTempId) return;
+    const diag = workingDiags.find(d => d.tempId === resolveModalTempId);
+    if (!diag) return;
+
+    await Promise.all(
+      resolveMeds.map(med => {
+        const shouldShow = checkedMedIds.has(med.id);
+        if (med.mostrarEvolucao === shouldShow) return Promise.resolve();
+        return supabase.from('medicacoes_pacientes').update({ mostrar_evolucao: shouldShow }).eq('id', med.id);
+      })
+    );
+    await handleStatusChange(resolveModalTempId, 'resolvido');
+    setResolveModalTempId(null);
+  };
+
   const handleArchiveRequest = (tempId: string) => {
     setTempIdToArchive(tempId);
     setArchiveReason('');
@@ -422,10 +456,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     setArchiveReason('');
   };
 
-  const handleToggleMostrarEvolucao = async (medId: number, current: boolean) => {
-    const { error } = await supabase.from('medicacoes_pacientes').update({ mostrar_evolucao: !current }).eq('id', medId);
-    if (!error) setMedications(prev => prev.map(m => m.id === medId ? { ...m, mostrarEvolucao: !current } : m));
-  };
 
   const resolveStaticOpcaoId = async (d: WorkingDiag): Promise<number> => {
     if (!d.isStatic || !d.staticCodigo) return d.opcaoId;
@@ -504,8 +534,8 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       await loadData();
       if (onSave) onSave([]);
       showNotification({ message: 'Diagnósticos salvos com sucesso!', type: 'success' });
-    } catch (err: any) {
-      showNotification({ message: err.message || 'Erro ao salvar diagnósticos.', type: 'error' });
+    } catch (err: unknown) {
+      showNotification({ message: err instanceof Error ? err.message : 'Erro ao salvar diagnósticos.', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -741,7 +771,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                   Não Resolvido
                 </button>
                 <button
-                  onClick={() => handleStatusChange(diag.tempId, 'resolvido')}
+                  onClick={() => { if (diag.status !== 'resolvido') handleResolveClick(diag.tempId); }}
                   className={`px-3 py-2 transition-colors ${
                     diag.status === 'resolvido'
                       ? 'bg-emerald-500 text-white'
@@ -766,49 +796,6 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           </div>
         )}
 
-        {/* Medicações vinculadas */}
-        {diag.dbId && (() => {
-          const linkedMeds = medications.filter(m => m.diagnosticoId === diag.dbId);
-          if (!linkedMeds.length) return null;
-          return (
-            <div className={`border-t px-3 py-2.5 space-y-1.5 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-              <p className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                Medicações
-              </p>
-              {linkedMeds.map(med => (
-                <div key={med.id} className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className={`material-symbols-rounded text-[14px] shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                      medication
-                    </span>
-                    <span className={`text-xs truncate ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                      {med.nome}{med.dosagem ? ` — ${med.dosagem}` : ''}
-                    </span>
-                    {med.dataInicio && (
-                      <span className={`text-[10px] shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                        {formatDiagDate(med.dataInicio)}
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => handleToggleMostrarEvolucao(med.id, med.mostrarEvolucao)}
-                    title={med.mostrarEvolucao ? 'Remover do Word' : 'Incluir no Word'}
-                    className={`shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold transition-colors ${
-                      med.mostrarEvolucao
-                        ? isDark ? 'bg-blue-900/50 text-blue-300 border border-blue-700' : 'bg-blue-100 text-blue-700 border border-blue-200'
-                        : isDark ? 'bg-slate-700 text-slate-500 border border-slate-600' : 'bg-slate-100 text-slate-400 border border-slate-200'
-                    }`}
-                  >
-                    <span className="material-symbols-rounded text-[12px]">
-                      {med.mostrarEvolucao ? 'description' : 'description'}
-                    </span>
-                    {med.mostrarEvolucao ? 'No Word' : 'Fora do Word'}
-                  </button>
-                </div>
-              ))}
-            </div>
-          );
-        })()}
       </div>
     );
   };
@@ -1129,6 +1116,20 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           </>
         )}
       </button>
+
+      {/* Resolve modal */}
+      {resolveModalTempId && (() => {
+        const diag = workingDiags.find(d => d.tempId === resolveModalTempId);
+        if (!diag) return null;
+        return (
+          <ResolveDiagnosticModal
+            diagLabel={diag.label}
+            medications={resolveMeds}
+            onConfirm={handleConfirmResolve}
+            onClose={() => setResolveModalTempId(null)}
+          />
+        );
+      })()}
 
       {/* Archive modal */}
       {archiveModalOpen && (

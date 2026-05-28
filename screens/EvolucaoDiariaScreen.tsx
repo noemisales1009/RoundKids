@@ -18,6 +18,7 @@ interface DiagItem {
   tipo: 'principal' | 'secundario';
   sistema?: string;
   created_at?: string;
+  data_inicio?: string | null;
   resolved_at?: string | null;
 }
 
@@ -107,20 +108,6 @@ interface PainelViralRecord {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface ControlesState {
-  pamMin: string; pamMax: string;
-  fcMin: string; fcMax: string;
-  frMin: string; frMax: string;
-  taxMin: string; taxMax: string;
-  dxtMin: string; dxtMax: string;
-}
-
-interface SaidasState {
-  diurese: string; evacuacoes: string;
-  drenoTorax: string; dve: string; sng: string;
-  ileostomia: string; penrose: string; outrosDrenos: string;
-  hemodialise: string; dialisePeritoneal: string;
-}
 
 interface ExameFisicoState {
   monitorizacao: string; ectoscopia: string; peleFaneros: string;
@@ -382,7 +369,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   const previewCtx = useContext(PreviewContext)!;
   const toggleWordItem = (key: string) => setWordExcluded(prev => {
     const s = new Set(prev);
-    s.has(key) ? s.delete(key) : s.add(key);
+    if (s.has(key)) s.delete(key); else s.add(key);
     return s;
   });
 
@@ -391,13 +378,13 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
   const toggle = (id: string) => setOpenSections(prev => {
     const s = new Set(prev);
-    s.has(id) ? s.delete(id) : s.add(id);
+    if (s.has(id)) s.delete(id); else s.add(id);
     return s;
   });
 
   const toggleAv = (id: string) => setOpenAvaliacoes(prev => {
     const s = new Set(prev);
-    s.has(id) ? s.delete(id) : s.add(id);
+    if (s.has(id)) s.delete(id); else s.add(id);
     return s;
   });
 
@@ -450,14 +437,15 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           supabase.from('perguntas_diagnistico').select('id, tipo'),
         ]);
         const opts: Record<number, { label: string; pergunta_id: number }> = {};
-        (optsRes.data || []).forEach((o: any) => { opts[o.id] = { label: o.label, pergunta_id: o.pergunta_id }; });
+        (optsRes.data || []).forEach((o: { id: number; label: string; pergunta_id: number }) => { opts[o.id] = { label: o.label, pergunta_id: o.pergunta_id }; });
         const qTipo: Record<number, 'principal' | 'secundario'> = {};
-        (qsRes.data || []).forEach((q: any) => { qTipo[q.id] = q.tipo; });
+        (qsRes.data || []).forEach((q: { id: number; tipo: 'principal' | 'secundario' }) => { qTipo[q.id] = q.tipo; });
         // Sem repetir opcao_id (principal: todos; secundário: apenas resolvidos)
         const byOpcao = new Map<number, DiagItem>();
         const opcaoToIds = new Map<number, number[]>();
+        type DiagRow = { id: number | string; opcao_id: number; created_at: string; texto_digitado?: string | null; status: 'resolvido' | 'nao_resolvido'; sistema?: string | null; data_inicio?: string | null; resolved_at?: string | null };
         (diagRes.data || [])
-          .forEach((d: any) => {
+          .forEach((d: DiagRow) => {
             const ids = opcaoToIds.get(d.opcao_id) ?? [];
             ids.push(Number(d.id));
             opcaoToIds.set(d.opcao_id, ids);
@@ -468,11 +456,12 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                 id: Number(d.id),
                 allIds: [],
                 label: opts[d.opcao_id]?.label ?? '—',
-                texto_digitado: d.texto_digitado,
+                texto_digitado: d.texto_digitado ?? undefined,
                 status: d.status,
                 tipo: qTipo[opts[d.opcao_id]?.pergunta_id] ?? 'principal',
-                sistema: d.sistema,
+                sistema: d.sistema ?? undefined,
                 created_at: d.created_at,
+                data_inicio: d.data_inicio,
                 resolved_at: d.resolved_at,
               });
             }
@@ -556,14 +545,15 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           .eq('paciente_id', patientId)
           .is('archived_at', null)
           .order('data_referencia', { ascending: false });
-        setAportesList((data ?? []).map((r: any) => ({
+        type AporteRow = { id: string; data_referencia: string; vo_ml_kg_h: string; hv_npt_ml_kg_h: string; medicacoes_ml_kg_h: string; tht_ml_kg_h: string; sistema?: string | null; mostrar_evolucao?: boolean | null };
+        setAportesList((data ?? []).map((r: AporteRow) => ({
           id: r.id,
           data_referencia: r.data_referencia,
           vo_ml_kg_h: parseFloat(r.vo_ml_kg_h),
           hv_npt_ml_kg_h: parseFloat(r.hv_npt_ml_kg_h),
           medicacoes_ml_kg_h: parseFloat(r.medicacoes_ml_kg_h),
           tht_ml_kg_h: parseFloat(r.tht_ml_kg_h),
-          sistema: r.sistema,
+          sistema: r.sistema ?? undefined,
           mostrar_evolucao: r.mostrar_evolucao !== false,
         })));
       } catch (e) {
@@ -639,7 +629,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           .select('id, alerta_descricao, sistemas, responsavel, status, created_at, hora_selecionada, mostrar_evolucao')
           .eq('patient_id', patientId)
           .is('archived_at', null);
-        setAlertasList((data ?? []).map((r: any) => ({
+        type AlertaRow = { id: string; alerta_descricao: string; sistemas: string[] | unknown; responsavel?: string | null; status?: string | null; created_at: string; hora_selecionada?: string | null; mostrar_evolucao?: boolean | null };
+        setAlertasList((data ?? []).map((r: AlertaRow) => ({
           id: r.id,
           alerta_descricao: r.alerta_descricao,
           sistemas: Array.isArray(r.sistemas) ? r.sistemas : [],
@@ -815,7 +806,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     }
 
 
-    const dietasWord = (p.diets ?? []).filter(d => !d.isArchived && d.mostrar_evolucao !== false && (d.vet_at != null || d.pt_at != null));
+    const _allDietasWord = [...(p.diets ?? [])].filter(d => !d.isArchived && d.mostrar_evolucao !== false && (d.vet_at != null || d.pt_at != null)).sort((a, b) => b.data_inicio.localeCompare(a.data_inicio));
+    const _dietaWord = _allDietasWord.find(d => d.data_inicio.split(' ')[0] >= _cutoff24h) ?? _allDietasWord[0];
+    const dietasWord = _dietaWord ? [_dietaWord] : [];
     if (dietasWord.length > 0) {
       title('10. DIETAS');
       dietasWord.forEach(d => {
@@ -856,6 +849,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     const ALL_KNOWN_SISTEMAS = new Set(Object.values(SECTION_SISTEMAS).flat());
     const apLines: string[] = [];
     const _today = new Date(); _today.setHours(0, 0, 0, 0);
+    const _cutoff48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const _cutoff24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     AVALIACAO_SECTIONS.forEach(sec => {
       const sistemas = SECTION_SISTEMAS[sec.id] ?? [];
@@ -870,8 +865,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const allSecCults = (p.cultures ?? []).filter(c => !c.isArchived && c.mostrar_evolucao !== false && matchSistema(c.sistema) && !we.has(`cult_${c.id}`));
       const allSecPnls  = paineisViraisList.filter(pn => pn.mostrar_evolucao !== false && matchSistema(pn.sistema) && !we.has(`pnl_${pn.id}`));
       const cirgs = (p.surgicalProcedures ?? []).filter(c => !c.isArchived && c.mostrar_evolucao !== false && matchSistema(c.sistema) && !we.has(`cir_${c.id}`));
-      const diets = (p.diets ?? []).filter(d => !d.isArchived && d.mostrar_evolucao !== false && matchSistema(d.sistema) && !we.has(`diet_${d.id}`));
-      const exs   = (p.exams ?? []).filter(e => !e.isArchived && e.mostrar_evolucao !== false && matchSistema(e.sistema) && !we.has(`exam_${e.id}`));
+      const _allMatchDiets = [...(p.diets ?? [])].filter(d => !d.isArchived && d.mostrar_evolucao !== false && matchSistema(d.sistema) && !we.has(`diet_${d.id}`)).sort((a, b) => b.data_inicio.localeCompare(a.data_inicio));
+      const _dietaMatch = _allMatchDiets.find(d => d.data_inicio.split(' ')[0] >= _cutoff24h) ?? _allMatchDiets[0];
+      const diets = _dietaMatch ? [_dietaMatch] : [];
+      const exs   = (p.exams ?? []).filter(e => !e.isArchived && e.mostrar_evolucao !== false && matchSistema(e.sistema) && !we.has(`exam_${e.id}`) && e.date >= _cutoff48h);
       const imgs  = examesImagemList.filter(ei => ei.mostrar_evolucao !== false && matchSistema(ei.sistema) && !we.has(`img_${ei.id}`));
       const pars  = pareceresList.filter(par => {
         if (par.mostrar_evolucao === false || we.has(`par_${par.id}`)) return false;
@@ -886,7 +883,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       });
       const activeAlts = alts.filter(a => { const st = (a.status || '').toLowerCase(); return !st.includes('concluí') && !st.includes('concluido') && !st.includes('resolvido') && !st.includes('arquivado'); });
 
-      const secAportes = sec.id === 'nutricional' ? aportesList.filter(a => a.mostrar_evolucao !== false) : [];
+      const _allAportesMatch = sec.id === 'nutricional' ? aportesList.filter(a => a.mostrar_evolucao !== false) : [];
+      const _aporteMatch = _allAportesMatch.find(a => a.data_referencia >= _cutoff24h) ?? _allAportesMatch[0];
+      const secAportes = _aporteMatch ? [_aporteMatch] : [];
       const totalItems = secDiags.length + allSecMeds.length + allSecCults.length + allSecPnls.length + cirgs.length + diets.length + exs.length + imgs.length + pars.length + activeAlts.length + secAportes.length;
       if (totalItems === 0) return;
 
@@ -1213,16 +1212,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white leading-tight">
                 {selectedPatient.name}
               </h2>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
-                  Leito {selectedPatient.bedNumber}
-                </span>
-                {selectedPatient.prontuario && (
-                  <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                    · Pront. {selectedPatient.prontuario}
-                  </span>
-                )}
-              </div>
             </div>
           </div>
 
@@ -1233,7 +1222,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               : selectedPatient.sexo === 'Feminino' ? '♀ Feminino'
               : <span className="text-orange-500 italic font-normal">Não informado</span>
             } />
-            <InfoBox label="Mãe" colSpan value={selectedPatient.motherName || '-'} />
             <InfoBox label="Peso" value={
               selectedPatient.peso
                 ? `${selectedPatient.peso} kg`
@@ -1581,7 +1569,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum aporte registrado.</p>
         ) : (
           <div className="space-y-2">
-            {aportesList.map(a => (
+            {[aportesList.find(a => a.data_referencia >= new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]) ?? aportesList[0]].map(a => (
               <div key={a.id} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
                   {new Date(a.data_referencia + 'T12:00:00').toLocaleDateString('pt-BR')}
@@ -1693,10 +1681,13 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
               const secCirurgias = (selectedPatient?.surgicalProcedures ?? [])
                 .filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && allNames.includes(c.sistema));
-              const secDietas = (selectedPatient?.diets ?? [])
-                .filter(d => !d.isArchived && d.mostrar_evolucao !== false && d.sistema && allNames.includes(d.sistema));
+              const _uiCutoff48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString().split('T')[0];
+              const _uiCutoff24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+              const _allSecDietas = [...(selectedPatient?.diets ?? [])].filter(d => !d.isArchived && d.mostrar_evolucao !== false && d.sistema && allNames.includes(d.sistema)).sort((a, b) => b.data_inicio.localeCompare(a.data_inicio));
+              const _secDietaMatch = _allSecDietas.find(d => d.data_inicio.split(' ')[0] >= _uiCutoff24h) ?? _allSecDietas[0];
+              const secDietas = _secDietaMatch ? [_secDietaMatch] : [];
               const secExames = (selectedPatient?.exams ?? [])
-                .filter(e => !e.isArchived && e.mostrar_evolucao !== false && e.sistema && allNames.includes(e.sistema));
+                .filter(e => !e.isArchived && e.mostrar_evolucao !== false && e.sistema && allNames.includes(e.sistema) && e.date >= _uiCutoff48h);
               const secExamesImagem = examesImagemList
                 .filter(ei => ei.mostrar_evolucao !== false && ei.sistema && allNames.includes(ei.sistema));
               const secPareceres = pareceresList
@@ -1745,7 +1736,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                               <p className="text-sm font-bold text-orange-700 dark:text-orange-300">
                                 {diag.tipo === 'principal' ? '★ ' : ''}{lbl}{det}
                               </p>
-                              {diag.created_at && <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(diag.created_at).toLocaleDateString('pt-BR')}</p>}
+                              {(diag.data_inicio || diag.created_at) && <p className="text-xs text-slate-400 dark:text-slate-500">{new Date((diag.data_inicio || diag.created_at)!).toLocaleDateString('pt-BR')}</p>}
                             </div>
                             <button onClick={() => toggleWordItem(wkDiag)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110">
                               <span className={`material-symbols-rounded text-[20px] ${offDiag ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{offDiag ? 'check_box_outline_blank' : 'check_box'}</span>

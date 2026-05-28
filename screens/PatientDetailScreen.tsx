@@ -115,6 +115,8 @@ const PatientDetailScreen: React.FC = () => {
     const [isAddExamModalOpen, setAddExamModalOpen] = useState(false);
     const [editingExam, setEditingExam] = useState<Exam | null>(null);
     const [archiveExamModal, setArchiveExamModal] = useState<Exam | null>(null);
+    const [examSelectMode, setExamSelectMode] = useState(false);
+    const [selectedExamIds, setSelectedExamIds] = useState<Set<string | number>>(new Set());
     const [isAddMedicationModalOpen, setAddMedicationModalOpen] = useState(false);
     const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
     const [editingMedicationEndDate, setEditingMedicationEndDate] = useState<Medication | null>(null);
@@ -140,6 +142,13 @@ const PatientDetailScreen: React.FC = () => {
     const scalesSectionRef = useRef<HTMLDivElement>(null);
 
     const [extraCounts, setExtraCounts] = useState({ aportes: 0, pareceres: 0, examesImagem: 0, paPercentis: 0, paineisVirais: 0 });
+
+    useEffect(() => {
+        if (openCategoryModal !== 'exams') {
+            setExamSelectMode(false);
+            setSelectedExamIds(new Set());
+        }
+    }, [openCategoryModal]);
 
     useEffect(() => {
         if (openCategoryModal !== 'medications') return;
@@ -216,6 +225,27 @@ const PatientDetailScreen: React.FC = () => {
             navigate('/patients');
         }
     };;
+
+    const handleBulkMarkEvolution = async (include: boolean) => {
+        if (selectedExamIds.size === 0) return;
+        const ids = [...selectedExamIds];
+        try {
+            const { error } = await supabase
+                .from('exames_pacientes')
+                .update({ mostrar_evolucao: include })
+                .in('id', ids);
+            if (error) {
+                showNotification({ message: `Erro: ${error.message}`, type: 'error' });
+                return;
+            }
+            showNotification({ message: `${ids.length} exame(s) ${include ? 'incluído(s) na' : 'removido(s) da'} Evolução Diária.`, type: 'success' });
+            setSelectedExamIds(new Set());
+            setExamSelectMode(false);
+            refreshPatients();
+        } catch {
+            showNotification({ message: 'Erro. Tente novamente.', type: 'error' });
+        }
+    };
 
     useEffect(() => {
         // Scroll para o topo quando entra na página
@@ -796,37 +826,87 @@ const PatientDetailScreen: React.FC = () => {
                                     {patient.exams.filter(e => !e.isArchived).length > 0 && (() => {
                                         const items = patient.exams.filter(e => !e.isArchived);
                                         const allChecked = items.every(item => item.mostrar_evolucao !== false);
+                                        const allSelected = items.every(item => selectedExamIds.has(item.id));
                                         return (
-                                            <div className="flex justify-end mb-1">
-                                                <button
-                                                    onClick={() => items.forEach(item => toggleMostrarEvolucaoExame(item.id, !allChecked))}
-                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
-                                                >
-                                                    {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
-                                                </button>
+                                            <div className="flex items-center justify-between mb-1 gap-2 flex-wrap">
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => { setExamSelectMode(v => !v); setSelectedExamIds(new Set()); }}
+                                                        className={`text-xs font-semibold px-2 py-1 rounded-lg transition ${examSelectMode ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                                                    >
+                                                        {examSelectMode ? 'Cancelar' : 'Selecionar'}
+                                                    </button>
+                                                    {examSelectMode && (
+                                                        <button
+                                                            onClick={() => setSelectedExamIds(allSelected ? new Set() : new Set(items.map(i => i.id)))}
+                                                            className="text-xs text-slate-500 dark:text-slate-400 hover:underline"
+                                                        >
+                                                            {allSelected ? 'Desmarcar todos' : 'Marcar todos'}
+                                                        </button>
+                                                    )}
+                                                    {examSelectMode && selectedExamIds.size > 0 && (<>
+                                                        <button
+                                                            onClick={() => handleBulkMarkEvolution(true)}
+                                                            className="text-xs font-semibold px-2 py-1 rounded-lg bg-teal-600 hover:bg-teal-700 text-white transition"
+                                                        >
+                                                            + Evolução ({selectedExamIds.size})
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleBulkMarkEvolution(false)}
+                                                            className="text-xs font-semibold px-2 py-1 rounded-lg bg-slate-500 hover:bg-slate-600 text-white transition"
+                                                        >
+                                                            − Evolução ({selectedExamIds.size})
+                                                        </button>
+                                                    </>)}
+                                                </div>
+                                                {!examSelectMode && (
+                                                    <button
+                                                        onClick={() => items.forEach(item => toggleMostrarEvolucaoExame(item.id, !allChecked))}
+                                                        className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                                    >
+                                                        {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
+                                                    </button>
+                                                )}
                                             </div>
                                         );
                                     })()}
                                     {patient.exams.filter(e => !e.isArchived).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(exam => (
-                                        <div key={exam.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+                                        <div
+                                            key={exam.id}
+                                            className={`bg-slate-50 dark:bg-slate-800 p-3 rounded-lg transition ${examSelectMode ? 'cursor-pointer' : ''} ${examSelectMode && selectedExamIds.has(exam.id) ? 'ring-2 ring-amber-500 dark:ring-amber-400' : ''}`}
+                                            onClick={examSelectMode ? () => setSelectedExamIds(prev => { const s = new Set(prev); s.has(exam.id) ? s.delete(exam.id) : s.add(exam.id); return s; }) : undefined}
+                                        >
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
-                                                    <FileTextIcon className="w-5 h-5 text-teal-600 dark:text-teal-400 mt-1 shrink-0" />
+                                                    {examSelectMode ? (
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedExamIds.has(exam.id)}
+                                                            onChange={() => {}}
+                                                            className="w-4 h-4 mt-1 accent-amber-500 shrink-0 cursor-pointer"
+                                                        />
+                                                    ) : (
+                                                        <FileTextIcon className="w-5 h-5 text-teal-600 dark:text-teal-400 mt-1 shrink-0" />
+                                                    )}
                                                     <div>
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{exam.name}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(exam.date)}</p>
                                                         {exam.sistema && <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800">{exam.sistema}</span>}
                                                         {exam.observation && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 italic">Obs: {exam.observation}</p>}
-                                                        <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
-                                                            <input type="checkbox" checked={exam.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucaoExame(exam.id, e.target.checked)} className="w-3.5 h-3.5 accent-blue-500" />
-                                                            <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
-                                                        </label>
+                                                        {!examSelectMode && (
+                                                            <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit" onClick={e => e.stopPropagation()}>
+                                                                <input type="checkbox" checked={exam.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucaoExame(exam.id, e.target.checked)} className="w-3.5 h-3.5 accent-blue-500" />
+                                                                <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
+                                                            </label>
+                                                        )}
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-1 shrink-0 ml-2">
-                                                    <button onClick={() => setEditingExam(exam)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
-                                                    <button onClick={() => setArchiveExamModal(exam)} className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"><CloseIcon className="w-4 h-4" /></button>
-                                                </div>
+                                                {!examSelectMode && (
+                                                    <div className="flex items-center gap-1 shrink-0 ml-2">
+                                                        <button onClick={() => setEditingExam(exam)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
+                                                        <button onClick={() => setArchiveExamModal(exam)} className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"><CloseIcon className="w-4 h-4" /></button>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
