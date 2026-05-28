@@ -57,11 +57,32 @@ const ChecklistRedirector: React.FC = () => {
 // --- PREVIEW MODAL GLOBAL ---
 const PreviewModal: React.FC = () => {
     const ctx = React.useContext(PreviewContext)!;
+    const [copied, setCopied] = useState(false);
+
     if (!ctx.showPreview) return null;
 
     const { previewText, previewMinimized, setPreviewMinimized, setShowPreview, patientName, downloadWordRef } = ctx;
 
     const handleClose = () => { setShowPreview(false); setPreviewMinimized(false); };
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(previewText);
+        } catch {
+            // fallback para contextos sem HTTPS
+            const ta = document.createElement('textarea');
+            ta.value = previewText;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+        }
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
 
     if (previewMinimized) {
         return (
@@ -100,10 +121,10 @@ const PreviewModal: React.FC = () => {
                 </div>
                 <div className="flex gap-3 px-5 py-4 border-t border-slate-200 dark:border-slate-700">
                     <button
-                        onClick={() => navigator.clipboard.writeText(previewText)}
-                        className="flex-1 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold transition"
+                        onClick={handleCopy}
+                        className={`flex-1 px-4 py-2 text-white rounded-lg text-sm font-semibold transition ${copied ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-600 hover:bg-slate-700'}`}
                     >
-                        Copiar
+                        {copied ? 'Copiado!' : 'Copiar'}
                     </button>
                     <button
                         onClick={() => {
