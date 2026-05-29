@@ -98,10 +98,14 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
 
             for (const d of diagData as any[]) {
                 const opt = optMap.get(d.opcao_id) as any;
-                if (!opt) continue;
 
                 let label: string;
-                if (opt.parent_id !== null && opt.parent_id !== undefined) {
+                if (!opt) {
+                    // Fallback: usa labels já salvos no registro
+                    label = d.texto_digitado
+                        ? (d.opcao_label === 'Outros' ? d.texto_digitado : `${d.opcao_label || ''} ${d.texto_digitado}`.trim())
+                        : (d.opcao_label || 'Diagnóstico');
+                } else if (opt.parent_id !== null && opt.parent_id !== undefined) {
                     // Filho: combina label do pai + label do filho + texto
                     const labelPai = parentMap.get(opt.parent_id) || '';
                     const textoPart = d.texto_digitado ? `: ${d.texto_digitado}` : '';
