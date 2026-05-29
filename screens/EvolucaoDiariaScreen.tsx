@@ -737,19 +737,26 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       });
     }
 
-    const secundarios = diagItems.filter(d => d.tipo === 'secundario' && d.status === 'resolvido');
+    const secundarios = diagItems
+      .filter(d => d.tipo === 'secundario' && d.status === 'resolvido')
+      .sort((a, b) => (a.resolved_at ?? '').localeCompare(b.resolved_at ?? ''));
     if (secundarios.length > 0) {
       title('6. DIAGNÓSTICOS SECUNDÁRIOS');
       const allMedsExport = (p.medications ?? []).filter(m => !m.isArchived);
       secundarios.forEach(d => {
         const lbl = d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label;
         const det = d.label !== 'Outros' && d.texto_digitado ? ` (${d.texto_digitado})` : '';
-        const dataResolvido = d.resolved_at ? `  Resolvido em ${formatDateToBRL(d.resolved_at)}` : '';
-        add(`• ${lbl}${det}${dataResolvido}`);
+        const dataInicio = d.data_inicio ? `Início: ${formatDateToBRL(d.data_inicio)}` : '';
+        const dataResolvido = d.resolved_at ? `Resolução: ${formatDateToBRL(d.resolved_at)}` : '';
+        const dataPart = [dataInicio, dataResolvido].filter(Boolean).join('  |  ');
+        add(`• ${lbl}${det}${dataPart ? `  [${dataPart}]` : ''}`);
         const linkedMeds = allMedsExport.filter(m => m.diagnosticoId != null && d.allIds.includes(Number(m.diagnosticoId)) && !we.has(`med_${m.id}`));
         linkedMeds.forEach(m => {
           const dosagePart = m.dosage && m.dosage !== m.name ? ` (${m.dosage})` : '';
-          add(`    ◦ ${m.name}${dosagePart}`);
+          const medInicio = m.startDate ? `Início: ${formatDateToBRL(m.startDate)}` : '';
+          const medFim = m.endDate ? `Fim: ${formatDateToBRL(m.endDate)}` : '';
+          const medDatas = [medInicio, medFim].filter(Boolean).join('  |  ');
+          add(`    ◦ ${m.name}${dosagePart}${medDatas ? `  [${medDatas}]` : ''}`);
         });
       });
     }
@@ -1387,8 +1394,12 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                               <span className="text-xs text-slate-600 dark:text-slate-300">
                                 {m.name}{m.dosage && m.dosage !== m.name ? ` — ${m.dosage}` : ''}
                               </span>
-                              {m.startDate && (
-                                <span className="text-[10px] text-slate-400 dark:text-slate-500">{formatDateToBRL(m.startDate)}</span>
+                              {(m.startDate || m.endDate) && (
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                                  {m.startDate && <><span className="font-semibold">Início:</span> {formatDateToBRL(m.startDate)}</>}
+                                  {m.startDate && m.endDate && '  ·  '}
+                                  {m.endDate && <><span className="font-semibold">Fim:</span> {formatDateToBRL(m.endDate)}</>}
+                                </span>
                               )}
                               <button onClick={() => toggleWordItem(wk)} title={off ? 'Incluir no Word' : 'Remover do Word'} className="absolute right-0 p-0.5 rounded transition-all hover:scale-110">
                                 <span className={`material-symbols-rounded text-[18px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span>
@@ -1413,7 +1424,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" />
           </div>
         ) : (() => {
-          const secundarios = diagItems.filter(d => d.tipo === 'secundario' && d.status === 'resolvido');
+          const secundarios = diagItems
+            .filter(d => d.tipo === 'secundario' && d.status === 'resolvido')
+            .sort((a, b) => (a.resolved_at ?? '').localeCompare(b.resolved_at ?? ''));
           const allMeds2 = (selectedPatient?.medications ?? []).filter(m => !m.isArchived);
           return secundarios.length === 0 ? (
             <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum diagnóstico secundário registrado.</p>
@@ -1432,9 +1445,18 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                           <p className="text-xs text-slate-500 dark:text-slate-400 italic mt-0.5">{d.texto_digitado}</p>
                         )}
                       </div>
-                      <span className="shrink-0 text-xs font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
-                        Resolvido{d.resolved_at ? ` em ${formatDateToBRL(d.resolved_at)}` : ''}
-                      </span>
+                      <div className="shrink-0 flex flex-col items-end gap-1">
+                        {d.data_inicio && (
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                            <span className="font-semibold">Início:</span> {formatDateToBRL(d.data_inicio)}
+                          </span>
+                        )}
+                        {d.resolved_at && (
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                            Resolução: {formatDateToBRL(d.resolved_at)}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {linkedMeds.length > 0 && (
                       <div className="border-t border-slate-200 dark:border-slate-700 px-3 py-2 space-y-1">
@@ -1447,8 +1469,12 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                               <span className="text-xs text-slate-600 dark:text-slate-300">
                                 {m.name}{m.dosage && m.dosage !== m.name ? ` — ${m.dosage}` : ''}
                               </span>
-                              {m.startDate && (
-                                <span className="text-[10px] text-slate-400 dark:text-slate-500">{formatDateToBRL(m.startDate)}</span>
+                              {(m.startDate || m.endDate) && (
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                                  {m.startDate && <><span className="font-semibold">Início:</span> {formatDateToBRL(m.startDate)}</>}
+                                  {m.startDate && m.endDate && '  ·  '}
+                                  {m.endDate && <><span className="font-semibold">Fim:</span> {formatDateToBRL(m.endDate)}</>}
+                                </span>
                               )}
                               <button onClick={() => toggleWordItem(wk)} title={off ? 'Incluir no Word' : 'Remover do Word'} className="absolute right-0 p-0.5 rounded transition-all hover:scale-110">
                                 <span className={`material-symbols-rounded text-[18px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span>
