@@ -763,15 +763,15 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const vitaisLines: string[] = [];
       if (cs) {
         const vitaisDef = [
-          { min: cs.pam_min, max: cs.pam_max, label: 'Δ PAM', unit: 'mmHg' },
-          { min: cs.fc_min,  max: cs.fc_max,  label: 'Δ FC',  unit: 'bpm' },
-          { min: cs.fr_min,  max: cs.fr_max,  label: 'Δ Fr',  unit: 'irpm' },
-          { min: cs.tax_min, max: cs.tax_max, label: 'Δ Tax', unit: 'ºC' },
-          { min: cs.dxt_min, max: cs.dxt_max, label: 'Δ Dxt', unit: 'mg/dl' },
-          { min: cs.spo2_min, max: cs.spo2_max, label: 'SpO₂', unit: '%' },
+          { min: cs.pam_min, max: cs.pam_max, label: 'PAM', unit: 'mmHg' },
+          { min: cs.fc_min,  max: cs.fc_max,  label: 'FC',  unit: 'bpm' },
+          { min: cs.fr_min,  max: cs.fr_max,  label: 'Fr',  unit: 'irpm' },
+          { min: cs.tax_min, max: cs.tax_max, label: 'Tax', unit: 'oC' },
+          { min: cs.dxt_min, max: cs.dxt_max, label: 'Dxt', unit: 'mg/dl' },
+          { min: cs.spo2_min, max: cs.spo2_max, label: 'SpO2', unit: '%' },
         ];
         vitaisDef.forEach(v => {
-          if (v.min || v.max) vitaisLines.push(`  ${v.label}: ${v.min || '—'} – ${v.max || '—'} ${v.unit}`);
+          if (v.min || v.max) vitaisLines.push(`  ${v.label}: ${v.min || '-'} - ${v.max || '-'} ${v.unit}`);
         });
       }
       const saidasLines: string[] = [];
@@ -805,6 +805,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       add(`Total: ${bhCumul.bh_cumulativo_total > 0 ? '+' : ''}${bhCumul.bh_cumulativo_total.toFixed(2)}% | BH Anterior: ${bhCumul.bh_historico_antigo.toFixed(2)}% | Últimas 24h: ${bhCumul.bh_ultimas_24h.toFixed(2)}%`);
     }
 
+
+    const _today = new Date(); _today.setHours(0, 0, 0, 0);
+    const _cutoff48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const _cutoff24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     const _allDietasWord = [...(p.diets ?? [])].filter(d => !d.isArchived && d.mostrar_evolucao !== false && (d.vet_at != null || d.pt_at != null)).sort((a, b) => b.data_inicio.localeCompare(a.data_inicio));
     const _dietaWord = _allDietasWord.find(d => d.data_inicio.split(' ')[0] >= _cutoff24h) ?? _allDietasWord[0];
@@ -848,9 +852,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
     const ALL_KNOWN_SISTEMAS = new Set(Object.values(SECTION_SISTEMAS).flat());
     const apLines: string[] = [];
-    const _today = new Date(); _today.setHours(0, 0, 0, 0);
-    const _cutoff48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const _cutoff24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     AVALIACAO_SECTIONS.forEach(sec => {
       const sistemas = SECTION_SISTEMAS[sec.id] ?? [];
