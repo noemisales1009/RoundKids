@@ -15,6 +15,7 @@ interface DiagnosticOption {
   ordem: number;
   parent_id?: number | null;
   isStatic?: boolean;
+  categoria?: string;
 }
 
 interface PatientDiagnostic {
@@ -167,7 +168,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           perguntaId: d.pergunta_id,
           opcaoId: d.opcao_id,
           label: resolvedLabel,
-          categoria: DIAGNOSTICO_CATEGORIAS[d.opcao_id] || staticOpt?.categoria || 'Outros',
+          categoria: opt?.categoria || DIAGNOSTICO_CATEGORIAS[d.opcao_id] || staticOpt?.categoria || 'Outros',
           tipo: d.pergunta_id === 1 ? 'principal' : 'secundario',
           dataInicio: d.data_inicio || d.created_at?.split('T')[0] || '',
           observacao: hasInputAndText ? '' : (d.texto_digitado || ''),
@@ -230,7 +231,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const optionsInCategory: DiagnosticOption[] = formCategoria
     ? [
         ...allOptionsForForm().filter(opt =>
-          (DIAGNOSTICO_CATEGORIAS[opt.id] || (opt.isStatic
+          (opt.categoria || DIAGNOSTICO_CATEGORIAS[opt.id] || (opt.isStatic
             ? STATIC_DIAGNOSTICO_OPTIONS.find(s => s.codigo === opt.codigo)?.categoria
             : undefined) || 'Outros') === formCategoria
         ),
