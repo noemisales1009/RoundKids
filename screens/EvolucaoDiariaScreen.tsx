@@ -1451,11 +1451,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                             <span className="font-semibold">Início:</span> {formatDateToBRL(d.data_inicio)}
                           </span>
                         )}
-                        {d.resolved_at && (
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
-                            Resolução: {formatDateToBRL(d.resolved_at)}
-                          </span>
-                        )}
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                          {d.resolved_at ? `Resolução: ${formatDateToBRL(d.resolved_at)}` : 'Resolvido'}
+                        </span>
                       </div>
                     </div>
                     {linkedMeds.length > 0 && (

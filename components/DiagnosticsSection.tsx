@@ -304,7 +304,8 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     if (!opt) return;
     if (workingDiags.some(d => d.opcaoId === formOpcaoId || (opt.isStatic && d.staticCodigo === opt.codigo))) return;
 
-    const categoria = DIAGNOSTICO_CATEGORIAS[opt.id]
+    const categoria = opt.categoria
+      || DIAGNOSTICO_CATEGORIAS[opt.id]
       || STATIC_DIAGNOSTICO_OPTIONS.find(s => s.codigo === opt.codigo)?.categoria
       || 'Outros';
 
