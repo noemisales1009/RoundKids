@@ -702,10 +702,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     blank();
 
     title('1. IDENTIFICAÇÃO');
-    add(`Paciente: ${p.name}`);
-    add(`Prontuário: ${p.prontuario || '—'}   Leito: ${p.bedNumber}`);
     add(`Idade: ${p.dob ? formatAge(p.dob) : '—'}   Sexo: ${p.sexo === 'Masculino' || p.sexo === 'M' ? 'Masculino' : p.sexo === 'Feminino' || p.sexo === 'F' ? 'Feminino' : p.sexo ?? 'Não informado'}`);
-    if (p.motherName) add(`Mãe: ${p.motherName}`);
     add(`Peso: ${p.peso ? `${p.peso} kg` : '—'}   SC: ${p.sc ? `${p.sc} m²` : '—'}`);
     add(`Internação: ${p.admissionDate ? `${formatDateToBRL(p.admissionDate)} · ${calcDays(p.admissionDate)} dia(s)` : '—'}`);
 
@@ -1197,23 +1194,14 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       {/* 1. Identificação — Patient card */}
       <div className="rounded-2xl shadow-lg overflow-hidden border border-blue-500/20 dark:border-blue-400/20">
         <div className="h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
-        <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 relative">
-          <button
-            onClick={handleTrocarLeito}
-            className="absolute top-4 right-4 text-xs font-semibold text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-200 bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-lg transition"
-          >
-            Trocar Leito
-          </button>
-
-          <div className="flex items-center gap-3 pr-28 mb-4">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md">
-              <span className="text-white font-bold text-lg">{selectedPatient.name.charAt(0).toUpperCase()}</span>
-            </div>
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white leading-tight">
-                {selectedPatient.name}
-              </h2>
-            </div>
+        <div className="bg-white dark:bg-slate-900 p-4 sm:p-5">
+          <div className="flex justify-end mb-3">
+            <button
+              onClick={handleTrocarLeito}
+              className="text-xs font-semibold text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-200 bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-lg transition"
+            >
+              Trocar Leito
+            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
