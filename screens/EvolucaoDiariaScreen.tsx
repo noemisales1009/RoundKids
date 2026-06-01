@@ -1074,7 +1074,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const todaySP = Date.UTC(nowSP.getUTCFullYear(), nowSP.getUTCMonth(), nowSP.getUTCDate());
       const [sy, sm, sd] = d.startDate.split('-').map(Number);
       const startSP = Date.UTC(sy, sm - 1, sd);
-      const days = Math.floor((todaySP - startSP) / 86400000);
+      const endSP = d.removalDate ? (() => { const [ry, rm, rd] = d.removalDate!.split('-').map(Number); return Date.UTC(ry, rm - 1, rd); })() : todaySP;
+      const days = Math.floor((endSP - startSP) / 86400000);
       const loc = d.location ? ` – ${d.location}` : '';
       const start = formatDateToBRL(d.startDate);
       const removal = d.removalDate ? ` | Retirada: ${formatDateToBRL(d.removalDate)}` : '';
@@ -1101,7 +1102,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const todaySP = Date.UTC(nowSP.getUTCFullYear(), nowSP.getUTCMonth(), nowSP.getUTCDate());
       const [sy, sm, sd] = d.startDate.split('-').map(Number);
       const startSP = Date.UTC(sy, sm - 1, sd);
-      const days = Math.floor((todaySP - startSP) / 86400000);
+      const endSP = d.removalDate ? (() => { const [ry, rm, rd] = d.removalDate!.split('-').map(Number); return Date.UTC(ry, rm - 1, rd); })() : todaySP;
+      const days = Math.floor((endSP - startSP) / 86400000);
       return `<tr>
         <td style="padding:3px 14px 3px 0;vertical-align:top;">${escHtml(d.name)}</td>
         <td style="padding:3px 14px 3px 0;vertical-align:top;">${d.observacao ? escHtml(d.observacao) : ''}</td>
@@ -1655,7 +1657,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const todaySP = Date.UTC(nowSP.getUTCFullYear(), nowSP.getUTCMonth(), nowSP.getUTCDate());
       const [sy, sm, sd] = d.startDate.split('-').map(Number);
       const startSP = Date.UTC(sy, sm - 1, sd);
-      const days = Math.floor((todaySP - startSP) / 86400000);
+      const endSP = d.removalDate ? (() => { const [ry, rm, rd] = d.removalDate!.split('-').map(Number); return Date.UTC(ry, rm - 1, rd); })() : todaySP;
+      const days = Math.floor((endSP - startSP) / 86400000);
                 return (
                   <div key={d.id} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
                     <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{d.name}</p>
