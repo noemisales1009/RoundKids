@@ -1,5 +1,5 @@
-import React, { useState, useContext, useMemo, useEffect, useRef } from 'react';
-import { PatientsContext, NotificationContext, UserContext } from '../../../contexts';
+import React, { useState, useContext, useEffect, useRef } from 'react';
+import { PatientsContext, NotificationContext } from '../../../contexts';
 import { Medication } from '../../../types';
 import { CloseIcon, ChevronDownIcon } from '../../icons';
 import { supabase } from '../../../supabaseClient';
@@ -22,8 +22,6 @@ interface DiagnosticoAtivo {
 export const EditMedicationModal: React.FC<{ medication: Medication; patientId: number | string; onClose: () => void; }> = ({ medication, patientId, onClose }) => {
     const { updateMedicationInPatient } = useContext(PatientsContext)!;
     const { showNotification } = useContext(NotificationContext)!;
-    const { user } = useContext(UserContext)!;
-    
     // State para categorias e medicamentos do DB
     const [categorias, setCategorias] = useState<string[]>([]);
     const [medicamentos, setMedicamentos] = useState<Medicamento[]>([]);
@@ -37,7 +35,6 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
     const [customUnidade, setCustomUnidade] = useState('');
     const [dosageValue, setDosageValue] = useState('');
     const [startDate, setStartDate] = useState(medication.startDate);
-    const [observacao, setObservacao] = useState(medication.observacao || '');
     const [sistema, setSistema] = useState(
         medication.sistema && !ALERT_SYSTEMS.includes(medication.sistema) ? 'Outros' : (medication.sistema || '')
     );
@@ -87,8 +84,7 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                 }
             });
 
-            const labelsVistos = new Set<string>();
-            const unicos: DiagnosticoAtivo[] = [];
+            const byOpcaoId = new Map<number, DiagnosticoAtivo>();
 
             for (const d of diagData as any[]) {
                 const opt = optMap.get(d.opcao_id) as any;
@@ -110,16 +106,28 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                         : d.opcao_label;
                 }
 
-                if (!labelsVistos.has(label)) {
-                    labelsVistos.add(label);
-                    unicos.push({ id: d.id, label, created_at: d.created_at, sistema: d.sistema || undefined });
+                // Mantém a linha mais recente (maior id) por opcao_id
+                const existing = byOpcaoId.get(d.opcao_id);
+                if (!existing || d.id > existing.id) {
+                    byOpcaoId.set(d.opcao_id, { id: d.id, label, created_at: d.created_at, sistema: d.sistema || undefined });
                 }
             }
 
-            setDiagnosticosAtivos(unicos);
+            setDiagnosticosAtivos(Array.from(byOpcaoId.values()));
         };
         fetchDiagnosticos();
     }, [patientId]);
+
+    // Quando a lista carregar, sincroniza selectedDiagnosticoId com o id mais recente
+    // (a medicação pode ter sido salva com um id antigo do mesmo diagnóstico)
+    useEffect(() => {
+        if (diagnosticosAtivos.length === 0 || selectedDiagnosticoId === '') return;
+        const found = diagnosticosAtivos.find(d => d.id === selectedDiagnosticoId);
+        if (!found && medication.diagnosticoLabel) {
+            const byLabel = diagnosticosAtivos.find(d => d.label === medication.diagnosticoLabel);
+            if (byLabel) setSelectedDiagnosticoId(byLabel.id);
+        }
+    }, [diagnosticosAtivos]);
 
     // Carregar categorias ao montar
     useEffect(() => {
@@ -253,16 +261,23 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
             ? diagnosticosAtivos.find(d => d.id === selectedDiagnosticoId)
             : undefined;
 
+        // Se o usuário tinha um diagnóstico selecionado mas ele não está na lista atual
+        // (ID de uma linha antiga), preserva o vínculo original em vez de apagar
+        const diagId = diagSelecionado?.id ?? (selectedDiagnosticoId !== '' ? medication.diagnosticoId : undefined);
+        const diagLabel = diagSelecionado?.label ?? (selectedDiagnosticoId !== '' ? medication.diagnosticoLabel : undefined);
+        const diagDataInicio = selectedDiagnosticoId !== ''
+          ? (diagSelecionado?.created_at?.split('T')[0] ?? medication.diagnosticoDataInicio)
+          : undefined;
+
         updateMedicationInPatient(patientId, {
             ...medication,
             name: finalMedicationName,
             dosage: dosageFormatted,
             startDate,
-            observacao,
             sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined,
-            diagnosticoId: diagSelecionado?.id,
-            diagnosticoLabel: diagSelecionado?.label,
-            diagnosticoDataInicio: diagSelecionado?.created_at?.split('T')[0] ?? medication.diagnosticoDataInicio,
+            diagnosticoId: diagId,
+            diagnosticoLabel: diagLabel,
+            diagnosticoDataInicio: diagDataInicio,
         });
         showNotification({ message: 'Medicação atualizada com sucesso!', type: 'success' });
         onClose();
@@ -462,20 +477,6 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                                 className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
                             />
                         )}
-                    </div>
-
-                    {/* Observação */}
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                            Observação <span className="text-slate-400 font-normal">(opcional)</span>
-                        </label>
-                        <textarea 
-                            value={observacao} 
-                            onChange={e => setObservacao(e.target.value)} 
-                            placeholder="Digite observações sobre a medicação..."
-                            rows={3}
-                            className="block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 resize-none"
-                        />
                     </div>
 
                     <button 

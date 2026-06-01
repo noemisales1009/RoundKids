@@ -10,7 +10,6 @@ export const EditExamModal: React.FC<{ exam: Exam; patientId: number | string; o
 
     const [name, setName] = useState(exam.name);
     const [date, setDate] = useState(exam.date);
-    const [observation, setObservation] = useState(exam.observation || '');
     const [sistema, setSistema] = useState(
         exam.sistema && !ALERT_SYSTEMS.includes(exam.sistema) ? 'Outros' : (exam.sistema || '')
     );
@@ -21,7 +20,7 @@ export const EditExamModal: React.FC<{ exam: Exam; patientId: number | string; o
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!name || !date) return;
-        updateExamInPatient(patientId, { ...exam, name, date, observation, sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined });
+        updateExamInPatient(patientId, { ...exam, name, date, sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined });
         showNotification({ message: 'Exame atualizado com sucesso!', type: 'success' });
         onClose();
     };
@@ -54,10 +53,6 @@ export const EditExamModal: React.FC<{ exam: Exam; patientId: number | string; o
                         {sistema === 'Outros' && (
                             <input type="text" value={sistemaOutros} onChange={e => setSistemaOutros(e.target.value)} placeholder="Especifique o sistema..." className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
                         )}
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Observação (Opcional)</label>
-                        <textarea value={observation} onChange={e => setObservation(e.target.value)} placeholder="Digite aqui..." className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" rows={3}></textarea>
                     </div>
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar Alterações</button>
                 </form>

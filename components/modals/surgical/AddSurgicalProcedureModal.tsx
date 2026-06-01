@@ -18,7 +18,6 @@ export const AddSurgicalProcedureModal: React.FC<{ patientId: number | string; o
     const [name, setName] = useState('');
     const [date, setDate] = useState(getTodayDateString());
     const [surgeon, setSurgeon] = useState('');
-    const [notes, setNotes] = useState('');
     const [sistema, setSistema] = useState('');
     const [sistemaOutros, setSistemaOutros] = useState('');
 
@@ -32,7 +31,7 @@ export const AddSurgicalProcedureModal: React.FC<{ patientId: number | string; o
             return;
         }
         
-        addSurgicalProcedureToPatient(patientId, { name, date, surgeon, notes, sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined }, user.id);
+        addSurgicalProcedureToPatient(patientId, { name, date, surgeon, sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined }, user.id);
         showNotification({ message: 'Procedimento cirúrgico cadastrado!', type: 'success' });
         onClose();
     };
@@ -69,10 +68,6 @@ export const AddSurgicalProcedureModal: React.FC<{ patientId: number | string; o
                         {sistema === 'Outros' && (
                             <input type="text" value={sistemaOutros} onChange={e => setSistemaOutros(e.target.value)} placeholder="Especifique o sistema..." className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
                         )}
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Observação (Opcional)</label>
-                        <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Digite aqui..." className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" rows={3}></textarea>
                     </div>
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Cadastrar</button>
                 </form>

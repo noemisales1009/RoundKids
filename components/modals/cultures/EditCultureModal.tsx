@@ -21,7 +21,6 @@ export const EditCultureModal: React.FC<{ culture: Culture; patientId: number | 
     const [microorganism, setMicroorganism] = useState(culture.microorganism);
     const [customMicroorganism, setCustomMicroorganism] = useState('');
     const [collectionDate, setCollectionDate] = useState(culture.collectionDate);
-    const [observation, setObservation] = useState(culture.observation || '');
     const [sistema, setSistema] = useState(
         culture.sistema && !ALERT_SYSTEMS.includes(culture.sistema) ? 'Outros' : (culture.sistema || '')
     );
@@ -113,7 +112,6 @@ export const EditCultureModal: React.FC<{ culture: Culture; patientId: number | 
             site: finalSite,
             microorganism: finalMicroorganism,
             collectionDate,
-            observation: observation || undefined,
             sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined,
             diagnosticoId: diagSelecionado?.id,
             diagnosticoLabel: diagSelecionado?.label,
@@ -234,10 +232,6 @@ export const EditCultureModal: React.FC<{ culture: Culture; patientId: number | 
                         {sistema === 'Outros' && (
                             <input type="text" value={sistemaOutros} onChange={e => setSistemaOutros(e.target.value)} placeholder="Especifique o sistema..." className="mt-2 block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-slate-800 dark:text-slate-200" />
                         )}
-                    </div>
-                    <div>
-                        <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Observações <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
-                        <textarea value={observation} onChange={e => setObservation(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-sm sm:text-base text-slate-800 dark:text-slate-200 resize-none" placeholder="Adicionar observações sobre a cultura..." rows={3} />
                     </div>
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 sm:py-3 px-4 rounded-lg text-sm sm:text-base">Salvar Alterações</button>
                 </form>

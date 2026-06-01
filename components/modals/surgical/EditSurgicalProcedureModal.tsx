@@ -10,7 +10,6 @@ export const EditSurgicalProcedureModal: React.FC<{ procedure: SurgicalProcedure
     const [name, setName] = useState(procedure.name);
     const [date, setDate] = useState(procedure.date);
     const [surgeon, setSurgeon] = useState(procedure.surgeon);
-    const [notes, setNotes] = useState(procedure.notes || '');
     const [sistema, setSistema] = useState(
         procedure.sistema && !ALERT_SYSTEMS.includes(procedure.sistema) ? 'Outros' : (procedure.sistema || '')
     );
@@ -21,7 +20,7 @@ export const EditSurgicalProcedureModal: React.FC<{ procedure: SurgicalProcedure
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!name || !date || !surgeon) return;
-        updateSurgicalProcedureInPatient(patientId, { ...procedure, name, date, surgeon, notes, sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined });
+        updateSurgicalProcedureInPatient(patientId, { ...procedure, name, date, surgeon, sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined });
         showNotification({ message: 'Procedimento cirúrgico atualizado!', type: 'success' });
         onClose();
     };
@@ -58,10 +57,6 @@ export const EditSurgicalProcedureModal: React.FC<{ procedure: SurgicalProcedure
                         {sistema === 'Outros' && (
                             <input type="text" value={sistemaOutros} onChange={e => setSistemaOutros(e.target.value)} placeholder="Especifique o sistema..." className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
                         )}
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Observação (Opcional)</label>
-                        <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Digite aqui..." className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" rows={3}></textarea>
                     </div>
                     <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar Alterações</button>
                 </form>

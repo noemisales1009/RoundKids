@@ -172,7 +172,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           label: resolvedLabel,
           categoria: opt?.categoria || DIAGNOSTICO_CATEGORIAS[d.opcao_id] || staticOpt?.categoria || 'Outros',
           tipo: d.pergunta_id === 1 ? 'principal' : 'secundario',
-          dataInicio: d.data_inicio || d.created_at?.split('T')[0] || '',
+          dataInicio: d.data_inicio || '',
           observacao: hasInputAndText ? '' : (d.texto_digitado || ''),
           inputComplement: hasInputAndText ? d.texto_digitado : undefined,
           sistema: d.sistema || '',
@@ -366,6 +366,8 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     handleEditField(tempId, field, value);
     const diag = workingDiags.find(d => d.tempId === tempId);
     if (!diag?.dbId) return; // novo diagnóstico: salva pelo botão "Salvar Diagnósticos"
+    // Não salva datas vazias automaticamente (evita sobrescrever com null durante edição)
+    if (!value && (field === 'dataInicio' || field === 'resolvedAt')) return;
     const dbField: Record<string, string> = {
       dataInicio: 'data_inicio',
       observacao: 'texto_digitado',

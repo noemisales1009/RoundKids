@@ -43,7 +43,6 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
     
     const [dosageValue, setDosageValue] = useState('');
     const [startDate, setStartDate] = useState(getTodayDateString());
-    const [observacao, setObservacao] = useState('');
     const [sistema, setSistema] = useState('');
     const [sistemaOutros, setSistemaOutros] = useState('');
     const [loading, setLoading] = useState(true);
@@ -93,8 +92,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                 }
             });
 
-            const labelsVistos = new Set<string>();
-            const unicos: DiagnosticoAtivo[] = [];
+            const byOpcaoId = new Map<number, DiagnosticoAtivo>();
 
             for (const d of diagData as any[]) {
                 const opt = optMap.get(d.opcao_id) as any;
@@ -118,13 +116,14 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                         : d.opcao_label;
                 }
 
-                if (!labelsVistos.has(label)) {
-                    labelsVistos.add(label);
-                    unicos.push({ id: d.id, label, created_at: d.created_at, sistema: d.sistema || undefined });
+                // Mantém a linha mais recente (maior id) por opcao_id
+                const existing = byOpcaoId.get(d.opcao_id);
+                if (!existing || d.id > existing.id) {
+                    byOpcaoId.set(d.opcao_id, { id: d.id, label, created_at: d.created_at, sistema: d.sistema || undefined });
                 }
             }
 
-            setDiagnosticosAtivos(unicos);
+            setDiagnosticosAtivos(Array.from(byOpcaoId.values()));
         };
         fetchDiagnosticos();
     }, [patientId]);
@@ -268,7 +267,6 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                     dosageValue: dosageValueFinal,
                     unidade: unidade,
                     startDate,
-                    observacao,
                     sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined,
                     diagnosticoId: diagSelecionado?.id,
                     diagnosticoLabel: diagSelecionado?.label,
@@ -480,18 +478,6 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                                 className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
                             />
                         )}
-                    </div>
-
-                    {/* Campo 7: Observação */}
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Observação <span className="text-slate-400 font-normal">(opcional)</span></label>
-                        <textarea 
-                            value={observacao}
-                            onChange={e => setObservacao(e.target.value)}
-                            placeholder="Digite observações sobre a medicação..."
-                            rows={3}
-                            className="block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 resize-none"
-                        />
                     </div>
 
                     <button 

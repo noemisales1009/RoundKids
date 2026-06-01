@@ -20,7 +20,6 @@ export const AddCultureModal: React.FC<{ patientId: number | string; onClose: ()
     const [microorganism, setMicroorganism] = useState('');
     const [customMicroorganism, setCustomMicroorganism] = useState('');
     const [collectionDate, setCollectionDate] = useState(getTodayDateString());
-    const [observation, setObservation] = useState('');
     const [sistema, setSistema] = useState('');
     const [sistemaOutros, setSistemaOutros] = useState('');
     const [diagnosticosAtivos, setDiagnosticosAtivos] = useState<DiagnosticoAtivo[]>([]);
@@ -113,7 +112,6 @@ export const AddCultureModal: React.FC<{ patientId: number | string; onClose: ()
                 site: finalSite,
                 microorganism: finalMicroorganism,
                 collectionDate,
-                observation: observation || undefined,
                 sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined,
                 diagnosticoId: diagSelecionado?.id,
                 diagnosticoLabel: diagSelecionado?.label,
@@ -240,10 +238,6 @@ export const AddCultureModal: React.FC<{ patientId: number | string; onClose: ()
                             {sistema === 'Outros' && (
                                 <input type="text" value={sistemaOutros} onChange={e => setSistemaOutros(e.target.value)} placeholder="Especifique o sistema..." className="mt-2 w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-slate-800 dark:text-slate-200" />
                             )}
-                        </div>
-                        <div>
-                            <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Observações <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
-                            <textarea value={observation} onChange={(e) => setObservation(e.target.value)} className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200 resize-none" placeholder="Adicionar observações sobre a cultura..." rows={3} />
                         </div>
                         <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 sm:py-3 rounded-lg transition mt-2 text-sm sm:text-base">Cadastrar</button>
                     </form>
