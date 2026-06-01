@@ -194,7 +194,7 @@ export const AddPainelViralModal: React.FC<{
                     created_by: user.id,
                     diagnostico_id: diagSelecionado?.id ?? null,
                     diagnostico_label: diagSelecionado?.label ?? null,
-                    diagnostico_data_inicio: diagSelecionado?.data_inicio || diagSelecionado?.created_at?.split('T')[0] ?? null,
+                    diagnostico_data_inicio: diagSelecionado?.data_inicio || diagSelecionado?.created_at?.split('T')[0] || null,
                 }]);
 
             if (error) throw error;

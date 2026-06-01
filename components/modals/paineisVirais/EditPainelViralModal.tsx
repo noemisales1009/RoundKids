@@ -208,9 +208,9 @@ export const EditPainelViralModal: React.FC<{
                     sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || null,
                     observacao: observacao.trim() || null,
                     updated_by: user.id,
-                    diagnostico_id: diagSelecionado?.id ?? null,
-                    diagnostico_label: diagSelecionado?.label ?? null,
-                    diagnostico_data_inicio: diagSelecionado?.data_inicio || diagSelecionado?.created_at?.split('T')[0] ?? null,
+                    diagnostico_id: diagSelecionado?.id || null,
+                    diagnostico_label: diagSelecionado?.label || null,
+                    diagnostico_data_inicio: diagSelecionado?.data_inicio || diagSelecionado?.created_at?.split('T')[0] || null,
                 })
                 .eq('id', painelData.id);
 
