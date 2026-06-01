@@ -1715,12 +1715,18 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                 .filter(d => d.sistema && allNames.includes(d.sistema) && d.status !== 'resolvido')
                 .sort((a, b) => (a.tipo === 'principal' ? 0 : 1) - (b.tipo === 'principal' ? 0 : 1));
 
+              const resolvedDiagAllIds = new Set<number>(
+                diagItems.filter(d => d.status === 'resolvido').flatMap(d => d.allIds)
+              );
               const allSecMeds = (selectedPatient?.medications ?? [])
-                .filter(m => !m.isArchived && m.mostrar_evolucao !== false && m.sistema && allNames.includes(m.sistema));
+                .filter(m => !m.isArchived && m.mostrar_evolucao !== false && m.sistema && allNames.includes(m.sistema)
+                  && !(m.diagnosticoId != null && resolvedDiagAllIds.has(Number(m.diagnosticoId))));
               const allSecCults = (selectedPatient?.cultures ?? [])
-                .filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && allNames.includes(c.sistema));
+                .filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && allNames.includes(c.sistema)
+                  && !(c.diagnosticoId != null && resolvedDiagAllIds.has(Number(c.diagnosticoId))));
               const allSecPnls = paineisViraisList
-                .filter(pn => pn.mostrar_evolucao !== false && pn.sistema && allNames.includes(pn.sistema));
+                .filter(pn => pn.mostrar_evolucao !== false && pn.sistema && allNames.includes(pn.sistema)
+                  && !(pn.diagnostico_id != null && resolvedDiagAllIds.has(pn.diagnostico_id!)));
 
               const secCirurgias = (selectedPatient?.surgicalProcedures ?? [])
                 .filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && allNames.includes(c.sistema));
