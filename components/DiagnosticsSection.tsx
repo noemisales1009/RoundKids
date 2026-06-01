@@ -49,6 +49,7 @@ interface MedItem {
 interface WorkingDiag {
   tempId: string;
   dbId?: number;
+  allIds: number[];
   perguntaId: number;
   opcaoId: number;
   label: string;
@@ -129,20 +130,12 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const [resolveModalTempId, setResolveModalTempId] = useState<string | null>(null);
   const [resolveMeds, setResolveMeds] = useState<MedItem[]>([]);
 
-  // Medicações vinculadas por diagnostico_id
-  const [linkedMedsMap, setLinkedMedsMap] = useState<Map<number, MedItem[]>>(new Map());
-
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [optionsRes, diagnosticsRes, medsRes] = await Promise.all([
+      const [optionsRes, diagnosticsRes] = await Promise.all([
         supabase.from('pergunta_opcoes_diagnostico').select('*').order('pergunta_id').order('ordem'),
         supabase.from('paciente_diagnosticos').select('*').eq('patient_id', patientId).eq('arquivado', false),
-        supabase.from('medicacoes_pacientes')
-          .select('id, nome_medicacao, dosagem_valor, unidade_medida, data_inicio, data_fim, diagnostico_id')
-          .eq('paciente_id', patientId)
-          .eq('is_archived', false)
-          .not('diagnostico_id', 'is', null),
       ]);
 
       if (optionsRes.error) throw optionsRes.error;
@@ -173,6 +166,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         return {
           tempId: `db-${d.id}`,
           dbId: d.id,
+          allIds: [],
           perguntaId: d.pergunta_id,
           opcaoId: d.opcao_id,
           label: resolvedLabel,
@@ -190,31 +184,23 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         };
       });
 
-      // Deduplica por opcao_id mantendo o registro mais recente
+      // Mapeia todos os IDs por opcao_id e deduplica mantendo o registro mais recente
+      const opcaoToIds = new Map<number, number[]>();
+      working.forEach(d => {
+        if (d.dbId == null) return;
+        const ids = opcaoToIds.get(d.opcaoId) ?? [];
+        ids.push(d.dbId);
+        opcaoToIds.set(d.opcaoId, ids);
+      });
+
       const seen = new Map<number, WorkingDiag>();
       working.forEach(d => {
         const existing = seen.get(d.opcaoId);
         if (!existing || (d.dbId ?? 0) > (existing.dbId ?? 0)) seen.set(d.opcaoId, d);
       });
-
-      // Mapa de medicações vinculadas por diagnostico_id
-      const medsMap = new Map<number, MedItem[]>();
-      (medsRes.data || []).forEach((m: any) => {
-        const diagId = m.diagnostico_id as number;
-        if (!medsMap.has(diagId)) medsMap.set(diagId, []);
-        const dosagem = m.dosagem_valor
-          ? `${m.dosagem_valor}${m.unidade_medida ? ' ' + m.unidade_medida : ''}`
-          : undefined;
-        medsMap.get(diagId)!.push({
-          id: m.id,
-          nome: m.nome_medicacao,
-          dosagem,
-          dataInicio: m.data_inicio || undefined,
-          mostrarEvolucao: true,
-          diagnosticoId: diagId,
-        });
+      seen.forEach((item, opcaoId) => {
+        item.allIds = opcaoToIds.get(opcaoId) ?? (item.dbId != null ? [item.dbId] : []);
       });
-      setLinkedMedsMap(medsMap);
 
       setWorkingDiags(Array.from(seen.values()));
     } catch (err) {
@@ -413,10 +399,11 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     const diag = workingDiags.find(d => d.tempId === tempId);
     if (!diag || !diag.dbId) { handleStatusChange(tempId, 'resolvido'); return; }
 
+    const ids = diag.allIds.length > 0 ? diag.allIds : [diag.dbId];
     const { data } = await supabase
       .from('medicacoes_pacientes')
       .select('id, nome_medicacao, dosagem_valor, unidade_medida, mostrar_evolucao')
-      .eq('diagnostico_id', diag.dbId)
+      .in('diagnostico_id', ids)
       .eq('is_archived', false);
 
     type MedRow = { id: number; nome_medicacao: string; dosagem_valor?: string | null; unidade_medida?: string | null; mostrar_evolucao?: boolean | null };
