@@ -757,8 +757,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         const linkedMeds = allMedsExport.filter(m => m.diagnosticoId != null && d.allIds.includes(Number(m.diagnosticoId)) && !we.has(`med_${m.id}`));
         linkedMeds.forEach(m => {
           const dosagePart = m.dosage && m.dosage !== m.name ? ` (${m.dosage})` : '';
-          const medInicio = m.startDate ? `Início: ${formatDateToBRL(m.startDate)}` : '';
-          const medFim = m.endDate ? `Fim: ${formatDateToBRL(m.endDate)}` : '';
+          const medInicio = m.startDate ? formatDateToBRL(m.startDate) : '';
+          const medFim = m.endDate ? formatDateToBRL(m.endDate) : '';
           const medDatas = [medInicio, medFim].filter(Boolean).join('  |  ');
           add(`    ◦ ${m.name}${dosagePart}${medDatas ? `  [${medDatas}]` : ''}`);
         });
