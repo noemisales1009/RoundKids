@@ -759,7 +759,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           const dosagePart = m.dosage && m.dosage !== m.name ? ` (${m.dosage})` : '';
           const medInicio = m.startDate ? formatDateToBRL(m.startDate) : '';
           const medFim = m.endDate ? formatDateToBRL(m.endDate) : '';
-          const medDatas = [medInicio, medFim].filter(Boolean).join('  |  ');
+          const medDias = m.startDate && m.endDate
+            ? Math.round((new Date(m.endDate).getTime() - new Date(m.startDate).getTime()) / 86400000) + 1
+            : null;
+          const medDiasPart = medDias !== null ? `${medDias} dia${medDias !== 1 ? 's' : ''}` : '';
+          const medDatas = [medInicio, medFim, medDiasPart].filter(Boolean).join('  |  ');
           add(`    ◦ ${m.name}${dosagePart}${medDatas ? `  [${medDatas}]` : ''}`);
         });
       });
