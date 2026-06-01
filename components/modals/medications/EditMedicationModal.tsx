@@ -16,6 +16,7 @@ interface DiagnosticoAtivo {
     id: number;
     label: string;
     created_at: string;
+    data_inicio?: string | null;
     sistema?: string;
 }
 
@@ -49,7 +50,7 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
         const fetchDiagnosticos = async () => {
             const { data: diagData, error } = await supabase
                 .from('paciente_diagnosticos')
-                .select('id, opcao_id, opcao_label, texto_digitado, created_at, sistema')
+                .select('id, opcao_id, opcao_label, texto_digitado, created_at, data_inicio, sistema')
                 .eq('patient_id', patientId)
                 .eq('arquivado', false)
                 .eq('status', 'nao_resolvido');
@@ -109,7 +110,7 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                 // Mantém a linha mais recente (maior id) por opcao_id
                 const existing = byOpcaoId.get(d.opcao_id);
                 if (!existing || d.id > existing.id) {
-                    byOpcaoId.set(d.opcao_id, { id: d.id, label, created_at: d.created_at, sistema: d.sistema || undefined });
+                    byOpcaoId.set(d.opcao_id, { id: d.id, label, created_at: d.created_at, data_inicio: d.data_inicio || null, sistema: d.sistema || undefined });
                 }
             }
 
@@ -266,7 +267,7 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
         const diagId = diagSelecionado?.id ?? (selectedDiagnosticoId !== '' ? medication.diagnosticoId : undefined);
         const diagLabel = diagSelecionado?.label ?? (selectedDiagnosticoId !== '' ? medication.diagnosticoLabel : undefined);
         const diagDataInicio = selectedDiagnosticoId !== ''
-          ? (diagSelecionado?.created_at?.split('T')[0] ?? medication.diagnosticoDataInicio)
+          ? (diagSelecionado?.data_inicio || diagSelecionado?.created_at?.split('T')[0] ?? medication.diagnosticoDataInicio)
           : undefined;
 
         updateMedicationInPatient(patientId, {

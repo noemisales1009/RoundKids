@@ -8,6 +8,7 @@ interface DiagnosticoAtivo {
   id: number;
   label: string;
   created_at: string;
+  data_inicio?: string | null;
   sistema?: string;
 }
 
@@ -139,7 +140,7 @@ export const AddPainelViralModal: React.FC<{
         const fetchDiagnosticos = async () => {
             const { data } = await supabase
                 .from('paciente_diagnosticos')
-                .select('id, opcao_label, texto_digitado, created_at, sistema')
+                .select('id, opcao_label, texto_digitado, created_at, data_inicio, sistema')
                 .eq('patient_id', patientId)
                 .eq('arquivado', false)
                 .eq('status', 'nao_resolvido')
@@ -153,7 +154,7 @@ export const AddPainelViralModal: React.FC<{
                     : d.opcao_label;
                 if (!label || visto.has(label)) continue;
                 visto.add(label);
-                unicos.push({ id: d.id, label, created_at: d.created_at, sistema: d.sistema || undefined });
+                unicos.push({ id: d.id, label, created_at: d.created_at, data_inicio: d.data_inicio || null, sistema: d.sistema || undefined });
             }
             setDiagnosticosAtivos(unicos);
         };
@@ -193,7 +194,7 @@ export const AddPainelViralModal: React.FC<{
                     created_by: user.id,
                     diagnostico_id: diagSelecionado?.id ?? null,
                     diagnostico_label: diagSelecionado?.label ?? null,
-                    diagnostico_data_inicio: diagSelecionado?.created_at?.split('T')[0] ?? null,
+                    diagnostico_data_inicio: diagSelecionado?.data_inicio || diagSelecionado?.created_at?.split('T')[0] ?? null,
                 }]);
 
             if (error) throw error;

@@ -8,6 +8,7 @@ interface DiagnosticoAtivo {
     id: number;
     label: string;
     created_at: string;
+    data_inicio?: string | null;
     sistema?: string;
 }
 
@@ -29,7 +30,7 @@ export const AddCultureModal: React.FC<{ patientId: number | string; onClose: ()
         const fetchDiagnosticos = async () => {
             const { data: diagData, error } = await supabase
                 .from('paciente_diagnosticos')
-                .select('id, opcao_id, opcao_label, texto_digitado, created_at, sistema')
+                .select('id, opcao_id, opcao_label, texto_digitado, created_at, data_inicio, sistema')
                 .eq('patient_id', patientId)
                 .eq('arquivado', false)
                 .eq('status', 'nao_resolvido');
@@ -82,7 +83,7 @@ export const AddCultureModal: React.FC<{ patientId: number | string; onClose: ()
 
                 if (!labelsVistos.has(label)) {
                     labelsVistos.add(label);
-                    unicos.push({ id: d.id, label, created_at: d.created_at, sistema: d.sistema || undefined });
+                    unicos.push({ id: d.id, label, created_at: d.created_at, data_inicio: d.data_inicio || null, sistema: d.sistema || undefined });
                 }
             }
 
@@ -115,7 +116,7 @@ export const AddCultureModal: React.FC<{ patientId: number | string; onClose: ()
                 sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined,
                 diagnosticoId: diagSelecionado?.id,
                 diagnosticoLabel: diagSelecionado?.label,
-                diagnosticoDataInicio: diagSelecionado?.created_at?.split('T')[0],
+                diagnosticoDataInicio: diagSelecionado?.data_inicio || diagSelecionado?.created_at?.split('T')[0],
             }, user.id);
             showNotification({ message: 'Cultura cadastrada com sucesso!', type: 'success' });
             onClose();

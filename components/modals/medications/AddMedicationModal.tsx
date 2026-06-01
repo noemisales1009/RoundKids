@@ -16,6 +16,7 @@ interface DiagnosticoAtivo {
     id: number;
     label: string;
     created_at: string;
+    data_inicio?: string | null;
     sistema?: string;
 }
 
@@ -54,7 +55,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
         const fetchDiagnosticos = async () => {
             const { data: diagData, error } = await supabase
                 .from('paciente_diagnosticos')
-                .select('id, opcao_id, opcao_label, texto_digitado, created_at, sistema')
+                .select('id, opcao_id, opcao_label, texto_digitado, created_at, data_inicio, sistema')
                 .eq('patient_id', patientId)
                 .eq('arquivado', false)
                 .eq('status', 'nao_resolvido');
@@ -119,7 +120,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                 // Mantém a linha mais recente (maior id) por opcao_id
                 const existing = byOpcaoId.get(d.opcao_id);
                 if (!existing || d.id > existing.id) {
-                    byOpcaoId.set(d.opcao_id, { id: d.id, label, created_at: d.created_at, sistema: d.sistema || undefined });
+                    byOpcaoId.set(d.opcao_id, { id: d.id, label, created_at: d.created_at, data_inicio: d.data_inicio || null, sistema: d.sistema || undefined });
                 }
             }
 
@@ -270,7 +271,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                     sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined,
                     diagnosticoId: diagSelecionado?.id,
                     diagnosticoLabel: diagSelecionado?.label,
-                    diagnosticoDataInicio: diagSelecionado?.created_at?.split('T')[0],
+                    diagnosticoDataInicio: diagSelecionado?.data_inicio || diagSelecionado?.created_at?.split('T')[0],
                     categoria: isCategoriaManual ? undefined : (selectedCategoria || undefined),
                 },
                 user.id
