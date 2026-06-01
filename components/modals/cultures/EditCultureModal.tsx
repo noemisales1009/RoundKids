@@ -116,7 +116,9 @@ export const EditCultureModal: React.FC<{ culture: Culture; patientId: number | 
             sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined,
             diagnosticoId: diagSelecionado?.id,
             diagnosticoLabel: diagSelecionado?.label,
-            diagnosticoDataInicio: diagSelecionado?.data_inicio || diagSelecionado?.created_at?.split('T')[0] ?? culture.diagnosticoDataInicio,
+            diagnosticoDataInicio: (diagSelecionado?.data_inicio
+                || diagSelecionado?.created_at?.split('T')[0]
+                || culture.diagnosticoDataInicio),
         });
         showNotification({ message: 'Cultura atualizada com sucesso!', type: 'success' });
         onClose();

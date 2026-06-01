@@ -266,9 +266,10 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
         // (ID de uma linha antiga), preserva o vínculo original em vez de apagar
         const diagId = diagSelecionado?.id ?? (selectedDiagnosticoId !== '' ? medication.diagnosticoId : undefined);
         const diagLabel = diagSelecionado?.label ?? (selectedDiagnosticoId !== '' ? medication.diagnosticoLabel : undefined);
-        const diagDataInicio = selectedDiagnosticoId !== ''
-          ? (diagSelecionado?.data_inicio || diagSelecionado?.created_at?.split('T')[0] ?? medication.diagnosticoDataInicio)
-          : undefined;
+        const diagDataInicioRaw = diagSelecionado?.data_inicio
+          || diagSelecionado?.created_at?.split('T')[0]
+          || medication.diagnosticoDataInicio;
+        const diagDataInicio = selectedDiagnosticoId !== '' ? diagDataInicioRaw : undefined;
 
         updateMedicationInPatient(patientId, {
             ...medication,
