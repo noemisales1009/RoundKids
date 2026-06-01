@@ -736,7 +736,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         const lbl = d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label;
         const det = d.label !== 'Outros' && d.texto_digitado ? ` (${d.texto_digitado})` : '';
         const dataCriacao = d.created_at ? `  Em ${formatDateToBRL(d.created_at)}` : '';
-        add(`• ${lbl}${det}${dataCriacao}`);
+        const resolvidoText = d.status === 'resolvido' ? `  [RESOLVIDO${d.resolved_at ? ` em ${formatDateToBRL(d.resolved_at)}` : ''}]` : '';
+        add(`• ${lbl}${det}${dataCriacao}${resolvidoText}`);
       });
     }
 
