@@ -450,7 +450,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
             ids.push(Number(d.id));
             opcaoToIds.set(d.opcao_id, ids);
             const existing = byOpcao.get(d.opcao_id);
-            if (!existing || new Date(d.created_at) < new Date(existing.created_at!)) {
+            if (!existing || new Date(d.created_at) > new Date(existing.created_at!)) {
               byOpcao.set(d.opcao_id, {
                 opcao_id: d.opcao_id,
                 id: Number(d.id),
