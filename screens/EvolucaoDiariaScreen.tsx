@@ -742,7 +742,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       .sort((a, b) => (a.resolved_at ?? '').localeCompare(b.resolved_at ?? ''));
     if (secundarios.length > 0) {
       title('6. DIAGNÓSTICOS SECUNDÁRIOS');
-      const allMedsExport = (p.medications ?? []).filter(m => !m.isArchived);
+      const allMedsExport = (p.medications ?? []).filter(m => !m.isArchived && m.mostrar_evolucao !== false);
       secundarios.forEach(d => {
         const lbl = d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label;
         const det = d.label !== 'Outros' && d.texto_digitado ? ` (${d.texto_digitado})` : '';
@@ -811,8 +811,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
 
     const _today = new Date(); _today.setHours(0, 0, 0, 0);
-    const _cutoff48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const _cutoff24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const _SP_OFFSET = 3 * 60 * 60 * 1000;
+    const _cutoff48h = new Date(Date.now() - _SP_OFFSET - 48 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const _cutoff24h = new Date(Date.now() - _SP_OFFSET - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     const _allDietasWord = [...(p.diets ?? [])].filter(d => !d.isArchived && d.mostrar_evolucao !== false && (d.vet_at != null || d.pt_at != null)).sort((a, b) => b.data_inicio.localeCompare(a.data_inicio));
     const _dietaWord = _allDietasWord.find(d => d.data_inicio.split(' ')[0] >= _cutoff24h) ?? _allDietasWord[0];
@@ -828,7 +829,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       blank();
     }
 
-    const activeDevicesWord = (p.devices ?? []).filter(d => !d.isArchived).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+    const activeDevicesWord = (p.devices ?? []).filter(d => !d.isArchived && d.mostrar_evolucao !== false).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
     if (activeDevicesWord.length > 0) {
       title('11. DISPOSITIVOS');
       add('@@DEVICES_TABLE@@');
@@ -873,7 +874,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const _allMatchDiets = [...(p.diets ?? [])].filter(d => !d.isArchived && d.mostrar_evolucao !== false && matchSistema(d.sistema) && !we.has(`diet_${d.id}`)).sort((a, b) => b.data_inicio.localeCompare(a.data_inicio));
       const _dietaMatch = _allMatchDiets.find(d => d.data_inicio.split(' ')[0] >= _cutoff24h) ?? _allMatchDiets[0];
       const diets = _dietaMatch ? [_dietaMatch] : [];
-      const exs   = (p.exams ?? []).filter(e => !e.isArchived && e.mostrar_evolucao !== false && matchSistema(e.sistema) && !we.has(`exam_${e.id}`) && e.date >= _cutoff48h);
+      const exs   = (p.exams ?? []).filter(e => !e.isArchived && e.mostrar_evolucao !== false && matchSistema(e.sistema) && !we.has(`exam_${e.id}`) && (e.mostrar_evolucao === true || e.date >= _cutoff48h));
       const imgs  = examesImagemList.filter(ei => ei.mostrar_evolucao !== false && matchSistema(ei.sistema) && !we.has(`img_${ei.id}`));
       const pars  = pareceresList.filter(par => {
         if (par.mostrar_evolucao === false || we.has(`par_${par.id}`)) return false;
@@ -1046,11 +1047,29 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     return lines.join('\n');
   };
 
+  const buildDevicesText = (): string => {
+    if (!selectedPatient) return '';
+    const devices = (selectedPatient.devices ?? [])
+      .filter(d => !d.isArchived && d.mostrar_evolucao !== false)
+      .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+    if (devices.length === 0) return '';
+    return devices.map(d => {
+      const nowSP = new Date(Date.now() - 3 * 60 * 60 * 1000);
+      const todaySP = Date.UTC(nowSP.getUTCFullYear(), nowSP.getUTCMonth(), nowSP.getUTCDate());
+      const [sy, sm, sd] = d.startDate.split('-').map(Number);
+      const startSP = Date.UTC(sy, sm - 1, sd);
+      const days = Math.floor((todaySP - startSP) / 86400000);
+      const loc = d.location ? ` – ${d.location}` : '';
+      const start = d.startDate.split('-').reverse().join('/');
+      const removal = d.removalDate ? ` | Retirada: ${d.removalDate.split('-').reverse().join('/')}` : '';
+      return `  • ${d.name}${loc} | Início: ${start}${removal} | ${days} dia${days !== 1 ? 's' : ''}`;
+    }).join('\n');
+  };
 
   const handleDownloadDoc = async () => {
     const content = buildTextContent();
     const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const activeDevicesDoc = (selectedPatient!.devices ?? []).filter(d => !d.isArchived).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+    const activeDevicesDoc = (selectedPatient!.devices ?? []).filter(d => !d.isArchived && d.mostrar_evolucao !== false).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
     const devicesTableHtml = activeDevicesDoc.length > 0 ? `
 <table style="border-collapse:collapse;width:100%;margin:4px 0;font-family:Arial,sans-serif;font-size:11pt;">
   <thead><tr style="border-bottom:1px solid #ccc;">
@@ -1256,7 +1275,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         <div className="flex gap-2">
           <button
             onClick={() => {
-              const content = buildTextContent().replace(/@@DEVICES_TABLE@@/g, '');
+              const content = buildTextContent().replace(/@@DEVICES_TABLE@@/g, buildDevicesText());
               previewCtx.setPreviewText(content);
               previewCtx.setPatientName(selectedPatient?.name ?? '');
               previewCtx.downloadWordRef.current = handleDownloadDoc;
@@ -1268,7 +1287,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           </button>
           <button
             onClick={() => {
-              const content = buildTextContent().replace(/@@DEVICES_TABLE@@/g, '');
+              const content = buildTextContent().replace(/@@DEVICES_TABLE@@/g, buildDevicesText());
               const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
               const url = URL.createObjectURL(blob);
               const a = document.createElement('a');
@@ -1357,7 +1376,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           </div>
         ) : (() => {
           const principais = diagItems.filter(d => d.tipo === 'principal');
-          const allMeds = (selectedPatient?.medications ?? []).filter(m => !m.isArchived);
+          const allMeds = (selectedPatient?.medications ?? []).filter(m => !m.isArchived && m.mostrar_evolucao !== false);
           return principais.length === 0 ? (
             <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum diagnóstico principal registrado.</p>
           ) : (
@@ -1427,7 +1446,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           const secundarios = diagItems
             .filter(d => d.tipo === 'secundario' && d.status === 'resolvido')
             .sort((a, b) => (a.resolved_at ?? '').localeCompare(b.resolved_at ?? ''));
-          const allMeds2 = (selectedPatient?.medications ?? []).filter(m => !m.isArchived);
+          const allMeds2 = (selectedPatient?.medications ?? []).filter(m => !m.isArchived && m.mostrar_evolucao !== false);
           return secundarios.length === 0 ? (
             <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum diagnóstico secundário registrado.</p>
           ) : (
@@ -1610,7 +1629,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       {/* 12. Dispositivos */}
       <Section title="12. Dispositivos" id="dispositivos" open={openSections.has('dispositivos')} onToggle={() => toggle('dispositivos')}>
         {(() => {
-          const activeDevices = (selectedPatient?.devices ?? []).filter(d => !d.isArchived).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+          const activeDevices = (selectedPatient?.devices ?? []).filter(d => !d.isArchived && d.mostrar_evolucao !== false).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
           if (activeDevices.length === 0)
             return <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum dispositivo ativo.</p>;
           return (
@@ -1694,13 +1713,14 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
               const secCirurgias = (selectedPatient?.surgicalProcedures ?? [])
                 .filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && allNames.includes(c.sistema));
-              const _uiCutoff48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString().split('T')[0];
-              const _uiCutoff24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+              const _SP_OFFSET_UI = 3 * 60 * 60 * 1000;
+              const _uiCutoff48h = new Date(Date.now() - _SP_OFFSET_UI - 48 * 60 * 60 * 1000).toISOString().split('T')[0];
+              const _uiCutoff24h = new Date(Date.now() - _SP_OFFSET_UI - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
               const _allSecDietas = [...(selectedPatient?.diets ?? [])].filter(d => !d.isArchived && d.mostrar_evolucao !== false && d.sistema && allNames.includes(d.sistema)).sort((a, b) => b.data_inicio.localeCompare(a.data_inicio));
               const _secDietaMatch = _allSecDietas.find(d => d.data_inicio.split(' ')[0] >= _uiCutoff24h) ?? _allSecDietas[0];
               const secDietas = _secDietaMatch ? [_secDietaMatch] : [];
               const secExames = (selectedPatient?.exams ?? [])
-                .filter(e => !e.isArchived && e.mostrar_evolucao !== false && e.sistema && allNames.includes(e.sistema) && e.date >= _uiCutoff48h);
+                .filter(e => !e.isArchived && e.mostrar_evolucao !== false && e.sistema && allNames.includes(e.sistema) && (e.mostrar_evolucao === true || e.date >= _uiCutoff48h));
               const secExamesImagem = examesImagemList
                 .filter(ei => ei.mostrar_evolucao !== false && ei.sistema && allNames.includes(ei.sistema));
               const secPareceres = pareceresList

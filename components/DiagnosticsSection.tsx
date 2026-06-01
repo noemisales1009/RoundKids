@@ -129,12 +129,20 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const [resolveModalTempId, setResolveModalTempId] = useState<string | null>(null);
   const [resolveMeds, setResolveMeds] = useState<MedItem[]>([]);
 
+  // Medicações vinculadas por diagnostico_id
+  const [linkedMedsMap, setLinkedMedsMap] = useState<Map<number, MedItem[]>>(new Map());
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [optionsRes, diagnosticsRes] = await Promise.all([
+      const [optionsRes, diagnosticsRes, medsRes] = await Promise.all([
         supabase.from('pergunta_opcoes_diagnostico').select('*').order('pergunta_id').order('ordem'),
         supabase.from('paciente_diagnosticos').select('*').eq('patient_id', patientId).eq('arquivado', false),
+        supabase.from('medicacoes_pacientes')
+          .select('id, nome_medicacao, dosagem_valor, unidade_medida, data_inicio, data_fim, diagnostico_id')
+          .eq('paciente_id', patientId)
+          .eq('is_archived', false)
+          .not('diagnostico_id', 'is', null),
       ]);
 
       if (optionsRes.error) throw optionsRes.error;
@@ -188,6 +196,26 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         const existing = seen.get(d.opcaoId);
         if (!existing || (d.dbId ?? 0) > (existing.dbId ?? 0)) seen.set(d.opcaoId, d);
       });
+
+      // Mapa de medicações vinculadas por diagnostico_id
+      const medsMap = new Map<number, MedItem[]>();
+      (medsRes.data || []).forEach((m: any) => {
+        const diagId = m.diagnostico_id as number;
+        if (!medsMap.has(diagId)) medsMap.set(diagId, []);
+        const dosagem = m.dosagem_valor
+          ? `${m.dosagem_valor}${m.unidade_medida ? ' ' + m.unidade_medida : ''}`
+          : undefined;
+        medsMap.get(diagId)!.push({
+          id: m.id,
+          nome: m.nome_medicacao,
+          dosagem,
+          dataInicio: m.data_inicio || undefined,
+          mostrarEvolucao: true,
+          diagnosticoId: diagId,
+        });
+      });
+      setLinkedMedsMap(medsMap);
+
       setWorkingDiags(Array.from(seen.values()));
     } catch (err) {
       console.error('Erro ao carregar diagnósticos:', err);

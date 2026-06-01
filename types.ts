@@ -21,7 +21,7 @@ export interface Exam {
   observation?: string;
   isArchived?: boolean;
   sistema?: string;
-  mostrar_evolucao?: boolean;
+  mostrar_evolucao?: boolean | null;
 }
 
 export interface Medication {

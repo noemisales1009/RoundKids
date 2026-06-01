@@ -57,7 +57,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 result: e.resultado || 'Pendente',
                 observation: e.observacao,
                 sistema: e.sistema || undefined,
-                mostrar_evolucao: e.mostrar_evolucao !== false,
+                mostrar_evolucao: e.mostrar_evolucao ?? null,
             });
             return acc;
         }, {});
@@ -816,10 +816,10 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         if (error) {
             console.error('Erro ao inserir dieta:', error);
-        } else {
+            throw error;
         }
 
-        if (!error) fetchPatients();
+        fetchPatients();
     };
 
     const deleteDietFromPatient = async (patientId: number | string, dietId: number | string, userId?: string) => {
@@ -827,20 +827,19 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const { error } = await supabase.from('dietas_pacientes')
             .update({
                 is_archived: true,
-                arquivado_por_id: userId || null  // 🟢 Capturar quem está arquivando
+                arquivado_por_id: userId || null
             })
             .eq('id', dietId);
 
         if (error) {
             console.error('Erro ao arquivar dieta:', error);
-        } else {
+            throw error;
         }
 
-        if (!error) await fetchPatients();
+        await fetchPatients();
     };
 
     const updateDietInPatient = async (patientId: number | string, dietData: Diet) => {
-        // vet_at e pt_at são calculados automaticamente pelo banco (GENERATED ALWAYS AS)
         const { error } = await supabase.from('dietas_pacientes')
             .update({
                 tipo: sanitizeText(dietData.type),
@@ -856,7 +855,13 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 sistema: dietData.sistema || null
             })
             .eq('id', dietData.id);
-        if (!error) await fetchPatients();
+
+        if (error) {
+            console.error('Erro ao atualizar dieta:', error);
+            throw error;
+        }
+
+        await fetchPatients();
     };
 
     // Precautions Functions
