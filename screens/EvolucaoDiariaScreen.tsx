@@ -688,6 +688,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
   const handleTrocarLeito = () => {
     setPatientId('');
+    setExameFisico({ monitorizacao: '', ectoscopia: '', peleFaneros: '', respiratorio: '', cardiovascular: '', digestivo: '', urinario: '', neurologico: '' });
+    setCondutasCriticas('');
+    setWordExcluded(new Set());
   };
 
   const buildTextContent = (): string => {
@@ -857,6 +860,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
     const ALL_KNOWN_SISTEMAS = new Set(Object.values(SECTION_SISTEMAS).flat());
     const apLines: string[] = [];
+    const resolvedAllIds = new Set<number>(diagItems.filter(d => d.status === 'resolvido').flatMap(d => d.allIds));
 
     AVALIACAO_SECTIONS.forEach(sec => {
       const sistemas = SECTION_SISTEMAS[sec.id] ?? [];
@@ -864,17 +868,24 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         !!s && (sistemas.includes(s) || (sec.id === 'outras_av' && !ALL_KNOWN_SISTEMAS.has(s)));
 
       const secDiags = diagItems
-        .filter(d => matchSistema(d.sistema) && d.status !== 'resolvido')
+        .filter(d => matchSistema(d.sistema) && d.status !== 'resolvido' && !we.has(`diag_${d.opcao_id}`))
         .sort((a, b) => (a.tipo === 'principal' ? 0 : 1) - (b.tipo === 'principal' ? 0 : 1));
 
-      const allSecMeds  = (p.medications ?? []).filter(m => !m.isArchived && m.mostrar_evolucao !== false && matchSistema(m.sistema) && !we.has(`med_${m.id}`) && (!m.endDate || new Date(m.endDate + 'T00:00:00') >= _today));
+      const excludedDiagIds = new Set<number>([
+        ...diagItems
+          .filter(d => matchSistema(d.sistema) && we.has(`diag_${d.opcao_id}`))
+          .flatMap(d => d.allIds),
+        ...resolvedAllIds,
+      ]);
+
+      const allSecMeds  = (p.medications ?? []).filter(m => !m.isArchived && m.mostrar_evolucao !== false && matchSistema(m.sistema) && !we.has(`med_${m.id}`) && (!m.endDate || new Date(m.endDate + 'T00:00:00') >= _today) && !(m.diagnosticoId != null && excludedDiagIds.has(Number(m.diagnosticoId))));
       const allSecCults = (p.cultures ?? []).filter(c => !c.isArchived && c.mostrar_evolucao !== false && matchSistema(c.sistema) && !we.has(`cult_${c.id}`));
       const allSecPnls  = paineisViraisList.filter(pn => pn.mostrar_evolucao !== false && matchSistema(pn.sistema) && !we.has(`pnl_${pn.id}`));
       const cirgs = (p.surgicalProcedures ?? []).filter(c => !c.isArchived && c.mostrar_evolucao !== false && matchSistema(c.sistema) && !we.has(`cir_${c.id}`));
       const _allMatchDiets = [...(p.diets ?? [])].filter(d => !d.isArchived && d.mostrar_evolucao !== false && matchSistema(d.sistema) && !we.has(`diet_${d.id}`)).sort((a, b) => b.data_inicio.localeCompare(a.data_inicio));
       const _dietaMatch = _allMatchDiets.find(d => d.data_inicio.split(' ')[0] >= _cutoff24h) ?? _allMatchDiets[0];
       const diets = _dietaMatch ? [_dietaMatch] : [];
-      const exs   = (p.exams ?? []).filter(e => !e.isArchived && e.mostrar_evolucao !== false && matchSistema(e.sistema) && !we.has(`exam_${e.id}`) && (e.mostrar_evolucao === true || e.date >= _cutoff48h));
+      const exs   = (p.exams ?? []).filter(e => !e.isArchived && e.mostrar_evolucao !== false && matchSistema(e.sistema) && !we.has(`exam_${e.id}`) && e.date >= _cutoff48h);
       const imgs  = examesImagemList.filter(ei => ei.mostrar_evolucao !== false && matchSistema(ei.sistema) && !we.has(`img_${ei.id}`));
       const pars  = pareceresList.filter(par => {
         if (par.mostrar_evolucao === false || we.has(`par_${par.id}`)) return false;
@@ -1060,8 +1071,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const startSP = Date.UTC(sy, sm - 1, sd);
       const days = Math.floor((todaySP - startSP) / 86400000);
       const loc = d.location ? ` – ${d.location}` : '';
-      const start = d.startDate.split('-').reverse().join('/');
-      const removal = d.removalDate ? ` | Retirada: ${d.removalDate.split('-').reverse().join('/')}` : '';
+      const start = formatDateToBRL(d.startDate);
+      const removal = d.removalDate ? ` | Retirada: ${formatDateToBRL(d.removalDate)}` : '';
       return `  • ${d.name}${loc} | Início: ${start}${removal} | ${days} dia${days !== 1 ? 's' : ''}`;
     }).join('\n');
   };
@@ -1679,7 +1690,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       </Section>
 
       {/* 13. O — Exame Físico */}
-      <Section title="14. O — Exame Físico" id="exameFisico" open={openSections.has('exameFisico')} onToggle={() => toggle('exameFisico')}>
+      <Section title="13. O — Exame Físico" id="exameFisico" open={openSections.has('exameFisico')} onToggle={() => toggle('exameFisico')}>
         {EXAME_SECTIONS.map(({ key, label }) => (
           <Field
             key={key}
@@ -1692,7 +1703,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       </Section>
 
       {/* 14. AP — Avaliação x Propedêutica */}
-      <Section title="13. AP — Avaliação x Propedêutica (Alertas)" id="avaliacoes" open={openSections.has('avaliacoes')} onToggle={() => toggle('avaliacoes')}>
+      <Section title="14. AP — Avaliação x Propedêutica (Alertas)" id="avaliacoes" open={openSections.has('avaliacoes')} onToggle={() => toggle('avaliacoes')}>
         {alertasLoading ? (
           <div className="flex justify-center py-6"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" /></div>
         ) : (
@@ -1720,14 +1731,17 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               const _secDietaMatch = _allSecDietas.find(d => d.data_inicio.split(' ')[0] >= _uiCutoff24h) ?? _allSecDietas[0];
               const secDietas = _secDietaMatch ? [_secDietaMatch] : [];
               const secExames = (selectedPatient?.exams ?? [])
-                .filter(e => !e.isArchived && e.mostrar_evolucao !== false && e.sistema && allNames.includes(e.sistema) && (e.mostrar_evolucao === true || e.date >= _uiCutoff48h));
+                .filter(e => !e.isArchived && e.mostrar_evolucao !== false && e.sistema && allNames.includes(e.sistema) && e.date >= _uiCutoff48h);
               const secExamesImagem = examesImagemList
                 .filter(ei => ei.mostrar_evolucao !== false && ei.sistema && allNames.includes(ei.sistema));
               const secPareceres = pareceresList
                 .filter(p => p.mostrar_evolucao !== false && (ESPECIALISTA_TO_SISTEMAS[p.especialista] ?? []).some(s => allNames.includes(s)));
-              const secAlertas = alertasList.filter(a =>
-                a.mostrar_evolucao !== false && a.sistemas.some(s => allNames.includes(s))
-              );
+              const secAlertas = alertasList.filter(a => {
+                if (a.mostrar_evolucao === false || a.created_at.split('T')[0] !== date) return false;
+                const st = (a.status || '').toLowerCase();
+                if (st.includes('concluí') || st.includes('concluido') || st.includes('resolvido') || st.includes('arquivado')) return false;
+                return a.sistemas.some(s => allNames.includes(s));
+              });
 
               const total = secDiags.length + allSecMeds.length + allSecCults.length + allSecPnls.length + secCirurgias.length + secDietas.length + secExames.length + secExamesImagem.length + secPareceres.length + secAlertas.length;
               if (total === 0) return null;
@@ -1789,7 +1803,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                                         <div key={m.id} className={`relative p-2 pr-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
                                           <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{m.name}</p>
                                           {m.dosage && <p className="text-xs text-slate-500 dark:text-slate-400">{m.dosage}</p>}
-                                          <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(m.startDate).toLocaleDateString('pt-BR')}</p>
+                                          <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(m.startDate)}</p>
                                           <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                                         </div>
                                       );
@@ -1807,7 +1821,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                                         <div key={c.id} className={`relative p-2 pr-10 bg-lime-50 dark:bg-lime-900/20 rounded-lg border border-lime-200 dark:border-lime-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
                                           <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{c.site}</p>
                                           {c.microorganism && <p className="text-xs text-slate-500 dark:text-slate-400">{c.microorganism}</p>}
-                                          <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(c.collectionDate).toLocaleDateString('pt-BR')}</p>
+                                          <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(c.collectionDate)}</p>
                                           <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                                         </div>
                                       );
@@ -1851,7 +1865,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                               <div key={m.id} className={`relative p-2 pr-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
                                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{m.name}</p>
                                 {m.dosage && <p className="text-xs text-slate-500 dark:text-slate-400">{m.dosage}</p>}
-                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(m.startDate).toLocaleDateString('pt-BR')}</p>
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(m.startDate)}</p>
                                 <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
@@ -1870,7 +1884,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                             return (
                               <div key={e.id} className={`relative p-2 pr-10 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
                                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{e.name}</p>
-                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(e.date).toLocaleDateString('pt-BR')}</p>
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(e.date)}</p>
                                 <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
@@ -1890,7 +1904,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                               <div key={c.id} className={`relative p-2 pr-10 bg-lime-50 dark:bg-lime-900/20 rounded-lg border border-lime-200 dark:border-lime-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
                                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{c.site}</p>
                                 {c.microorganism && <p className="text-xs text-slate-500 dark:text-slate-400">{c.microorganism}</p>}
-                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(c.collectionDate).toLocaleDateString('pt-BR')}</p>
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(c.collectionDate)}</p>
                                 <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
@@ -1931,7 +1945,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                               <div key={ei.id} className={`relative p-2 pr-10 bg-violet-50 dark:bg-violet-900/20 rounded-lg border border-violet-200 dark:border-violet-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
                                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ei.exame}</p>
                                 {ei.resultado && <p className="text-xs text-slate-500 dark:text-slate-400">{ei.resultado}</p>}
-                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(ei.data_exame).toLocaleDateString('pt-BR')}</p>
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(ei.data_exame)}</p>
                                 <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
@@ -1951,7 +1965,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                               <div key={p.id} className={`relative p-2 pr-10 bg-pink-50 dark:bg-pink-900/20 rounded-lg border border-pink-200 dark:border-pink-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
                                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{p.especialista}</p>
                                 {p.parecer && <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{p.parecer}</p>}
-                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(p.data_parecer).toLocaleDateString('pt-BR')}</p>
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(p.data_parecer)}</p>
                                 <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
@@ -1970,7 +1984,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                             return (
                               <div key={a.id} className={`relative p-2 pr-10 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
                                 <p className="text-sm text-slate-700 dark:text-slate-200">{a.alerta_descricao}</p>
-                                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{new Date(a.created_at).toLocaleDateString('pt-BR')}</p>
+                                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{formatDateToBRL(a.created_at)}</p>
                                 <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
@@ -1990,7 +2004,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                               <div key={c.id} className={`relative p-2 pr-10 bg-rose-50 dark:bg-rose-900/20 rounded-lg border border-rose-200 dark:border-rose-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
                                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{c.name}</p>
                                 {c.surgeon && <p className="text-xs text-slate-500 dark:text-slate-400">{c.surgeon}</p>}
-                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(c.date).toLocaleDateString('pt-BR')}</p>
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(c.date)}</p>
                                 <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
@@ -2016,7 +2030,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                                     {d.pt_at != null && <p className="text-xs font-bold text-blue-900 dark:text-blue-200">PT AT: {d.pt_at.toFixed(0)}% <span className="font-normal text-blue-600 dark:text-blue-400">({d.pt} g/dia de {d.pt_g_dia} g/dia)</span></p>}
                                   </div>
                                 )}
-                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(d.data_inicio).toLocaleDateString('pt-BR')}</p>
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(d.data_inicio)}</p>
                                 <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
@@ -2034,7 +2048,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       </Section>
 
       {/* 15. Condutas Críticas */}
-      <Section title="14. Condutas Críticas — Próximas 24h" id="condutasCriticas" open={openSections.has('condutasCriticas')} onToggle={() => toggle('condutasCriticas')}>
+      <Section title="15. Condutas Críticas — Próximas 24h" id="condutasCriticas" open={openSections.has('condutasCriticas')} onToggle={() => toggle('condutasCriticas')}>
         <Field label="Condutas Críticas" value={condutasCriticas} onChange={setCondutasCriticas} rows={6} placeholder="Liste as condutas críticas para as próximas 24 horas..." />
       </Section>
 
