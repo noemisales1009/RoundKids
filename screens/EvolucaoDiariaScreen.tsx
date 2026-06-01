@@ -923,7 +923,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       secDiags.forEach(diag => {
         const lbl = diag.label === 'Outros' && diag.texto_digitado ? diag.texto_digitado : diag.label;
         const det = diag.label !== 'Outros' && diag.texto_digitado ? ` (${diag.texto_digitado})` : '';
-        apLines.push(`  ★ ${lbl}${det}`);
+        apLines.push(`  • ${lbl}${det}`);
 
         const diagMeds  = allSecMeds.filter(m => m.diagnosticoId != null && diag.allIds.includes(m.diagnosticoId));
         const diagCults = allSecCults.filter(c => c.diagnosticoId != null && diag.allIds.includes(c.diagnosticoId));
@@ -1792,7 +1792,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                           <div className="relative flex items-start justify-between px-3 py-2 bg-orange-50 dark:bg-orange-900/20 pr-10">
                             <div>
                               <p className="text-sm font-bold text-orange-700 dark:text-orange-300">
-                                {diag.tipo === 'principal' ? '★ ' : ''}{lbl}{det}
+                                {diag.tipo === 'principal' ? '• ' : ''}{lbl}{det}
                               </p>
                               {(diag.data_inicio || diag.created_at) && <p className="text-xs text-slate-400 dark:text-slate-500">{new Date((diag.data_inicio || diag.created_at)!).toLocaleDateString('pt-BR')}</p>}
                             </div>
