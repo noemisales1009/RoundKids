@@ -1789,7 +1789,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
             </div>
             <button
               onClick={() => { setExameFisicoArchived(false); setExameFisico({ monitorizacao: '', ectoscopia: '', peleFaneros: '', respiratorio: '', cardiovascular: '', digestivo: '', urinario: '', neurologico: '' }); }}
-              className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors ${isDark ? 'border-blue-600 text-blue-400 hover:bg-blue-900/20' : 'border-blue-400 text-blue-600 hover:bg-blue-50'}`}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors border-blue-400 text-blue-600 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/20`}
             >
               <span className="material-symbols-rounded text-[18px]">add</span>
               Novo Exame Físico
@@ -1810,7 +1810,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               <button
                 onClick={handleArquivarExame}
                 disabled={archivingExame}
-                className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 ${isDark ? 'border-amber-700/60 text-amber-400 hover:bg-amber-900/20' : 'border-amber-300 text-amber-700 hover:bg-amber-50'}`}
+                className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700/60 dark:text-amber-400 dark:hover:bg-amber-900/20`}
               >
                 {archivingExame
                   ? <div className="w-4 h-4 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
@@ -2183,7 +2183,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
             </div>
             <button
               onClick={() => { setCondutasArchived(false); setCondutasCriticas(''); }}
-              className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors ${isDark ? 'border-blue-600 text-blue-400 hover:bg-blue-900/20' : 'border-blue-400 text-blue-600 hover:bg-blue-50'}`}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors border-blue-400 text-blue-600 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/20`}
             >
               <span className="material-symbols-rounded text-[18px]">add</span>
               Novas Condutas
@@ -2196,7 +2196,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               <button
                 onClick={handleArquivarCondutas}
                 disabled={archivingCondutas}
-                className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 ${isDark ? 'border-amber-700/60 text-amber-400 hover:bg-amber-900/20' : 'border-amber-300 text-amber-700 hover:bg-amber-50'}`}
+                className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700/60 dark:text-amber-400 dark:hover:bg-amber-900/20`}
               >
                 {archivingCondutas
                   ? <div className="w-4 h-4 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
