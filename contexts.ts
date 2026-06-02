@@ -17,6 +17,7 @@ export interface PreviewContextType {
     patientName: string;
     setPatientName: (v: string) => void;
     downloadWordRef: { current: (() => void) | null };
+    rebuildRef: { current: (() => string) | null };
 }
 
 export const TasksContext = createContext<TasksContextType | null>(null);

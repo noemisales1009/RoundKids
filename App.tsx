@@ -61,7 +61,7 @@ const PreviewModal: React.FC = () => {
 
     if (!ctx.showPreview) return null;
 
-    const { previewText, previewMinimized, setPreviewMinimized, setShowPreview, patientName, downloadWordRef } = ctx;
+    const { previewText, previewMinimized, setPreviewMinimized, setShowPreview, patientName, downloadWordRef, rebuildRef, setPreviewText } = ctx;
 
     const handleClose = () => { setShowPreview(false); setPreviewMinimized(false); };
 
@@ -120,6 +120,14 @@ const PreviewModal: React.FC = () => {
                     <pre className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-mono leading-relaxed">{previewText}</pre>
                 </div>
                 <div className="flex gap-3 px-5 py-4 border-t border-slate-200 dark:border-slate-700">
+                    {rebuildRef.current && (
+                        <button
+                            onClick={() => { const t = rebuildRef.current!(); setPreviewText(t); }}
+                            className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition"
+                        >
+                            Atualizar
+                        </button>
+                    )}
                     <button
                         onClick={handleCopy}
                         className={`flex-1 px-4 py-2 text-white rounded-lg text-sm font-semibold transition ${copied ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-600 hover:bg-slate-700'}`}
@@ -163,9 +171,10 @@ const App: React.FC = () => {
     const [previewMinimized, setPreviewMinimized] = useState(false);
     const [patientName, setPatientName] = useState('');
     const downloadWordRef = useRef<(() => void) | null>(null);
+    const rebuildRef = useRef<(() => string) | null>(null);
 
     return (
-        <PreviewContext.Provider value={{ showPreview, setShowPreview, previewText, setPreviewText, previewMinimized, setPreviewMinimized, patientName, setPatientName, downloadWordRef }}>
+        <PreviewContext.Provider value={{ showPreview, setShowPreview, previewText, setPreviewText, previewMinimized, setPreviewMinimized, patientName, setPatientName, downloadWordRef, rebuildRef }}>
         <NetworkProvider>
             <HashRouter>
                 <NotificationProvider>
