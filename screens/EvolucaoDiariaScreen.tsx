@@ -365,6 +365,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   const [pareceresList, setPareceresList] = useState<PropedeuticaParecer[]>([]);
   const [paineisViraisList, setPaineisViraisList] = useState<PainelViralRecord[]>([]);
   const [condutasCriticas, setCondutasCriticas] = useState('');
+  const [exameFisicoArchived, setExameFisicoArchived] = useState(false);
+  const [condutasArchived, setCondutasArchived] = useState(false);
+  const [archivingExame, setArchivingExame] = useState(false);
+  const [archivingCondutas, setArchivingCondutas] = useState(false);
   const [wordExcluded, setWordExcluded] = useState<Set<string>>(new Set());
   const previewCtx = useContext(PreviewContext)!;
   const toggleWordItem = (key: string) => setWordExcluded(prev => {
@@ -695,8 +699,12 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       .limit(1)
       .maybeSingle()
       .then(({ data: row }) => {
-        if (!row) return;
-        setExameFisico({
+        if (!row) {
+          setExameFisicoArchived(false);
+          setCondutasArchived(false);
+          return;
+        }
+        const exame = {
           monitorizacao:  row.exame_fisico_monitorizacao  ?? '',
           ectoscopia:     row.exame_fisico_ectoscopia     ?? '',
           peleFaneros:    row.exame_fisico_pele_faneros   ?? '',
@@ -705,8 +713,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           digestivo:      row.exame_fisico_digestivo      ?? '',
           urinario:       row.exame_fisico_urinario       ?? '',
           neurologico:    row.exame_fisico_neurologico    ?? '',
-        });
+        };
+        setExameFisico(exame);
+        setExameFisicoArchived(Object.values(exame).some(v => v.trim() !== ''));
         setCondutasCriticas(row.condutas_criticas ?? '');
+        setCondutasArchived(!!(row.condutas_criticas?.trim()));
       });
   }, [patientId, date]);
 
@@ -718,8 +729,45 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   const handleTrocarLeito = () => {
     setPatientId('');
     setExameFisico({ monitorizacao: '', ectoscopia: '', peleFaneros: '', respiratorio: '', cardiovascular: '', digestivo: '', urinario: '', neurologico: '' });
+    setExameFisicoArchived(false);
     setCondutasCriticas('');
+    setCondutasArchived(false);
     setWordExcluded(new Set());
+  };
+
+  const handleArquivarExame = async () => {
+    if (!patientId || !Object.values(exameFisico).some(v => v.trim())) return;
+    setArchivingExame(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    await supabase.from('evolucao_diaria_registros').insert({
+      patient_id: patientId,
+      data_evolucao: date,
+      exame_fisico_monitorizacao:  exameFisico.monitorizacao  || null,
+      exame_fisico_ectoscopia:     exameFisico.ectoscopia     || null,
+      exame_fisico_pele_faneros:   exameFisico.peleFaneros    || null,
+      exame_fisico_respiratorio:   exameFisico.respiratorio   || null,
+      exame_fisico_cardiovascular: exameFisico.cardiovascular || null,
+      exame_fisico_digestivo:      exameFisico.digestivo      || null,
+      exame_fisico_urinario:       exameFisico.urinario       || null,
+      exame_fisico_neurologico:    exameFisico.neurologico    || null,
+      created_by: user?.id ?? null,
+    });
+    setArchivingExame(false);
+    setExameFisicoArchived(true);
+  };
+
+  const handleArquivarCondutas = async () => {
+    if (!patientId || !condutasCriticas.trim()) return;
+    setArchivingCondutas(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    await supabase.from('evolucao_diaria_registros').insert({
+      patient_id: patientId,
+      data_evolucao: date,
+      condutas_criticas: condutasCriticas || null,
+      created_by: user?.id ?? null,
+    });
+    setArchivingCondutas(false);
+    setCondutasArchived(true);
   };
 
   const buildTextContent = (): string => {
@@ -1728,15 +1776,50 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
       {/* 13. O — Exame Físico */}
       <Section title="13. O — Exame Físico" id="exameFisico" open={openSections.has('exameFisico')} onToggle={() => toggle('exameFisico')}>
-        {EXAME_SECTIONS.map(({ key, label }) => (
-          <Field
-            key={key}
-            label={label}
-            value={exameFisico[key as keyof ExameFisicoState]}
-            onChange={v => updateExame(key as keyof ExameFisicoState, v)}
-            rows={2}
-          />
-        ))}
+        {exameFisicoArchived ? (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              {EXAME_SECTIONS.filter(s => exameFisico[s.key as keyof ExameFisicoState]?.trim()).map(({ key, label }) => (
+                <div key={key} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1">{label}</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap">{exameFisico[key as keyof ExameFisicoState]}</p>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => { setExameFisicoArchived(false); setExameFisico({ monitorizacao: '', ectoscopia: '', peleFaneros: '', respiratorio: '', cardiovascular: '', digestivo: '', urinario: '', neurologico: '' }); }}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors ${isDark ? 'border-blue-600 text-blue-400 hover:bg-blue-900/20' : 'border-blue-400 text-blue-600 hover:bg-blue-50'}`}
+            >
+              <span className="material-symbols-rounded text-[18px]">add</span>
+              Novo Exame Físico
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {EXAME_SECTIONS.map(({ key, label }) => (
+              <Field
+                key={key}
+                label={label}
+                value={exameFisico[key as keyof ExameFisicoState]}
+                onChange={v => updateExame(key as keyof ExameFisicoState, v)}
+                rows={2}
+              />
+            ))}
+            {Object.values(exameFisico).some(v => v.trim()) && (
+              <button
+                onClick={handleArquivarExame}
+                disabled={archivingExame}
+                className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 ${isDark ? 'border-amber-700/60 text-amber-400 hover:bg-amber-900/20' : 'border-amber-300 text-amber-700 hover:bg-amber-50'}`}
+              >
+                {archivingExame
+                  ? <div className="w-4 h-4 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
+                  : <span className="material-symbols-rounded text-[18px]">archive</span>
+                }
+                Arquivar Exame Físico
+              </button>
+            )}
+          </div>
+        )}
       </Section>
 
       {/* 14. AP — Avaliação x Propedêutica */}
@@ -2092,7 +2175,37 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
       {/* 15. Condutas Críticas */}
       <Section title="15. Condutas Críticas — Próximas 24h" id="condutasCriticas" open={openSections.has('condutasCriticas')} onToggle={() => toggle('condutasCriticas')}>
-        <Field label="Condutas Críticas" value={condutasCriticas} onChange={setCondutasCriticas} rows={6} placeholder="Liste as condutas críticas para as próximas 24 horas..." />
+        {condutasArchived ? (
+          <div className="space-y-3">
+            <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+              <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">{condutasCriticas}</p>
+            </div>
+            <button
+              onClick={() => { setCondutasArchived(false); setCondutasCriticas(''); }}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors ${isDark ? 'border-blue-600 text-blue-400 hover:bg-blue-900/20' : 'border-blue-400 text-blue-600 hover:bg-blue-50'}`}
+            >
+              <span className="material-symbols-rounded text-[18px]">add</span>
+              Novas Condutas
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <Field label="Condutas Críticas" value={condutasCriticas} onChange={setCondutasCriticas} rows={6} placeholder="Liste as condutas críticas para as próximas 24 horas..." />
+            {condutasCriticas.trim() && (
+              <button
+                onClick={handleArquivarCondutas}
+                disabled={archivingCondutas}
+                className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 ${isDark ? 'border-amber-700/60 text-amber-400 hover:bg-amber-900/20' : 'border-amber-300 text-amber-700 hover:bg-amber-50'}`}
+              >
+                {archivingCondutas
+                  ? <div className="w-4 h-4 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
+                  : <span className="material-symbols-rounded text-[18px]">archive</span>
+                }
+                Arquivar Condutas
+              </button>
+            )}
+          </div>
+        )}
       </Section>
 
     </div>
