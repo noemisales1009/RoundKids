@@ -96,6 +96,8 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
   const [isArchived, setIsArchived] = useState(false);
   const [archiveConfirm, setArchiveConfirm] = useState(false);
   const [archiving, setArchiving] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [createdBy, setCreatedBy] = useState<string | null>(null);
   const [updatedBy, setUpdatedBy] = useState<string | null>(null);
 
@@ -248,6 +250,19 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
     setArchiveConfirm(false);
     await loadSavedDates();
     setSelectedDate(todayStr());
+  };
+
+  const handleDelete = async () => {
+    if (!rowId) return;
+    setDeleting(true);
+    await supabase.from('patient_controles_saidas').delete().eq('id', rowId);
+    setDeleting(false);
+    setDeleteConfirm(false);
+    setRowId(null);
+    setData(EMPTY);
+    setIsArchived(false);
+    setIsEditing(true);
+    await loadSavedDates();
   };
 
   // Inputs desabilitados quando em modo leitura ou arquivado
@@ -661,7 +676,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
                 </div>
               )}
 
-              {/* Botão Arquivar — sempre visível quando há dados */}
+              {/* Botão Arquivar — visível quando há dados e não está arquivado */}
               {rowId && (
                 archiveConfirm ? (
                   <div className={`flex flex-col gap-2 p-3 rounded-xl border ${
@@ -712,6 +727,57 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
                 )
               )}
             </div>
+          )}
+
+          {/* Botão Apagar — visível mesmo quando arquivado */}
+          {rowId && !readOnly && (
+            deleteConfirm ? (
+              <div className={`flex flex-col gap-2 p-3 rounded-xl border ${
+                isDark ? 'border-red-700/50 bg-red-900/20' : 'border-red-200 bg-red-50'
+              }`}>
+                <p className={`text-sm font-semibold text-center ${isDark ? 'text-red-300' : 'text-red-700'}`}>
+                  Tem certeza que quer apagar os dados do dia {formatDateBR(selectedDate)}?
+                </p>
+                <p className={`text-xs text-center ${isDark ? 'text-red-400/70' : 'text-red-600/80'}`}>
+                  Esta ação é irreversível. Os dados serão excluídos permanentemente.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-bold text-sm bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-60"
+                  >
+                    {deleting
+                      ? <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                      : <span className="material-symbols-rounded text-[18px]">delete</span>
+                    }
+                    Sim, apagar
+                  </button>
+                  <button
+                    onClick={() => setDeleteConfirm(false)}
+                    className={`flex-1 py-2.5 rounded-lg font-bold text-sm border transition-colors ${
+                      isDark
+                        ? 'border-slate-600 text-slate-300 hover:bg-slate-800'
+                        : 'border-slate-300 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    Não
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setDeleteConfirm(true)}
+                className={`w-full flex items-center justify-center gap-1 py-2.5 px-3 rounded-xl font-bold text-sm border transition-colors ${
+                  isDark
+                    ? 'border-red-700/60 text-red-400 hover:bg-red-900/20'
+                    : 'border-red-300 text-red-600 hover:bg-red-50'
+                }`}
+              >
+                <span className="material-symbols-rounded text-[18px]">delete</span>
+                Apagar Dia — {formatDateBR(selectedDate)}
+              </button>
+            )
           )}
         </>
       )}
