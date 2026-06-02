@@ -681,6 +681,35 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       });
   }, [patientId, date]);
 
+  useEffect(() => {
+    if (!patientId || !date) {
+      setExameFisico({ monitorizacao: '', ectoscopia: '', peleFaneros: '', respiratorio: '', cardiovascular: '', digestivo: '', urinario: '', neurologico: '' });
+      return;
+    }
+    supabase
+      .from('evolucao_diaria_registros')
+      .select('exame_fisico_monitorizacao,exame_fisico_ectoscopia,exame_fisico_pele_faneros,exame_fisico_respiratorio,exame_fisico_cardiovascular,exame_fisico_digestivo,exame_fisico_urinario,exame_fisico_neurologico,condutas_criticas')
+      .eq('patient_id', patientId)
+      .eq('data_evolucao', date)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data: row }) => {
+        if (!row) return;
+        setExameFisico({
+          monitorizacao:  row.exame_fisico_monitorizacao  ?? '',
+          ectoscopia:     row.exame_fisico_ectoscopia     ?? '',
+          peleFaneros:    row.exame_fisico_pele_faneros   ?? '',
+          respiratorio:   row.exame_fisico_respiratorio   ?? '',
+          cardiovascular: row.exame_fisico_cardiovascular ?? '',
+          digestivo:      row.exame_fisico_digestivo      ?? '',
+          urinario:       row.exame_fisico_urinario       ?? '',
+          neurologico:    row.exame_fisico_neurologico    ?? '',
+        });
+        setCondutasCriticas(row.condutas_criticas ?? '');
+      });
+  }, [patientId, date]);
+
   const handleSelectPatient = (p: Patient) => {
     setPatientId(String(p.id));
     setSearch('');
