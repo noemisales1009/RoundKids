@@ -6,24 +6,28 @@ import { ALERT_SYSTEMS } from '../../../constants';
 
 const ESPECIALISTAS = [
     'Alergologia Ped',
+    'Broncoscopia',
+    'Cardioped',
     'CIPE',
     'Dermatologia Ped',
+    'Endocrinologia',
     'Endoscopia',
     'Farmácia Clínica',
-    'Genética',
     'Gastropediatria',
+    'Genética',
     'Hematologia Ped',
-    'Infectologia Ped',
+    'Hepatologista',
     'Imunologia',
-    'Neurologia Pediátrica',
+    'Infectologia Ped',
     'Nefrologia Ped',
     'Neurocirurgia',
+    'Neurologia Pediátrica',
     'Oftalmologista',
-    'Ortopedia',
     'Oncologia Ped',
+    'Ortopedia',
     'Pneumologia',
-    'Psiquiatria',
     'Psicologia',
+    'Psiquiatria',
     'Reumatologista',
 ];
 
@@ -57,8 +61,7 @@ export const EditParecerModal: React.FC<{
     );
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async () => {
 
         if (!especialista) {
             showNotification({ message: 'Por favor, selecione o especialista', type: 'error' });
@@ -105,7 +108,7 @@ export const EditParecerModal: React.FC<{
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                             Especialista <span className="text-red-500">*</span>

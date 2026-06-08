@@ -23,7 +23,7 @@ export const ArchivePainelViralModal: React.FC<ArchivePainelViralModalProps> = (
     const [archiveReason, setArchiveReason] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if (!archiveReason.trim()) {
@@ -42,7 +42,6 @@ export const ArchivePainelViralModal: React.FC<ArchivePainelViralModalProps> = (
                 .update({
                     archived_at: new Date().toISOString(),
                     motivo_arquivamento: archiveReason.trim(),
-                    updated_by: user.id,
                 })
                 .eq('id', painelId);
 
