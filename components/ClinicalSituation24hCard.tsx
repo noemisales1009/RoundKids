@@ -22,6 +22,7 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [confirmArchive, setConfirmArchive] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeNote, setActiveNote] = useState<ClinicalSituationRow | null>(null);
 
@@ -54,6 +55,7 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
   };
 
   useEffect(() => {
+    setEditing(false);
     loadActiveSituation();
   }, [patientId]);
 
@@ -89,9 +91,16 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
     }
 
     await loadActiveSituation();
+    setEditing(false);
     setSaved(true);
     setSaving(false);
     setTimeout(() => setSaved(false), 2500);
+  };
+
+  const handleCancelEdit = () => {
+    setText(activeNote?.situacao_texto || '');
+    setEditing(false);
+    setError(null);
   };
 
   const handleArchive = async () => {
@@ -124,15 +133,45 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Situação clínica nas últimas 24 horas</h3>
         <div className="flex items-center gap-2">
-          {activeNote && !confirmArchive && (
-            <button
-              type="button"
-              onClick={() => setConfirmArchive(true)}
-              disabled={saving}
-              className="px-4 py-2 rounded-lg bg-slate-500 hover:bg-slate-600 text-white font-semibold transition disabled:opacity-60"
-            >
-              Arquivar
-            </button>
+          {activeNote && !confirmArchive && !editing && (
+            <>
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                disabled={saving}
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition disabled:opacity-60"
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmArchive(true)}
+                disabled={saving}
+                className="px-4 py-2 rounded-lg bg-slate-500 hover:bg-slate-600 text-white font-semibold transition disabled:opacity-60"
+              >
+                Arquivar
+              </button>
+            </>
+          )}
+          {activeNote && editing && (
+            <>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving || !userId}
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition disabled:opacity-60"
+              >
+                {saving ? 'Salvando...' : 'Salvar'}
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                disabled={saving}
+                className="px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold transition disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+            </>
           )}
           {confirmArchive && (
             <>
@@ -171,8 +210,8 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        disabled={loading || saving || !!activeNote}
-        readOnly={!!activeNote}
+        disabled={loading || saving || (!!activeNote && !editing)}
+        readOnly={!!activeNote && !editing}
         placeholder="Digite aqui a evolução/situação clínica das últimas 24 horas..."
         rows={4}
         className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-200 disabled:opacity-70"
