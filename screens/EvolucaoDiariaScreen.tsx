@@ -1,6 +1,6 @@
 
 import React, { useState, useContext, useMemo, useEffect } from 'react';
-import { PatientsContext, PreviewContext } from '../contexts';
+import { PatientsContext, PreviewContext, NotificationContext } from '../contexts';
 import { useHeader } from '../hooks/useHeader';
 import { CheckCircleIcon, AlertIcon, WarningIcon } from '../components/icons';
 import { formatDateToBRL, ALERT_SYSTEMS } from '../constants';
@@ -114,6 +114,7 @@ interface ExameFisicoState {
   respiratorio: string; cardiovascular: string; digestivo: string;
   urinario: string; neurologico: string;
 }
+
 
 interface ControlesSaidasRec {
   pam_min: string; pam_max: string;
@@ -336,6 +337,7 @@ const InfoBox: React.FC<{ label: string; value: React.ReactNode; colSpan?: boole
 export const EvolucaoDiariaScreen: React.FC = () => {
   useHeader('Evolução Diária');
   const { patients } = useContext(PatientsContext)!;
+  const { showNotification } = useContext(NotificationContext)!;
 
   const [patientId, setPatientId] = useState('');
   const [search, setSearch] = useState('');
@@ -365,10 +367,12 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   const [pareceresList, setPareceresList] = useState<PropedeuticaParecer[]>([]);
   const [paineisViraisList, setPaineisViraisList] = useState<PainelViralRecord[]>([]);
   const [condutasCriticas, setCondutasCriticas] = useState('');
-  const [exameFisicoArchived, setExameFisicoArchived] = useState(false);
-  const [condutasArchived, setCondutasArchived] = useState(false);
+  const [draftExameId, setDraftExameId] = useState<string | null>(null);
+  const [draftCondutasId, setDraftCondutasId] = useState<string | null>(null);
   const [archivingExame, setArchivingExame] = useState(false);
   const [archivingCondutas, setArchivingCondutas] = useState(false);
+  const [savingExame, setSavingExame] = useState(false);
+  const [savingCondutas, setSavingCondutas] = useState(false);
   const [wordExcluded, setWordExcluded] = useState<Set<string>>(new Set());
   const previewCtx = useContext(PreviewContext)!;
   const toggleWordItem = (key: string) => setWordExcluded(prev => {
@@ -437,17 +441,18 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       try {
         const [diagRes, optsRes, qsRes] = await Promise.all([
           supabase.from('paciente_diagnosticos').select('*').eq('patient_id', patientId).eq('arquivado', false),
-          supabase.from('pergunta_opcoes_diagnostico').select('id, pergunta_id, label'),
+          supabase.from('pergunta_opcoes_diagnostico').select('id, pergunta_id, label, parent_id, has_input'),
           supabase.from('perguntas_diagnistico').select('id, tipo'),
         ]);
-        const opts: Record<number, { label: string; pergunta_id: number }> = {};
-        (optsRes.data || []).forEach((o: { id: number; label: string; pergunta_id: number }) => { opts[o.id] = { label: o.label, pergunta_id: o.pergunta_id }; });
+        type OptRow = { id: number; label: string; pergunta_id: number; parent_id: number | null; has_input: boolean | null };
+        const opts: Record<number, OptRow> = {};
+        (optsRes.data || []).forEach((o: OptRow) => { opts[o.id] = o; });
         const qTipo: Record<number, 'principal' | 'secundario'> = {};
         (qsRes.data || []).forEach((q: { id: number; tipo: 'principal' | 'secundario' }) => { qTipo[q.id] = q.tipo; });
         // Sem repetir opcao_id (principal: todos; secundário: apenas resolvidos)
         const byOpcao = new Map<number, DiagItem>();
         const opcaoToIds = new Map<number, number[]>();
-        type DiagRow = { id: number | string; opcao_id: number; created_at: string; texto_digitado?: string | null; status: 'resolvido' | 'nao_resolvido'; sistema?: string | null; data_inicio?: string | null; resolved_at?: string | null };
+        type DiagRow = { id: number | string; opcao_id: number; created_at: string; texto_digitado?: string | null; opcao_label?: string | null; status: 'resolvido' | 'nao_resolvido'; sistema?: string | null; data_inicio?: string | null; resolved_at?: string | null };
         (diagRes.data || [])
           .forEach((d: DiagRow) => {
             const ids = opcaoToIds.get(d.opcao_id) ?? [];
@@ -455,12 +460,23 @@ export const EvolucaoDiariaScreen: React.FC = () => {
             opcaoToIds.set(d.opcao_id, ids);
             const existing = byOpcao.get(d.opcao_id);
             if (!existing || new Date(d.created_at) > new Date(existing.created_at!)) {
+              // Mesma resolução de label do DiagnosticsSection: pai + filho, e has_input combina o texto digitado
+              const opt = opts[d.opcao_id];
+              const parentOpt = opt?.parent_id ? opts[opt.parent_id] : null;
+              const baseLabel = parentOpt
+                ? `${parentOpt.label} ${opt?.label || ''}`.trim()
+                : (opt?.label || d.opcao_label || '—');
+              const isOutrosOption = baseLabel.toLowerCase().startsWith('outro');
+              const hasInputAndText = !!opt?.has_input && !!d.texto_digitado;
+              const resolvedLabel = hasInputAndText
+                ? (isOutrosOption ? d.texto_digitado! : `${baseLabel} ${d.texto_digitado}`.trim())
+                : (d.opcao_label || baseLabel);
               byOpcao.set(d.opcao_id, {
                 opcao_id: d.opcao_id,
                 id: Number(d.id),
                 allIds: [],
-                label: opts[d.opcao_id]?.label ?? '—',
-                texto_digitado: d.texto_digitado ?? undefined,
+                label: resolvedLabel,
+                texto_digitado: hasInputAndText ? undefined : (d.texto_digitado ?? undefined),
                 status: d.status,
                 tipo: qTipo[opts[d.opcao_id]?.pergunta_id] ?? 'principal',
                 sistema: d.sistema ?? undefined,
@@ -685,41 +701,59 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       });
   }, [patientId, date]);
 
-  useEffect(() => {
+  const EMPTY_EXAME: ExameFisicoState = {
+    monitorizacao: '', ectoscopia: '', peleFaneros: '',
+    respiratorio: '', cardiovascular: '', digestivo: '',
+    urinario: '', neurologico: '',
+  };
+
+  const mapRowExame = (row: any): ExameFisicoState => ({
+    monitorizacao:  row.exame_fisico_monitorizacao  ?? '',
+    ectoscopia:     row.exame_fisico_ectoscopia     ?? '',
+    peleFaneros:    row.exame_fisico_pele_faneros   ?? '',
+    respiratorio:   row.exame_fisico_respiratorio   ?? '',
+    cardiovascular: row.exame_fisico_cardiovascular ?? '',
+    digestivo:      row.exame_fisico_digestivo      ?? '',
+    urinario:       row.exame_fisico_urinario       ?? '',
+    neurologico:    row.exame_fisico_neurologico    ?? '',
+  });
+
+  const loadRegistros = async () => {
     if (!patientId || !date) {
-      setExameFisico({ monitorizacao: '', ectoscopia: '', peleFaneros: '', respiratorio: '', cardiovascular: '', digestivo: '', urinario: '', neurologico: '' });
+      setExameFisico({ ...EMPTY_EXAME });
+      setCondutasCriticas('');
+      setDraftExameId(null);
+      setDraftCondutasId(null);
       return;
     }
-    supabase
+    const { data: rows, error } = await supabase
       .from('evolucao_diaria_registros')
-      .select('exame_fisico_monitorizacao,exame_fisico_ectoscopia,exame_fisico_pele_faneros,exame_fisico_respiratorio,exame_fisico_cardiovascular,exame_fisico_digestivo,exame_fisico_urinario,exame_fisico_neurologico,condutas_criticas')
+      .select('id,arquivado,created_at,exame_fisico_monitorizacao,exame_fisico_ectoscopia,exame_fisico_pele_faneros,exame_fisico_respiratorio,exame_fisico_cardiovascular,exame_fisico_digestivo,exame_fisico_urinario,exame_fisico_neurologico,condutas_criticas')
       .eq('patient_id', patientId)
       .eq('data_evolucao', date)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data: row }) => {
-        if (!row) {
-          setExameFisicoArchived(false);
-          setCondutasArchived(false);
-          return;
-        }
-        const exame = {
-          monitorizacao:  row.exame_fisico_monitorizacao  ?? '',
-          ectoscopia:     row.exame_fisico_ectoscopia     ?? '',
-          peleFaneros:    row.exame_fisico_pele_faneros   ?? '',
-          respiratorio:   row.exame_fisico_respiratorio   ?? '',
-          cardiovascular: row.exame_fisico_cardiovascular ?? '',
-          digestivo:      row.exame_fisico_digestivo      ?? '',
-          urinario:       row.exame_fisico_urinario       ?? '',
-          neurologico:    row.exame_fisico_neurologico    ?? '',
-        };
-        setExameFisico(exame);
-        setExameFisicoArchived(Object.values(exame).some(v => v.trim() !== ''));
-        setCondutasCriticas(row.condutas_criticas ?? '');
-        setCondutasArchived(!!(row.condutas_criticas?.trim()));
-      });
-  }, [patientId, date]);
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('[EvolucaoDiaria] Erro ao carregar registros:', error);
+      showNotification({ message: `Erro ao carregar exame físico/condutas: ${error.message}`, type: 'error' });
+      return;
+    }
+
+    const all = rows ?? [];
+    const hasExameContent = (r: any) => Object.values(mapRowExame(r)).some(v => String(v).trim() !== '');
+    const hasCondutasContent = (r: any) => !!(r.condutas_criticas && String(r.condutas_criticas).trim());
+
+    // Rascunho = registro salvo mas não arquivado (continua editável nos campos).
+    // Registros arquivados ficam guardados no banco e fora da tela.
+    const draftExame = all.find(r => !r.arquivado && hasExameContent(r));
+    setExameFisico(draftExame ? mapRowExame(draftExame) : { ...EMPTY_EXAME });
+    setDraftExameId(draftExame?.id ?? null);
+
+    const draftCondutas = all.find(r => !r.arquivado && hasCondutasContent(r));
+    setCondutasCriticas(draftCondutas?.condutas_criticas ?? '');
+    setDraftCondutasId(draftCondutas?.id ?? null);
+  };
+
+  useEffect(() => { loadRegistros(); }, [patientId, date]);
 
   const handleSelectPatient = (p: Patient) => {
     setPatientId(String(p.id));
@@ -728,46 +762,106 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
   const handleTrocarLeito = () => {
     setPatientId('');
-    setExameFisico({ monitorizacao: '', ectoscopia: '', peleFaneros: '', respiratorio: '', cardiovascular: '', digestivo: '', urinario: '', neurologico: '' });
-    setExameFisicoArchived(false);
+    setExameFisico({ ...EMPTY_EXAME });
     setCondutasCriticas('');
-    setCondutasArchived(false);
+    setDraftExameId(null);
+    setDraftCondutasId(null);
     setWordExcluded(new Set());
+  };
+
+  const exameToColumns = () => ({
+    exame_fisico_monitorizacao:  exameFisico.monitorizacao  || null,
+    exame_fisico_ectoscopia:     exameFisico.ectoscopia     || null,
+    exame_fisico_pele_faneros:   exameFisico.peleFaneros    || null,
+    exame_fisico_respiratorio:   exameFisico.respiratorio   || null,
+    exame_fisico_cardiovascular: exameFisico.cardiovascular || null,
+    exame_fisico_digestivo:      exameFisico.digestivo      || null,
+    exame_fisico_urinario:       exameFisico.urinario       || null,
+    exame_fisico_neurologico:    exameFisico.neurologico    || null,
+  });
+
+  // Salva (ou atualiza) o registro; arquivado=true marca como avaliação concluída
+  const gravarRegistro = async (
+    draftId: string | null,
+    columns: Record<string, any>,
+    arquivado: boolean,
+  ): Promise<{ ok: boolean; id?: string; message?: string }> => {
+    if (draftId) {
+      const { error } = await supabase.from('evolucao_diaria_registros')
+        .update({ ...columns, arquivado })
+        .eq('id', draftId);
+      if (error) {
+        console.error('[EvolucaoDiaria] Erro ao atualizar registro:', error);
+        return { ok: false, message: error.message };
+      }
+      return { ok: true, id: draftId };
+    }
+    // created_by é omitido de propósito: o banco preenche com auth.uid()
+    const { data, error } = await supabase.from('evolucao_diaria_registros')
+      .insert({ patient_id: patientId, data_evolucao: date, ...columns, arquivado })
+      .select('id')
+      .single();
+    if (error) {
+      console.error('[EvolucaoDiaria] Erro ao inserir registro:', error);
+      return { ok: false, message: error.message };
+    }
+    return { ok: true, id: data?.id };
+  };
+
+  const handleSalvarExame = async () => {
+    if (!patientId || !Object.values(exameFisico).some(v => v.trim())) return;
+    setSavingExame(true);
+    const { ok, id, message } = await gravarRegistro(draftExameId, exameToColumns(), false);
+    setSavingExame(false);
+    if (!ok) {
+      showNotification({ message: `Erro ao salvar exame físico: ${message}`, type: 'error' });
+      return;
+    }
+    setDraftExameId(id ?? null);
+    showNotification({ message: 'Exame físico salvo! O texto permanece para continuar editando.', type: 'success' });
   };
 
   const handleArquivarExame = async () => {
     if (!patientId || !Object.values(exameFisico).some(v => v.trim())) return;
     setArchivingExame(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    await supabase.from('evolucao_diaria_registros').insert({
-      patient_id: patientId,
-      data_evolucao: date,
-      exame_fisico_monitorizacao:  exameFisico.monitorizacao  || null,
-      exame_fisico_ectoscopia:     exameFisico.ectoscopia     || null,
-      exame_fisico_pele_faneros:   exameFisico.peleFaneros    || null,
-      exame_fisico_respiratorio:   exameFisico.respiratorio   || null,
-      exame_fisico_cardiovascular: exameFisico.cardiovascular || null,
-      exame_fisico_digestivo:      exameFisico.digestivo      || null,
-      exame_fisico_urinario:       exameFisico.urinario       || null,
-      exame_fisico_neurologico:    exameFisico.neurologico    || null,
-      created_by: user?.id ?? null,
-    });
+    const { ok, message } = await gravarRegistro(draftExameId, exameToColumns(), true);
     setArchivingExame(false);
-    setExameFisicoArchived(true);
+    if (!ok) {
+      showNotification({ message: `Erro ao arquivar exame físico: ${message}`, type: 'error' });
+      return;
+    }
+    setDraftExameId(null);
+    setExameFisico({ ...EMPTY_EXAME });
+    showNotification({ message: 'Exame físico arquivado! Campos liberados para nova avaliação.', type: 'success' });
+    loadRegistros();
+  };
+
+  const handleSalvarCondutas = async () => {
+    if (!patientId || !condutasCriticas.trim()) return;
+    setSavingCondutas(true);
+    const { ok, id, message } = await gravarRegistro(draftCondutasId, { condutas_criticas: condutasCriticas || null }, false);
+    setSavingCondutas(false);
+    if (!ok) {
+      showNotification({ message: `Erro ao salvar condutas críticas: ${message}`, type: 'error' });
+      return;
+    }
+    setDraftCondutasId(id ?? null);
+    showNotification({ message: 'Condutas críticas salvas! O texto permanece para continuar editando.', type: 'success' });
   };
 
   const handleArquivarCondutas = async () => {
     if (!patientId || !condutasCriticas.trim()) return;
     setArchivingCondutas(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    await supabase.from('evolucao_diaria_registros').insert({
-      patient_id: patientId,
-      data_evolucao: date,
-      condutas_criticas: condutasCriticas || null,
-      created_by: user?.id ?? null,
-    });
+    const { ok, message } = await gravarRegistro(draftCondutasId, { condutas_criticas: condutasCriticas || null }, true);
     setArchivingCondutas(false);
-    setCondutasArchived(true);
+    if (!ok) {
+      showNotification({ message: `Erro ao arquivar condutas críticas: ${message}`, type: 'error' });
+      return;
+    }
+    setDraftCondutasId(null);
+    setCondutasCriticas('');
+    showNotification({ message: 'Condutas críticas arquivadas! Campo liberado para nova avaliação.', type: 'success' });
+    loadRegistros();
   };
 
   const buildTextContent = (): string => {
@@ -926,6 +1020,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       add(situacaoRec.situacao_texto);
     }
 
+    // Apenas o exame atual (digitado nos campos) — avaliações arquivadas de
+    // outros médicos não entram: cada um gera a evolução com o próprio exame
     if (Object.values(exameFisico).some(v => v.trim())) {
       title('13. EXAME FÍSICO');
       EXAME_SECTIONS.forEach(s => {
@@ -1132,6 +1228,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       apLines.forEach(l => add(l));
     }
 
+    // Apenas as condutas atuais (digitadas no campo), pelo mesmo motivo do exame
     title('15. CONDUTAS CRÍTICAS — PRÓXIMAS 24H');
     if (condutasCriticas.trim()) add(condutasCriticas);
 
@@ -1209,27 +1306,26 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    const hasExame = Object.values(exameFisico).some(v => v.trim());
-    if (hasExame || condutasCriticas.trim()) {
-      const { data: { user } } = await supabase.auth.getUser();
-      await supabase.from('evolucao_diaria_registros').insert({
-        patient_id: patientId,
-        data_evolucao: date,
-        exame_fisico_monitorizacao:  exameFisico.monitorizacao  || null,
-        exame_fisico_ectoscopia:     exameFisico.ectoscopia     || null,
-        exame_fisico_pele_faneros:   exameFisico.peleFaneros    || null,
-        exame_fisico_respiratorio:   exameFisico.respiratorio   || null,
-        exame_fisico_cardiovascular: exameFisico.cardiovascular || null,
-        exame_fisico_digestivo:      exameFisico.digestivo      || null,
-        exame_fisico_urinario:       exameFisico.urinario       || null,
-        exame_fisico_neurologico:    exameFisico.neurologico    || null,
-        condutas_criticas:           condutasCriticas           || null,
-        created_by: user?.id ?? null,
-      });
+    // Gerar o Word arquiva o que estiver digitado (avaliação entrou na evolução)
+    if (Object.values(exameFisico).some(v => v.trim())) {
+      const { ok, message } = await gravarRegistro(draftExameId, exameToColumns(), true);
+      if (!ok) {
+        showNotification({ message: `Erro ao salvar exame físico: ${message}`, type: 'error' });
+        return; // Não limpa os campos: a digitação seria perdida sem ter sido gravada
+      }
+      setDraftExameId(null);
+      setExameFisico({ ...EMPTY_EXAME });
     }
-
-    setExameFisico({ monitorizacao: '', ectoscopia: '', peleFaneros: '', respiratorio: '', cardiovascular: '', digestivo: '', urinario: '', neurologico: '' });
-    setCondutasCriticas('');
+    if (condutasCriticas.trim()) {
+      const { ok, message } = await gravarRegistro(draftCondutasId, { condutas_criticas: condutasCriticas || null }, true);
+      if (!ok) {
+        showNotification({ message: `Erro ao salvar condutas críticas: ${message}`, type: 'error' });
+        return;
+      }
+      setDraftCondutasId(null);
+      setCondutasCriticas('');
+    }
+    loadRegistros();
   };
 
   // ─── Patient selector ─────────────────────────────────────────────────────
@@ -1777,50 +1873,44 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
       {/* 13. O — Exame Físico */}
       <Section title="13. O — Exame Físico" id="exameFisico" open={openSections.has('exameFisico')} onToggle={() => toggle('exameFisico')}>
-        {exameFisicoArchived ? (
-          <div className="space-y-3">
-            <div className="space-y-2">
-              {EXAME_SECTIONS.filter(s => exameFisico[s.key as keyof ExameFisicoState]?.trim()).map(({ key, label }) => (
-                <div key={key} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1">{label}</p>
-                  <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap">{exameFisico[key as keyof ExameFisicoState]}</p>
-                </div>
-              ))}
-            </div>
-            <button
-              onClick={() => { setExameFisicoArchived(false); setExameFisico({ monitorizacao: '', ectoscopia: '', peleFaneros: '', respiratorio: '', cardiovascular: '', digestivo: '', urinario: '', neurologico: '' }); }}
-              className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors border-blue-400 text-blue-600 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/20`}
-            >
-              <span className="material-symbols-rounded text-[18px]">add</span>
-              Novo Exame Físico
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {EXAME_SECTIONS.map(({ key, label }) => (
-              <Field
-                key={key}
-                label={label}
-                value={exameFisico[key as keyof ExameFisicoState]}
-                onChange={v => updateExame(key as keyof ExameFisicoState, v)}
-                rows={2}
-              />
-            ))}
-            {Object.values(exameFisico).some(v => v.trim()) && (
+        <div className="space-y-3">
+          {/* Campos para a avaliação atual */}
+          {EXAME_SECTIONS.map(({ key, label }) => (
+            <Field
+              key={key}
+              label={label}
+              value={exameFisico[key as keyof ExameFisicoState]}
+              onChange={v => updateExame(key as keyof ExameFisicoState, v)}
+              rows={2}
+            />
+          ))}
+          {Object.values(exameFisico).some(v => v.trim()) && (
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                onClick={handleSalvarExame}
+                disabled={savingExame || archivingExame}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 border-blue-400 text-blue-600 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/20`}
+              >
+                {savingExame
+                  ? <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+                  : <span className="material-symbols-rounded text-[18px]">save</span>
+                }
+                Salvar
+              </button>
               <button
                 onClick={handleArquivarExame}
-                disabled={archivingExame}
-                className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700/60 dark:text-amber-400 dark:hover:bg-amber-900/20`}
+                disabled={savingExame || archivingExame}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700/60 dark:text-amber-400 dark:hover:bg-amber-900/20`}
               >
                 {archivingExame
                   ? <div className="w-4 h-4 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
                   : <span className="material-symbols-rounded text-[18px]">archive</span>
                 }
-                Arquivar Exame Físico
+                Arquivar e Limpar
               </button>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </Section>
 
       {/* 14. AP — Avaliação x Propedêutica */}
@@ -2176,37 +2266,35 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
       {/* 15. Condutas Críticas */}
       <Section title="15. Condutas Críticas — Próximas 24h" id="condutasCriticas" open={openSections.has('condutasCriticas')} onToggle={() => toggle('condutasCriticas')}>
-        {condutasArchived ? (
-          <div className="space-y-3">
-            <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-              <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">{condutasCriticas}</p>
-            </div>
-            <button
-              onClick={() => { setCondutasArchived(false); setCondutasCriticas(''); }}
-              className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors border-blue-400 text-blue-600 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/20`}
-            >
-              <span className="material-symbols-rounded text-[18px]">add</span>
-              Novas Condutas
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <Field label="Condutas Críticas" value={condutasCriticas} onChange={setCondutasCriticas} rows={6} placeholder="Liste as condutas críticas para as próximas 24 horas..." />
-            {condutasCriticas.trim() && (
+        <div className="space-y-3">
+          <Field label="Condutas Críticas" value={condutasCriticas} onChange={setCondutasCriticas} rows={6} placeholder="Liste as condutas críticas para as próximas 24 horas..." />
+          {condutasCriticas.trim() && (
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                onClick={handleSalvarCondutas}
+                disabled={savingCondutas || archivingCondutas}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 border-blue-400 text-blue-600 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/20`}
+              >
+                {savingCondutas
+                  ? <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+                  : <span className="material-symbols-rounded text-[18px]">save</span>
+                }
+                Salvar
+              </button>
               <button
                 onClick={handleArquivarCondutas}
-                disabled={archivingCondutas}
-                className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700/60 dark:text-amber-400 dark:hover:bg-amber-900/20`}
+                disabled={savingCondutas || archivingCondutas}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700/60 dark:text-amber-400 dark:hover:bg-amber-900/20`}
               >
                 {archivingCondutas
                   ? <div className="w-4 h-4 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
                   : <span className="material-symbols-rounded text-[18px]">archive</span>
                 }
-                Arquivar Condutas
+                Arquivar e Limpar
               </button>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </Section>
 
     </div>
