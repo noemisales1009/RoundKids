@@ -1,12 +1,13 @@
 import React, { useEffect, lazy, Suspense, useState, useRef } from 'react';
-import { HashRouter, Routes, Route, useParams } from 'react-router-dom';
+import { HashRouter, Routes, Route, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AdminRoute } from './components/AdminRoute';
 import { AppLayout } from './components/AppLayout';
 import { NetworkBanner } from './components/NetworkBanner';
+import { SessionExpiredScreen } from './components/SessionExpiredScreen';
 import { NetworkProvider } from './contexts/NetworkContext';
 import { useHeader } from './hooks/useHeader';
-import { PreviewContext } from './contexts';
+import { PreviewContext, UserContext } from './contexts';
 
 // Providers
 import {
@@ -42,6 +43,23 @@ const LoadingSpinner: React.FC = () => (
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
     </div>
 );
+
+// --- TELA DE SESSÃO EXPIRADA (overlay global) ---
+const SessionExpiredGate: React.FC = () => {
+    const { sessionExpired, clearSessionExpired } = React.useContext(UserContext)!;
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    // Na tela de login o overlay esconderia o formulário — não faz sentido lá
+    if (!sessionExpired || location.pathname === '/') return null;
+
+    const handleLogin = () => {
+        clearSessionExpired();
+        navigate('/');
+    };
+
+    return <SessionExpiredScreen onLogin={handleLogin} />;
+};
 
 // --- CHECKLIST REDIRECTOR ---
 const ChecklistRedirector: React.FC = () => {
@@ -183,6 +201,7 @@ const App: React.FC = () => {
                             <PatientsProvider>
                                 <TasksProvider>
                                     <NetworkBanner />
+                                    <SessionExpiredGate />
                                     <ErrorBoundary>
                                     <Routes>
                                         <Route path="/" element={<LoginScreen />} />

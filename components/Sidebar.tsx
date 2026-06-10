@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { DashboardIcon, BedIcon, FileTextIcon, ClipboardIcon, SettingsIcon, LogOutIcon, EvolucaoIcon } from './icons';
 import { LoadingIndicator } from './LoadingIndicator';
 import { UserContext } from '../contexts';
-import { supabase } from '../supabaseClient';
+import { supabase, markManualSignOut } from '../supabaseClient';
 
 export const Sidebar: React.FC = () => {
     const navigate = useNavigate();
@@ -22,6 +22,7 @@ export const Sidebar: React.FC = () => {
     const inactiveLinkClass = "text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200";
 
     const handleLogout = async () => {
+        markManualSignOut();
         await supabase.auth.signOut();
         navigate('/');
     };

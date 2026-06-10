@@ -2,7 +2,7 @@ import React, { useContext, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { BackArrowIcon, MenuIcon, ClipboardIcon, LogOutIcon } from './icons';
 import { UserContext, HeaderContext, ThemeContext } from '../contexts';
-import { supabase } from '../supabaseClient';
+import { supabase, markManualSignOut } from '../supabaseClient';
 
 export const useHeader = (title: string) => {
     const context = useContext(HeaderContext);
@@ -60,6 +60,7 @@ export const Header: React.FC<{ title: string; onMenuClick: () => void }> = ({ t
     const showBackButton = backPath !== -1 && location.pathname !== '/dashboard';
 
     const handleLogout = async () => {
+        markManualSignOut();
         await supabase.auth.signOut();
         navigate('/');
     };

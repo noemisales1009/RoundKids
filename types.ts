@@ -278,6 +278,8 @@ export interface UserContextType {
   isLoading: boolean;
   updateUser: (userData: Partial<User>) => Promise<{ success: boolean; error?: string }>;
   loadUser: () => Promise<void>;
+  sessionExpired: boolean;
+  clearSessionExpired: () => void;
 }
 
 export interface ThemeContextType {

@@ -1,14 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { UserContext } from '../contexts';
 import { User } from '../types';
 import { INITIAL_USER } from '../constants';
-import { supabase } from '../supabaseClient';
+import { supabase, consumeManualSignOut } from '../supabaseClient';
 import { sanitizeText } from '../lib/sanitize';
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User>(INITIAL_USER);
     const [isLoading, setIsLoading] = useState(true);
+    const [sessionExpired, setSessionExpired] = useState(false);
+    // Sem isso, o SIGNED_OUT disparado antes de qualquer login (ex.: limpeza de
+    // token inválido na abertura) também mostraria a tela de sessão expirada.
+    const hadSessionRef = useRef(false);
 
     const getAvatarUrl = (foto?: string | null) => {
         if (!foto) return '';
@@ -60,6 +64,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
 
             if (session?.user) {
+                hadSessionRef.current = true;
 
                 const { data, error } = await supabase
                     .from('users')
@@ -125,10 +130,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+                hadSessionRef.current = true;
+                setSessionExpired(false);
                 loadUser(session);
             }
 
             if (event === 'SIGNED_OUT') {
+                const wasManual = consumeManualSignOut();
+                if (!wasManual && hadSessionRef.current) {
+                    setSessionExpired(true);
+                }
+                hadSessionRef.current = false;
                 setUser(INITIAL_USER);
                 setIsLoading(false);
             }
@@ -162,8 +174,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: true };
     };
 
+    const clearSessionExpired = () => setSessionExpired(false);
+
     return (
-        <UserContext.Provider value={{ user, isLoading, updateUser, loadUser }}>
+        <UserContext.Provider value={{ user, isLoading, updateUser, loadUser, sessionExpired, clearSessionExpired }}>
             {children}
         </UserContext.Provider>
     );
