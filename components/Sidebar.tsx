@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { DashboardIcon, BedIcon, FileTextIcon, ClipboardIcon, SettingsIcon, LogOutIcon, EvolucaoIcon } from './icons';
+import { DashboardIcon, BedIcon, FileTextIcon, ClipboardIcon, SettingsIcon, LogOutIcon, EvolucaoIcon, ExternalLinkIcon } from './icons';
 import { LoadingIndicator } from './LoadingIndicator';
 import { UserContext } from '../contexts';
 import { supabase, markManualSignOut } from '../supabaseClient';
@@ -25,6 +25,23 @@ export const Sidebar: React.FC = () => {
         markManualSignOut();
         await supabase.auth.signOut();
         navigate('/');
+    };
+
+    const handleOpenSbarKids = async () => {
+        const { data } = await supabase.auth.getSession();
+        const session = data?.session;
+        if (session) {
+            const params = new URLSearchParams({
+                access_token: session.access_token,
+                refresh_token: session.refresh_token,
+                token_type: 'bearer',
+                expires_in: String(session.expires_in ?? 3600),
+                type: 'magiclink',
+            });
+            window.open(`https://sbarkids.com.br/#${params.toString()}`, '_blank', 'noopener');
+        } else {
+            window.open('https://sbarkids.com.br', '_blank', 'noopener');
+        }
     };
 
     return (
@@ -75,6 +92,13 @@ export const Sidebar: React.FC = () => {
                         Nenhum usuário encontrado
                     </div>
                 )}
+                <button
+                    onClick={handleOpenSbarKids}
+                    className="w-full flex items-center justify-center space-x-2 px-3 py-2.5 rounded-lg font-semibold transition bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 mb-2"
+                >
+                    <ExternalLinkIcon className="w-5 h-5" />
+                    <span>Abrir SbarKids</span>
+                </button>
                 <button
                     onClick={handleLogout}
                     disabled={isLoading}

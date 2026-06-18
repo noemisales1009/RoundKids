@@ -1,6 +1,6 @@
 import React, { useContext, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { BackArrowIcon, MenuIcon, ClipboardIcon, LogOutIcon } from './icons';
+import { BackArrowIcon, MenuIcon, LogOutIcon, ExternalLinkIcon } from './icons';
 import { UserContext, HeaderContext, ThemeContext } from '../contexts';
 import { supabase, markManualSignOut } from '../supabaseClient';
 
@@ -65,6 +65,23 @@ export const Header: React.FC<{ title: string; onMenuClick: () => void }> = ({ t
         navigate('/');
     };
 
+    const handleOpenSbarKids = async () => {
+        const { data } = await supabase.auth.getSession();
+        const session = data?.session;
+        if (session) {
+            const params = new URLSearchParams({
+                access_token: session.access_token,
+                refresh_token: session.refresh_token,
+                token_type: 'bearer',
+                expires_in: String(session.expires_in ?? 3600),
+                type: 'magiclink',
+            });
+            window.open(`https://sbarkids.com.br/#${params.toString()}`, '_blank', 'noopener');
+        } else {
+            window.open('https://sbarkids.com.br', '_blank', 'noopener');
+        }
+    };
+
     return (
         <header className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-3 sm:px-4 sticky top-0 z-10 flex items-center justify-between shrink-0 h-14 sm:h-20 lg:h-24">
             <div className="flex items-center gap-3">
@@ -106,6 +123,13 @@ export const Header: React.FC<{ title: string; onMenuClick: () => void }> = ({ t
                         className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover bg-slate-200 dark:bg-slate-700"
                     />
                 )}
+                <button
+                    onClick={handleOpenSbarKids}
+                    className="p-2 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition"
+                    title="Abrir SbarKids"
+                >
+                    <ExternalLinkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                </button>
                 <button
                     onClick={handleLogout}
                     className="p-2 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition"
