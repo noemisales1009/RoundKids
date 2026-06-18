@@ -17,6 +17,24 @@ export const LoginScreen: React.FC = () => {
     const [isLockedOut, setIsLockedOut] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
 
+    React.useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        if (accessToken && refreshToken) {
+            setLoading(true);
+            supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+                .then(({ error }) => {
+                    if (!error) {
+                        window.history.replaceState({}, '', window.location.pathname);
+                        navigate('/dashboard');
+                    } else {
+                        setLoading(false);
+                    }
+                });
+        }
+    }, []);
+
     const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     const validatePassword = (password: string) => password.length >= 6;
 
