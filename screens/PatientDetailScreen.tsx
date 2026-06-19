@@ -53,6 +53,7 @@ const EtCO2DirectCalculator = lazy(() => import('../components/EtCO2DirectCalcul
 const IndiceAPDCalculator = lazy(() => import('../components/IndiceAPDCalculator').then(m => ({ default: m.IndiceAPDCalculator })));
 const ScvO2Calculator = lazy(() => import('../components/ScvO2Calculator').then(m => ({ default: m.ScvO2Calculator })));
 const O2ERCalculator = lazy(() => import('../components/O2ERCalculator').then(m => ({ default: m.O2ERCalculator })));
+const PressaoPulsoCalculator = lazy(() => import('../components/PressaoPulsoCalculator').then(m => ({ default: m.PressaoPulsoCalculator })));
 const DiagnosticsSection = lazy(() => import('../components/DiagnosticsSection').then(m => ({ default: m.DiagnosticsSection })));
 const ControlesSaidasSection = lazy(() => import('../components/ControlesSaidasSection').then(m => ({ default: m.ControlesSaidasSection })));
 const AlertasSection = lazy(() => import('../components/AlertasSection').then(m => ({ default: m.AlertasSection })));
@@ -594,6 +595,10 @@ const PatientDetailScreen: React.FC = () => {
                         <div className="border-t border-slate-200 dark:border-slate-700" />
                         <Suspense fallback={<LoadingSpinner />}>
                             <O2ERCalculator patientId={patient.id.toString()} />
+                        </Suspense>
+                        <div className="border-t border-slate-200 dark:border-slate-700" />
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <PressaoPulsoCalculator patientId={patient.id.toString()} />
                         </Suspense>
                     </div>
                 )}
