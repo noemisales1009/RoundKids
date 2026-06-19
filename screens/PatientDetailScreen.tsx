@@ -47,6 +47,12 @@ const PhoenixSepsisCalculator = lazy(() => import('../components/PhoenixSepsisCa
 const KDIGOScale = lazy(() => import('../components/KDIGOScale').then(m => ({ default: m.KDIGOScale })));
 const NPTCalculator = lazy(() => import('../npt/NPTWrapper'));
 const GasometriaCalculator = lazy(() => import('../components/GasometriaCalculator').then(m => ({ default: m.GasometriaCalculator })));
+const GapCO2Calculator = lazy(() => import('../components/GapCO2Calculator').then(m => ({ default: m.GapCO2Calculator })));
+const EtCO2Calculator = lazy(() => import('../components/EtCO2Calculator').then(m => ({ default: m.EtCO2Calculator })));
+const EtCO2DirectCalculator = lazy(() => import('../components/EtCO2DirectCalculator').then(m => ({ default: m.EtCO2DirectCalculator })));
+const IndiceAPDCalculator = lazy(() => import('../components/IndiceAPDCalculator').then(m => ({ default: m.IndiceAPDCalculator })));
+const ScvO2Calculator = lazy(() => import('../components/ScvO2Calculator').then(m => ({ default: m.ScvO2Calculator })));
+const O2ERCalculator = lazy(() => import('../components/O2ERCalculator').then(m => ({ default: m.O2ERCalculator })));
 const DiagnosticsSection = lazy(() => import('../components/DiagnosticsSection').then(m => ({ default: m.DiagnosticsSection })));
 const ControlesSaidasSection = lazy(() => import('../components/ControlesSaidasSection').then(m => ({ default: m.ControlesSaidasSection })));
 const AlertasSection = lazy(() => import('../components/AlertasSection').then(m => ({ default: m.AlertasSection })));
@@ -565,9 +571,29 @@ const PatientDetailScreen: React.FC = () => {
                 )}
 
                 {mainTab === 'gasometria' && patient && (
-                    <div className="p-4">
+                    <div className="p-4 space-y-6">
                         <Suspense fallback={<LoadingSpinner />}>
-                            <GasometriaCalculator patientId={patient.id.toString()} />
+                            <GapCO2Calculator patientId={patient.id.toString()} />
+                        </Suspense>
+                        <div className="border-t border-slate-200 dark:border-slate-700" />
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <EtCO2Calculator patientId={patient.id.toString()} />
+                        </Suspense>
+                        <div className="border-t border-slate-200 dark:border-slate-700" />
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <EtCO2DirectCalculator patientId={patient.id.toString()} />
+                        </Suspense>
+                        <div className="border-t border-slate-200 dark:border-slate-700" />
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <IndiceAPDCalculator patientId={patient.id.toString()} />
+                        </Suspense>
+                        <div className="border-t border-slate-200 dark:border-slate-700" />
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <ScvO2Calculator patientId={patient.id.toString()} />
+                        </Suspense>
+                        <div className="border-t border-slate-200 dark:border-slate-700" />
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <O2ERCalculator patientId={patient.id.toString()} />
                         </Suspense>
                     </div>
                 )}
