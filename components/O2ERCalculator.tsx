@@ -17,22 +17,22 @@ interface Result {
 }
 
 function interpretar(o2er: number): Pick<Result, 'severity' | 'label' | 'interpretacao'> {
-  if (o2er < 20) {
+  if (o2er < 25) {
     return {
       severity: 'reduzida',
-      label: 'Extração baixa (< 20–25%)',
+      label: 'Extração baixa (< 20–24%)',
       interpretacao: 'DO₂ alta, relação profunda ou má extração tecidual / sepse.',
     };
   } else if (o2er <= 30) {
     return {
       severity: 'normal',
-      label: 'Normal (20–30%)',
+      label: 'Normal (25–30%)',
       interpretacao: 'Taxa de extração dentro da faixa esperada.',
     };
   } else if (o2er <= 50) {
     return {
       severity: 'aumentada',
-      label: 'Extração aumentada (30–50%)',
+      label: 'Extração aumentada (31–50%)',
       interpretacao: 'DO₂ insuficiente: baixo DC/IC, anemia, hipoxemia ou VO₂ alta.',
     };
   } else {
@@ -230,9 +230,9 @@ export const O2ERCalculator: React.FC<Props> = ({ patientId }) => {
                 </div>
               )}
               <div className="text-xs opacity-70 space-y-0.5 border-t border-current/20 pt-2">
-                <p>&lt; 20–25% → extração baixa (DO₂ alta, má extração / sepse)</p>
-                <p>20–30% → normal</p>
-                <p>30–50% → extração aumentada (DO₂ insuficiente, baixo DC/IC, anemia, hipoxemia ou VO₂ alta)</p>
+                <p>&lt; 20–24% → extração baixa (DO₂ alta, má extração / sepse)</p>
+                <p>25–30% → normal</p>
+                <p>31–50% → extração aumentada (DO₂ insuficiente, baixo DC/IC, anemia, hipoxemia ou VO₂ alta)</p>
                 <p>&gt; 50% → choque grave</p>
               </div>
             </div>
