@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { CloseIcon, ChevronRightIcon, PlusIcon } from './icons';
+import { Medication } from '../types';
 
 interface ComorbidadeComponentProps {
   patientId: string | number;
+  medications?: Medication[];
 }
 
-const ComorbidadeComponent: React.FC<ComorbidadeComponentProps> = ({ patientId }) => {
+const ComorbidadeComponent: React.FC<ComorbidadeComponentProps> = ({ patientId, medications = [] }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [comorbidades, setComorbidades] = useState<string[]>([]);
   const [currentInput, setCurrentInput] = useState('');
@@ -85,24 +87,38 @@ const ComorbidadeComponent: React.FC<ComorbidadeComponentProps> = ({ patientId }
 
       {/* Comorbidades sempre visíveis — chips */}
       {comorbidades.length > 0 && (
-        <div className="px-4 py-3 border-t border-slate-200 dark:border-slate-700">
-          <div className="flex flex-wrap gap-2">
-            {comorbidades.map((comorbidade, index) => (
-              <span
-                key={index}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border border-blue-400 dark:border-blue-500 text-slate-700 dark:text-slate-200 bg-transparent"
-              >
-                {comorbidade}
-                <button
-                  onClick={() => handleRemoveComorbidade(index)}
-                  className="text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors leading-none"
-                  title="Remover"
+        <div className="px-4 py-3 border-t border-slate-200 dark:border-slate-700 space-y-2">
+          {comorbidades.map((comorbidade, index) => {
+            const medsVinculadas = medications.filter(m => m.comorbidadeRelacionada === comorbidade);
+            return (
+              <div key={index}>
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border border-blue-400 dark:border-blue-500 text-slate-700 dark:text-slate-200 bg-transparent"
                 >
-                  <CloseIcon className="w-3 h-3" />
-                </button>
-              </span>
-            ))}
-          </div>
+                  {comorbidade}
+                  <button
+                    onClick={() => handleRemoveComorbidade(index)}
+                    className="text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors leading-none"
+                    title="Remover"
+                  >
+                    <CloseIcon className="w-3 h-3" />
+                  </button>
+                </span>
+                {medsVinculadas.length > 0 && (
+                  <div className="mt-1.5 ml-2 flex flex-wrap gap-1.5">
+                    {medsVinculadas.map(med => (
+                      <span
+                        key={med.id}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700"
+                      >
+                        💊 {med.name}{med.dosage ? ` ${med.dosage}` : ''}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 

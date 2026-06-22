@@ -40,6 +40,7 @@ export interface Medication {
   diagnosticoLabel?: string;
   diagnosticoDataInicio?: string;
   categoria?: string;
+  comorbidadeRelacionada?: string;
 }
 
 export interface SurgicalProcedure {

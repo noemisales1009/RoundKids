@@ -463,7 +463,7 @@ const PatientDetailScreen: React.FC = () => {
             {/* Comorbidade */}
             <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-4 mb-4">
                 <Suspense fallback={<LoadingSpinner />}>
-                    <ComorbidadeComponent patientId={patient.id.toString()} />
+                    <ComorbidadeComponent patientId={patient.id.toString()} medications={patient.medications.filter(m => !m.isArchived)} />
                 </Suspense>
             </div>
 

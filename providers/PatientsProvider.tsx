@@ -82,6 +82,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 diagnosticoLabel: m.diagnostico_label || undefined,
                 diagnosticoDataInicio: m.diagnostico_data_inicio || undefined,
                 categoria: m.categoria || undefined,
+                comorbidadeRelacionada: m.comorbidade_relacionada || undefined,
             });
             return acc;
         }, {});
@@ -522,6 +523,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             categoria: medication.categoria || null,
             ...(medication.sistema ? { sistema: medication.sistema } : {}),
             ...(medication.diagnosticoId ? { diagnostico_id: medication.diagnosticoId, diagnostico_label: medication.diagnosticoLabel, diagnostico_data_inicio: medication.diagnosticoDataInicio || null } : {}),
+            comorbidade_relacionada: medication.comorbidadeRelacionada || null,
         };
 
 

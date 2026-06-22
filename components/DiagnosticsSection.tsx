@@ -294,6 +294,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       const uniqueCodigo = `OUTROS_${formTipo.toUpperCase()}_${Date.now()}`;
       setWorkingDiags(prev => [...prev, {
         tempId: `new-${Date.now()}`,
+        allIds: [],
         perguntaId: formTipo === 'principal' ? 1 : 2,
         opcaoId: OUTROS_ID,
         label,
@@ -336,6 +337,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
 
     setWorkingDiags(prev => [...prev, {
       tempId: `new-${Date.now()}`,
+      allIds: [],
       perguntaId: finalOpt.pergunta_id,
       opcaoId: finalOpt.id,
       label: finalLabel,
