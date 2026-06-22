@@ -506,7 +506,7 @@ export const ArchivedPatientsScreen: React.FC = () => {
       const tht = Number(a.tht_ml_kg_h || 0);
       return `
         <strong>Data: ${escapeHtml(a.data_referencia)}</strong>
-        <br>VO: ${vo.toFixed(2)} ml/kg/h | HV/NPT: ${hv.toFixed(2)} ml/kg/h | MED: ${med.toFixed(2)} ml/kg/h | THT: ${tht.toFixed(2)} ml/kg/h
+        <br>VO: ${vo.toFixed(2)} ml/m²/dia | HV/NPT: ${hv.toFixed(2)} ml/m²/dia | MED: ${med.toFixed(2)} ml/m²/dia | THT: ${tht.toFixed(2)} ml/m²/dia
       `;
     });
 

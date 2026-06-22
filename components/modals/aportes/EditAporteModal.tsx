@@ -74,17 +74,17 @@ export const EditAporteModal: React.FC<{
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">VO (ml/kg/h)</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">VO (ml/m²/dia)</label>
             <input type="number" step="0.1" min="0" value={vo} onChange={(e) => setVo(e.target.value)} placeholder="0" className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">HV/NPT (ml/kg/h)</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">HV/NPT (ml/m²/dia)</label>
             <input type="number" step="0.1" min="0" value={hvNpt} onChange={(e) => setHvNpt(e.target.value)} placeholder="0" className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">MED (ml/kg/h)</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">MED (ml/m²/dia)</label>
             <input type="number" step="0.1" min="0" value={medicacoes} onChange={(e) => setMedicacoes(e.target.value)} placeholder="0" className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
           </div>
 

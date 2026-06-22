@@ -96,11 +96,11 @@ export const AportesCard: React.FC<AportesCardProps> = ({ patientId, addTrigger 
                       Aportes - {new Date(aporte.data_referencia).toLocaleDateString('pt-BR')}
                     </p>
                     <div className="text-sm text-slate-600 dark:text-slate-400 mt-1 space-y-1">
-                      <p>VO: <strong>{aporte.vo_ml_kg_h.toFixed(2)}</strong> ml/kg/h</p>
-                      <p>HV/NPT: <strong>{aporte.hv_npt_ml_kg_h.toFixed(2)}</strong> ml/kg/h</p>
-                      <p>MED: <strong>{aporte.medicacoes_ml_kg_h.toFixed(2)}</strong> ml/kg/h</p>
+                      <p>VO: <strong>{aporte.vo_ml_kg_h.toFixed(2)}</strong> ml/m²/dia</p>
+                      <p>HV/NPT: <strong>{aporte.hv_npt_ml_kg_h.toFixed(2)}</strong> ml/m²/dia</p>
+                      <p>MED: <strong>{aporte.medicacoes_ml_kg_h.toFixed(2)}</strong> ml/m²/dia</p>
                       <p className="mt-2 p-2 bg-blue-100 dark:bg-blue-900/30 rounded font-semibold text-blue-700 dark:text-blue-300">
-                        THT: {aporte.tht_ml_kg_h.toFixed(2)} ml/kg/h
+                        THT: {aporte.tht_ml_kg_h.toFixed(2)} ml/m²/dia
                       </p>
                       {aporte.sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{aporte.sistema}</span>}
                     </div>

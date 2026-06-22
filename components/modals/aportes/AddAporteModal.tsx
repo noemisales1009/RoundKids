@@ -99,7 +99,7 @@ export const AddAporteModal: React.FC<{
 
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-              VO (ml/kg/h)
+              VO (ml/m²/dia)
             </label>
             <input
               type="number"
@@ -114,7 +114,7 @@ export const AddAporteModal: React.FC<{
 
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-              HV/NPT (ml/kg/h)
+              HV/NPT (ml/m²/dia)
             </label>
             <input
               type="number"
@@ -129,7 +129,7 @@ export const AddAporteModal: React.FC<{
 
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-              MED (ml/kg/h)
+              MED (ml/m²/dia)
             </label>
             <input
               type="number"

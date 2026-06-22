@@ -1215,10 +1215,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         secAportes.forEach((a, idx) => {
           if (idx > 0) apLines.push('');
           apLines.push(`    ${new Date(a.data_referencia + 'T12:00:00').toLocaleDateString('pt-BR')}`);
-          apLines.push(`    VO: ${a.vo_ml_kg_h.toFixed(2)} mL/kg/h`);
-          apLines.push(`    HV/NPT: ${a.hv_npt_ml_kg_h.toFixed(2)} mL/kg/h`);
-          apLines.push(`    MED: ${a.medicacoes_ml_kg_h.toFixed(2)} mL/kg/h`);
-          apLines.push(`    THT: ${a.tht_ml_kg_h.toFixed(2)} mL/kg/h`);
+          apLines.push(`    VO: ${a.vo_ml_kg_h.toFixed(2)} ml/m²/dia`);
+          apLines.push(`    HV/NPT: ${a.hv_npt_ml_kg_h.toFixed(2)} ml/m²/dia`);
+          apLines.push(`    MED: ${a.medicacoes_ml_kg_h.toFixed(2)} ml/m²/dia`);
+          apLines.push(`    THT: ${a.tht_ml_kg_h.toFixed(2)} ml/m²/dia`);
         });
       }
     });
@@ -1808,7 +1808,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                     <div key={label} className="bg-white dark:bg-slate-700 rounded px-2 py-1.5 text-center border border-slate-200 dark:border-slate-600">
                       <p className="text-xs text-slate-400 dark:text-slate-500">{label}</p>
                       <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{value.toFixed(3)}</p>
-                      <p className="text-xs text-slate-400">mL/kg/h</p>
+                      <p className="text-xs text-slate-400">ml/m²/dia</p>
                     </div>
                   ))}
                 </div>
