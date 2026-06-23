@@ -710,6 +710,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 diagnostico_id: medicationData.diagnosticoId || null,
                 diagnostico_label: medicationData.diagnosticoLabel || null,
                 diagnostico_data_inicio: medicationData.diagnosticoDataInicio || null,
+                comorbidade_relacionada: medicationData.comorbidadeRelacionada || null,
             })
             .eq('id', medicationData.id);
         if (!error) fetchPatients();

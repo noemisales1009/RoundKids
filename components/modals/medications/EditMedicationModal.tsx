@@ -44,6 +44,23 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
     );
     const [diagnosticosAtivos, setDiagnosticosAtivos] = useState<DiagnosticoAtivo[]>([]);
     const [selectedDiagnosticoId, setSelectedDiagnosticoId] = useState<number | ''>(medication.diagnosticoId ?? '');
+    const [comorbidades, setComorbidades] = useState<string[]>([]);
+    const [selectedComorbidade, setSelectedComorbidade] = useState<string>(medication.comorbidadeRelacionada || '');
+
+    // Buscar comorbidades do paciente
+    useEffect(() => {
+        const fetchComorbidades = async () => {
+            const { data, error } = await supabase
+                .from('patients')
+                .select('comorbidade')
+                .eq('id', patientId)
+                .single();
+            if (!error && data?.comorbidade) {
+                setComorbidades(data.comorbidade.split('|').filter((c: string) => c.trim()));
+            }
+        };
+        fetchComorbidades();
+    }, [patientId]);
 
     // Buscar diagnósticos ativos do paciente
     useEffect(() => {
@@ -280,6 +297,7 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
             diagnosticoId: diagId,
             diagnosticoLabel: diagLabel,
             diagnosticoDataInicio: diagDataInicio,
+            comorbidadeRelacionada: selectedComorbidade || undefined,
         });
         showNotification({ message: 'Medicação atualizada com sucesso!', type: 'success' });
         onClose();
@@ -452,6 +470,34 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                                                 </span>
                                             )}
                                         </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Comorbidade relacionada (Reconciliação) */}
+                    {comorbidades.length > 0 && (
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                Comorbidade relacionada <span className="text-slate-400 font-normal">(Reconciliação)</span>
+                            </label>
+                            <div className="border border-slate-300 dark:border-slate-700 rounded-md overflow-hidden max-h-48 overflow-y-auto">
+                                <div
+                                    onClick={() => setSelectedComorbidade('')}
+                                    className={`flex items-start gap-2 px-3 py-2 cursor-pointer text-sm ${selectedComorbidade === '' ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                >
+                                    <span className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${selectedComorbidade === '' ? 'border-purple-500 bg-purple-500' : 'border-slate-400'}`} />
+                                    Nenhuma
+                                </div>
+                                {comorbidades.map((c, i) => (
+                                    <div
+                                        key={i}
+                                        onClick={() => setSelectedComorbidade(c)}
+                                        className={`flex items-start gap-2 px-3 py-2 cursor-pointer text-sm border-t border-slate-200 dark:border-slate-700 ${selectedComorbidade === c ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                    >
+                                        <span className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${selectedComorbidade === c ? 'border-purple-500 bg-purple-500' : 'border-slate-400'}`} />
+                                        {c}
                                     </div>
                                 ))}
                             </div>
