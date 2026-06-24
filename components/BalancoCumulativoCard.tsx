@@ -7,10 +7,13 @@ interface BalancoCumulativoData {
   patient_id: string;
   patient_name: string;
   data_calculo: string;
-  bh_historico_antigo: number;
-  bh_ultimas_24h: number;
-  bh_cumulativo_total: number;
-  registros_ultimas_24h: number;
+  peso_referencia_kg: number;
+  volume_cumulativo_ml: number;
+  bh_cumulativo_pct: number;
+  volume_24h_ml: number;
+  bh_24h_pct: number;
+  total_registros: number;
+  registros_24h: number;
 }
 
 interface BalancoCumulativoCardProps {
@@ -18,7 +21,7 @@ interface BalancoCumulativoCardProps {
 }
 
 const BalancoCumulativoCard: React.FC<BalancoCumulativoCardProps> = ({ patientId }) => {
-  const { patients } = useContext(PatientsContext)!;
+  useContext(PatientsContext);
   const [data, setData] = useState<BalancoCumulativoData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -47,26 +50,11 @@ const BalancoCumulativoCard: React.FC<BalancoCumulativoCardProps> = ({ patientId
     fetchBalancoCumulativo();
   }, [patientId]);
 
-  // Buscar peso do paciente
-  const patient = patients.find(p => p.id.toString() === patientId.toString());
-  const peso = patient?.peso || 0;
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
-  };
-
-  // Não mostrar componente se não houver dados de 24 horas
-  if (!loading && (!data || data.registros_ultimas_24h === 0)) {
+  if (!loading && (!data || data.registros_24h === 0)) {
     return null;
   }
+
+  const bhHistorico = data ? data.bh_cumulativo_pct - data.bh_24h_pct : 0;
 
   return (
     <div className="w-full bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 mb-4">
@@ -84,24 +72,24 @@ const BalancoCumulativoCard: React.FC<BalancoCumulativoCardProps> = ({ patientId
           <div className="text-center py-4 text-slate-600 dark:text-slate-400">
             Carregando dados...
           </div>
-        ) : (
+        ) : data ? (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* BH Histórico Antigo */}
+            {/* BH Histórico */}
             <div className="p-4 bg-slate-50 dark:bg-slate-900/20 rounded-lg border border-slate-200 dark:border-slate-700">
               <div className="text-xs font-medium text-slate-700 dark:text-slate-400 mb-2">
                 BH HISTÓRICO
               </div>
               <div className={`text-2xl font-bold mb-2 ${
-                data.bh_historico_antigo > 0 
-                  ? 'text-blue-600 dark:text-blue-400' 
-                  : data.bh_historico_antigo < 0
+                bhHistorico > 0
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : bhHistorico < 0
                   ? 'text-green-600 dark:text-green-400'
                   : 'text-slate-600 dark:text-slate-400'
               }`}>
-                {data.bh_historico_antigo > 0 ? '+' : ''}{data.bh_historico_antigo.toFixed(2)}%
+                {bhHistorico > 0 ? '+' : ''}{bhHistorico.toFixed(2)}%
               </div>
               <div className="text-xs text-slate-600 dark:text-slate-400">
-                {data.bh_historico_antigo > 0 ? 'Ganho' : data.bh_historico_antigo < 0 ? 'Perda' : 'Neutro'}
+                {bhHistorico > 0 ? 'Ganho' : bhHistorico < 0 ? 'Perda' : 'Neutro'}
               </div>
             </div>
 
@@ -111,78 +99,78 @@ const BalancoCumulativoCard: React.FC<BalancoCumulativoCardProps> = ({ patientId
                 BH ÚLTIMAS 24H
               </div>
               <div className={`text-2xl font-bold mb-2 ${
-                data.bh_ultimas_24h > 0 
-                  ? 'text-blue-600 dark:text-blue-400' 
-                  : data.bh_ultimas_24h < 0
+                data.bh_24h_pct > 0
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : data.bh_24h_pct < 0
                   ? 'text-green-600 dark:text-green-400'
                   : 'text-slate-600 dark:text-slate-400'
               }`}>
-                {data.bh_ultimas_24h > 0 ? '+' : ''}{data.bh_ultimas_24h.toFixed(2)}%
+                {data.bh_24h_pct > 0 ? '+' : ''}{data.bh_24h_pct.toFixed(2)}%
               </div>
               <div className="text-xs text-slate-600 dark:text-slate-400">
-                {data.registros_ultimas_24h} medição{data.registros_ultimas_24h !== 1 ? 'ões' : ''}
+                {data.registros_24h} medição{data.registros_24h !== 1 ? 'ões' : ''}
               </div>
             </div>
 
             {/* BH Cumulativo */}
             <div className={`p-4 rounded-lg border ${
-              Math.abs(data.bh_cumulativo_total) > 200
-                ? data.bh_cumulativo_total > 0
+              Math.abs(data.bh_cumulativo_pct) > 200
+                ? data.bh_cumulativo_pct > 0
                   ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
                   : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
-                : data.bh_cumulativo_total > 0
+                : data.bh_cumulativo_pct > 0
                 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-                : data.bh_cumulativo_total < 0
+                : data.bh_cumulativo_pct < 0
                 ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
                 : 'bg-slate-50 dark:bg-slate-900/20 border-slate-200 dark:border-slate-700'
             }`}>
               <div className={`text-xs font-medium mb-2 ${
-                Math.abs(data.bh_cumulativo_total) > 200
-                  ? data.bh_cumulativo_total > 0
+                Math.abs(data.bh_cumulativo_pct) > 200
+                  ? data.bh_cumulativo_pct > 0
                     ? 'text-red-700 dark:text-red-400'
                     : 'text-orange-700 dark:text-orange-400'
-                  : data.bh_cumulativo_total > 0
+                  : data.bh_cumulativo_pct > 0
                   ? 'text-blue-700 dark:text-blue-400'
-                  : data.bh_cumulativo_total < 0
+                  : data.bh_cumulativo_pct < 0
                   ? 'text-green-700 dark:text-green-400'
                   : 'text-slate-700 dark:text-slate-400'
               }`}>
                 BH CUMULATIVO
               </div>
               <div className={`text-2xl font-bold mb-2 ${
-                Math.abs(data.bh_cumulativo_total) > 200
-                  ? data.bh_cumulativo_total > 0
+                Math.abs(data.bh_cumulativo_pct) > 200
+                  ? data.bh_cumulativo_pct > 0
                     ? 'text-red-600 dark:text-red-400'
                     : 'text-orange-600 dark:text-orange-400'
-                  : data.bh_cumulativo_total > 0
+                  : data.bh_cumulativo_pct > 0
                   ? 'text-blue-600 dark:text-blue-400'
-                  : data.bh_cumulativo_total < 0
+                  : data.bh_cumulativo_pct < 0
                   ? 'text-green-600 dark:text-green-400'
                   : 'text-slate-600 dark:text-slate-400'
               }`}>
-                {data.bh_cumulativo_total > 0 ? '+' : ''}{data.bh_cumulativo_total.toFixed(2)}%
+                {data.bh_cumulativo_pct > 0 ? '+' : ''}{data.bh_cumulativo_pct.toFixed(2)}%
               </div>
               <div className={`text-xs font-medium mb-2 ${
-                Math.abs(data.bh_cumulativo_total) > 200
-                  ? data.bh_cumulativo_total > 0
+                Math.abs(data.bh_cumulativo_pct) > 200
+                  ? data.bh_cumulativo_pct > 0
                     ? 'text-red-600 dark:text-red-400'
                     : 'text-orange-600 dark:text-orange-400'
-                  : data.bh_cumulativo_total > 0
+                  : data.bh_cumulativo_pct > 0
                   ? 'text-blue-600 dark:text-blue-400'
-                  : data.bh_cumulativo_total < 0
+                  : data.bh_cumulativo_pct < 0
                   ? 'text-green-600 dark:text-green-400'
                   : 'text-slate-600 dark:text-slate-400'
               }`}>
-                {Math.abs(data.bh_cumulativo_total) > 200 
-                  ? data.bh_cumulativo_total > 0 ? '⚠️ Retenção' : '⚠️ Perda'
-                  : data.bh_cumulativo_total > 0 ? '💧 Ganho' : data.bh_cumulativo_total < 0 ? '✓ Eliminação' : 'Neutro'}
+                {Math.abs(data.bh_cumulativo_pct) > 200
+                  ? data.bh_cumulativo_pct > 0 ? '⚠️ Retenção' : '⚠️ Perda'
+                  : data.bh_cumulativo_pct > 0 ? '💧 Ganho' : data.bh_cumulativo_pct < 0 ? '✓ Eliminação' : 'Neutro'}
               </div>
               <div className="text-xs text-slate-600 dark:text-slate-400">
-                Peso: {peso.toFixed(2)}kg
+                Peso: {data.peso_referencia_kg.toFixed(2)}kg
               </div>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
