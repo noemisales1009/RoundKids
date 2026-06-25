@@ -85,6 +85,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
   const [saving, setSaving] = useState(false);
   const [savedOk, setSavedOk] = useState(false);
   const [openControles, setOpenControles] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [openSaidas, setOpenSaidas] = useState(false);
   const [drenoDropdownOpen, setDrenoDropdownOpen] = useState(false);
   const [activeDrenos, setActiveDrenos] = useState<Set<DrenoKey>>(new Set());
@@ -335,25 +336,42 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
           )}
         </div>
 
-        <input
-          type="date"
-          value={selectedDate}
-          onChange={e => setSelectedDate(e.target.value)}
-          className={`rounded-lg border px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            isDark
-              ? 'bg-slate-800 border-slate-600 text-slate-200'
-              : 'bg-white border-slate-300 text-slate-700'
-          }`}
-        />
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={e => { setSelectedDate(e.target.value); setShowDatePicker(false); }}
+            className={`rounded-lg border px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              isDark
+                ? 'bg-slate-800 border-slate-600 text-slate-200'
+                : 'bg-white border-slate-300 text-slate-700'
+            }`}
+          />
+          {savedDates.length > 0 && (
+            <button
+              onClick={() => setShowDatePicker(v => !v)}
+              title="Ver datas com registros"
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+                showDatePicker
+                  ? 'bg-blue-500 border-blue-500 text-white'
+                  : isDark
+                    ? 'bg-slate-800 border-slate-600 text-slate-300 hover:border-blue-500'
+                    : 'bg-white border-slate-300 text-slate-600 hover:border-blue-400'
+              }`}
+            >
+              📅 {savedDates.length}
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Botões de datas salvas */}
-      {savedDates.length > 0 && (
-        <div className="flex gap-2 flex-wrap">
+      {/* Botões de datas salvas — visível só quando aberto */}
+      {showDatePicker && savedDates.length > 0 && (
+        <div className="flex gap-2 flex-wrap pt-1">
           {savedDates.map(d => (
             <button
               key={d}
-              onClick={() => setSelectedDate(d)}
+              onClick={() => { setSelectedDate(d); setShowDatePicker(false); }}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors ${
                 d === selectedDate
                   ? 'bg-blue-500 border-blue-500 text-white'

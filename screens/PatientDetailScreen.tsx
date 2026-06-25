@@ -61,6 +61,7 @@ const CompletedAlertsSection = lazy(() => import('../components/CompletedAlertsS
 const DiuresisCalc = lazy(() => import('../components/DiuresisCalc'));
 const DiuresisHistory = lazy(() => import('../components/DiuresisHistory'));
 const FluidBalanceCalc = lazy(() => import('../components/FluidBalanceCalc'));
+const BalancoCumulativoCard = lazy(() => import('../components/BalancoCumulativoCard'));
 const FluidBalanceHistory = lazy(() => import('../components/FluidBalanceHistory'));
 const LatestCalculationsCard = lazy(() => import('../components/LatestCalculationsCard'));
 const StatusComponent = lazy(() => import('../components/StatusComponent'));
@@ -107,7 +108,7 @@ const PatientDetailScreen: React.FC = () => {
 
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
-    const [mainTab, setMainTab] = useState<'npt' | 'scales' | 'gasometria' | null>(null);
+    const [mainTab, setMainTab] = useState<'npt' | 'scales' | 'gasometria' | 'hemodinamico' | null>(null);
     const [notifRefresh, setNotifRefresh] = useState(0);
     const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'scales' | 'pareceres' | 'examesImagem' | 'paPercentis' | 'paineisVirais' | null>(null);
     const [showPAForm, setShowPAForm] = useState(false);
@@ -124,6 +125,12 @@ const PatientDetailScreen: React.FC = () => {
     const [archiveExamModal, setArchiveExamModal] = useState<Exam | null>(null);
     const [examSelectMode, setExamSelectMode] = useState(false);
     const [selectedExamIds, setSelectedExamIds] = useState<Set<string | number>>(new Set());
+    const [markingAllMeds, setMarkingAllMeds] = useState(false);
+    const [markingAllDevices, setMarkingAllDevices] = useState(false);
+    const [markingAllCultures, setMarkingAllCultures] = useState(false);
+    const [markingAllExams, setMarkingAllExams] = useState(false);
+    const [markingAllSurgeries, setMarkingAllSurgeries] = useState(false);
+    const [markingAllDiets, setMarkingAllDiets] = useState(false);
     const [isAddMedicationModalOpen, setAddMedicationModalOpen] = useState(false);
     const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
     const [editingMedicationEndDate, setEditingMedicationEndDate] = useState<Medication | null>(null);
@@ -528,30 +535,38 @@ const PatientDetailScreen: React.FC = () => {
             {/* NPT + Escalas */}
             <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm">
                 <div className={mainTab ? 'border-b border-slate-200 dark:border-slate-800' : ''}>
-                    <nav className="flex justify-around">
+                    <nav className="grid grid-cols-2 sm:grid-cols-4">
                         <button
                             onClick={() => setMainTab(mainTab === 'npt' ? null : 'npt')}
-                            className={`flex-1 py-4 px-1 text-center font-bold flex items-center justify-center gap-2 transition-colors duration-200 text-lg ${mainTab === 'npt' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                            className={`py-3 px-2 font-bold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 transition-colors duration-200 text-xs sm:text-base border-b sm:border-b-0 border-r border-slate-200 dark:border-slate-700 ${mainTab === 'npt' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                         >
-                            <BeakerIcon className="w-6 h-6" />
-                            Calculadora NPT
-                            <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${mainTab === 'npt' ? 'rotate-180' : ''}`} />
+                            <BeakerIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                            <span>Calc. NPT</span>
+                            <ChevronDownIcon className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 ${mainTab === 'npt' ? 'rotate-180' : ''}`} />
                         </button>
                         <button
                             onClick={() => setMainTab(mainTab === 'scales' ? null : 'scales')}
-                            className={`flex-1 py-4 px-1 text-center font-bold flex items-center justify-center gap-2 transition-colors duration-200 text-lg ${mainTab === 'scales' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                            className={`py-3 px-2 font-bold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 transition-colors duration-200 text-xs sm:text-base border-b sm:border-b-0 sm:border-r border-slate-200 dark:border-slate-700 ${mainTab === 'scales' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                         >
-                            <BarChartIcon className="w-6 h-6" />
-                            Escalas
-                            <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${mainTab === 'scales' ? 'rotate-180' : ''}`} />
+                            <BarChartIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                            <span>Escalas</span>
+                            <ChevronDownIcon className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 ${mainTab === 'scales' ? 'rotate-180' : ''}`} />
                         </button>
                         <button
                             onClick={() => setMainTab(mainTab === 'gasometria' ? null : 'gasometria')}
-                            className={`flex-1 py-4 px-1 text-center font-bold flex items-center justify-center gap-2 transition-colors duration-200 text-lg ${mainTab === 'gasometria' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                            className={`py-3 px-2 font-bold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 transition-colors duration-200 text-xs sm:text-base border-r border-slate-200 dark:border-slate-700 ${mainTab === 'gasometria' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                         >
-                            <DropletIcon className="w-6 h-6" />
-                            Gasometria
-                            <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${mainTab === 'gasometria' ? 'rotate-180' : ''}`} />
+                            <DropletIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                            <span>Gasometria</span>
+                            <ChevronDownIcon className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 ${mainTab === 'gasometria' ? 'rotate-180' : ''}`} />
+                        </button>
+                        <button
+                            onClick={() => setMainTab(mainTab === 'hemodinamico' ? null : 'hemodinamico')}
+                            className={`py-3 px-2 font-bold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 transition-colors duration-200 text-xs sm:text-base ${mainTab === 'hemodinamico' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                        >
+                            <HeartPulseIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                            <span>Hemodinâmico</span>
+                            <ChevronDownIcon className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 ${mainTab === 'hemodinamico' ? 'rotate-180' : ''}`} />
                         </button>
                     </nav>
                 </div>
@@ -572,6 +587,14 @@ const PatientDetailScreen: React.FC = () => {
                 )}
 
                 {mainTab === 'gasometria' && patient && (
+                    <div className="p-4 space-y-6">
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <GasometriaCalculator patientId={patient.id.toString()} />
+                        </Suspense>
+                    </div>
+                )}
+
+                {mainTab === 'hemodinamico' && patient && (
                     <div className="p-4 space-y-6">
                         <Suspense fallback={<LoadingSpinner />}>
                             <GapCO2Calculator patientId={patient.id.toString()} />
@@ -804,7 +827,16 @@ const PatientDetailScreen: React.FC = () => {
                                     </button>
                                 </div>
                             </div>
-                            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                            <div className="flex-1 overflow-y-auto p-4 space-y-3 relative">
+                                {((openCategoryModal === 'medications' && markingAllMeds) || (openCategoryModal === 'devices' && markingAllDevices) || (openCategoryModal === 'cultures' && markingAllCultures) || (openCategoryModal === 'exams' && markingAllExams) || (openCategoryModal === 'surgical' && markingAllSurgeries) || (openCategoryModal === 'diets' && markingAllDiets)) && (
+                                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-b-2xl gap-3">
+                                        <svg className="animate-spin w-8 h-8 text-blue-500" viewBox="0 0 24 24" fill="none">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                                        </svg>
+                                        <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">Atualizando...</p>
+                                    </div>
+                                )}
                                 {openCategoryModal === 'devices' && (<>
                                     {patient.devices.filter(d => !d.isArchived).length === 0 && <p className="text-center text-slate-500 dark:text-slate-400 py-4">Nenhum dispositivo cadastrado.</p>}
                                     {patient.devices.filter(d => !d.isArchived).length > 0 && (() => {
@@ -813,8 +845,14 @@ const PatientDetailScreen: React.FC = () => {
                                         return (
                                             <div className="flex justify-end mb-1">
                                                 <button
-                                                    onClick={() => items.forEach(item => toggleMostrarEvolucaoDispositivo(item.id, !allChecked))}
-                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                                    onClick={async () => {
+                                                        setMarkingAllDevices(true);
+                                                        await new Promise(r => setTimeout(r, 0));
+                                                        await Promise.all(items.map(item => toggleMostrarEvolucaoDispositivo(item.id, !allChecked)));
+                                                        setMarkingAllDevices(false);
+                                                    }}
+                                                    disabled={markingAllDevices}
+                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline disabled:opacity-50"
                                                 >
                                                     {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
                                                 </button>
@@ -892,8 +930,14 @@ const PatientDetailScreen: React.FC = () => {
                                                 </div>
                                                 {!examSelectMode && (
                                                     <button
-                                                        onClick={() => items.forEach(item => toggleMostrarEvolucaoExame(item.id, !allChecked))}
-                                                        className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                                        onClick={async () => {
+                                                            setMarkingAllExams(true);
+                                                            await new Promise(r => setTimeout(r, 0));
+                                                            await Promise.all(items.map(item => toggleMostrarEvolucaoExame(item.id, !allChecked)));
+                                                            setMarkingAllExams(false);
+                                                        }}
+                                                        disabled={markingAllExams}
+                                                        className="text-xs text-blue-500 dark:text-blue-400 hover:underline disabled:opacity-50"
                                                     >
                                                         {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
                                                     </button>
@@ -950,8 +994,14 @@ const PatientDetailScreen: React.FC = () => {
                                         return (
                                             <div className="flex justify-end mb-1">
                                                 <button
-                                                    onClick={() => meds.forEach(m => toggleMostrarEvolucao(m.id, !allChecked))}
-                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                                    onClick={async () => {
+                                                        setMarkingAllMeds(true);
+                                                        await new Promise(r => setTimeout(r, 0));
+                                                        await Promise.all(meds.map(m => toggleMostrarEvolucao(m.id, !allChecked)));
+                                                        setMarkingAllMeds(false);
+                                                    }}
+                                                    disabled={markingAllMeds}
+                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline disabled:opacity-50"
                                                 >
                                                     {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
                                                 </button>
@@ -1026,8 +1076,14 @@ const PatientDetailScreen: React.FC = () => {
                                         return (
                                             <div className="flex justify-end mb-1">
                                                 <button
-                                                    onClick={() => items.forEach(item => toggleMostrarEvolucaoCirurgia(item.id, !allChecked))}
-                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                                    onClick={async () => {
+                                                        setMarkingAllSurgeries(true);
+                                                        await new Promise(r => setTimeout(r, 0));
+                                                        await Promise.all(items.map(item => toggleMostrarEvolucaoCirurgia(item.id, !allChecked)));
+                                                        setMarkingAllSurgeries(false);
+                                                    }}
+                                                    disabled={markingAllSurgeries}
+                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline disabled:opacity-50"
                                                 >
                                                     {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
                                                 </button>
@@ -1067,8 +1123,14 @@ const PatientDetailScreen: React.FC = () => {
                                         return (
                                             <div className="flex justify-end mb-1">
                                                 <button
-                                                    onClick={() => items.forEach(item => toggleMostrarEvolucaoCultura(item.id, !allChecked))}
-                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                                    onClick={async () => {
+                                                        setMarkingAllCultures(true);
+                                                        await new Promise(r => setTimeout(r, 0));
+                                                        await Promise.all(items.map(item => toggleMostrarEvolucaoCultura(item.id, !allChecked)));
+                                                        setMarkingAllCultures(false);
+                                                    }}
+                                                    disabled={markingAllCultures}
+                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline disabled:opacity-50"
                                                 >
                                                     {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
                                                 </button>
@@ -1108,8 +1170,14 @@ const PatientDetailScreen: React.FC = () => {
                                         return (
                                             <div className="flex justify-end mb-1">
                                                 <button
-                                                    onClick={() => items.forEach(item => toggleMostrarEvolucaoDieta(item.id, !allChecked))}
-                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                                    onClick={async () => {
+                                                        setMarkingAllDiets(true);
+                                                        await new Promise(r => setTimeout(r, 0));
+                                                        await Promise.all(items.map(item => toggleMostrarEvolucaoDieta(item.id, !allChecked)));
+                                                        setMarkingAllDiets(false);
+                                                    }}
+                                                    disabled={markingAllDiets}
+                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline disabled:opacity-50"
                                                 >
                                                     {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
                                                 </button>
