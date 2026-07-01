@@ -74,6 +74,7 @@ const AportesCard = lazy(() => import('../components/AportesCard').then(m => ({ 
 const ParecerCard = lazy(() => import('../components/ParecerCard').then(m => ({ default: m.ParecerCard })));
 const ExameImagemCard = lazy(() => import('../components/ExameImagemCard').then(m => ({ default: m.ExameImagemCard })));
 const PrecautionsCard = lazy(() => import('../components/PrecautionsCard').then(m => ({ default: m.PrecautionsCard })));
+const TriagemMRCard = lazy(() => import('../components/TriagemMRCard').then(m => ({ default: m.TriagemMRCard })));
 const PAPercentisCard = lazy(() => import('../components/PAPercentisCard').then(m => ({ default: m.PAPercentisCard })));
 const PaineisViraisCard = lazy(() => import('../components/PaineisViraisCard').then(m => ({ default: m.PaineisViraisCard })));
 
@@ -487,6 +488,11 @@ const PatientDetailScreen: React.FC = () => {
                     patientId={patient.id}
                     precautions={patient.precautions || []}
                 />
+            </Suspense>
+
+            {/* Triagem MR (vigilância de bactérias multirresistentes) */}
+            <Suspense fallback={<LoadingSpinner />}>
+                <TriagemMRCard patientId={patient.id} />
             </Suspense>
 
             <Suspense fallback={<LoadingSpinner />}>
