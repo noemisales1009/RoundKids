@@ -39,16 +39,38 @@ function computeIdadeLabel(dob: string): string {
 }
 
 function classBadge(classe: string) {
-  if (classe === 'abaixo_p5') return 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300';
-  if (classe === 'acima_p95') return 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300';
-  return 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300';
+  switch (classe) {
+    case 'hipotensao':      return 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300';
+    case 'pre_hipertensao': return 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300';
+    case 'hipertensao':     return 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300';
+    case 'aceitavel':       return 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300';
+    case 'normal':
+    default:                return 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300';
+  }
 }
 
 function classeTexto(classe: string) {
-  if (classe === 'abaixo_p5') return 'Abaixo do P5 ↓';
-  if (classe === 'acima_p95') return 'Acima do P95 ↑';
-  return 'Normal ✓';
+  switch (classe) {
+    case 'hipotensao':      return 'Hipotensão ↓';
+    case 'aceitavel':       return 'Aceitável ✓';
+    case 'pre_hipertensao': return 'Pré-hipertensão ⚠';
+    case 'hipertensao':     return 'Hipertensão ↑';
+    case 'normal':
+    default:                return 'Normal ✓';
+  }
 }
+
+// Nível geral da medição a partir das faixas (Sist./Diast./Média), definindo a cor:
+//   alerta (vermelho) = Hipotensão ou Hipertensão | atencao (amarelo) = Pré-hipertensão | ok (verde)
+type NivelPA = 'alerta' | 'atencao' | 'ok';
+function nivelPA(classes: string[]): NivelPA {
+  if (classes.some(c => c === 'hipotensao' || c === 'hipertensao')) return 'alerta';
+  if (classes.some(c => c === 'pre_hipertensao')) return 'atencao';
+  return 'ok';
+}
+const NIVEL_BORDER: Record<NivelPA, string> = { alerta: 'border-red-500', atencao: 'border-amber-500', ok: 'border-emerald-500' };
+const NIVEL_STRIPE: Record<NivelPA, string> = { alerta: 'bg-red-500', atencao: 'bg-amber-500', ok: 'bg-emerald-500' };
+const NIVEL_ICON: Record<NivelPA, string> = { alerta: 'text-red-500', atencao: 'text-amber-500', ok: 'text-emerald-500' };
 
 export const PAPercentisCard: React.FC<PAPercentisCardProps> = ({ patientId, sexo, dob, showForm, onFormClose }) => {
   const { user } = useContext(UserContext)!;
@@ -65,6 +87,9 @@ export const PAPercentisCard: React.FC<PAPercentisCardProps> = ({ patientId, sex
   const [erro, setErro] = useState<string | null>(null);
 
   const semSexo = !sexo || sexo === 'Não informado';
+  const nivelResultado: NivelPA = resultado
+    ? nivelPA([resultado.class_sistolica, resultado.class_diastolica, resultado.class_media])
+    : 'ok';
 
   const loadMedicoes = async () => {
     setLoadingList(true);
@@ -225,20 +250,22 @@ export const PAPercentisCard: React.FC<PAPercentisCardProps> = ({ patientId, sex
               </button>
 
               {resultado && (
-                <div className={`rounded-xl overflow-hidden border-2 ${resultado.alerta ? 'border-red-500' : 'border-emerald-500'}`}>
-                  {resultado.alerta && (
-                    <div className="bg-red-500 px-4 py-2.5 flex items-center gap-2">
+                <div className={`rounded-xl overflow-hidden border-2 ${NIVEL_BORDER[nivelResultado]}`}>
+                  {nivelResultado !== 'ok' && (
+                    <div className={`px-4 py-2.5 flex items-center gap-2 ${nivelResultado === 'alerta' ? 'bg-red-500' : 'bg-amber-500'}`}>
                       <HeartPulseIcon className="w-5 h-5 text-white shrink-0" />
-                      <p className="text-white font-bold text-sm">ALERTA: PA fora do intervalo P5–P95</p>
+                      <p className="text-white font-bold text-sm">
+                        {nivelResultado === 'alerta' ? 'ALERTA: Hipotensão ou Hipertensão' : 'ATENÇÃO: Pré-hipertensão'}
+                      </p>
                     </div>
                   )}
                   <div className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
                     <PASection titulo="PA Sistólica" medido={`${sistolica} mmHg`} classe={resultado.class_sistolica}
-                      percentis={[['P5', resultado.sist_p5], ['P50', resultado.sist_p50], ['P95', resultado.sist_p95]]} />
+                      percentis={[['P5', resultado.sist_p5], ['P50', resultado.sist_p50], ['P90', resultado.sist_p90], ['P95', resultado.sist_p95]]} />
                     <PASection titulo="PA Diastólica" medido={`${diastolica} mmHg`} classe={resultado.class_diastolica}
-                      percentis={[['P5', resultado.diast_p5], ['P50', resultado.diast_p50], ['P95', resultado.diast_p95]]} />
+                      percentis={[['P5', resultado.diast_p5], ['P50', resultado.diast_p50], ['P90', resultado.diast_p90], ['P95', resultado.diast_p95]]} />
                     <PASection titulo="PA Média" medido={`${resultado.media_medida} mmHg`} classe={resultado.class_media}
-                      percentis={[['P5', resultado.media_p5], ['P50', resultado.media_p50], ['P95', resultado.media_p95]]} />
+                      percentis={[['P5', resultado.media_p5], ['P50', resultado.media_p50], ['P90', resultado.media_p90], ['P95', resultado.media_p95]]} />
                   </div>
                   <div className="bg-white dark:bg-slate-800 px-4 pb-4 pt-2">
                     <button
@@ -268,23 +295,25 @@ export const PAPercentisCard: React.FC<PAPercentisCardProps> = ({ patientId, sex
           <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
             Histórico
           </p>
-          {medicoes.map(m => (
+          {medicoes.map(m => {
+            const nivel = nivelPA([m.class_sistolica, m.class_diastolica, m.class_media]);
+            return (
             <div key={m.id} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
               <div className="flex items-stretch">
-                <div className={`w-1 shrink-0 ${m.alerta ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                <div className={`w-1 shrink-0 ${NIVEL_STRIPE[nivel]}`} />
                 <div className="flex-1 p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2 flex-wrap min-w-0">
-                      <HeartPulseIcon className={`w-4 h-4 shrink-0 ${m.alerta ? 'text-red-500' : 'text-emerald-500'}`} />
+                      <HeartPulseIcon className={`w-4 h-4 shrink-0 ${NIVEL_ICON[nivel]}`} />
                       <p className="font-bold text-slate-800 dark:text-slate-100">
                         {m.sistolica}/{m.diastolica} mmHg
                       </p>
                       <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full">
                         média {m.media_medida}
                       </span>
-                      {m.alerta && (
-                        <span className="text-xs font-semibold bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full">
-                          ⚠ Alerta
+                      {nivel !== 'ok' && (
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${nivel === 'alerta' ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'}`}>
+                          {nivel === 'alerta' ? '⚠ Alerta' : '⚠ Atenção'}
                         </span>
                       )}
                     </div>
@@ -321,7 +350,8 @@ export const PAPercentisCard: React.FC<PAPercentisCardProps> = ({ patientId, sex
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </>
@@ -348,7 +378,7 @@ const PASection: React.FC<PASectionProps> = ({ titulo, medido, classe, percentis
         </span>
       </div>
     </div>
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-4 gap-2">
       {percentis.map(([label, val]) => (
         <div key={label} className="bg-slate-100 dark:bg-slate-700 rounded-lg py-2 text-center">
           <p className="text-xs text-slate-400 dark:text-slate-500">{label}</p>

@@ -2,7 +2,7 @@ import { supabase } from '../supabaseClient';
 
 export type Sexo = 'masculino' | 'feminino';
 
-export type ClassificacaoPA = 'abaixo_p5' | 'normal' | 'acima_p95';
+export type ClassificacaoPA = 'hipotensao' | 'normal' | 'aceitavel' | 'pre_hipertensao' | 'hipertensao';
 
 export interface PercentisPA {
   idade_label: string;
@@ -24,9 +24,9 @@ export interface PercentisPA {
 }
 
 export interface ClassificacaoPAResult {
-  sist_p5: number;  sist_p50: number;  sist_p95: number;
-  diast_p5: number; diast_p50: number; diast_p95: number;
-  media_p5: number; media_p50: number; media_p95: number;
+  sist_p5: number;  sist_p50: number;  sist_p90: number;  sist_p95: number;
+  diast_p5: number; diast_p50: number; diast_p90: number; diast_p95: number;
+  media_p5: number; media_p50: number; media_p90: number; media_p95: number;
   media_medida: number;
   class_sistolica: ClassificacaoPA;
   class_diastolica: ClassificacaoPA;
@@ -64,21 +64,50 @@ export async function buscarPercentisPA(
   return data?.[0] ?? null;
 }
 
+// Classifica um valor de PA em uma das 5 faixas clínicas por percentil:
+//   < P5        → Hipotensão
+//   P5  a < P50 → Normal
+//   P50 a < P90 → Aceitável
+//   P90 a < P95 → Pré-hipertensão
+//   ≥ P95       → Hipertensão
+export function classificarFaixa(
+  valor: number, p5: number, p50: number, p90: number, p95: number
+): ClassificacaoPA {
+  if (valor < p5) return 'hipotensao';
+  if (valor < p50) return 'normal';
+  if (valor < p90) return 'aceitavel';
+  if (valor < p95) return 'pre_hipertensao';
+  return 'hipertensao';
+}
+
+// Classificação feita no próprio app (sem depender da função classificar_pa do
+// Supabase), usando os percentis de referência — inclusive o P90, necessário
+// para as faixas "Aceitável" e "Pré-hipertensão".
 export async function classificarPA(
   sexo: Sexo,
   idadeLabel: string,
   sistolica: number,
   diastolica: number
 ): Promise<ClassificacaoPAResult> {
-  const { data, error } = await supabase.rpc('classificar_pa', {
-    p_sexo: sexo,
-    p_idade_label: idadeLabel.toUpperCase(),
-    p_sistolica: sistolica,
-    p_diastolica: diastolica,
-  });
-  if (error) throw new Error(error.message);
-  if (!data?.[0]) throw new Error(`Sem dados para ${sexo} / ${idadeLabel}`);
-  return data[0];
+  const p = await buscarPercentisPA(sexo, idadeLabel);
+  if (!p) throw new Error(`Sem dados de percentis para ${sexo} / ${idadeLabel}`);
+
+  const media_medida = calcularPAMedia(sistolica, diastolica);
+  const class_sistolica  = classificarFaixa(sistolica,    p.sist_p5,  p.sist_p50,  p.sist_p90,  p.sist_p95);
+  const class_diastolica = classificarFaixa(diastolica,   p.diast_p5, p.diast_p50, p.diast_p90, p.diast_p95);
+  const class_media      = classificarFaixa(media_medida, p.media_p5, p.media_p50, p.media_p90, p.media_p95);
+
+  const ehAlerta = (c: ClassificacaoPA) => c === 'hipotensao' || c === 'hipertensao';
+  const alerta = ehAlerta(class_sistolica) || ehAlerta(class_diastolica) || ehAlerta(class_media);
+
+  return {
+    sist_p5: p.sist_p5,   sist_p50: p.sist_p50,   sist_p90: p.sist_p90,   sist_p95: p.sist_p95,
+    diast_p5: p.diast_p5, diast_p50: p.diast_p50, diast_p90: p.diast_p90, diast_p95: p.diast_p95,
+    media_p5: p.media_p5, media_p50: p.media_p50, media_p90: p.media_p90, media_p95: p.media_p95,
+    media_medida,
+    class_sistolica, class_diastolica, class_media,
+    alerta,
+  };
 }
 
 export function calcularPAMedia(sistolica: number, diastolica: number): number {
