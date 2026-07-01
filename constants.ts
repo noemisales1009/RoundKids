@@ -554,6 +554,62 @@ export const ALERT_SYSTEMS: string[] = [
     'Outros',
 ];
 
+// ========== CLASSIFICAÇÃO DAS ESCALAS CLÍNICAS POR SISTEMA ==========
+// A relação escala → sistema é FIXA (uma escala pertence sempre ao mesmo
+// sistema), por isso ela é derivada aqui no código — não há coluna `sistema`
+// na tabela scale_scores nem necessidade de migração no banco.
+// Os valores usam exatamente as mesmas strings de ALERT_SYSTEMS.
+
+// Mapa por chave de scaleView — usado para exibir a etiqueta na aba "Escalas".
+export const SCALE_VIEW_SISTEMA: Record<string, string> = {
+    'comfort-b':              'Sedação /Analgesia',
+    'delirium':               'Sedação /Analgesia', // CAM-ICU Pediátrico
+    'glasgow':                'Avaliação neurológica',
+    'crs-r':                  'Avaliação neurológica',
+    'flacc':                  'Sedação /Analgesia',
+    'braden':                 'Gestão de riscos assistenciais',
+    'braden-qd':              'Gestão de riscos assistenciais',
+    'vni-cnaf':               'Avaliação respiratória',
+    'respiratory':            'Avaliação respiratória',
+    'avaliacao-respiratoria': 'Avaliação respiratória',
+    'fss':                    'Avaliação neurológica',
+    'abstinencia':            'Sedação /Analgesia',
+    'sos-pd':                 'Sedação /Analgesia',
+    'consciousness':          'Avaliação neurológica',
+    'phoenix-sepsis':         'Avaliação infecciosa',
+    'kdigo':                  'Avaliação renal',
+};
+
+// Deriva o sistema a partir do nome salvo em scale_scores.scale_name, que é
+// DINÂMICO (inclui faixa etária/config, ex.: "Glasgow (Adulto)", "CAM-ICU ... - Lactente").
+// Por isso a classificação é por palavra-chave, não por texto exato.
+// Retorna null quando não é uma escala clínica classificável (ex.: calculadoras
+// hemodinâmicas/gasometria salvas na mesma tabela: etco2_direto, gap_co2, o2er...).
+export const getSistemaForScale = (scaleName: string): string | null => {
+    const n = (scaleName || '').toLowerCase();
+    if (!n) return null;
+    // Sedação / Analgesia
+    if (n.includes('comfort')) return 'Sedação /Analgesia';
+    if (n.includes('flacc')) return 'Sedação /Analgesia';
+    if (n.includes('sos-pd')) return 'Sedação /Analgesia';
+    if (n.includes('abstinência') || n.includes('abstinencia') || n.includes('withdrawal') || n.includes('finnegan') || n.includes('wat-1')) return 'Sedação /Analgesia';
+    if (n.includes('cam-icu') || n.includes('cam') || n.includes('delir') || n.includes('capd')) return 'Sedação /Analgesia';
+    // Neurológica
+    if (n.includes('glasgow')) return 'Avaliação neurológica';
+    if (n.includes('crs-r') || n.includes('crsr')) return 'Avaliação neurológica';
+    if (n.includes('consci') || n.includes('four') || n.includes('jfk')) return 'Avaliação neurológica';
+    if (n.includes('fss')) return 'Avaliação neurológica';
+    // Gestão de riscos assistenciais (lesão por pressão)
+    if (n.includes('braden')) return 'Gestão de riscos assistenciais';
+    // Respiratória
+    if (n.includes('vni') || n.includes('cnaf') || n.includes('respirat') || n.includes('resp.') || n.includes('wood')) return 'Avaliação respiratória';
+    // Infecciosa
+    if (n.includes('phoenix') || n.includes('sepse') || n.includes('sepsis')) return 'Avaliação infecciosa';
+    // Renal
+    if (n.includes('kdigo') || n.includes('renal')) return 'Avaliação renal';
+    return null;
+};
+
 export const INITIAL_USER: User = {
     name: '',
     title: '',

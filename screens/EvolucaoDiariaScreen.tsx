@@ -3,7 +3,7 @@ import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { PatientsContext, PreviewContext, NotificationContext } from '../contexts';
 import { useHeader } from '../hooks/useHeader';
 import { CheckCircleIcon, AlertIcon, WarningIcon } from '../components/icons';
-import { formatDateToBRL, ALERT_SYSTEMS } from '../constants';
+import { formatDateToBRL, ALERT_SYSTEMS, getSistemaForScale } from '../constants';
 import { Patient } from '../types';
 import { supabase } from '../supabaseClient';
 import { ControlesSaidasSection } from '../components/ControlesSaidasSection';
@@ -206,6 +206,35 @@ const SYSTEM_EXTRA_MATCHES: Record<string, string[]> = {
   'Avaliação respiratória': ['Sist. respiratório'],
 };
 
+// ─── Escalas clínicas na Evolução ────────────────────────────────────────────
+interface ScaleScoreRecord {
+  id: number;
+  scale_name: string;
+  score: number;
+  interpretation: string;
+  date: string;
+}
+
+// Retorna a avaliação mais recente de CADA escala cujo sistema (derivado do
+// nome, via getSistemaForScale) pertence a `sistemas`, da mais recente à mais
+// antiga. `excluded` desmarca itens no seletor de exportação (chave scale_<id>).
+const latestScalesForSistemas = (
+  scores: ScaleScoreRecord[],
+  sistemas: string[],
+  excluded: Set<string>,
+): ScaleScoreRecord[] => {
+  const byName = new Map<string, ScaleScoreRecord>();
+  for (const s of scores) {
+    const sis = getSistemaForScale(s.scale_name);
+    if (!sis || !sistemas.includes(sis)) continue;
+    const prev = byName.get(s.scale_name);
+    if (!prev || new Date(s.date).getTime() > new Date(prev.date).getTime()) byName.set(s.scale_name, s);
+  }
+  return [...byName.values()]
+    .filter(s => !excluded.has(`scale_${s.id}`))
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+};
+
 const ESPECIALISTA_TO_SISTEMAS: Record<string, string[]> = {
   'Alergologia Ped':      ['Avaliação imunológica'],
   'CIPE':                 ['Gestão de riscos assistenciais'],
@@ -366,6 +395,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   const [examesImagemList, setExamesImagemList] = useState<PropedeuticaExameImagem[]>([]);
   const [pareceresList, setPareceresList] = useState<PropedeuticaParecer[]>([]);
   const [paineisViraisList, setPaineisViraisList] = useState<PainelViralRecord[]>([]);
+  const [scaleScoresList, setScaleScoresList] = useState<ScaleScoreRecord[]>([]);
   const [condutasCriticas, setCondutasCriticas] = useState('');
   const [draftExameId, setDraftExameId] = useState<string | null>(null);
   const [draftCondutasId, setDraftCondutasId] = useState<string | null>(null);
@@ -637,6 +667,23 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       }
     };
     fetchPropedeutica();
+  }, [patientId]);
+
+  useEffect(() => {
+    if (!patientId) { setScaleScoresList([]); return; }
+    const fetchScaleScores = async () => {
+      try {
+        const { data } = await supabase
+          .from('scale_scores')
+          .select('id, scale_name, score, interpretation, date')
+          .eq('patient_id', patientId)
+          .order('date', { ascending: false });
+        setScaleScoresList((data ?? []) as ScaleScoreRecord[]);
+      } catch (e) {
+        console.error('Erro ao carregar escalas:', e);
+      }
+    };
+    fetchScaleScores();
   }, [patientId]);
 
   useEffect(() => {
@@ -1063,7 +1110,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const _allMatchDiets = [...(p.diets ?? [])].filter(d => !d.isArchived && d.mostrar_evolucao !== false && matchSistema(d.sistema) && !we.has(`diet_${d.id}`)).sort((a, b) => b.data_inicio.localeCompare(a.data_inicio));
       const _dietaMatch = _allMatchDiets.find(d => d.data_inicio.split(' ')[0] >= _cutoff24h) ?? _allMatchDiets[0];
       const diets = _dietaMatch ? [_dietaMatch] : [];
-      const exs   = (p.exams ?? []).filter(e => !e.isArchived && e.mostrar_evolucao !== false && matchSistema(e.sistema) && !we.has(`exam_${e.id}`) && e.date >= _cutoff48h);
+      const exs   = (p.exams ?? []).filter(e => !e.isArchived && matchSistema(e.sistema) && !we.has(`exam_${e.id}`)
+        && (e.mostrar_evolucao === true || (e.mostrar_evolucao !== false && e.date >= _cutoff48h)));
+      const scs   = latestScalesForSistemas(scaleScoresList, sistemas, we);
       const imgs  = examesImagemList.filter(ei => ei.mostrar_evolucao !== false && matchSistema(ei.sistema) && !we.has(`img_${ei.id}`));
       const pars  = pareceresList.filter(par => {
         if (par.mostrar_evolucao === false || we.has(`par_${par.id}`)) return false;
@@ -1081,7 +1130,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const _allAportesMatch = sec.id === 'nutricional' ? aportesList.filter(a => a.mostrar_evolucao !== false) : [];
       const _aporteMatch = _allAportesMatch.find(a => a.data_referencia >= _cutoff24h) ?? _allAportesMatch[0];
       const secAportes = _aporteMatch ? [_aporteMatch] : [];
-      const totalItems = secDiags.length + allSecMeds.length + allSecCults.length + allSecPnls.length + cirgs.length + diets.length + exs.length + imgs.length + pars.length + activeAlts.length + secAportes.length;
+      const totalItems = secDiags.length + allSecMeds.length + allSecCults.length + allSecPnls.length + cirgs.length + diets.length + exs.length + scs.length + imgs.length + pars.length + activeAlts.length + secAportes.length;
       if (totalItems === 0) return;
 
       apLines.push('');
@@ -1151,6 +1200,14 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         apLines.push('  EXAMES:');
         exs.forEach(e => {
           apLines.push(`    • Em ${formatDateToBRL(e.date)} — ${e.name}`);
+        });
+      }
+
+      // 3b. Escalas clínicas
+      if (scs.length) {
+        apLines.push('  ESCALAS:');
+        scs.forEach(s => {
+          apLines.push(`    • ${s.scale_name}: ${s.score}${s.interpretation ? ` — ${s.interpretation}` : ''} — Em ${new Date(s.date).toLocaleDateString('pt-BR')}`);
         });
       }
 
@@ -1948,7 +2005,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               const _secDietaMatch = _allSecDietas.find(d => d.data_inicio.split(' ')[0] >= _uiCutoff24h) ?? _allSecDietas[0];
               const secDietas = _secDietaMatch ? [_secDietaMatch] : [];
               const secExames = (selectedPatient?.exams ?? [])
-                .filter(e => !e.isArchived && e.mostrar_evolucao !== false && e.sistema && allNames.includes(e.sistema) && e.date >= _uiCutoff48h);
+                .filter(e => !e.isArchived && e.sistema && allNames.includes(e.sistema)
+                  && (e.mostrar_evolucao === true || (e.mostrar_evolucao !== false && e.date >= _uiCutoff48h)));
+              const secEscalas = latestScalesForSistemas(scaleScoresList, allNames, wordExcluded);
               const secExamesImagem = examesImagemList
                 .filter(ei => ei.mostrar_evolucao !== false && ei.sistema && allNames.includes(ei.sistema));
               const secPareceres = pareceresList
@@ -1960,7 +2019,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                 return a.sistemas.some(s => allNames.includes(s));
               });
 
-              const total = secDiags.length + allSecMeds.length + allSecCults.length + allSecPnls.length + secCirurgias.length + secDietas.length + secExames.length + secExamesImagem.length + secPareceres.length + secAlertas.length;
+              const total = secDiags.length + allSecMeds.length + allSecCults.length + allSecPnls.length + secCirurgias.length + secDietas.length + secExames.length + secEscalas.length + secExamesImagem.length + secPareceres.length + secAlertas.length;
               if (total === 0) return null;
 
               // Rastreia itens já exibidos sob um diagnóstico
@@ -2102,6 +2161,26 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                               <div key={e.id} className={`relative p-2 pr-10 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
                                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{e.name}</p>
                                 <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(e.date)}</p>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 3b. Escalas clínicas */}
+                    {secEscalas.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide mb-1.5">Escalas</p>
+                        <div className="space-y-1">
+                          {secEscalas.map(s => {
+                            const wk = `scale_${s.id}`; const off = wordExcluded.has(wk);
+                            return (
+                              <div key={s.id} className={`relative p-2 pr-10 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{s.scale_name}: {s.score}</p>
+                                {s.interpretation && <p className="text-xs text-slate-500 dark:text-slate-400">{s.interpretation}</p>}
+                                <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(s.date).toLocaleDateString('pt-BR')}</p>
                                 <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
