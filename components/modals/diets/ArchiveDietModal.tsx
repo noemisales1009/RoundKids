@@ -3,6 +3,7 @@ import { NotificationContext, UserContext } from '../../../contexts';
 import { Diet } from '../../../types';
 import { CloseIcon } from '../../icons';
 import { supabase } from '../../../supabaseClient';
+import { formatDecimalBR } from '../../../lib/format';
 
 interface ArchiveDietModalProps {
     diet: Diet;
@@ -84,7 +85,7 @@ export const ArchiveDietModal: React.FC<ArchiveDietModalProps> = ({ diet, patien
                     )}
                     {diet.volume && (
                         <p className="text-xs text-amber-700 dark:text-amber-300">
-                            Volume: {diet.volume} ml
+                            Volume: {formatDecimalBR(diet.volume)} ml
                         </p>
                     )}
                 </div>

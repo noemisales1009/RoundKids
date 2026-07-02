@@ -180,6 +180,21 @@ export const PDFReport: React.FC<PDFReportProps> = ({ reportData, nptStages = 2 
     ? { phosphorus: phosphorusCalculations, electrolytes: electrolyteCalculations } 
     : { phosphorus: alternativeCalculations.phosphorusCalculations, electrolytes: alternativeCalculations.electrolyteCalculations };
 
+  // Cabeçalho (timbrado) do hospital em texto — compacto, sem imagem.
+  const hospitalHeader = (
+    <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+      <p style={{ fontSize: '7px', letterSpacing: '1px', color: '#6b7280', textTransform: 'uppercase', margin: 0 }}>
+        Instituto Acqua · Governo do Maranhão · Secretaria de Estado da Saúde
+      </p>
+      <h2 style={{ color: '#0d8a8a', fontSize: '15px', fontWeight: 'bold', lineHeight: 1.1, margin: '2px 0 0' }}>
+        Hospital Infantil Dr. Juvêncio Mattos
+      </h2>
+      <p style={{ fontSize: '9px', color: '#4b5563', lineHeight: 1.2, margin: 0 }}>
+        Rua São Pantaleão S/N - Centro · São Luís - MA · CEP: 6505-460
+      </p>
+    </div>
+  );
+
   const commonFooter = (
     <footer className="text-center text-gray-500 text-xs mt-auto pt-4 border-t border-gray-200">
         <p>Este é um protótipo para fins educacionais e não substitui protocolos institucionais. Os cálculos devem ser verificados por um profissional qualificado antes da administração.</p>
@@ -191,6 +206,7 @@ export const PDFReport: React.FC<PDFReportProps> = ({ reportData, nptStages = 2 
         {/* Page 1: Resumo e Macronutrientes Principais */}
         <div className="p-6" style={{ width: '210mm', height: '297mm', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
             <header className="text-center mb-4 border-b-2 border-gray-800 pb-2">
+                {hospitalHeader}
                 <h1 className="text-2xl font-bold text-gray-900">Relatório de Nutrição Parenteral</h1>
                 <p className="text-xs text-gray-500 mt-1">Gerado em: {generatedDate}</p>
             </header>
@@ -267,6 +283,7 @@ export const PDFReport: React.FC<PDFReportProps> = ({ reportData, nptStages = 2 
         {/* Page 2: Glicose e Eletrólitos */}
         <div className="p-6" style={{ width: '210mm', minHeight: '297mm', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
             <header className="text-center mb-4 border-b-2 border-gray-800 pb-2">
+                {hospitalHeader}
                 <h1 className="text-2xl font-bold text-gray-900">Relatório de Nutrição Parenteral</h1>
                 <p className="text-xs text-gray-500 mt-1">Detalhamento de Componentes (Continuação)</p>
             </header>
@@ -349,6 +366,7 @@ export const PDFReport: React.FC<PDFReportProps> = ({ reportData, nptStages = 2 
         {/* Page 3: Análises */}
         <div className="p-8" style={{ width: '210mm', minHeight: '297mm', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
             <header className="text-center mb-8 border-b-2 border-gray-800 pb-4">
+                {hospitalHeader}
                 <h1 className="text-3xl font-bold text-gray-900">Análise de Cálculos</h1>
                 <p className="text-sm text-gray-500 mt-1">Distribuição Calórica, Osmolaridade & Fontes de Fósforo</p>
             </header>

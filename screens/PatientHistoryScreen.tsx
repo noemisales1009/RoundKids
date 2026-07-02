@@ -4,6 +4,7 @@ import { PatientsContext, TasksContext } from '../contexts';
 import { useHeader } from '../hooks/useHeader';
 import { supabase } from '../supabaseClient';
 import { formatDateToBRL, formatDateTimeWithHour } from '../constants';
+import { formatDecimalBR } from '../lib/format';
 import {
     HeartPulseIcon,
     CpuIcon,
@@ -931,14 +932,14 @@ const PatientHistoryScreen: React.FC = () => {
             // Montar descrição com todos os dados, incluindo VET AT e PT AT
             let description = `[DIETA] Dieta Iniciada: ${diet.tipo}`;
 
-            if (diet.volume) description += ` | Volume: ${diet.volume}mL`;
-            if (diet.vet) description += ` | VET: ${diet.vet}kcal/dia`;
-            if (diet.vet_pleno) description += ` | VET Pleno: ${diet.vet_pleno}kcal/dia`;
-            if (diet.vet_at) description += ` | VET AT: ${Number(diet.vet_at).toFixed(1)}%`;
-            if (diet.pt) description += ` | PT: ${diet.pt}g/dia`;
-            if (diet.pt_g_dia) description += ` | PT Plena: ${diet.pt_g_dia}g/dia`;
-            if (diet.pt_at) description += ` | PT AT: ${Number(diet.pt_at).toFixed(1)}%`;
-            if (diet.th) description += ` | TH: ${diet.th}ml/m²/dia`;
+            if (diet.volume) description += ` | Volume: ${formatDecimalBR(diet.volume)}mL`;
+            if (diet.vet) description += ` | VET: ${formatDecimalBR(diet.vet)}kcal/dia`;
+            if (diet.vet_pleno) description += ` | VET Pleno: ${formatDecimalBR(diet.vet_pleno)}kcal/dia`;
+            if (diet.vet_at) description += ` | VET AT: ${formatDecimalBR(Number(diet.vet_at).toFixed(1))}%`;
+            if (diet.pt) description += ` | PT: ${formatDecimalBR(diet.pt)}g/dia`;
+            if (diet.pt_g_dia) description += ` | PT Plena: ${formatDecimalBR(diet.pt_g_dia)}g/dia`;
+            if (diet.pt_at) description += ` | PT AT: ${formatDecimalBR(Number(diet.pt_at).toFixed(1))}%`;
+            if (diet.th) description += ` | TH: ${formatDecimalBR(diet.th)}ml/m²/dia`;
             if (diet.observacao) description += ` | Obs: ${diet.observacao}`;
             if (diet.sistema) description += `\n🏷️ Sistema: ${diet.sistema}`;
 
@@ -1134,7 +1135,7 @@ const PatientHistoryScreen: React.FC = () => {
             events.push({
                 timestamp: dataArquivamento || new Date().toISOString(),
                 icon: AppleIcon,
-                description: `[DIETA_ARQUIVADA] 🍽️ Dieta Arquivada\n📋 Tipo: ${diet.tipo}\n${diet.volume ? `💧 Volume: ${diet.volume} ml\n` : ''}${diet.vet ? `⚡ VET: ${diet.vet} kcal/dia\n` : ''}📝 Motivo do Arquivamento: ${diet.motivo_arquivamento || 'Não informado'}\n👨‍⚕️ Arquivado por: ${diet.nome_arquivador || 'Sistema'}\n📅 Arquivado em: ${dataArquivamento ? new Date(dataArquivamento).toLocaleString('pt-BR') : 'N/A'}`,
+                description: `[DIETA_ARQUIVADA] 🍽️ Dieta Arquivada\n📋 Tipo: ${diet.tipo}\n${diet.volume ? `💧 Volume: ${formatDecimalBR(diet.volume)} ml\n` : ''}${diet.vet ? `⚡ VET: ${formatDecimalBR(diet.vet)} kcal/dia\n` : ''}📝 Motivo do Arquivamento: ${diet.motivo_arquivamento || 'Não informado'}\n👨‍⚕️ Arquivado por: ${diet.nome_arquivador || 'Sistema'}\n📅 Arquivado em: ${dataArquivamento ? new Date(dataArquivamento).toLocaleString('pt-BR') : 'N/A'}`,
                 hasTime: true,
                 archiveInfo: { type: 'diet', itemId: diet.id, reason: diet.motivo_arquivamento },
             });
@@ -1353,10 +1354,10 @@ const PatientHistoryScreen: React.FC = () => {
                     <li>
                         <strong>${d.type}</strong><br>
                         Início: ${formatDateToBRL(d.data_inicio)}
-                        ${d.volume ? `<br>Volume: ${d.volume}mL` : ''}
-                        ${d.vet ? `<br>VET: ${d.vet}kcal/dia` : ''}
-                        ${d.pt ? `<br>Proteína (PT): ${d.pt}g/dia` : ''}
-                        ${d.th ? `<br>Taxa Hídrica (TH): ${d.th}ml/m²/dia` : ''}
+                        ${d.volume ? `<br>Volume: ${formatDecimalBR(d.volume)}mL` : ''}
+                        ${d.vet ? `<br>VET: ${formatDecimalBR(d.vet)}kcal/dia` : ''}
+                        ${d.pt ? `<br>Proteína (PT): ${formatDecimalBR(d.pt)}g/dia` : ''}
+                        ${d.th ? `<br>Taxa Hídrica (TH): ${formatDecimalBR(d.th)}ml/m²/dia` : ''}
                         ${d.data_remocao ? `<br>Retirada: ${formatDateToBRL(d.data_remocao)}` : ''}
                         ${d.observacao ? `<br><em>Obs: ${d.observacao}</em>` : ''}
                     </li>

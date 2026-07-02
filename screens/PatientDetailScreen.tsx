@@ -4,6 +4,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { Device, Exam, Medication, SurgicalProcedure, Culture, Diet } from '../types';
 import { formatDateToBRL, ALERT_SYSTEMS, SCALE_VIEW_SISTEMA } from '../constants';
+import { formatDecimalBR } from '../lib/format';
 import { BackArrowIcon, WarningIcon, PencilIcon, ClipboardIcon, FileTextIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, BrainIcon, ShieldIcon, BeakerIcon, LungsIcon, DumbbellIcon, CloseIcon, ScalpelIcon, ChevronRightIcon, CalculatorIcon, ChevronDownIcon, CameraIcon, HeartPulseIcon, VirusIcon } from '../components/icons';
 import { PatientDetailSkeleton } from '../components/SkeletonLoader';
 import { ArchiveModal } from '../components/modals/ArchiveModal';
@@ -1206,17 +1207,17 @@ const PatientDetailScreen: React.FC = () => {
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{diet.type}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(diet.data_inicio)}</p>
                                                         {diet.data_remocao ? <p className="text-sm bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded mt-1 font-medium">Retirada: {formatDateToBRL(diet.data_remocao)}</p> : <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(diet.data_inicio)}</p>}
-                                                        {diet.volume && <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Volume: {diet.volume} ml</p>}
-                                                        {diet.vet && <p className="text-sm text-slate-500 dark:text-slate-400">VET: {diet.vet} kcal/dia</p>}
-                                                        {diet.vet_pleno && <p className="text-sm text-slate-500 dark:text-slate-400">VET Pleno: {diet.vet_pleno} kcal/dia</p>}
-                                                        {diet.pt && <p className="text-sm text-slate-500 dark:text-slate-400">Proteína (PT): {diet.pt} g/dia</p>}
-                                                        {diet.pt_g_dia && <p className="text-sm text-slate-500 dark:text-slate-400">PT Plena: {diet.pt_g_dia} g/dia</p>}
-                                                        {diet.th && <p className="text-sm text-slate-500 dark:text-slate-400">Taxa Hídrica (TH): {diet.th} ml/m²/dia</p>}
+                                                        {diet.volume && <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Volume: {formatDecimalBR(diet.volume)} ml</p>}
+                                                        {diet.vet && <p className="text-sm text-slate-500 dark:text-slate-400">VET: {formatDecimalBR(diet.vet)} kcal/dia</p>}
+                                                        {diet.vet_pleno && <p className="text-sm text-slate-500 dark:text-slate-400">VET Pleno: {formatDecimalBR(diet.vet_pleno)} kcal/dia</p>}
+                                                        {diet.pt && <p className="text-sm text-slate-500 dark:text-slate-400">Proteína (PT): {formatDecimalBR(diet.pt)} g/dia</p>}
+                                                        {diet.pt_g_dia && <p className="text-sm text-slate-500 dark:text-slate-400">PT Plena: {formatDecimalBR(diet.pt_g_dia)} g/dia</p>}
+                                                        {diet.th && <p className="text-sm text-slate-500 dark:text-slate-400">Taxa Hídrica (TH): {formatDecimalBR(diet.th)} ml/m²/dia</p>}
                                                         {(diet.vet_at || diet.pt_at) && (
                                                             <div className="mt-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2">
                                                                 <p className="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1">📊 Cálculos Automáticos</p>
-                                                                {diet.vet_at && diet.vet && diet.vet_pleno && <><p className="text-sm font-bold text-blue-900 dark:text-blue-200">VET AT: {diet.vet_at.toFixed(1)}%</p><p className="text-xs text-blue-600 dark:text-blue-400">{diet.vet} kcal/dia de {diet.vet_pleno} kcal/dia</p></>}
-                                                                {diet.pt_at && diet.pt && diet.pt_g_dia && <><p className="text-sm font-bold text-blue-900 dark:text-blue-200 mt-1">PT AT: {diet.pt_at.toFixed(1)}%</p><p className="text-xs text-blue-600 dark:text-blue-400">{diet.pt} g/dia de {diet.pt_g_dia} g/dia</p></>}
+                                                                {diet.vet_at && diet.vet && diet.vet_pleno && <><p className="text-sm font-bold text-blue-900 dark:text-blue-200">VET AT: {formatDecimalBR(diet.vet_at.toFixed(1))}%</p><p className="text-xs text-blue-600 dark:text-blue-400">{formatDecimalBR(diet.vet)} kcal/dia de {formatDecimalBR(diet.vet_pleno)} kcal/dia</p></>}
+                                                                {diet.pt_at && diet.pt && diet.pt_g_dia && <><p className="text-sm font-bold text-blue-900 dark:text-blue-200 mt-1">PT AT: {formatDecimalBR(diet.pt_at.toFixed(1))}%</p><p className="text-xs text-blue-600 dark:text-blue-400">{formatDecimalBR(diet.pt)} g/dia de {formatDecimalBR(diet.pt_g_dia)} g/dia</p></>}
                                                             </div>
                                                         )}
                                                         {diet.observacao && <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 font-medium">Observação: {diet.observacao}</p>}

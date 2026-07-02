@@ -9,6 +9,12 @@ const getTodayDateString = () => {
     return `${year}-${month}-${day}`;
 };
 
+// Aceita números com vírgula (padrão brasileiro): converte "1,5" em "1.5"
+const normalizeDecimal = (value: string): string | undefined => {
+    const normalized = value.trim().replace(',', '.');
+    return normalized || undefined;
+};
+
 export const AddDietModal: React.FC<{ patientId: number | string; onClose: () => void }> = ({ patientId, onClose }) => {
     const { addDietToPatient } = useContext(PatientsContext)!;
     const { showNotification } = useContext(NotificationContext)!;
@@ -31,12 +37,12 @@ export const AddDietModal: React.FC<{ patientId: number | string; onClose: () =>
             await addDietToPatient(patientId, {
                 type,
                 data_inicio: dataInicio,
-                volume: volume || undefined,
-                vet: vet || undefined,
-                vet_pleno: vetPleno || undefined,
-                pt: pt || undefined,
-                pt_g_dia: ptGDia || undefined,
-                th: th || undefined,
+                volume: normalizeDecimal(volume),
+                vet: normalizeDecimal(vet),
+                vet_pleno: normalizeDecimal(vetPleno),
+                pt: normalizeDecimal(pt),
+                pt_g_dia: normalizeDecimal(ptGDia),
+                th: normalizeDecimal(th),
                 sistema: 'Avaliação nutricional e metabólica',
                 observacao: observacao || undefined
             }, user?.id);
@@ -174,7 +180,7 @@ export const AddDietModal: React.FC<{ patientId: number | string; onClose: () =>
                                             <div className="flex justify-between items-center">
                                                 <span className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">VET AT:</span>
                                                 <span className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-200">
-                                                    {((parseFloat(vet) * 100) / parseFloat(vetPleno)).toFixed(1)}%
+                                                    {((parseFloat(vet.replace(',', '.')) * 100) / parseFloat(vetPleno.replace(',', '.'))).toFixed(1)}%
                                                 </span>
                                             </div>
                                             <div className="text-xs text-blue-600 dark:text-blue-400 text-right">
@@ -187,7 +193,7 @@ export const AddDietModal: React.FC<{ patientId: number | string; onClose: () =>
                                             <div className="flex justify-between items-center">
                                                 <span className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">PT AT:</span>
                                                 <span className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-200">
-                                                    {((parseFloat(pt) * 100) / parseFloat(ptGDia)).toFixed(1)}%
+                                                    {((parseFloat(pt.replace(',', '.')) * 100) / parseFloat(ptGDia.replace(',', '.'))).toFixed(1)}%
                                                 </span>
                                             </div>
                                             <div className="text-xs text-blue-600 dark:text-blue-400 text-right">

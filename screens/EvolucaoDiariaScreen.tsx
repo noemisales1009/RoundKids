@@ -4,6 +4,7 @@ import { PatientsContext, PreviewContext, NotificationContext } from '../context
 import { useHeader } from '../hooks/useHeader';
 import { CheckCircleIcon, AlertIcon, WarningIcon } from '../components/icons';
 import { formatDateToBRL, ALERT_SYSTEMS, getSistemaForScale } from '../constants';
+import { formatDecimalBR } from '../lib/format';
 import { Patient } from '../types';
 import { supabase } from '../supabaseClient';
 import { ControlesSaidasSection } from '../components/ControlesSaidasSection';
@@ -1262,8 +1263,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       if (diets.length) {
         apLines.push('  DIETAS:');
         diets.forEach(d => {
-          if (d.vet_at != null) apLines.push(`    VET AT: ${d.vet_at.toFixed(0)}% (${d.vet} kcal/dia de ${d.vet_pleno} kcal/dia)`);
-          if (d.pt_at != null) apLines.push(`    PT AT: ${d.pt_at.toFixed(0)}% (${d.pt} g/dia de ${d.pt_g_dia} g/dia)`);
+          if (d.vet_at != null) apLines.push(`    VET AT: ${d.vet_at.toFixed(0)}% (${formatDecimalBR(d.vet)} kcal/dia de ${formatDecimalBR(d.vet_pleno)} kcal/dia)`);
+          if (d.pt_at != null) apLines.push(`    PT AT: ${d.pt_at.toFixed(0)}% (${formatDecimalBR(d.pt)} g/dia de ${formatDecimalBR(d.pt_g_dia)} g/dia)`);
           if (d.observacao) apLines.push(`    ${d.observacao}`);
         });
       }
@@ -2319,11 +2320,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                             return (
                               <div key={d.id} className={`relative p-2 pr-10 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
                                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{d.type}</p>
-                                {d.volume && <p className="text-xs text-slate-500 dark:text-slate-400">Volume: {d.volume} ml</p>}
+                                {d.volume && <p className="text-xs text-slate-500 dark:text-slate-400">Volume: {formatDecimalBR(d.volume)} ml</p>}
                                 {(d.vet_at != null || d.pt_at != null) && (
                                   <div className="mt-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-1.5">
-                                    {d.vet_at != null && <p className="text-xs font-bold text-blue-900 dark:text-blue-200">VET AT: {d.vet_at.toFixed(0)}% <span className="font-normal text-blue-600 dark:text-blue-400">({d.vet} kcal/dia de {d.vet_pleno} kcal/dia)</span></p>}
-                                    {d.pt_at != null && <p className="text-xs font-bold text-blue-900 dark:text-blue-200">PT AT: {d.pt_at.toFixed(0)}% <span className="font-normal text-blue-600 dark:text-blue-400">({d.pt} g/dia de {d.pt_g_dia} g/dia)</span></p>}
+                                    {d.vet_at != null && <p className="text-xs font-bold text-blue-900 dark:text-blue-200">VET AT: {d.vet_at.toFixed(0)}% <span className="font-normal text-blue-600 dark:text-blue-400">({formatDecimalBR(d.vet)} kcal/dia de {formatDecimalBR(d.vet_pleno)} kcal/dia)</span></p>}
+                                    {d.pt_at != null && <p className="text-xs font-bold text-blue-900 dark:text-blue-200">PT AT: {d.pt_at.toFixed(0)}% <span className="font-normal text-blue-600 dark:text-blue-400">({formatDecimalBR(d.pt)} g/dia de {formatDecimalBR(d.pt_g_dia)} g/dia)</span></p>}
                                   </div>
                                 )}
                                 <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(d.data_inicio)}</p>

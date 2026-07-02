@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
+import { formatDecimalBR } from './lib/format';
 
 interface ArchivedPatient {
   id: string;
@@ -419,19 +420,19 @@ export const ArchivedPatientsScreen: React.FC = () => {
     const dietsHtml = renderList('Dietas', data.diets.filter((d: any) => !d.is_archived), (d: any) => `
       <strong>${escapeHtml(d.tipo || d.type)}</strong>
       ${d.data_inicio ? `<br>Início: ${formatDateToBRL(d.data_inicio)}` : ''}
-      ${d.volume ? `<br>Volume: ${escapeHtml(d.volume)} mL` : ''}
-      ${d.vet ? `<br>VET: ${escapeHtml(d.vet)} kcal/dia` : ''}
-      ${d.vet_pleno ? `<br>VET Pleno: ${escapeHtml(d.vet_pleno)} kcal/dia` : ''}
-      ${d.pt ? `<br>PT: ${escapeHtml(d.pt)} g/dia` : ''}
-      ${d.th ? `<br>TH: ${escapeHtml(d.th)} ml/m²/dia` : ''}
+      ${d.volume ? `<br>Volume: ${escapeHtml(formatDecimalBR(d.volume))} mL` : ''}
+      ${d.vet ? `<br>VET: ${escapeHtml(formatDecimalBR(d.vet))} kcal/dia` : ''}
+      ${d.vet_pleno ? `<br>VET Pleno: ${escapeHtml(formatDecimalBR(d.vet_pleno))} kcal/dia` : ''}
+      ${d.pt ? `<br>PT: ${escapeHtml(formatDecimalBR(d.pt))} g/dia` : ''}
+      ${d.th ? `<br>TH: ${escapeHtml(formatDecimalBR(d.th))} ml/m²/dia` : ''}
       ${d.data_remocao ? `<br>Retirada: ${formatDateToBRL(d.data_remocao)}` : ''}
       ${d.observacao ? `<br><em>Obs: ${escapeHtml(d.observacao)}</em>` : ''}
     `);
 
     const archivedDietsHtml = renderList('Dietas Arquivadas', data.archivedDiets, (d: any) => `
       <strong>${escapeHtml(d.tipo)}</strong>
-      ${d.volume ? `<br>Volume: ${escapeHtml(d.volume)} mL` : ''}
-      ${d.vet ? `<br>VET: ${escapeHtml(d.vet)} kcal/dia` : ''}
+      ${d.volume ? `<br>Volume: ${escapeHtml(formatDecimalBR(d.volume))} mL` : ''}
+      ${d.vet ? `<br>VET: ${escapeHtml(formatDecimalBR(d.vet))} kcal/dia` : ''}
       <br>Motivo: ${escapeHtml(d.motivo_arquivamento || 'Não informado')}
       <br>Arquivado por: ${escapeHtml(d.nome_arquivador || 'Sistema')}
       ${d.created_at ? `<br>Data: ${formatDateTimeToBRL(d.created_at)}` : ''}

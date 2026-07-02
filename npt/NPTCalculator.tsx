@@ -123,10 +123,21 @@ const PharmacyPrescription: React.FC<PharmacyPrescriptionProps> = ({ reportData,
         <div id="pharmacy-prescription" className="bg-white font-serif text-black">
             <div className="p-8" style={{ width: '210mm', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <header className="text-center mb-4">
+                    <div style={{ marginBottom: '8px' }}>
+                        <p style={{ fontSize: '7px', letterSpacing: '1px', color: '#6b7280', textTransform: 'uppercase', margin: 0 }}>
+                            Instituto Acqua · Governo do Maranhão · Secretaria de Estado da Saúde
+                        </p>
+                        <p style={{ color: '#0d8a8a', fontSize: '15px', fontWeight: 'bold', lineHeight: 1.1, margin: '2px 0 0' }}>
+                            Hospital Infantil Dr. Juvêncio Mattos
+                        </p>
+                        <p style={{ fontSize: '9px', color: '#4b5563', lineHeight: 1.2, margin: 0 }}>
+                            Rua São Pantaleão S/N - Centro · São Luís - MA · CEP: 6505-460
+                        </p>
+                    </div>
                     <h1 className="text-2xl font-bold">Prescrição para Manipulação de NPT</h1>
                 </header>
                 
-                <main className="grow flex flex-col justify-start gap-y-6">
+                <main className="grow flex flex-col justify-start gap-y-2">
                     {nptStages === 1 ? (
                         renderBagContent(null)
                     ) : (
