@@ -36,5 +36,16 @@ CREATE TABLE IF NOT EXISTS triagem_mr_pacientes (
 CREATE INDEX IF NOT EXISTS idx_triagem_mr_paciente
   ON triagem_mr_pacientes (paciente_id, data_triagem DESC);
 
--- Consistente com as outras tabelas do app (ex.: pa_medicoes_pacientes)
-ALTER TABLE triagem_mr_pacientes DISABLE ROW LEVEL SECURITY;
+-- RLS: o Supabase mantém RLS habilitado nesta tabela; por isso liberamos o
+-- acesso do app com uma policy permissiva para os papéis anon/authenticated.
+GRANT ALL ON triagem_mr_pacientes TO anon, authenticated;
+
+ALTER TABLE triagem_mr_pacientes ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Permitir acesso ao app (triagem_mr)" ON triagem_mr_pacientes;
+CREATE POLICY "Permitir acesso ao app (triagem_mr)"
+  ON triagem_mr_pacientes
+  FOR ALL
+  TO anon, authenticated
+  USING (true)
+  WITH CHECK (true);

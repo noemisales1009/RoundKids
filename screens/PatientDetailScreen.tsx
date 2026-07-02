@@ -492,7 +492,7 @@ const PatientDetailScreen: React.FC = () => {
 
             {/* Triagem MR (vigilância de bactérias multirresistentes) */}
             <Suspense fallback={<LoadingSpinner />}>
-                <TriagemMRCard patientId={patient.id} />
+                <TriagemMRCard patientId={patient.id} precautions={patient.precautions || []} />
             </Suspense>
 
             <Suspense fallback={<LoadingSpinner />}>

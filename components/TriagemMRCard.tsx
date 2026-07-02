@@ -2,9 +2,11 @@ import React, { useContext, useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { PatientsContext, NotificationContext, UserContext } from '../contexts';
 import { VirusIcon, PlusIcon, CloseIcon, SaveIcon } from './icons';
+import { Precaution } from '../types';
 
 interface TriagemMRCardProps {
   patientId: number | string;
+  precautions: Precaution[];
 }
 
 interface TriagemMR {
@@ -64,8 +66,8 @@ function computeRecomendacao(selected: string[]) {
   };
 }
 
-export const TriagemMRCard: React.FC<TriagemMRCardProps> = ({ patientId }) => {
-  const { addPrecautionToPatient } = useContext(PatientsContext)!;
+export const TriagemMRCard: React.FC<TriagemMRCardProps> = ({ patientId, precautions }) => {
+  const { addPrecautionToPatient, addEndDateToPrecaution } = useContext(PatientsContext)!;
   const { showNotification } = useContext(NotificationContext)!;
   const { user } = useContext(UserContext)!;
 
@@ -142,6 +144,18 @@ export const TriagemMRCard: React.FC<TriagemMRCardProps> = ({ patientId }) => {
       isArchived: false,
     });
     showNotification({ message: 'Precaução de contato criada no card de Precauções.', type: 'success' });
+  };
+
+  // Precauções de contato criadas por esta ferramenta (para status e finalizar)
+  const precaucoesTriagemAtivas = precautions.filter(
+    p => !p.isArchived && !p.data_fim &&
+      ((p.doenca_nome_manual ?? '').includes('Triagem MR') || (p.observacao ?? '').includes('Triagem MR'))
+  );
+  const temPrecaucaoAtiva = precaucoesTriagemAtivas.length > 0;
+
+  const finalizarPrecaucao = () => {
+    precaucoesTriagemAtivas.forEach(p => addEndDateToPrecaution(patientId, p.id, hojeISO()));
+    showNotification({ message: 'Precaução de contato finalizada.', type: 'info' });
   };
 
   return (
@@ -240,13 +254,28 @@ export const TriagemMRCard: React.FC<TriagemMRCardProps> = ({ patientId }) => {
                   </p>
                 )}
 
-                {t.precaucao_contato && (
+                {t.precaucao_contato && !temPrecaucaoAtiva && (
                   <button
                     onClick={() => criarPrecaucao(t)}
                     className="mt-2 w-full text-xs font-semibold px-3 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white transition"
                   >
                     + Criar precaução de contato no card de Precauções
                   </button>
+                )}
+                {temPrecaucaoAtiva && (
+                  <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-xs font-medium text-yellow-700 dark:text-yellow-300">● Precaução de contato ativa</span>
+                    <button
+                      onClick={finalizarPrecaucao}
+                      className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition ${
+                        t.resultado_swab === 'negativo'
+                          ? 'border-red-400 text-red-600 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20'
+                          : 'border-slate-300 text-slate-500 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      Finalizar precaução de contato
+                    </button>
+                  </div>
                 )}
               </div>
             );
