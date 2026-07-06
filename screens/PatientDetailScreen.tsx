@@ -5,7 +5,7 @@ import { supabase } from '../supabaseClient';
 import { Device, Exam, Medication, SurgicalProcedure, Culture, Diet } from '../types';
 import { formatDateToBRL, ALERT_SYSTEMS, SCALE_VIEW_SISTEMA } from '../constants';
 import { formatDecimalBR } from '../lib/format';
-import { BackArrowIcon, WarningIcon, PencilIcon, ClipboardIcon, FileTextIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, BrainIcon, ShieldIcon, BeakerIcon, LungsIcon, DumbbellIcon, CloseIcon, ScalpelIcon, ChevronRightIcon, CalculatorIcon, ChevronDownIcon, CameraIcon, HeartPulseIcon, VirusIcon } from '../components/icons';
+import { BackArrowIcon, WarningIcon, PencilIcon, ClipboardIcon, FileTextIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, BrainIcon, ShieldIcon, BeakerIcon, LungsIcon, LungsAltIcon, DumbbellIcon, CloseIcon, ScalpelIcon, ChevronRightIcon, CalculatorIcon, ChevronDownIcon, CameraIcon, HeartPulseIcon, VirusIcon } from '../components/icons';
 import { PatientDetailSkeleton } from '../components/SkeletonLoader';
 import { ArchiveModal } from '../components/modals/ArchiveModal';
 import { SecondaryNavigation } from '../components/SecondaryNavigation';
@@ -76,6 +76,7 @@ const ParecerCard = lazy(() => import('../components/ParecerCard').then(m => ({ 
 const ExameImagemCard = lazy(() => import('../components/ExameImagemCard').then(m => ({ default: m.ExameImagemCard })));
 const PrecautionsCard = lazy(() => import('../components/PrecautionsCard').then(m => ({ default: m.PrecautionsCard })));
 const TriagemMRCard = lazy(() => import('../components/TriagemMRCard').then(m => ({ default: m.TriagemMRCard })));
+const TriagemPAVCard = lazy(() => import('../components/TriagemPAVCard').then(m => ({ default: m.TriagemPAVCard })));
 const PAPercentisCard = lazy(() => import('../components/PAPercentisCard').then(m => ({ default: m.PAPercentisCard })));
 const PaineisViraisCard = lazy(() => import('../components/PaineisViraisCard').then(m => ({ default: m.PaineisViraisCard })));
 
@@ -110,7 +111,7 @@ const PatientDetailScreen: React.FC = () => {
 
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
-    const [mainTab, setMainTab] = useState<'npt' | 'scales' | 'gasometria' | 'hemodinamico' | null>(null);
+    const [mainTab, setMainTab] = useState<'npt' | 'scales' | 'gasometria' | 'hemodinamico' | 'pav' | null>(null);
     const [notifRefresh, setNotifRefresh] = useState(0);
     const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'scales' | 'pareceres' | 'examesImagem' | 'paPercentis' | 'paineisVirais' | null>(null);
     const [showPAForm, setShowPAForm] = useState(false);
@@ -549,39 +550,32 @@ const PatientDetailScreen: React.FC = () => {
             {/* NPT + Escalas */}
             <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm">
                 <div className={mainTab ? 'border-b border-slate-200 dark:border-slate-800' : ''}>
-                    <nav className="grid grid-cols-2 sm:grid-cols-4">
-                        <button
-                            onClick={() => setMainTab(mainTab === 'npt' ? null : 'npt')}
-                            className={`py-3 px-2 font-bold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 transition-colors duration-200 text-xs sm:text-base border-b sm:border-b-0 border-r border-slate-200 dark:border-slate-700 ${mainTab === 'npt' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
-                        >
-                            <BeakerIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                            <span>Calc. NPT</span>
-                            <ChevronDownIcon className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 ${mainTab === 'npt' ? 'rotate-180' : ''}`} />
-                        </button>
-                        <button
-                            onClick={() => setMainTab(mainTab === 'scales' ? null : 'scales')}
-                            className={`py-3 px-2 font-bold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 transition-colors duration-200 text-xs sm:text-base border-b sm:border-b-0 sm:border-r border-slate-200 dark:border-slate-700 ${mainTab === 'scales' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
-                        >
-                            <BarChartIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                            <span>Escalas</span>
-                            <ChevronDownIcon className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 ${mainTab === 'scales' ? 'rotate-180' : ''}`} />
-                        </button>
-                        <button
-                            onClick={() => setMainTab(mainTab === 'gasometria' ? null : 'gasometria')}
-                            className={`py-3 px-2 font-bold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 transition-colors duration-200 text-xs sm:text-base border-r border-slate-200 dark:border-slate-700 ${mainTab === 'gasometria' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
-                        >
-                            <DropletIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                            <span>Gasometria</span>
-                            <ChevronDownIcon className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 ${mainTab === 'gasometria' ? 'rotate-180' : ''}`} />
-                        </button>
-                        <button
-                            onClick={() => setMainTab(mainTab === 'hemodinamico' ? null : 'hemodinamico')}
-                            className={`py-3 px-2 font-bold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 transition-colors duration-200 text-xs sm:text-base ${mainTab === 'hemodinamico' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
-                        >
-                            <HeartPulseIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                            <span>Hemodinâmico</span>
-                            <ChevronDownIcon className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 ${mainTab === 'hemodinamico' ? 'rotate-180' : ''}`} />
-                        </button>
+                    {/* 5 botões em 2 linhas (3 + 2) — layout consistente no celular, tablet e desktop */}
+                    <nav className="grid grid-cols-3">
+                        {([
+                            { id: 'npt' as const, label: 'Calc. NPT', Icon: BeakerIcon },
+                            { id: 'scales' as const, label: 'Escalas', Icon: BarChartIcon },
+                            { id: 'gasometria' as const, label: 'Gasometria', Icon: DropletIcon },
+                            { id: 'hemodinamico' as const, label: 'Hemodinâmico', Icon: HeartPulseIcon },
+                            { id: 'pav' as const, label: 'Triagem PAV', Icon: LungsAltIcon },
+                        ]).map((t, i, arr) => {
+                            const cols = 3;
+                            const lastRowStart = arr.length - (arr.length % cols === 0 ? cols : arr.length % cols);
+                            const notLastRow = i < lastRowStart;                     // divisor horizontal entre as linhas
+                            const hasRight = i % cols !== cols - 1 && i + 1 < arr.length; // divisor vertical entre colunas
+                            const active = mainTab === t.id;
+                            return (
+                                <button
+                                    key={t.id}
+                                    onClick={() => setMainTab(active ? null : t.id)}
+                                    className={`py-3 px-2 font-bold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 transition-colors duration-200 text-xs sm:text-base border-slate-200 dark:border-slate-700 ${notLastRow ? 'border-b' : ''} ${hasRight ? 'border-r' : ''} ${active ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                                >
+                                    <t.Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                                    <span>{t.label}</span>
+                                    <ChevronDownIcon className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 ${active ? 'rotate-180' : ''}`} />
+                                </button>
+                            );
+                        })}
                     </nav>
                 </div>
 
@@ -636,6 +630,14 @@ const PatientDetailScreen: React.FC = () => {
                         <div className="border-t border-slate-200 dark:border-slate-700" />
                         <Suspense fallback={<LoadingSpinner />}>
                             <PressaoPulsoCalculator patientId={patient.id.toString()} />
+                        </Suspense>
+                    </div>
+                )}
+
+                {mainTab === 'pav' && patient && (
+                    <div className="p-4">
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <TriagemPAVCard patientId={patient.id} dob={patient.dob} />
                         </Suspense>
                     </div>
                 )}
