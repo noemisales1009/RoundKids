@@ -494,6 +494,9 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             data_exame: exam.date,
             observacao: sanitizeTextOrNull(exam.observation),
             criado_por_id: userId || null,
+            // NULL = segue a regra automática das 48h; true fica reservado para inclusão manual
+            // (sobrescreve o DEFAULT true da coluna no banco)
+            mostrar_evolucao: null,
             ...(exam.sistema ? { sistema: exam.sistema } : {}),
         };
         const { data, error } = await supabase.from('exames_pacientes').insert([payload]);
