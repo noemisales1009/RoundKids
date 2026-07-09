@@ -39,6 +39,13 @@ const MAX_DIVALENT_TRIVALENT_CATIONS_MEQ_PER_LITER = 16; // máximo de Ca + Mg e
 const MAX_CALCIUM_VOLUME_PERCENTAGE = 2.2; // máximo de % do volume total para gluconato de Ca
 const MIN_PHOSPHORUS_CALCIUM_RATIO = 4.4; // proporção mínima: Volume Ca / Volume P
 
+// Faixas ideais da distribuição calórica (% das calorias totais), limites inclusivos
+const CALORIC_TARGETS = {
+    protein: { min: 10, max: 20 },
+    glucose: { min: 50, max: 60 },
+    lipid:   { min: 25, max: 40 },
+};
+
 // Tipagem para os dados do relatório, para ser usada por ambos os componentes de PDF
 type ReportData = ReturnType<typeof useAppCalculations>['reportData'];
 
@@ -408,12 +415,12 @@ const useAppCalculations = (
     const volumeToComplete = useMemo(() => hydrationByBSA - nonGlucoseVolume, [hydrationByBSA, nonGlucoseVolume]);
 
     const glucoseCalculations = useMemo(() => {
-        if (aminoAcidCalculations.nitrogen <= 0) return { totalGrams: 0, calories: 0, tig: 0 };
+        if (aminoAcidCalculations.nitrogen <= 0) return { totalGrams: 0, calories: 0, tig: 0, targetNonProteinCalories: 0 };
         const targetNonProteinCalories = aminoAcidCalculations.nitrogen * calorieNitrogenRatio;
         const glucoseCalories = targetNonProteinCalories - lipidCalculations.calories;
         const totalGrams = glucoseCalories > 0 ? glucoseCalories / 3.4 : 0;
         const tig = (totalGrams * 1000) / (weight * 1440);
-        return { totalGrams, calories: glucoseCalories > 0 ? glucoseCalories : 0, tig };
+        return { totalGrams, calories: glucoseCalories > 0 ? glucoseCalories : 0, tig, targetNonProteinCalories };
     }, [aminoAcidCalculations.nitrogen, calorieNitrogenRatio, lipidCalculations.calories, weight]);
     
     const totalComponentVolume = useMemo(() => nonGlucoseVolume + (volumeToComplete > 0 ? volumeToComplete : 0), [nonGlucoseVolume, volumeToComplete]);
@@ -453,11 +460,21 @@ const useAppCalculations = (
         const lipidPct = (lipidCalculations.calories / totalCalories) * 100;
         const glucosePct = (glucoseCalculations.calories / totalCalories) * 100;
         const warnings: string[] = [];
-        if (proteinPct < 10 || proteinPct > 15) warnings.push(`Proteínas (${proteinPct.toFixed(0)}%) está fora do ideal (10-15%).`);
-        if (lipidPct < 25 || lipidPct > 35) warnings.push(`Lipídeos (${lipidPct.toFixed(0)}%) está fora do ideal (25-35%).`);
-        if (glucosePct < 50 || glucosePct > 60) warnings.push(`Glicose (${glucosePct.toFixed(0)}%) está fora do ideal (50-60%).`);
+        if (proteinPct < CALORIC_TARGETS.protein.min || proteinPct > CALORIC_TARGETS.protein.max) warnings.push(`Proteínas (${proteinPct.toFixed(0)}%) está fora do ideal (${CALORIC_TARGETS.protein.min}-${CALORIC_TARGETS.protein.max}%).`);
+        if (lipidPct < CALORIC_TARGETS.lipid.min || lipidPct > CALORIC_TARGETS.lipid.max) warnings.push(`Lipídeos (${lipidPct.toFixed(0)}%) está fora do ideal (${CALORIC_TARGETS.lipid.min}-${CALORIC_TARGETS.lipid.max}%).`);
+        if (glucosePct < CALORIC_TARGETS.glucose.min || glucosePct > CALORIC_TARGETS.glucose.max) warnings.push(`Glicose (${glucosePct.toFixed(0)}%) está fora do ideal (${CALORIC_TARGETS.glucose.min}-${CALORIC_TARGETS.glucose.max}%).`);
         return { protein: proteinPct, lipid: lipidPct, glucose: glucosePct, warnings };
     }, [totalCalories, aminoAcidCalculations.calories, lipidCalculations.calories, glucoseCalculations.calories]);
+
+    // Sugestão de dose de lipídeos (g/kg) para manter a fração lipídica na faixa ideal.
+    // Como a glicose completa as calorias não proteicas, o total ideal = kcal proteínas + kcal não proteicas.
+    const idealLipidDoseRange = useMemo(() => {
+        const idealTotalCalories = aminoAcidCalculations.calories + glucoseCalculations.targetNonProteinCalories;
+        if (weight <= 0 || idealTotalCalories <= 0) return { minDose: 0, maxDose: 0, idealTotalCalories: 0 };
+        const minDose = ((CALORIC_TARGETS.lipid.min / 100) * idealTotalCalories) / 10 / weight;
+        const maxDose = ((CALORIC_TARGETS.lipid.max / 100) * idealTotalCalories) / 10 / weight;
+        return { minDose, maxDose, idealTotalCalories };
+    }, [aminoAcidCalculations.calories, glucoseCalculations.targetNonProteinCalories, weight]);
 
     const osmolarityCalculations = useMemo(() => {
         const osm_AA = finalAminoAcidConcentrationInBag * 100;
@@ -585,7 +602,7 @@ const useAppCalculations = (
             // detailed calculations
             aminoAcidCalculations, lipidCalculations, glucoseCalculations, electrolyteCalculations, phosphorusCalculations,
             finalAminoAcidConcentrationInBag, finalGlucoseConcentrationInBag, glucoseMixtureTargetConcentration, glucoseMixtureCalculations,
-            caloricDistribution, osmolarityCalculations, alternativeCalculations,
+            caloricDistribution, idealLipidDoseRange, osmolarityCalculations, alternativeCalculations,
             oligoelementosVolume, vitaminsVolume,
             electrolyteConcentrations,
             precipitationWarnings,
@@ -660,8 +677,8 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
       aminoAcidCalculations, lipidCalculations, glucoseCalculations, electrolyteCalculations,
       phosphorusCalculations, finalAminoAcidConcentrationInBag, finalGlucoseConcentrationInBag,
       glucoseMixtureTargetConcentration, glucoseMixtureCalculations, caloricDistribution,
-      osmolarityCalculations, oligoelementosVolume, vitaminsVolume, electrolyteConcentrations,
-      precipitationWarnings,
+      idealLipidDoseRange, osmolarityCalculations, oligoelementosVolume, vitaminsVolume,
+      electrolyteConcentrations, precipitationWarnings,
     } = reportData;
 
     const generatePdfFromElement = async (elementId: string, setPrintingState: (isPrinting: boolean) => void) => {
@@ -850,12 +867,50 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                             <SectionHeader icon={<ClipboardIcon className="w-6 h-6 text-indigo-500" />} title="Parâmetros de Prescrição" />
                             <div className="grid grid-cols-2 gap-4">
                                 <ClickToEditInput label="Dose AA (g/kg)" value={aminoAcidDose} onSave={setAminoAcidDose} unit="g/kg" />
-                                <ClickToEditInput label="Dose Lipídeos (g/kg)" value={lipidDose} onSave={setLipidDose} unit="g/kg" />
+                                <div>
+                                    <ClickToEditInput label="Dose Lipídeos (g/kg)" value={lipidDose} onSave={setLipidDose} unit="g/kg" />
+                                    <p className={`text-xs mt-1 font-semibold ${caloricDistribution.lipid >= CALORIC_TARGETS.lipid.min && caloricDistribution.lipid <= CALORIC_TARGETS.lipid.max ? 'text-green-600' : 'text-amber-600'}`}>
+                                        = {caloricDistribution.lipid.toFixed(0)}% das calorias
+                                    </p>
+                                </div>
                                 <ClickToEditInput label="Relação Cal/gN" value={calorieNitrogenRatio} onSave={setCalorieNitrogenRatio} unit="" />
                                 <ClickToEditInput label="Meta hídrica (mL/m²)" value={hydrationTarget} onSave={setHydrationTarget} unit="mL/m²" />
                                 <ClickToEditInput label="Concentração AA (%)" value={proteinConcentration} onSave={setProteinConcentration} unit="%" />
                                 <ClickToEditInput label="Concentração Lipídeos (%)" value={lipidConcentration} onSave={setLipidConcentration} unit="%" />
                             </div>
+
+                            {/* Distribuição calórica ao vivo — reage às doses acima */}
+                            <div className="mt-4 bg-slate-50 rounded-lg p-3 ring-1 ring-slate-200">
+                                <div className="flex justify-between items-baseline mb-2">
+                                    <p className="text-xs font-bold text-slate-600 uppercase tracking-wide">Distribuição Calórica</p>
+                                    <p className="text-xs text-slate-500">
+                                        Cal. não proteicas: <span className="font-semibold text-slate-700">{glucoseCalculations.targetNonProteinCalories.toFixed(0)} kcal</span>
+                                    </p>
+                                </div>
+                                <div className="space-y-1">
+                                    {[
+                                        { label: 'Proteínas', pct: caloricDistribution.protein, ...CALORIC_TARGETS.protein },
+                                        { label: 'Glicose', pct: caloricDistribution.glucose, ...CALORIC_TARGETS.glucose },
+                                        { label: 'Lipídeos', pct: caloricDistribution.lipid, ...CALORIC_TARGETS.lipid },
+                                    ].map(({ label, pct, min, max }) => {
+                                        const inRange = pct >= min && pct <= max;
+                                        return (
+                                            <div key={label} className="flex justify-between items-center text-xs">
+                                                <span className="text-slate-600">{label} <span className="text-slate-400">(alvo {min}–{max}%)</span></span>
+                                                <span className={`font-bold px-1.5 py-0.5 rounded ${inRange ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                                                    {pct.toFixed(0)}%
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                {idealLipidDoseRange.maxDose > 0 && (
+                                    <p className="text-xs text-indigo-700 mt-2 pt-2 border-t border-slate-200">
+                                        💡 Dose de lipídeos entre <strong>{idealLipidDoseRange.minDose.toFixed(1)}</strong> e <strong>{idealLipidDoseRange.maxDose.toFixed(1)} g/kg</strong> mantém {CALORIC_TARGETS.lipid.min}–{CALORIC_TARGETS.lipid.max}% das calorias.
+                                    </p>
+                                )}
+                            </div>
+
                             <div className="mt-4 pt-4 border-t border-slate-200 grid grid-cols-2 gap-4">
                                 <ClickToEditInput label="Dose Sódio (mEq/100mL)" value={sodiumDose} onSave={setSodiumDose} unit="mEq/100mL" />
                                 <ClickToEditInput label="Dose Potássio (mEq/100mL)" value={potassiumDose} onSave={setPotassiumDose} unit="mEq/100mL" />
