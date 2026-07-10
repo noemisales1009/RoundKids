@@ -942,13 +942,14 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (!error) refreshPatientPrecautions(patientId);
     };
 
-    const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number; sc?: number; sexo?: string; prontuario?: string }) => {
+    const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number; sc?: number; sexo?: string; prontuario?: string; bedNumber?: number }) => {
         try {
             const updateData: any = {};
             if (data.motherName !== undefined) updateData.mother_name = data.motherName;
             if (data.ctd !== undefined) updateData.diagnosis = data.ctd;
             if (data.sexo !== undefined) updateData.sexo = data.sexo || null;
             if (data.prontuario !== undefined) updateData.prontuario = data.prontuario || null;
+            if (data.bedNumber !== undefined) updateData.bed_number = data.bedNumber;
             if (data.peso !== undefined) {
                 const pesoNumero = typeof data.peso === 'string' ? parseFloat(data.peso) : data.peso;
                 updateData.peso = pesoNumero || null;
@@ -984,6 +985,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                         sc: data.sc ?? p.sc,
                         sexo: data.sexo ?? p.sexo,
                         prontuario: data.prontuario ?? p.prontuario,
+                        bedNumber: data.bedNumber ?? p.bedNumber,
                     };
                 }
                 return p;

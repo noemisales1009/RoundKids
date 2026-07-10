@@ -9,6 +9,7 @@ interface EditPatientInfoModalProps {
     currentSC?: number;
     currentSexo?: string;
     currentProntuario?: string;
+    currentBedNumber?: number;
     onClose: () => void;
 }
 
@@ -19,14 +20,16 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
     currentSC,
     currentSexo,
     currentProntuario,
+    currentBedNumber,
     onClose
 }) => {
-    const { updatePatientDetails } = useContext(PatientsContext)!;
+    const { updatePatientDetails, patients } = useContext(PatientsContext)!;
     const [motherName, setMotherName] = useState(currentMotherName);
     const [weight, setWeight] = useState(currentWeight?.toString() || '');
     const [sc, setSc] = useState(currentSC?.toString() || '');
     const [sexo, setSexo] = useState<string>(currentSexo || '');
     const [prontuario, setProntuario] = useState(currentProntuario || '');
+    const [bedNumber, setBedNumber] = useState(currentBedNumber?.toString() || '');
 
     // Fórmula de SC: (P × 4 + 7) / (P + 90)
     const calculateSC = (pesoKg: number) => {
@@ -47,12 +50,24 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        const newBedNumber = bedNumber ? parseInt(bedNumber, 10) : undefined;
+
+        // Avisa se outro paciente ativo já ocupa o leito escolhido
+        if (newBedNumber !== undefined && newBedNumber !== currentBedNumber) {
+            const occupant = patients.find(p => p.id.toString() !== patientId.toString() && p.bedNumber === newBedNumber);
+            if (occupant && !window.confirm(`⚠️ O leito ${newBedNumber} já está ocupado por ${occupant.name}.\n\nDeseja salvar mesmo assim?`)) {
+                return;
+            }
+        }
+
         updatePatientDetails(patientId, {
             motherName,
             peso: weight ? parseFloat(weight) : undefined,
             sc: sc ? parseFloat(sc) : undefined,
             sexo: sexo || undefined,
             prontuario: prontuario || undefined,
+            bedNumber: newBedNumber,
         });
         onClose();
     };
@@ -67,6 +82,18 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
                     <button onClick={onClose}><CloseIcon className="w-5 h-5 sm:w-6 sm:h-6 text-slate-500 dark:text-slate-400" /></button>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Nº do Leito</label>
+                        <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={bedNumber}
+                            onChange={e => setBedNumber(e.target.value)}
+                            placeholder="Ex: 12"
+                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                        />
+                    </div>
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Nº do Prontuário</label>
                         <input
