@@ -77,6 +77,7 @@ const ExameImagemCard = lazy(() => import('../components/ExameImagemCard').then(
 const PrecautionsCard = lazy(() => import('../components/PrecautionsCard').then(m => ({ default: m.PrecautionsCard })));
 const TriagemMRCard = lazy(() => import('../components/TriagemMRCard').then(m => ({ default: m.TriagemMRCard })));
 const TriagemPAVCard = lazy(() => import('../components/TriagemPAVCard').then(m => ({ default: m.TriagemPAVCard })));
+const TriagemIPCSCard = lazy(() => import('../components/TriagemIPCSCard').then(m => ({ default: m.TriagemIPCSCard })));
 const PAPercentisCard = lazy(() => import('../components/PAPercentisCard').then(m => ({ default: m.PAPercentisCard })));
 const PaineisViraisCard = lazy(() => import('../components/PaineisViraisCard').then(m => ({ default: m.PaineisViraisCard })));
 
@@ -111,7 +112,7 @@ const PatientDetailScreen: React.FC = () => {
 
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
-    const [mainTab, setMainTab] = useState<'npt' | 'scales' | 'gasometria' | 'hemodinamico' | 'pav' | null>(null);
+    const [mainTab, setMainTab] = useState<'npt' | 'scales' | 'gasometria' | 'hemodinamico' | 'pav' | 'ipcs' | null>(null);
     const [notifRefresh, setNotifRefresh] = useState(0);
     const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'scales' | 'pareceres' | 'examesImagem' | 'paPercentis' | 'paineisVirais' | null>(null);
     const [showPAForm, setShowPAForm] = useState(false);
@@ -558,6 +559,7 @@ const PatientDetailScreen: React.FC = () => {
                             { id: 'gasometria' as const, label: 'Gasometria', Icon: DropletIcon },
                             { id: 'hemodinamico' as const, label: 'Hemodinâmico', Icon: HeartPulseIcon },
                             { id: 'pav' as const, label: 'Triagem PAV', Icon: LungsAltIcon },
+                            { id: 'ipcs' as const, label: 'Triagem IPCS', Icon: VirusIcon },
                         ]).map((t, i, arr) => {
                             const cols = 3;
                             const lastRowStart = arr.length - (arr.length % cols === 0 ? cols : arr.length % cols);
@@ -638,6 +640,14 @@ const PatientDetailScreen: React.FC = () => {
                     <div className="p-4">
                         <Suspense fallback={<LoadingSpinner />}>
                             <TriagemPAVCard patientId={patient.id} dob={patient.dob} />
+                        </Suspense>
+                    </div>
+                )}
+
+                {mainTab === 'ipcs' && patient && (
+                    <div className="p-4">
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <TriagemIPCSCard patientId={patient.id} dob={patient.dob} />
                         </Suspense>
                     </div>
                 )}
