@@ -975,7 +975,7 @@ const PatientDetailScreen: React.FC = () => {
                                         <div
                                             key={exam.id}
                                             className={`bg-slate-50 dark:bg-slate-800 p-3 rounded-lg transition ${examSelectMode ? 'cursor-pointer' : ''} ${examSelectMode && selectedExamIds.has(exam.id) ? 'ring-2 ring-amber-500 dark:ring-amber-400' : ''}`}
-                                            onClick={examSelectMode ? () => setSelectedExamIds(prev => { const s = new Set(prev); s.has(exam.id) ? s.delete(exam.id) : s.add(exam.id); return s; }) : undefined}
+                                            onClick={examSelectMode ? () => setSelectedExamIds(prev => { const s = new Set(prev); if (s.has(exam.id)) { s.delete(exam.id); } else { s.add(exam.id); } return s; }) : undefined}
                                         >
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">

@@ -74,6 +74,38 @@ const getCurrentUserName = async (): Promise<string> => {
   return profile?.name || user.email || 'Usuário';
 };
 
+const CollapsibleHeader = ({
+  label, icon, open, onToggle, badge, isDark,
+}: { label: string; icon: string; open: boolean; onToggle: () => void; badge?: number; isDark: boolean }) => (
+  <button
+    onClick={onToggle}
+    className={`w-full flex items-center justify-between px-3 sm:px-4 py-3 rounded-xl border transition-all ${
+      open
+        ? isDark
+          ? 'bg-slate-800 border-blue-800/50 border-l-4 border-l-blue-500'
+          : 'bg-blue-50/50 border-blue-200 border-l-4 border-l-blue-500'
+        : isDark
+          ? 'bg-slate-800 border-slate-700 border-l-4 border-l-blue-700'
+          : 'bg-slate-50 border-slate-200 border-l-4 border-l-blue-300'
+    }`}
+  >
+    <div className="flex items-center gap-2.5">
+      <span className={`material-symbols-rounded text-[22px] ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+        {icon}
+      </span>
+      <span className={`font-bold text-sm sm:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+        {label}
+      </span>
+      {badge !== undefined && badge > 0 && (
+        <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-500 text-white">
+          {badge}
+        </span>
+      )}
+    </div>
+    <ChevronRightIcon className={`w-4 h-4 transition-transform shrink-0 ${open ? 'rotate-90' : ''} ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+  </button>
+);
+
 export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = false }) => {
   const themeContext = useContext(ThemeContext);
   const isDark = themeContext?.theme === 'dark';
@@ -278,38 +310,6 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
   const unitCls = 'text-sm text-slate-500 dark:text-slate-400';
   const descCls = 'text-xs text-slate-400 italic hidden sm:inline';
 
-  const CollapsibleHeader = ({
-    label, icon, open, onToggle, badge,
-  }: { label: string; icon: string; open: boolean; onToggle: () => void; badge?: number }) => (
-    <button
-      onClick={onToggle}
-      className={`w-full flex items-center justify-between px-3 sm:px-4 py-3 rounded-xl border transition-all ${
-        open
-          ? isDark
-            ? 'bg-slate-800 border-blue-800/50 border-l-4 border-l-blue-500'
-            : 'bg-blue-50/50 border-blue-200 border-l-4 border-l-blue-500'
-          : isDark
-            ? 'bg-slate-800 border-slate-700 border-l-4 border-l-blue-700'
-            : 'bg-slate-50 border-slate-200 border-l-4 border-l-blue-300'
-      }`}
-    >
-      <div className="flex items-center gap-2.5">
-        <span className={`material-symbols-rounded text-[22px] ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
-          {icon}
-        </span>
-        <span className={`font-bold text-sm sm:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-          {label}
-        </span>
-        {badge !== undefined && badge > 0 && (
-          <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-500 text-white">
-            {badge}
-          </span>
-        )}
-      </div>
-      <ChevronRightIcon className={`w-4 h-4 transition-transform shrink-0 ${open ? 'rotate-90' : ''} ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
-    </button>
-  );
-
   return (
     <div className={`space-y-4 p-3 sm:p-4 rounded-xl border ${
       isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
@@ -411,6 +411,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
               icon="vital_signs"
               open={openControles}
               onToggle={() => setOpenControles(p => !p)}
+              isDark={isDark}
             />
             {openControles && (
               <div className={`px-3 sm:px-4 pb-4 pt-3 space-y-3 rounded-b-xl border-x border-b ${
@@ -448,6 +449,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
               icon="output"
               open={openSaidas}
               onToggle={() => setOpenSaidas(p => !p)}
+              isDark={isDark}
             />
             {openSaidas && (
               <div className={`px-3 sm:px-4 pb-4 pt-3 space-y-4 rounded-b-xl border-x border-b ${

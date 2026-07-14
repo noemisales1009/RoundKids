@@ -11,10 +11,9 @@ export const RoundCategoryListScreen: React.FC = () => {
 
     useHeader('Round: Categorias');
 
-    if (!patientId || !patient) return <p>Paciente não encontrado.</p>;
-
+    // useMemo deve vir ANTES de qualquer return condicional (regras de hooks).
     const completedCategories = useMemo(() => {
-        if (!questions.length) return [];
+        if (!questions.length || !patientId) return [];
         const answers = checklistAnswers[patientId] || {};
         return categories.filter(cat => {
             const catQuestions = questions.filter(q => q.categoryId === cat.id);
@@ -22,6 +21,8 @@ export const RoundCategoryListScreen: React.FC = () => {
             return catQuestions.every(q => answers[q.id] !== undefined);
         }).map(c => c.id);
     }, [questions, checklistAnswers, patientId, categories]);
+
+    if (!patientId || !patient) return <p>Paciente não encontrado.</p>;
 
     return (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

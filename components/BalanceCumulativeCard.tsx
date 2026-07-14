@@ -42,8 +42,7 @@ const BalanceCumulativeCard: React.FC<BalanceCumulativeCardProps> = ({
         .order('dia', { ascending: false })
         .limit(1);
 
-      if (error) {
-      } else if (balanceData && balanceData.length > 0) {
+      if (!error && balanceData && balanceData.length > 0) {
         const latest = balanceData[0];
         setData({
           bh_dia_anterior: latest.bh_dia_anterior || null,

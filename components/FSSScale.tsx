@@ -1,3 +1,7 @@
+/* eslint-disable react-hooks/refs --
+   Refs de navegação de foco: o `.current` só é lido dentro de handleDropdownChange,
+   que roda a partir do onChange do dropdown (event handler), nunca durante o render.
+   A regra é falso-positivo para o padrão "objeto de refs" atribuído via ref={refs.x}. */
 import React, { useState, useMemo, useRef, forwardRef } from 'react';
 
 // --- Constante com Todos os Dados da Escala FSS ---

@@ -76,7 +76,6 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
           volume: parseFloat(data.volume),
           horas: parseInt(data.horas)
         });
-      } else {
       }
 
       if (balanceResult.data && balanceResult.data.length > 0) {
@@ -87,12 +86,10 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
           peso: parseFloat(data.peso),
           volume: parseFloat(data.volume)
         });
-      } else {
       }
 
       if (balancoCumulativoResult.data) {
         setBalancoCumulativo(balancoCumulativoResult.data);
-      } else {
       }
     } catch (error) {
       console.error('Erro ao buscar últimos cálculos:', error);

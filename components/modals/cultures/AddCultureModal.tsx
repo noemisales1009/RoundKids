@@ -46,7 +46,7 @@ export const AddCultureModal: React.FC<{ patientId: number | string; onClose: ()
             if (!optData) return;
 
             const parentIds = optData.filter((o: any) => o.parent_id !== null).map((o: any) => o.parent_id);
-            let parentMap = new Map<number, string>();
+            const parentMap = new Map<number, string>();
             if (parentIds.length > 0) {
                 const { data: parentData } = await supabase
                     .from('pergunta_opcoes_diagnostico')

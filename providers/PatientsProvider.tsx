@@ -29,9 +29,6 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         // ✅ NORMALIZAR DADOS - Se houver erro na query, retorna array vazio
         const safeData = (res: any) => (res?.data?.length ? res.data : []);
 
-        if (medsRes?.data && medsRes.data.length > 0) {
-        }
-
         const devicesMap = safeData(devicesRes).reduce((acc: any, d: any) => {
             if (!acc[d.paciente_id]) acc[d.paciente_id] = [];
             acc[d.paciente_id].push({
@@ -201,8 +198,6 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         const mappedPatients: Patient[] = patientsData.map((p: any) => {
             const pacienteMeds = medsMap[p.id] || [];
-            if (pacienteMeds.length > 0) {
-            }
 
             return {
                 id: p.id,
@@ -328,7 +323,6 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 // ✅ DEBUG ESCALAS
                 if (scalesRes.error) {
                     console.error('ERRO AO BUSCAR ESCALAS:', scalesRes.error);
-                } else if (!scalesRes.data || scalesRes.data.length === 0) {
                 }
 
                 // ✅ VALIDAR ERROS ANTES DE PROCESSAR
@@ -355,8 +349,6 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             });
         }, 500); // Pequeno delay para não competir com renderização dos leitos
 
-        if (questionsRes.data && questionsRes.data.length > 0) {
-        }
 
         // Process Categories from DB
         if (categoriesRes.data && categoriesRes.data.length > 0) {
@@ -503,7 +495,6 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         if (error) {
             console.error('Erro ao inserir exame:', error);
-        } else {
         }
 
         if (!error) fetchPatients();
@@ -557,7 +548,6 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         if (error) {
             console.error('Erro ao inserir procedimento:', error);
-        } else {
         }
 
         if (!error) fetchPatients();

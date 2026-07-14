@@ -299,7 +299,7 @@ export const AvaliacaoRespiratoriaScale: React.FC<AvaliacaoRespiratoriaScaleProp
     setErroForm(null);
     if (!faixaEtaria) return;
 
-    let campos: (number | null)[] = [];
+    let campos: (number | null)[];
     if (faixaEtaria === 'rn') campos = [sa_movimento, sa_intercostal, sa_xifoide, sa_asaNasal, sa_gemido];
     else if (faixaEtaria === 'lactente') campos = [wd_sibilos, wd_tiragem, wd_ventilacao, wd_fr, wd_fc, wd_cianose];
     else campos = [ir_fr, ir_musculatura, ir_ausculta, ir_cianose, ir_estadoMental, ir_saturacao];

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useContext } from 'react';
 import { supabase } from '../supabaseClient';
 import { UserContext, NotificationContext } from '../contexts';
+import { escapeHtml } from '../lib/sanitize';
 
 interface NotificacaoRecord {
   id: string;
@@ -198,16 +199,16 @@ const generatePDF = (n: NotificacaoRecord, patientName: string, bedNumber?: numb
       <div class="header-title">Notificação de Evento Adverso</div>
       <div class="header-sub">UTI Pediátrica — RoundKids</div>
     </div>
-    ${n.gravidade ? `<span class="badge">${GRAVIDADE_LABEL[n.gravidade] ?? n.gravidade}</span>` : ''}
+    ${n.gravidade ? `<span class="badge">${escapeHtml(GRAVIDADE_LABEL[n.gravidade] ?? n.gravidade)}</span>` : ''}
   </div>
 
   <div class="patient-bar">
     <div>
       <div class="patient-label">Paciente</div>
-      <div class="patient-name">${n.patient_name ?? patientName}</div>
+      <div class="patient-name">${escapeHtml(n.patient_name ?? patientName)}</div>
       <div style="display:flex;gap:12px;margin-top:3px;">
-        ${(n.bed_number ?? bedNumber) ? `<span style="font-size:8.5pt;color:#2563eb;font-weight:600;">Leito ${n.bed_number ?? bedNumber}</span>` : ''}
-        ${prontuario ? `<span style="font-size:8.5pt;color:#64748b;">Pront. ${prontuario}</span>` : ''}
+        ${(n.bed_number ?? bedNumber) ? `<span style="font-size:8.5pt;color:#2563eb;font-weight:600;">Leito ${escapeHtml(n.bed_number ?? bedNumber)}</span>` : ''}
+        ${prontuario ? `<span style="font-size:8.5pt;color:#64748b;">Pront. ${escapeHtml(prontuario)}</span>` : ''}
       </div>
     </div>
     <div class="patient-date">
@@ -224,18 +225,18 @@ const generatePDF = (n: NotificacaoRecord, patientName: string, bedNumber?: numb
         <div class="grid2">
           <div class="info-box">
             <div class="info-box-label">Profissional</div>
-            <div class="info-box-value">${n.profissional ?? '—'}</div>
+            <div class="info-box-value">${escapeHtml(n.profissional ?? '—')}</div>
           </div>
           <div class="info-box">
             <div class="info-box-label">Local / Leito</div>
-            <div class="info-box-value">${n.local_evento ?? '—'}</div>
+            <div class="info-box-value">${escapeHtml(n.local_evento ?? '—')}</div>
           </div>
         </div>
         ${n.tipo_natureza && n.tipo_natureza.length ? `
           <div class="info-box-label" style="margin-bottom:4px">Tipo de evento – natureza</div>
           <div class="tag-list">
-            ${n.tipo_natureza.map(t => `<span class="tag">${TIPO_LABEL[t] ?? t}</span>`).join('')}
-            ${n.tipo_natureza_outros ? `<span class="tag">${n.tipo_natureza_outros}</span>` : ''}
+            ${n.tipo_natureza.map(t => `<span class="tag">${escapeHtml(TIPO_LABEL[t] ?? t)}</span>`).join('')}
+            ${n.tipo_natureza_outros ? `<span class="tag">${escapeHtml(n.tipo_natureza_outros)}</span>` : ''}
           </div>` : ''}
       </div>
     </div>
@@ -243,15 +244,15 @@ const generatePDF = (n: NotificacaoRecord, patientName: string, bedNumber?: numb
     <div class="section">
       <div class="section-title">2. Descrição Objetiva do Evento</div>
       <div class="section-body">
-        <div class="text-block">${n.descricao ?? '—'}</div>
+        <div class="text-block">${escapeHtml(n.descricao ?? '—')}</div>
       </div>
     </div>
 
     <div class="section">
       <div class="section-title">3. Conduta Imediata Realizada</div>
       <div class="section-body">
-        <div class="text-block" style="margin-bottom:8px">${n.conduta_descricao ?? '—'}</div>
-        ${n.tempo_resposta ? `<div class="field"><span class="field-label">Tempo de resposta:</span><span class="field-value">${TEMPO_LABEL[n.tempo_resposta] ?? n.tempo_resposta}</span></div>` : ''}
+        <div class="text-block" style="margin-bottom:8px">${escapeHtml(n.conduta_descricao ?? '—')}</div>
+        ${n.tempo_resposta ? `<div class="field"><span class="field-label">Tempo de resposta:</span><span class="field-value">${escapeHtml(TEMPO_LABEL[n.tempo_resposta] ?? n.tempo_resposta)}</span></div>` : ''}
       </div>
     </div>
 
@@ -259,13 +260,13 @@ const generatePDF = (n: NotificacaoRecord, patientName: string, bedNumber?: numb
       <div class="section">
         <div class="section-title">4. Desfecho Imediato</div>
         <div class="section-body">
-          <div class="text-block">${n.desfecho ? DESFECHO_LABEL[n.desfecho] ?? n.desfecho : '—'}</div>
+          <div class="text-block">${n.desfecho ? escapeHtml(DESFECHO_LABEL[n.desfecho] ?? n.desfecho) : '—'}</div>
         </div>
       </div>
       <div class="section">
         <div class="section-title">5. Notificação Institucional</div>
         <div class="section-body">
-          ${(n.notificacao ?? []).length ? `<div class="tag-list">${(n.notificacao ?? []).map(v => `<span class="tag">${NOTIF_LABEL[v] ?? v}</span>`).join('')}</div>` : '<div class="text-block">—</div>'}
+          ${(n.notificacao ?? []).length ? `<div class="tag-list">${(n.notificacao ?? []).map(v => `<span class="tag">${escapeHtml(NOTIF_LABEL[v] ?? v)}</span>`).join('')}</div>` : '<div class="text-block">—</div>'}
         </div>
       </div>
     </div>
@@ -273,7 +274,7 @@ const generatePDF = (n: NotificacaoRecord, patientName: string, bedNumber?: numb
     <div class="section">
       <div class="section-title">6. Análise Inicial da Causa</div>
       <div class="section-body">
-        ${(n.causa ?? []).length ? `<div class="tag-list">${(n.causa ?? []).map(v => `<span class="tag">${CAUSA_LABEL[v] ?? v}</span>`).join('')}${n.causa_outros ? `<span class="tag">${n.causa_outros}</span>` : ''}</div>` : '<p>—</p>'}
+        ${(n.causa ?? []).length ? `<div class="tag-list">${(n.causa ?? []).map(v => `<span class="tag">${escapeHtml(CAUSA_LABEL[v] ?? v)}</span>`).join('')}${n.causa_outros ? `<span class="tag">${escapeHtml(n.causa_outros)}</span>` : ''}</div>` : '<p>—</p>'}
       </div>
     </div>
 

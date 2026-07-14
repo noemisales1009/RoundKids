@@ -1,4 +1,21 @@
 /**
+ * Escapa um valor para interpolação segura em HTML (defesa contra XSS).
+ * Use ao montar strings HTML manualmente (ex.: document.write de PDFs de
+ * impressão), onde o React NÃO está protegendo a saída. Converte os
+ * caracteres especiais em entidades para que nunca sejam interpretados
+ * como marcação.
+ */
+export function escapeHtml(value: unknown): string {
+    if (value === null || value === undefined) return '';
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/**
  * Sanitiza texto de input do usuário antes de enviar ao banco.
  * Remove tags HTML, trim whitespace, e limita tamanho.
  */

@@ -360,15 +360,13 @@ const useAppCalculations = (
     
     const phosphorusCalculations = useMemo(() => {
       const totalMEq = weight * phosphorusDose;
-      let volume = 0;
+      const volume = phosphorusSource === 'sodium' ? totalMEq / 1 : totalMEq / 2;
       let providedSodium = 0;
       let providedPotassium = 0;
 
       if (phosphorusSource === 'sodium') {
-          volume = totalMEq / 1; 
           providedSodium = totalMEq * 2;
-      } else { 
-          volume = totalMEq / 2;
+      } else {
           providedPotassium = totalMEq;
       }
       return { totalMEq, volume, providedSodium, providedPotassium };

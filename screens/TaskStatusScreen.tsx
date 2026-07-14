@@ -88,10 +88,6 @@ const TaskStatusScreen: React.FC = () => {
             }
 
             setAlerts(filtered);
-
-            // Debug: Log para verificar se justificativa está presente
-            if (filtered.length > 0) {
-            }
         } catch (error) {
             console.error('Erro ao buscar alertas:', error);
             showNotification({ message: 'Erro ao carregar alertas', type: 'error' });

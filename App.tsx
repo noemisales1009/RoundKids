@@ -138,6 +138,7 @@ const PreviewModal: React.FC = () => {
                     <pre className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-mono leading-relaxed">{previewText}</pre>
                 </div>
                 <div className="flex gap-3 px-5 py-4 border-t border-slate-200 dark:border-slate-700">
+                    {/* eslint-disable-next-line react-hooks/refs -- rebuildRef é sempre registrado antes de setShowPreview(true) (EvolucaoDiariaScreen), então já está preenchido quando o modal renderiza */}
                     {rebuildRef.current && (
                         <button
                             onClick={() => { const t = rebuildRef.current!(); setPreviewText(t); }}
@@ -168,6 +169,7 @@ const PreviewModal: React.FC = () => {
                     >
                         Baixar TXT
                     </button>
+                    {/* eslint-disable-next-line react-hooks/refs -- downloadWordRef é sempre registrado antes de setShowPreview(true) (EvolucaoDiariaScreen), então já está preenchido quando o modal renderiza */}
                     {downloadWordRef.current && (
                         <button
                             onClick={() => { handleClose(); downloadWordRef.current?.(); }}

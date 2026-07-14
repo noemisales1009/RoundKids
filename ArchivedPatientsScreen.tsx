@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import { formatDecimalBR } from './lib/format';
+import { escapeHtml } from './lib/sanitize';
 
 interface ArchivedPatient {
   id: string;
@@ -35,16 +36,6 @@ const formatDateTimeToBRL = (dateString?: string | null) => {
   } catch {
     return '—';
   }
-};
-
-const escapeHtml = (value: any) => {
-  if (value === null || value === undefined) return '';
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 };
 
 const renderList = <T,>(title: string, items: T[] | null | undefined, itemRenderer: (item: T) => string) => {
@@ -132,29 +123,21 @@ export const ArchivedPatientsScreen: React.FC = () => {
       ];
 
       for (const table of tables) {
-        let updateQuery = supabase
+        const updateQuery = supabase
           .from(table)
           .update({ is_archived: false })
           .eq('paciente_id', patientId)
           .eq('is_archived', true);
 
-        const { error: tableError } = await updateQuery;
-
-        if (tableError) {
-        } else {
-        }
+        await updateQuery;
       }
 
       // 3️⃣ Restaurar diagnósticos (usa campo 'arquivado' ao invés de 'is_archived')
-      const { error: diagError } = await supabase
+      await supabase
         .from('paciente_diagnosticos')
         .update({ arquivado: false })
         .eq('patient_id', patientId)
         .eq('arquivado', true);
-
-      if (diagError) {
-      } else {
-      }
 
       showMessage('success', '🎉 Paciente e todas as planilhas restauradas com sucesso!');
       fetchArchivedPatients();
@@ -917,9 +900,11 @@ export const ArchivedPatientsScreen: React.FC = () => {
               <button
                 onClick={() => {
                   if (confirmModal.patientId) {
-                    confirmModal.action === 'reactivate'
-                      ? handleReactivate(confirmModal.patientId)
-                      : handleDelete(confirmModal.patientId);
+                    if (confirmModal.action === 'reactivate') {
+                      handleReactivate(confirmModal.patientId);
+                    } else {
+                      handleDelete(confirmModal.patientId);
+                    }
                   }
                 }}
                 className={`flex-1 px-4 py-2.5 text-white text-sm font-medium rounded-xl transition ${

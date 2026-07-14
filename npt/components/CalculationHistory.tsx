@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { getPatientCalculations } from '../services/database'
+import { escapeHtml } from '../../lib/sanitize'
 
 interface CalculationHistoryProps {
   patientId: string | null
@@ -155,7 +156,7 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
       <html>
         <head>
           <meta charset="UTF-8">
-          <title>Prescrição Farmácia - ${patientName}</title>
+          <title>Prescrição Farmácia - ${escapeHtml(patientName)}</title>
           <style>
             @page { size: A4; margin: 10mm; }
             * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -228,7 +229,7 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
       <html>
         <head>
           <meta charset="UTF-8">
-          <title>Prescrição NPT - ${patientName}</title>
+          <title>Prescrição NPT - ${escapeHtml(patientName)}</title>
           <style>
             @page {
               size: A4;
@@ -328,7 +329,7 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
             <h2>Dados do Paciente</h2>
             <div class="row">
               <span class="row-label">Paciente:</span>
-              <span class="row-value">${patientName}</span>
+              <span class="row-value">${escapeHtml(patientName)}</span>
             </div>
             <div class="row">
               <span class="row-label">Peso:</span>
@@ -344,7 +345,7 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
             </div>
             <div class="row">
               <span class="row-label">Criado por:</span>
-              <span class="row-value">${calc.users?.name || 'N/A'}</span>
+              <span class="row-value">${escapeHtml(calc.users?.name || 'N/A')}</span>
             </div>
           </div>
 
@@ -422,7 +423,7 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
             <div class="section">
               <h2>Observações</h2>
               <div class="box">
-                ${calc.notes}
+                ${escapeHtml(calc.notes)}
               </div>
             </div>
           ` : ''}

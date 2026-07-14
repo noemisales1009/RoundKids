@@ -149,7 +149,7 @@ export const AddPainelViralModal: React.FC<{
             const unicos: DiagnosticoAtivo[] = [];
             const visto = new Set<string>();
             for (const d of data ?? []) {
-                let label = d.texto_digitado
+                const label = d.texto_digitado
                     ? (d.opcao_label?.startsWith('Outr') ? d.texto_digitado : `${d.opcao_label} ${d.texto_digitado}`.trim())
                     : d.opcao_label;
                 if (!label || visto.has(label)) continue;

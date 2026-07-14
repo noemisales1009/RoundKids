@@ -82,7 +82,6 @@ export const createPatient = async (patientData: Database['public']['Tables']['p
 export const updatePatient = async (id: string, updates: Database['public']['Tables']['patients']['Update']) => {
   const { data, error } = await supabase
     .from('patients')
-    // @ts-ignore - Supabase type inference issue
     .update(updates)
     .eq('id', id)
     .select()
@@ -177,7 +176,6 @@ export const updateCalculation = async (
 ) => {
   const { data, error } = await supabase
     .from('npt_calculations')
-    // @ts-ignore - Supabase type inference issue
     .update(updates)
     .eq('id', id)
     .select()

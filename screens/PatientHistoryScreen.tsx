@@ -5,6 +5,7 @@ import { useHeader } from '../hooks/useHeader';
 import { supabase } from '../supabaseClient';
 import { formatDateToBRL, formatDateTimeWithHour } from '../constants';
 import { formatDecimalBR } from '../lib/format';
+import { escapeHtml } from '../lib/sanitize';
 import {
     HeartPulseIcon,
     CpuIcon,
@@ -863,7 +864,7 @@ const PatientHistoryScreen: React.FC = () => {
             const label = diagnostic.opcao_label || 'Não informado';
             const createdByName = diagnostic.nome_criador || 'Não informado';
 
-            let description = `[DIAGNOSTICO] Diagnóstico: ${label}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''}${diagnostic.sistema ? ` | Sistema: ${diagnostic.sistema}` : ''} (Status: ${diagnostic.status}).\n👤 Criado por: ${createdByName}`;
+            const description = `[DIAGNOSTICO] Diagnóstico: ${label}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''}${diagnostic.sistema ? ` | Sistema: ${diagnostic.sistema}` : ''} (Status: ${diagnostic.status}).\n👤 Criado por: ${createdByName}`;
 
             events.push({
                 timestamp: diagnostic.data_criacao || new Date().toISOString(),
@@ -880,7 +881,7 @@ const PatientHistoryScreen: React.FC = () => {
             const archivedByName = diagnostic.nome_arquivador || 'Desconhecido';
 
             // Descrição sobre diagnóstico arquivado
-            let description = `[DIAGNOSTICO_ARQUIVADO] ⚠️ DIAGNÓSTICO OCULTADO/ARQUIVADO\n📋 Diagnóstico: ${label}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''}\n👤 Criado por: ${createdByName}\n🚫 Arquivado por: ${archivedByName}\n📅 Motivo: ${diagnostic.motivo_arquivamento || 'Não informado'}`;
+            const description = `[DIAGNOSTICO_ARQUIVADO] ⚠️ DIAGNÓSTICO OCULTADO/ARQUIVADO\n📋 Diagnóstico: ${label}${diagnostic.texto_digitado ? ` - ${diagnostic.texto_digitado}` : ''}\n👤 Criado por: ${createdByName}\n🚫 Arquivado por: ${archivedByName}\n📅 Motivo: ${diagnostic.motivo_arquivamento || 'Não informado'}`;
 
             events.push({
                 timestamp: diagnostic.data_arquivamento || diagnostic.data_criacao || new Date().toISOString(),
@@ -1288,7 +1289,7 @@ const PatientHistoryScreen: React.FC = () => {
                 hasData: filtered.length > 0,
                 html: filtered.map(d => `
                     <li>
-                        <strong>${d.name} (${d.location})</strong><br>
+                        <strong>${escapeHtml(d.name)} (${escapeHtml(d.location)})</strong><br>
                         Início: ${formatDateToBRL(d.startDate)}
                         ${d.removalDate ? `<br>Retirada: ${formatDateToBRL(d.removalDate)}` : ''}
                     </li>
@@ -1304,7 +1305,7 @@ const PatientHistoryScreen: React.FC = () => {
                 hasData: filtered.length > 0,
                 html: filtered.map(m => `
                     <li>
-                        <strong>${m.name} (${m.dosage})</strong><br>
+                        <strong>${escapeHtml(m.name)} (${escapeHtml(m.dosage)})</strong><br>
                         Início: ${formatDateToBRL(m.startDate)}
                         ${m.endDate ? `<br>Fim: ${formatDateToBRL(m.endDate)}` : ''}
                     </li>
@@ -1320,9 +1321,9 @@ const PatientHistoryScreen: React.FC = () => {
                 hasData: filtered.length > 0,
                 html: filtered.map(e => `
                     <li>
-                        <strong>${e.name}</strong><br>
+                        <strong>${escapeHtml(e.name)}</strong><br>
                         Data: ${formatDateToBRL(e.date)}
-                        ${e.observation ? `<br><em>Obs: ${e.observation}</em>` : ''}
+                        ${e.observation ? `<br><em>Obs: ${escapeHtml(e.observation)}</em>` : ''}
                     </li>
                 `).join('')
             };
@@ -1336,9 +1337,9 @@ const PatientHistoryScreen: React.FC = () => {
                 hasData: filtered.length > 0,
                 html: filtered.map(p => `
                     <li>
-                        <strong>${p.name}</strong> - Dr(a): ${p.surgeon}<br>
+                        <strong>${escapeHtml(p.name)}</strong> - Dr(a): ${escapeHtml(p.surgeon)}<br>
                         Data: ${formatDateToBRL(p.date)}
-                        ${p.notes ? `<br><em>Obs: ${p.notes}</em>` : ''}
+                        ${p.notes ? `<br><em>Obs: ${escapeHtml(p.notes)}</em>` : ''}
                     </li>
                 `).join('')
             };
@@ -1352,14 +1353,14 @@ const PatientHistoryScreen: React.FC = () => {
                 hasData: filtered.length > 0,
                 html: filtered.map(d => `
                     <li>
-                        <strong>${d.type}</strong><br>
+                        <strong>${escapeHtml(d.type)}</strong><br>
                         Início: ${formatDateToBRL(d.data_inicio)}
                         ${d.volume ? `<br>Volume: ${formatDecimalBR(d.volume)}mL` : ''}
                         ${d.vet ? `<br>VET: ${formatDecimalBR(d.vet)}kcal/dia` : ''}
                         ${d.pt ? `<br>Proteína (PT): ${formatDecimalBR(d.pt)}g/dia` : ''}
                         ${d.th ? `<br>Taxa Hídrica (TH): ${formatDecimalBR(d.th)}ml/m²/dia` : ''}
                         ${d.data_remocao ? `<br>Retirada: ${formatDateToBRL(d.data_remocao)}` : ''}
-                        ${d.observacao ? `<br><em>Obs: ${d.observacao}</em>` : ''}
+                        ${d.observacao ? `<br><em>Obs: ${escapeHtml(d.observacao)}</em>` : ''}
                     </li>
                 `).join('')
             };
@@ -1373,7 +1374,7 @@ const PatientHistoryScreen: React.FC = () => {
                 hasData: filtered.length > 0,
                 html: filtered.map(s => `
                     <li>
-                        <strong>${s.scaleName}</strong> - Pontuação: ${s.score} (${s.interpretation})<br>
+                        <strong>${escapeHtml(s.scaleName)}</strong> - Pontuação: ${escapeHtml(s.score)} (${escapeHtml(s.interpretation)})<br>
                         Data e Hora: ${formatDateTimeWithHour(s.date)}
                     </li>
                 `).join('')
@@ -1388,7 +1389,7 @@ const PatientHistoryScreen: React.FC = () => {
                 hasData: filtered.length > 0,
                 html: filtered.map(d => `
                     <li>
-                        <strong>Diurese: ${d.resultado || 'N/A'} mL/kg/h</strong><br>
+                        <strong>Diurese: ${escapeHtml(d.resultado || 'N/A')} mL/kg/h</strong><br>
                         Peso: ${d.peso}kg | Volume: ${d.volume}mL | Período: ${d.horas}h<br>
                         Data: ${formatDateToBRL(d.data_registro)}
                     </li>
@@ -1404,7 +1405,7 @@ const PatientHistoryScreen: React.FC = () => {
                 hasData: filtered.length > 0,
                 html: filtered.map(b => `
                     <li>
-                        <strong>Balanço Hídrico: ${b.resultado || 'N/A'}%</strong><br>
+                        <strong>Balanço Hídrico: ${escapeHtml(b.resultado || 'N/A')}%</strong><br>
                         Peso: ${b.peso}kg | Volume: ${b.volume > 0 ? '+' : ''}${b.volume}mL<br>
                         Data: ${formatDateToBRL(b.data_registro)}
                     </li>
@@ -1421,9 +1422,9 @@ const PatientHistoryScreen: React.FC = () => {
                 hasData: filtered.length > 0,
                 html: filtered.map(d => `
                     <li>
-                        <strong>${d.opcao_label || 'Não informado'}${d.texto_digitado ? ` - ${d.texto_digitado}` : ''}</strong><br>
-                        Status: ${d.status || 'Não informado'}<br>
-                        Criado por: ${d.nome_criador || 'Não informado'}<br>
+                        <strong>${escapeHtml(d.opcao_label || 'Não informado')}${d.texto_digitado ? ` - ${escapeHtml(d.texto_digitado)}` : ''}</strong><br>
+                        Status: ${escapeHtml(d.status || 'Não informado')}<br>
+                        Criado por: ${escapeHtml(d.nome_criador || 'Não informado')}<br>
                         Data: ${d.data_criacao ? new Date(d.data_criacao).toLocaleString('pt-BR') : 'N/A'}
                     </li>
                 `).join('')
@@ -1462,7 +1463,7 @@ const PatientHistoryScreen: React.FC = () => {
                             const eventDateTime = new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
                             // Construir evento com todas as informações em linhas
-                            let lines = [];
+                            const lines = [];
 
                             // Horário
                             if (event.hasTime) {
@@ -1471,7 +1472,7 @@ const PatientHistoryScreen: React.FC = () => {
 
                             // Descrição/Tipo (converter quebras de linha em <br/>)
                             if (event.description) {
-                                const descriptionHtml = event.description.split('\n').join('<br/>');
+                                const descriptionHtml = event.description.split('\n').map(escapeHtml).join('<br/>');
                                 lines.push(descriptionHtml);
                             }
 
@@ -1526,7 +1527,7 @@ const PatientHistoryScreen: React.FC = () => {
         const htmlContent = `
             <html>
             <head>
-                <title>Relatório do Paciente - ${patient.name}</title>
+                <title>Relatório do Paciente - ${escapeHtml(patient.name)}</title>
                 <style>
                     body { font-family: sans-serif; margin: 20px; color: #333; }
                     h1, h2, h3 { color: #00796b; border-bottom: 2px solid #e0f2f1; padding-bottom: 5px; }
@@ -1549,10 +1550,10 @@ const PatientHistoryScreen: React.FC = () => {
 
                 <h2>Dados do Paciente</h2>
                 <table>
-                    <tr><th>Nome</th><td>${patient.name}</td></tr>
-                    <tr><th>Leito</th><td>${patient.bedNumber}</td></tr>
+                    <tr><th>Nome</th><td>${escapeHtml(patient.name)}</td></tr>
+                    <tr><th>Leito</th><td>${escapeHtml(patient.bedNumber)}</td></tr>
                     <tr><th>Nascimento</th><td>${formatDateToBRL(patient.dob)}</td></tr>
-                    <tr><th>Nome da Mãe</th><td>${patient.motherName}</td></tr>
+                    <tr><th>Nome da Mãe</th><td>${escapeHtml(patient.motherName)}</td></tr>
                 </table>
 
                 ${devicesData.hasData ? `

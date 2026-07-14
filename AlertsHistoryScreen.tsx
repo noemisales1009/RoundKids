@@ -3,6 +3,7 @@ import { supabase } from './supabaseClient';
 import { Link } from 'react-router-dom';
 import { FileTextIcon, CloseIcon, ChevronDownIcon } from './components/icons';
 import { RESPONSIBLES } from './constants';
+import { escapeHtml } from './lib/sanitize';
 
 import { NotificationContext } from './contexts';
 
@@ -248,15 +249,15 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                     <tbody>
                         ${filteredAlerts.map(alert => `
                             <tr>
-                                <td>${alert.patient_name || 'N/A'}</td>
-                                <td>${alert.bed_number || 'N/A'}</td>
+                                <td>${escapeHtml(alert.patient_name || 'N/A')}</td>
+                                <td>${escapeHtml(alert.bed_number || 'N/A')}</td>
                                 <td>
-                                    ${alert.alertaclinico || 'N/A'}
+                                    ${escapeHtml(alert.alertaclinico || 'N/A')}
                                     ${alert.source === 'alertas' && alert.sistemas && alert.sistemas.length > 0
-                                        ? `<br/><span style="font-size:11px;color:#64748b;">${alert.sistemas.join(' • ')}</span>`
+                                        ? `<br/><span style="font-size:11px;color:#64748b;">${escapeHtml(alert.sistemas.join(' • '))}</span>`
                                         : ''}
                                 </td>
-                                <td><span class="status-badge status-${alert.live_status}">${alert.live_status?.replace('_', ' ') || 'N/A'}</span></td>
+                                <td><span class="status-badge status-${escapeHtml(alert.live_status)}">${escapeHtml(alert.live_status?.replace('_', ' ') || 'N/A')}</span></td>
                             </tr>
                         `).join('')}
                     </tbody>

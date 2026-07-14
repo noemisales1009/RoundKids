@@ -24,7 +24,6 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId, onCalcul
     const patient = patients.find(p => p.id.toString() === patientId.toString());
     if (patient?.peso) {
       setWeight(patient.peso.toString());
-    } else {
     }
   }, [patientId, patients]);
 
