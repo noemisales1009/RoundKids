@@ -15,7 +15,7 @@ export const BottomNav: React.FC = () => {
         { path: '/settings', label: 'Ajustes', icon: SettingsIcon },
     ];
 
-    const activeLinkClass = "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30";
+    const activeLinkClass = "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30";
     const inactiveLinkClass = "text-slate-600 dark:text-slate-300";
 
     return (

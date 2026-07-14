@@ -147,7 +147,7 @@ export const LoginScreen: React.FC = () => {
                             value={email}
                             onChange={(e) => { setEmail(e.target.value); setErrorMessage(''); }}
                             placeholder="seu@email.com"
-                            className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             required
                         />
                     </div>
@@ -158,7 +158,7 @@ export const LoginScreen: React.FC = () => {
                             value={password}
                             onChange={(e) => { setPassword(e.target.value); setErrorMessage(''); }}
                             placeholder="********"
-                            className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                            className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             required
                         />
                     </div>
@@ -175,7 +175,7 @@ export const LoginScreen: React.FC = () => {
                         className={`w-full font-bold py-2 sm:py-3 px-4 rounded-lg transition text-base sm:text-lg flex items-center justify-center gap-2 ${
                             loading || isLockedOut
                                 ? 'bg-slate-400 text-white cursor-not-allowed opacity-75'
-                                : 'bg-blue-500 hover:bg-blue-600 text-white'
+                                : 'bg-primary-600 hover:bg-primary-700 text-white'
                         }`}
                     >
                         {loading ? (

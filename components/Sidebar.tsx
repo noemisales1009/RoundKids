@@ -18,7 +18,7 @@ export const Sidebar: React.FC = () => {
         { path: '/settings', label: 'Ajustes', icon: SettingsIcon },
     ];
 
-    const activeLinkClass = "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200";
+    const activeLinkClass = "bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-200";
     const inactiveLinkClass = "text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200";
 
     const handleLogout = async () => {
@@ -77,7 +77,7 @@ export const Sidebar: React.FC = () => {
                             {user.avatarUrl ? (
                                 <img src={user.avatarUrl} alt="User avatar" className="w-12 h-12 rounded-full object-cover bg-slate-200" />
                             ) : (
-                                <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                                <div className="w-12 h-12 rounded-full bg-linear-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                                     {user.name.charAt(0).toUpperCase()}
                                 </div>
                             )}
