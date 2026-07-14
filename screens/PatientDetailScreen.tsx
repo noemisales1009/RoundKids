@@ -312,43 +312,55 @@ const PatientDetailScreen: React.FC = () => {
     };
 
     const handleDeleteDevice = (patientId: number | string, deviceId: number | string) => {
-        if (window.confirm("Tem certeza que deseja apagar este dispositivo?")) {
+        const item = patient?.devices?.find(d => String(d.id) === String(deviceId));
+        const nome = item ? `${item.name}${item.location ? ` (${item.location})` : ''}` : 'este dispositivo';
+        if (window.confirm(`Arquivar o dispositivo "${nome}"?\n\nEle sai da lista ativa, mas continua no histórico.`)) {
             deleteDeviceFromPatient(patientId, deviceId);
-            showNotification({ message: 'Dispositivo removido.', type: 'info' });
+            showNotification({ message: 'Dispositivo arquivado.', type: 'info' });
         }
     };
 
     const handleDeleteExam = (patientId: number | string, examId: number | string) => {
-        if (window.confirm("Tem certeza que deseja arquivar este exame?")) {
+        const item = patient?.exams?.find(e => String(e.id) === String(examId));
+        const nome = item?.name || 'este exame';
+        if (window.confirm(`Arquivar o exame "${nome}"?\n\nEle sai da lista ativa, mas continua no histórico.`)) {
             deleteExamFromPatient(patientId, examId);
             showNotification({ message: 'Exame arquivado.', type: 'info' });
         }
     };
 
     const handleDeleteMedication = (patientId: number | string, medicationId: number | string) => {
-        if (window.confirm("Tem certeza que deseja arquivar esta medicação?")) {
+        const item = patient?.medications?.find(m => String(m.id) === String(medicationId));
+        const nome = item ? `${item.name}${item.dosage ? ` — ${item.dosage}` : ''}` : 'esta medicação';
+        if (window.confirm(`Arquivar a medicação "${nome}"?\n\nEla sai da lista ativa, mas continua no histórico.`)) {
             deleteMedicationFromPatient(patientId, medicationId);
             showNotification({ message: 'Medicação arquivada.', type: 'info' });
         }
     };
 
     const handleDeleteProcedure = (patientId: number | string, procedureId: number | string) => {
-        if (window.confirm("Tem certeza que deseja arquivar este procedimento cirúrgico?")) {
+        const item = patient?.surgicalProcedures?.find(p => String(p.id) === String(procedureId));
+        const nome = item?.name || 'este procedimento cirúrgico';
+        if (window.confirm(`Arquivar o procedimento cirúrgico "${nome}"?\n\nEle sai da lista ativa, mas continua no histórico.`)) {
             deleteSurgicalProcedureFromPatient(patientId, procedureId);
             showNotification({ message: 'Procedimento cirúrgico arquivado.', type: 'info' });
         }
     };
 
     const handleDeleteCulture = (patientId: number | string, cultureId: number | string) => {
-        if (window.confirm("Tem certeza que deseja arquivar esta cultura?")) {
+        const item = patient?.cultures?.find(c => String(c.id) === String(cultureId));
+        const nome = item ? `${item.site}${item.microorganism ? ` — ${item.microorganism}` : ''}` : 'esta cultura';
+        if (window.confirm(`Arquivar a cultura "${nome}"?\n\nEla sai da lista ativa, mas continua no histórico.`)) {
             deleteCultureFromPatient(patientId, cultureId);
             showNotification({ message: 'Cultura arquivada.', type: 'info' });
         }
     };
 
     const handleDeleteDiet = (patientId: number | string, dietId: number | string) => {
-        if (window.confirm("Tem certeza que deseja arquivar esta dieta?")) {
-            deleteDietFromPatient(patientId, dietId, user?.id);  // 🟢 Passar user.id
+        const item = patient?.diets?.find(d => String(d.id) === String(dietId));
+        const nome = item?.type || 'esta dieta';
+        if (window.confirm(`Arquivar a dieta "${nome}"?\n\nEla sai da lista ativa, mas continua no histórico.`)) {
+            deleteDietFromPatient(patientId, dietId, user?.id);
             showNotification({ message: 'Dieta arquivada.', type: 'info' });
         }
     };

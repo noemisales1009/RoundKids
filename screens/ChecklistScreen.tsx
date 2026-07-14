@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useContext, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Answer, Question } from '../types';
-import { PatientsContext } from '../contexts';
+import { PatientsContext, NotificationContext } from '../contexts';
 import { useHeader } from '../hooks';
 import { CheckIcon, AlertIcon, ChevronLeftIcon, ChevronRightIcon } from '../components/icons';
 
@@ -11,11 +11,14 @@ const AlertModal = lazy(() => import('../components/modals').then(m => ({ defaul
 export const ChecklistScreen: React.FC = () => {
     const { patientId, categoryId, questionIndex } = useParams<{ patientId: string; categoryId: string; questionIndex: string }>();
     const { patients, questions, checklistAnswers, saveChecklistAnswer, categories } = useContext(PatientsContext)!;
+    const { showNotification } = useContext(NotificationContext)!;
 
     const patient = patients.find(p => p.id.toString() === patientId);
     const category = categories.find(c => c.id.toString() === categoryId);
 
     const [activeAlertQuestion, setActiveAlertQuestion] = useState<Question | null>(null);
+    const [pending, setPending] = useState<{ qId: number; answer: Answer } | null>(null);
+    const [savingAnswer, setSavingAnswer] = useState(false);
 
     // Filter questions based on category using questions from context
     const categoryQuestions = useMemo(() => {
@@ -35,13 +38,25 @@ export const ChecklistScreen: React.FC = () => {
     useHeader(category ? `Checklist: ${category.name}` : 'Checklist');
 
     // Get existing answer from context
-    const currentAnswer = patientId && categoryQuestions[currentQuestionIndex]
-        ? checklistAnswers[patientId]?.[categoryQuestions[currentQuestionIndex].id]
+    const activeQuestionId = categoryQuestions[currentQuestionIndex]?.id;
+    const serverAnswer = patientId && activeQuestionId != null
+        ? checklistAnswers[patientId]?.[activeQuestionId]
         : undefined;
+    // Resposta exibida de forma otimista: destaca o botão na hora do toque, sem
+    // esperar o servidor — evita toques repetidos quando a rede está lenta.
+    const currentAnswer = pending && pending.qId === activeQuestionId ? pending.answer : serverAnswer;
 
     const handleAnswer = async (questionId: number, answer: Answer) => {
-        if (patientId && categoryId) {
+        if (!patientId || !categoryId) return;
+        setPending({ qId: questionId, answer }); // destaque imediato
+        setSavingAnswer(true);
+        try {
             await saveChecklistAnswer(patientId, parseInt(categoryId), questionId, answer);
+        } catch {
+            setPending(null); // reverte o destaque se a gravação falhou
+            showNotification({ message: 'Não foi possível salvar a resposta. Tente novamente.', type: 'error' });
+        } finally {
+            setSavingAnswer(false);
         }
     };
 
@@ -98,6 +113,15 @@ export const ChecklistScreen: React.FC = () => {
                                 {currentAnswer === answer && <CheckIcon className="w-5 h-5" />} {answer.replace('_', ' ').toUpperCase()}
                             </button>
                         ))}
+                    </div>
+
+                    <div className="h-4 flex items-center justify-center">
+                        {savingAnswer && (
+                            <span className="flex items-center gap-2 text-blue-100 text-xs font-semibold">
+                                <span className="inline-block w-3 h-3 border-2 border-blue-200 border-t-transparent rounded-full animate-spin" />
+                                Salvando…
+                            </span>
+                        )}
                     </div>
 
                     <button

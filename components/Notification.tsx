@@ -1,13 +1,16 @@
 import React, { useEffect } from 'react';
-import { CheckCircleIcon, WarningIcon, InfoIcon } from './icons';
+import { CheckCircleIcon, WarningIcon, InfoIcon, CloseIcon } from './icons';
 
 export const Notification: React.FC<{ message: string; type: 'success' | 'error' | 'info'; onClose: () => void }> = ({ message, type, onClose }) => {
     useEffect(() => {
+        // Erros NÃO somem sozinhos: uma falha ao salvar (ex.: dose) precisa ser
+        // vista e fechada manualmente pelo clínico. Sucesso/info somem em 4s.
+        if (type === 'error') return;
         const timer = setTimeout(() => {
             onClose();
-        }, 3000);
+        }, 4000);
         return () => clearTimeout(timer);
-    }, [onClose]);
+    }, [onClose, type]);
 
     const bgColor = {
         success: 'bg-green-500',
@@ -22,9 +25,19 @@ export const Notification: React.FC<{ message: string; type: 'success' | 'error'
     }[type];
 
     return (
-        <div className={`fixed top-2 right-2 sm:top-5 sm:right-5 z-50 flex items-center p-3 sm:p-4 rounded-lg shadow-lg text-white max-w-xs sm:max-w-sm ${bgColor} animate-notification-in`}>
+        <div
+            role="alert"
+            className={`fixed top-2 right-2 sm:top-5 sm:right-5 z-50 flex items-center p-3 sm:p-4 rounded-lg shadow-lg text-white max-w-xs sm:max-w-sm ${bgColor} animate-notification-in`}
+        >
             {icon}
             <span className="ml-2 sm:ml-3 font-semibold text-sm sm:text-base">{message}</span>
+            <button
+                onClick={onClose}
+                aria-label="Fechar aviso"
+                className="ml-3 shrink-0 text-white/80 hover:text-white transition"
+            >
+                <CloseIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
         </div>
     );
 };

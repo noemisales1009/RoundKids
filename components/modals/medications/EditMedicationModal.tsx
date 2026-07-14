@@ -266,11 +266,12 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
 
         let dosageFormatted: string;
         if (temUnidadeDose) {
-            if (!dosageValue) {
-                showNotification({ message: 'Preencha a dosagem', type: 'error' });
+            const doseNum = Number(String(dosageValue).replace(',', '.'));
+            if (!String(dosageValue).trim() || !Number.isFinite(doseNum) || doseNum <= 0) {
+                showNotification({ message: 'Informe uma dose numérica válida, maior que zero (ex: 10, 5.5, 0.1).', type: 'error' });
                 return;
             }
-            dosageFormatted = `${dosageValue} ${unidadeFinal}`;
+            dosageFormatted = `${String(dosageValue).replace(',', '.')} ${unidadeFinal}`;
         } else {
             dosageFormatted = finalMedicationName;
         }
@@ -408,6 +409,7 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                             </label>
                             <input
                                 type="text"
+                                inputMode="decimal"
                                 value={dosageValue}
                                 onChange={e => setDosageValue(e.target.value)}
                                 placeholder="Ex: 10, 5.5, 0.1"

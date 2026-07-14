@@ -35,6 +35,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
     
     
     // State
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [categorias, setCategorias] = useState<string[]>([]);
     const [medicamentos, setMedicamentos] = useState<Medicamento[]>([]);
     const [selectedCategoria, setSelectedCategoria] = useState('');
@@ -238,15 +239,20 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
+        if (isSubmitting) return;
+
         if (!finalMedicationName) {
             showNotification({ message: 'Selecione ou digite um medicamento', type: 'error' });
             return;
         }
 
-        if (temUnidadeDose && !dosageValue) {
-            showNotification({ message: 'Preencha a dosagem', type: 'error' });
-            return;
+        if (temUnidadeDose) {
+            const doseNum = Number(String(dosageValue).replace(',', '.'));
+            if (!String(dosageValue).trim() || !Number.isFinite(doseNum) || doseNum <= 0) {
+                showNotification({ message: 'Informe uma dose numérica válida, maior que zero (ex: 10, 5.5, 0.1).', type: 'error' });
+                return;
+            }
         }
 
         if (!startDate) {
@@ -263,7 +269,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
         // ✅ LÓGICA CORRIGIDA:
         // Se tem unidade: salva valor + unidade
         // Se NÃO tem unidade: salva nome do medicamento em dosageValue, unidade = null
-        let dosageValueFinal = dosageValue;
+        let dosageValueFinal = String(dosageValue).replace(',', '.');
         let unidade: string | undefined = undefined;
 
         if (temUnidadeDose) {
@@ -277,6 +283,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
             ? diagnosticosAtivos.find(d => d.id === selectedDiagnosticoId)
             : undefined;
 
+        setIsSubmitting(true);
         try {
             await addMedicationToPatient(
                 patientId,
@@ -298,6 +305,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
             onClose();
         } catch (err: any) {
             showNotification({ message: `Erro ao cadastrar: ${err.message}`, type: 'error' });
+            setIsSubmitting(false);
         }
     };
 
@@ -419,6 +427,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                             </label>
                             <input
                                 type="text"
+                                inputMode="decimal"
                                 value={dosageValue}
                                 onChange={e => setDosageValue(e.target.value)}
                                 placeholder="Ex: 10, 5.5, 0.1"
@@ -527,11 +536,12 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                         )}
                     </div>
 
-                    <button 
-                        type="submit" 
-                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition"
+                    <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition"
                     >
-                        Cadastrar
+                        {isSubmitting ? 'Cadastrando...' : 'Cadastrar'}
                     </button>
                 </form>
             </div>

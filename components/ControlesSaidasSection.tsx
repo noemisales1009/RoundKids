@@ -217,6 +217,10 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
   const set = (key: keyof Data, val: string) =>
     setData(prev => ({ ...prev, [key]: val }));
 
+  // Campos numéricos: aceita vírgula e normaliza para ponto, evitando que
+  // "1,5" seja descartado (type="number" rejeita vírgula em pt-BR).
+  const setNum = (key: keyof Data, val: string) => set(key, val.replace(',', '.'));
+
   const toggleDreno = (key: DrenoKey) => {
     setActiveDrenos(prev => {
       const next = new Set(prev);
@@ -423,15 +427,15 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
                 {VITAIS.map(({ minKey, maxKey, label, unit, desc }) => (
                   <div key={minKey} className={rowCls}>
                     <span className={`${labelCls} w-16`}>{label}:</span>
-                    <input type="number" className={numCls}
+                    <input type="text" inputMode="decimal" className={numCls}
                       value={data[minKey as keyof Data]}
-                      onChange={e => set(minKey as keyof Data, e.target.value)}
+                      onChange={e => setNum(minKey as keyof Data, e.target.value)}
                       placeholder="mín"
                       disabled={inputDisabled} />
                     <span className={unitCls}>a</span>
-                    <input type="number" className={numCls}
+                    <input type="text" inputMode="decimal" className={numCls}
                       value={data[maxKey as keyof Data]}
-                      onChange={e => set(maxKey as keyof Data, e.target.value)}
+                      onChange={e => setNum(maxKey as keyof Data, e.target.value)}
                       placeholder="máx"
                       disabled={inputDisabled} />
                     <span className={unitCls}>{unit}</span>
@@ -463,8 +467,8 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
                   </p>
                   <div className={rowCls}>
                     <span className={`${labelCls} w-36`}>EVACUAÇÕES:</span>
-                    <input type="number" className={numCls} value={data.evacuacoes}
-                      onChange={e => set('evacuacoes', e.target.value)}
+                    <input type="text" inputMode="decimal" className={numCls} value={data.evacuacoes}
+                      onChange={e => setNum('evacuacoes', e.target.value)}
                       disabled={inputDisabled} />
                     <span className={unitCls}>g/ml</span>
                   </div>
@@ -592,10 +596,11 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
                             />
                           )}
                           <input
-                            type="number"
+                            type="text"
+                            inputMode="decimal"
                             className={numCls}
                             value={data[key as keyof Data]}
-                            onChange={e => set(key as keyof Data, e.target.value)}
+                            onChange={e => setNum(key as keyof Data, e.target.value)}
                             placeholder="valor"
                             disabled={inputDisabled}
                           />
@@ -613,15 +618,15 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
                   </p>
                   <div className={rowCls}>
                     <span className={`${labelCls} w-48`}>HEMODIÁLISE:</span>
-                    <input type="number" className={numCls} value={data.hemodialise}
-                      onChange={e => set('hemodialise', e.target.value)}
+                    <input type="text" inputMode="decimal" className={numCls} value={data.hemodialise}
+                      onChange={e => setNum('hemodialise', e.target.value)}
                       disabled={inputDisabled} />
                     <span className={unitCls}>ml/24h</span>
                   </div>
                   <div className={rowCls}>
                     <span className={`${labelCls} w-48`}>DIÁLISE PERITONEAL:</span>
-                    <input type="number" className={numCls} value={data.dialise_peritoneal}
-                      onChange={e => set('dialise_peritoneal', e.target.value)}
+                    <input type="text" inputMode="decimal" className={numCls} value={data.dialise_peritoneal}
+                      onChange={e => setNum('dialise_peritoneal', e.target.value)}
                       disabled={inputDisabled} />
                     <span className={unitCls}>ml/24h</span>
                   </div>
