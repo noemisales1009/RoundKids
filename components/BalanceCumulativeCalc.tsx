@@ -131,14 +131,14 @@ const BalanceCumulativeCalc: React.FC<BalanceCumulativeCalcProps> = ({
             <p className="text-xs text-slate-600 font-medium mb-3">Cálculo: BH Anterior + BH Hoje = Cumulativo</p>
             
             <div className="flex items-center justify-between gap-2 mb-3">
-              <div className="flex-1 bg-blue-50 p-2 rounded text-center border border-blue-200">
+              <div className="flex-1 bg-primary-50 p-2 rounded text-center border border-primary-200">
                 <p className="text-xs text-slate-600 mb-1">BH Anterior</p>
                 <p className={`font-bold text-sm ${
                   data.bh_dia_anterior === null 
-                    ? 'text-gray-500' 
+                    ? 'text-slate-500' 
                     : data.bh_dia_anterior >= 0 
                       ? 'text-red-600' 
-                      : 'text-blue-600'
+                      : 'text-primary-600'
                 }`}>
                   {formatValue(data.bh_dia_anterior)}
                 </p>
@@ -146,12 +146,12 @@ const BalanceCumulativeCalc: React.FC<BalanceCumulativeCalcProps> = ({
 
               <div className="text-slate-600 font-bold">+</div>
 
-              <div className="flex-1 bg-blue-50 p-2 rounded text-center border border-blue-200">
+              <div className="flex-1 bg-primary-50 p-2 rounded text-center border border-primary-200">
                 <p className="text-xs text-slate-600 mb-1">BH Hoje</p>
                 <p className={`font-bold text-sm ${
                   data.bh_do_dia >= 0 
                     ? 'text-red-600' 
-                    : 'text-blue-600'
+                    : 'text-primary-600'
                 }`}>
                   {formatValue(data.bh_do_dia)}
                 </p>
@@ -159,9 +159,9 @@ const BalanceCumulativeCalc: React.FC<BalanceCumulativeCalcProps> = ({
 
               <div className="text-slate-600 font-bold">=</div>
 
-              <div className="flex-1 bg-indigo-50 p-2 rounded text-center border border-indigo-200">
+              <div className="flex-1 bg-primary-50 p-2 rounded text-center border border-primary-200">
                 <p className="text-xs text-slate-600 mb-1">Cumulativo</p>
-                <p className="font-bold text-sm text-indigo-600">
+                <p className="font-bold text-sm text-primary-600">
                   {formatValue(cumulativeValue)}
                 </p>
               </div>
@@ -183,9 +183,9 @@ const BalanceCumulativeCalc: React.FC<BalanceCumulativeCalcProps> = ({
                 )}
                 
                 {cumulativeValue < -500 && (
-                  <div className="bg-blue-50 px-3 py-2 rounded border border-blue-200">
-                    <p className="text-xs font-bold text-blue-700">⚠️ Alerta</p>
-                    <p className="text-xs text-blue-600">Déficit {Math.abs(cumulativeValue).toFixed(0)} mL</p>
+                  <div className="bg-primary-50 px-3 py-2 rounded border border-primary-200">
+                    <p className="text-xs font-bold text-primary-700">⚠️ Alerta</p>
+                    <p className="text-xs text-primary-600">Déficit {Math.abs(cumulativeValue).toFixed(0)} mL</p>
                   </div>
                 )}
 
@@ -224,7 +224,7 @@ const BalanceCumulativeCalc: React.FC<BalanceCumulativeCalcProps> = ({
           <span className={`font-bold ${
             cumulativeValue >= 0 
               ? 'text-red-600' 
-              : 'text-blue-600'
+              : 'text-primary-600'
           }`}>
             {formatValue(cumulativeValue)} mL
           </span>

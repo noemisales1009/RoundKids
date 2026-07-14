@@ -70,27 +70,27 @@ export const EditAporteModal: React.FC<{
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
-            <input type="date" value={dataReferencia} onChange={(e) => setDataReferencia(e.target.value)} className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" required />
+            <input type="date" value={dataReferencia} onChange={(e) => setDataReferencia(e.target.value)} className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200" required />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">VO (ml/m²/dia)</label>
-            <input type="number" step="0.1" min="0" value={vo} onChange={(e) => setVo(e.target.value)} placeholder="0" className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
+            <input type="number" step="0.1" min="0" value={vo} onChange={(e) => setVo(e.target.value)} placeholder="0" className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200" />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">HV/NPT (ml/m²/dia)</label>
-            <input type="number" step="0.1" min="0" value={hvNpt} onChange={(e) => setHvNpt(e.target.value)} placeholder="0" className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
+            <input type="number" step="0.1" min="0" value={hvNpt} onChange={(e) => setHvNpt(e.target.value)} placeholder="0" className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200" />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">MED (ml/m²/dia)</label>
-            <input type="number" step="0.1" min="0" value={medicacoes} onChange={(e) => setMedicacoes(e.target.value)} placeholder="0" className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200" />
+            <input type="number" step="0.1" min="0" value={medicacoes} onChange={(e) => setMedicacoes(e.target.value)} placeholder="0" className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200" />
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2 pt-4">
             <button type="button" onClick={onClose} disabled={loading} className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-md text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition disabled:opacity-50">Cancelar</button>
-            <button type="submit" disabled={loading} className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition disabled:opacity-50">{loading ? 'Salvando...' : 'Salvar'}</button>
+            <button type="submit" disabled={loading} className="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md transition disabled:opacity-50">{loading ? 'Salvando...' : 'Salvar'}</button>
           </div>
         </form>
       </div>

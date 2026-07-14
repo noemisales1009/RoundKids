@@ -23,23 +23,23 @@ const DashboardScreen: React.FC = () => {
     const [loading, setLoading] = useState(true);
 
     const professionalColorMap: Record<string, { border: string; icon: string; badge: string }> = {
-        'Enfermeiro':                            { border: 'border-blue-400',    icon: 'medical_services',    badge: 'bg-blue-500' },
+        'Enfermeiro':                            { border: 'border-primary-400',    icon: 'medical_services',    badge: 'bg-primary-500' },
         'Farmacêutico':                          { border: 'border-orange-400',  icon: 'local_pharmacy',      badge: 'bg-orange-500' },
         'Fisioterapeuta':                        { border: 'border-green-400',   icon: 'accessibility_new',   badge: 'bg-green-500' },
-        'Médico':                                { border: 'border-sky-400',     icon: 'stethoscope',         badge: 'bg-sky-500' },
+        'Médico':                                { border: 'border-primary-400',     icon: 'stethoscope',         badge: 'bg-primary-500' },
         'Nutricionista':                         { border: 'border-amber-400',   icon: 'nutrition',           badge: 'bg-amber-500' },
-        'Odontólogo':                            { border: 'border-cyan-400',    icon: 'dentistry',           badge: 'bg-cyan-500' },
+        'Odontólogo':                            { border: 'border-primary-400',    icon: 'dentistry',           badge: 'bg-primary-500' },
         'Psicólogo':                             { border: 'border-pink-400',    icon: 'psychology',          badge: 'bg-pink-500' },
         'Fonoaudiólogo':                         { border: 'border-violet-400',  icon: 'record_voice_over',   badge: 'bg-violet-500' },
-        'Serviço Social':                        { border: 'border-teal-400',    icon: 'people',              badge: 'bg-teal-500' },
+        'Serviço Social':                        { border: 'border-primary-400',    icon: 'people',              badge: 'bg-primary-500' },
         'Terapeuta Ocupacional':                 { border: 'border-lime-500',    icon: 'front_hand',          badge: 'bg-lime-600' },
-        'Médico / Enfermeiro':                   { border: 'border-indigo-400',  icon: 'group',               badge: 'bg-indigo-500' },
+        'Médico / Enfermeiro':                   { border: 'border-primary-400',  icon: 'group',               badge: 'bg-primary-500' },
         'Médico / Fisioterapeuta':               { border: 'border-emerald-400', icon: 'group',               badge: 'bg-emerald-500' },
         'Médico / Nutricionista':                { border: 'border-yellow-400',  icon: 'group',               badge: 'bg-yellow-500' },
         'Médico / Enfermeiro / Fisioterapeuta':  { border: 'border-purple-400',  icon: 'groups',              badge: 'bg-purple-500' },
         'Médico / Enfermeiro / Nutricionista':   { border: 'border-rose-400',    icon: 'groups',              badge: 'bg-rose-500' },
-        'Médico / Odontólogo / Enfermeiro':      { border: 'border-sky-500',     icon: 'groups',              badge: 'bg-sky-600' },
-        'Médico / Serviço Social / Enfermeiro':  { border: 'border-teal-500',    icon: 'groups',              badge: 'bg-teal-600' },
+        'Médico / Odontólogo / Enfermeiro':      { border: 'border-primary-500',     icon: 'groups',              badge: 'bg-primary-600' },
+        'Médico / Serviço Social / Enfermeiro':  { border: 'border-primary-500',    icon: 'groups',              badge: 'bg-primary-600' },
         'Médico / Psicólogo / Enfermeiro':       { border: 'border-fuchsia-400', icon: 'groups',              badge: 'bg-fuchsia-500' },
     };
 
@@ -103,7 +103,7 @@ const DashboardScreen: React.FC = () => {
     const summaryData = useMemo(() => {
         return [
             { title: 'Alertas', count: dashboardData.totalAlertas, icon: WarningIcon, color: 'text-yellow-500', bgColor: 'bg-yellow-100 dark:bg-yellow-900/50', status: 'alerta' },
-            { title: 'No Prazo', count: dashboardData.totalNoPrazo, icon: ClockIcon, color: 'text-blue-500', bgColor: 'bg-blue-100 dark:bg-blue-900/50', status: 'no_prazo' },
+            { title: 'No Prazo', count: dashboardData.totalNoPrazo, icon: ClockIcon, color: 'text-primary-600', bgColor: 'bg-primary-100 dark:bg-primary-900/50', status: 'no_prazo' },
             { title: 'Fora do Prazo', count: dashboardData.totalForaDoPrazo, icon: AlertIcon, color: 'text-red-500', bgColor: 'bg-red-100 dark:bg-red-900/50', status: 'fora_do_prazo' },
             { title: 'Concluídos', count: dashboardData.totalConcluidos, icon: CheckCircleIcon, color: 'text-green-500', bgColor: 'bg-green-100 dark:bg-green-900/50', status: 'concluido' },
         ];
@@ -137,9 +137,9 @@ const DashboardScreen: React.FC = () => {
                 count: alerts.length,
                 tasks: alerts,
                 colors: professionalColorMap[professional] || {
-                    border: 'border-gray-400',
+                    border: 'border-slate-400',
                     icon: '👤',
-                    badge: 'bg-gray-500'
+                    badge: 'bg-slate-500'
                 }
             }))
             .sort((a, b) => b.count - a.count);
@@ -213,7 +213,7 @@ const DashboardScreen: React.FC = () => {
                                                             {alert.hora_criacao_formatado && <p>📅 Criado: {alert.hora_criacao_formatado}</p>}
                                                             {alert.prazo_limite_formatado && <p>⏰ Prazo: {alert.prazo_limite_formatado}</p>}
                                                             {alert.prazo_formatado && <p>⌛ Tempo: {alert.prazo_formatado}</p>}
-                                                            {alert.live_status && <p>Status: <span className={alert.live_status === 'no_prazo' ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}>{alert.live_status}</span></p>}
+                                                            {alert.live_status && <p>Status: <span className={alert.live_status === 'no_prazo' ? 'text-primary-600 dark:text-primary-400' : 'text-red-600 dark:text-red-400'}>{alert.live_status}</span></p>}
                                                         </div>
                                                         {alert.sistemas && alert.sistemas.length > 0 && (
                                                             <div className="flex flex-wrap gap-1 mt-1">

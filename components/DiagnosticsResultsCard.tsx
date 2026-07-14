@@ -43,13 +43,13 @@ const DiagnosticsResultsCard: React.FC<DiagnosticsResultsCardProps> = ({
         }
     };
 
-    const cardBg = isDarkMode ? 'bg-gray-800' : 'bg-white';
-    const textColor = isDarkMode ? 'text-gray-100' : 'text-gray-900';
-    const borderColor = isDarkMode ? 'border-gray-700' : 'border-gray-200';
-    const subtleText = isDarkMode ? 'text-gray-400' : 'text-gray-600';
-    const activeBg = isDarkMode ? 'bg-blue-900/30' : 'bg-blue-50';
+    const cardBg = isDarkMode ? 'bg-slate-800' : 'bg-white';
+    const textColor = isDarkMode ? 'text-slate-100' : 'text-slate-900';
+    const borderColor = isDarkMode ? 'border-slate-700' : 'border-slate-200';
+    const subtleText = isDarkMode ? 'text-slate-400' : 'text-slate-600';
+    const activeBg = isDarkMode ? 'bg-primary-900/30' : 'bg-primary-50';
     const resolvedBg = isDarkMode ? 'bg-green-900/30' : 'bg-green-50';
-    const archivedBg = isDarkMode ? 'bg-gray-900/50' : 'bg-gray-100';
+    const archivedBg = isDarkMode ? 'bg-slate-900/50' : 'bg-slate-100';
 
     return (
         <div className="space-y-4">
@@ -57,7 +57,7 @@ const DiagnosticsResultsCard: React.FC<DiagnosticsResultsCardProps> = ({
             {diagnostics.length > 0 && (
                 <div className={`${cardBg} rounded-lg border ${borderColor} p-4`}>
                     <h3 className={`${textColor} font-semibold mb-3 flex items-center gap-2`}>
-                        <ClipboardIcon className="w-5 h-5 text-blue-500" />
+                        <ClipboardIcon className="w-5 h-5 text-primary-500" />
                         Diagnósticos Ativos
                     </h3>
                     <div className="space-y-2">

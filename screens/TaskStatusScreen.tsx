@@ -189,7 +189,7 @@ const TaskStatusScreen: React.FC = () => {
         return (
             <div className="flex justify-center items-center h-64">
                 <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mb-4"></div>
                     <p className="text-slate-500 dark:text-slate-400">Carregando alertas...</p>
                 </div>
             </div>
@@ -214,7 +214,7 @@ const TaskStatusScreen: React.FC = () => {
                                     {/* Nome do Paciente e Leito */}
                                     {alert.patient_name && (
                                         <div className="mb-2">
-                                            <Link to={`/patient/${alert.patient_id}`} className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 hover:underline">
+                                            <Link to={`/patient/${alert.patient_id}`} className="text-base sm:text-lg font-bold text-primary-600 dark:text-primary-400 hover:underline">
                                                 {alert.patient_name}
                                             </Link>
                                             <span className="ml-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
@@ -245,7 +245,7 @@ const TaskStatusScreen: React.FC = () => {
 
                                     {/* Justificativa */}
                                     {alert.justificativa && (
-                                        <p className="text-xs italic text-blue-600 dark:text-blue-400 mt-2 bg-blue-50 dark:bg-blue-900/20 p-2 rounded">
+                                        <p className="text-xs italic text-primary-600 dark:text-primary-400 mt-2 bg-primary-50 dark:bg-primary-900/20 p-2 rounded">
                                             <strong>Justificativa:</strong> {alert.justificativa}
                                         </p>
                                     )}
@@ -264,7 +264,7 @@ const TaskStatusScreen: React.FC = () => {
                                     <>
                                         <button
                                             onClick={() => setJustificationModal(alert)}
-                                            className="text-xs bg-blue-100 dark:bg-blue-900/80 text-blue-700 dark:text-blue-300 font-semibold px-3 py-1.5 rounded-md hover:bg-blue-200 dark:hover:bg-blue-900 transition"
+                                            className="text-xs bg-primary-100 dark:bg-primary-900/80 text-primary-700 dark:text-primary-300 font-semibold px-3 py-1.5 rounded-md hover:bg-primary-200 dark:hover:bg-primary-900 transition"
                                         >
                                             {alert.justificativa ? 'Editar Justificativa' : 'Justificar Atraso'}
                                         </button>

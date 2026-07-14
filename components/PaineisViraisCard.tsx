@@ -12,7 +12,7 @@ const RESULTADO_COLORS: Record<string, string> = {
     'Negativo': 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
     'Não Detectado': 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
     'Indeterminado': 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800',
-    'Em andamento': 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+    'Em andamento': 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border-primary-200 dark:border-primary-800',
 };
 
 interface PaineisViraisCardProps {
@@ -78,7 +78,7 @@ export const PaineisViraisCard: React.FC<PaineisViraisCardProps> = ({ patientId,
                             <div className="flex justify-end mb-1">
                                 <button
                                     onClick={() => paineis.forEach(p => toggleMostrarEvolucao(p.id, !allChecked))}
-                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                    className="text-xs text-primary-500 dark:text-primary-400 hover:underline"
                                 >
                                     {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
                                 </button>
@@ -89,10 +89,10 @@ export const PaineisViraisCard: React.FC<PaineisViraisCardProps> = ({ patientId,
                         <div key={p.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                             <div className="flex justify-between items-start">
                                 <div className="flex items-start gap-3 flex-1 min-w-0">
-                                    <VirusIcon className="w-5 h-5 text-cyan-600 dark:text-cyan-400 mt-1 shrink-0" />
+                                    <VirusIcon className="w-5 h-5 text-primary-600 dark:text-primary-400 mt-1 shrink-0" />
                                     <div className="flex-1 min-w-0">
                                         <p className="font-bold text-slate-800 dark:text-slate-200">{p.painel}</p>
-                                        <p className="text-xs text-cyan-600 dark:text-cyan-400 font-medium mt-0.5">{p.categoria}</p>
+                                        <p className="text-xs text-primary-600 dark:text-primary-400 font-medium mt-0.5">{p.categoria}</p>
                                         <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                                             {new Date(p.data_coleta).toLocaleDateString('pt-BR')}
                                         </p>
@@ -102,7 +102,7 @@ export const PaineisViraisCard: React.FC<PaineisViraisCardProps> = ({ patientId,
                                             </span>
                                         )}
                                         {p.sistema && (
-                                            <span className="block mt-1 w-fit text-xs px-2 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+                                            <span className="block mt-1 w-fit text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">
                                                 {p.sistema}
                                             </span>
                                         )}
@@ -122,7 +122,7 @@ export const PaineisViraisCard: React.FC<PaineisViraisCardProps> = ({ patientId,
                                             </p>
                                         )}
                                         <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
-                                            <input type="checkbox" checked={p.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucao(p.id, e.target.checked)} className="w-3.5 h-3.5 accent-blue-500" />
+                                            <input type="checkbox" checked={p.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucao(p.id, e.target.checked)} className="w-3.5 h-3.5 accent-primary-500" />
                                             <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
                                         </label>
                                     </div>
@@ -130,7 +130,7 @@ export const PaineisViraisCard: React.FC<PaineisViraisCardProps> = ({ patientId,
                                 <div className="flex items-center gap-1 shrink-0 ml-2">
                                     <button
                                         onClick={() => setEditingPainel(p)}
-                                        className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"
+                                        className="p-1.5 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900 rounded-full transition"
                                         aria-label="Editar painel"
                                     >
                                         <PencilIcon className="w-4 h-4" />

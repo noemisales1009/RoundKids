@@ -76,9 +76,9 @@ const BalancoCumulativoSimples: React.FC<Props> = ({ patientId }) => {
       }
     } else if (value > 0) {
       return {
-        bg: 'bg-blue-50 dark:bg-blue-900/20',
-        border: 'border-blue-200 dark:border-blue-800',
-        value: 'text-blue-600 dark:text-blue-400',
+        bg: 'bg-primary-50 dark:bg-primary-900/20',
+        border: 'border-primary-200 dark:border-primary-800',
+        value: 'text-primary-600 dark:text-primary-400',
         status: '💧 Ganho',
       };
     } else if (value < 0) {
@@ -138,7 +138,7 @@ const BalancoCumulativoSimples: React.FC<Props> = ({ patientId }) => {
                 onClick={() => setSelectedPeriod(period)}
                 className={`px-4 py-2 rounded-lg font-medium text-sm transition whitespace-nowrap ${
                   selectedPeriod === period
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    ? 'bg-primary-600 hover:bg-primary-700 text-white'
                     : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
                 }`}
               >
@@ -172,7 +172,7 @@ const BalancoCumulativoSimples: React.FC<Props> = ({ patientId }) => {
                     BH da Manhã do Dia Anterior ({data.periodo_label} atrás)
                   </p>
                   <p className={`text-3xl font-bold mb-2 ${
-                    data.bh_anterior > 0 ? 'text-blue-600 dark:text-blue-400' :
+                    data.bh_anterior > 0 ? 'text-primary-600 dark:text-primary-400' :
                     data.bh_anterior < 0 ? 'text-green-600 dark:text-green-400' :
                     'text-slate-800 dark:text-slate-100'
                   }`}>
@@ -202,7 +202,7 @@ const BalancoCumulativoSimples: React.FC<Props> = ({ patientId }) => {
                     BH Calculado na Manhã Atual (últimas {data.periodo_label})
                   </p>
                   <p className={`text-3xl font-bold mb-2 ${
-                    data.bh_atual > 0 ? 'text-blue-600 dark:text-blue-400' :
+                    data.bh_atual > 0 ? 'text-primary-600 dark:text-primary-400' :
                     data.bh_atual < 0 ? 'text-green-600 dark:text-green-400' :
                     'text-slate-800 dark:text-slate-100'
                   }`}>
@@ -226,7 +226,7 @@ const BalancoCumulativoSimples: React.FC<Props> = ({ patientId }) => {
                 <div className={`text-center p-4 rounded-lg border-2 bg-white dark:bg-slate-800 ${
                   colors.value.includes('red') ? 'border-red-600 dark:border-red-500' :
                   colors.value.includes('orange') ? 'border-orange-600 dark:border-orange-500' :
-                  colors.value.includes('blue') ? 'border-blue-600 dark:border-blue-500' :
+                  colors.value.includes('blue') ? 'border-primary-600 dark:border-primary-500' :
                   colors.value.includes('green') ? 'border-green-600 dark:border-green-500' :
                   'border-slate-400 dark:border-slate-500'
                 }`}>

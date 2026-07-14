@@ -89,7 +89,7 @@ const PharmacyPrescription: React.FC<PharmacyPrescriptionProps> = ({ reportData,
         const caVolume = (needsPhosphateSeparation && bagNumber === 1) ? 0 : getVolume(electrolyteCalculations.calciumVolume);
 
         return (
-            <div className="border border-gray-400 p-1 rounded-lg">
+            <div className="border border-slate-400 p-1 rounded-lg">
                 <h3 className="text-lg font-bold text-center mb-2 font-sans">
                     {nptStages === 1 ? 'Prescrição NPT - Etapa Única (24h)' : `Prescrição NPT - Etapa ${bagNumber} de ${nptStages} (${infusionHours}h)`}
                 </h3>
@@ -161,7 +161,7 @@ const PharmacyPrescription: React.FC<PharmacyPrescriptionProps> = ({ reportData,
                 <footer className="mt-auto pt-2 text-xs font-sans">
                     <h4 className="font-bold text-center mb-2 text-sm border-t-2 border-black pt-2">PARÂMETROS PRESCRITOS & INDICADORES</h4>
                     
-                    <div className="grid grid-cols-4 gap-y-1 gap-x-2 mb-3 border-b border-gray-300 pb-2">
+                    <div className="grid grid-cols-4 gap-y-1 gap-x-2 mb-3 border-b border-slate-300 pb-2">
                         <p><strong>Aminoácidos:</strong> {aminoAcidDose} g/kg</p>
                         <p><strong>Lipídeos:</strong> {lipidDose} g/kg</p>
                         <p><strong>Sódio:</strong> {sodiumDose} mEq/100mL</p>
@@ -186,7 +186,7 @@ const PharmacyPrescription: React.FC<PharmacyPrescriptionProps> = ({ reportData,
                         </div>
                     </div>
                     
-                    <div className="text-center pt-1 text-[10px] text-gray-600">
+                    <div className="text-center pt-1 text-[10px] text-slate-600">
                          Distribuição Calórica: Proteínas {caloricDistribution.protein.toFixed(0)}% | Lipídeos {caloricDistribution.lipid.toFixed(0)}% | Glicose {caloricDistribution.glucose.toFixed(0)}%
                     </div>
 
@@ -300,7 +300,7 @@ const ClickToEditInput: React.FC<{
           onChange={handleChange}
           onBlur={handleSave}
           onKeyDown={handleKeyDown}
-          className="w-full bg-white text-slate-800 p-2 border border-indigo-500 rounded-md shadow-sm ring-2 ring-indigo-500 sm:text-sm transition-all duration-200"
+          className="w-full bg-white text-slate-800 p-2 border border-primary-500 rounded-md shadow-sm ring-2 ring-primary-500 sm:text-sm transition-all duration-200"
           placeholder="0"
         />
       ) : (
@@ -827,7 +827,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
             <div className="min-h-screen bg-slate-100 p-4 sm:p-6 lg:p-8 hide-on-print">
                 <header className="max-w-7xl mx-auto mb-8 flex justify-between items-center">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <div className="w-12 h-12 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg">
                             <CalculatorIcon className="w-7 h-7 text-white" />
                         </div>
                         <div>
@@ -842,16 +842,16 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                     <div className="lg:col-span-1 space-y-8">
                         {/* Card: Dados do Paciente */}
                         <div className="bg-white p-6 rounded-xl shadow-sm">
-                            <SectionHeader icon={<UserIcon className="w-6 h-6 text-indigo-500" />} title="Dados do Paciente" />
+                            <SectionHeader icon={<UserIcon className="w-6 h-6 text-primary-500" />} title="Dados do Paciente" />
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-xs font-medium text-slate-600 mb-1">Nome</label>
-                                    <input type="text" value={patientName} onChange={(e) => setPatientName(e.target.value)} className="w-full bg-white text-slate-800 p-2 border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                                    <input type="text" value={patientName} onChange={(e) => setPatientName(e.target.value)} className="w-full bg-white text-slate-800 p-2 border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm" />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs font-medium text-slate-600 mb-1">Data de Nasc.</label>
-                                        <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} className="w-full bg-white text-slate-800 p-2 border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                                        <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} className="w-full bg-white text-slate-800 p-2 border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm" />
                                     </div>
                                     <div>
                                       <ClickToEditInput label="Peso (kg)" value={weight} onSave={setWeight} unit="kg" />
@@ -862,7 +862,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
 
                         {/* Card: Parâmetros de Prescrição */}
                         <div className="bg-white p-6 rounded-xl shadow-sm">
-                            <SectionHeader icon={<ClipboardIcon className="w-6 h-6 text-indigo-500" />} title="Parâmetros de Prescrição" />
+                            <SectionHeader icon={<ClipboardIcon className="w-6 h-6 text-primary-500" />} title="Parâmetros de Prescrição" />
                             <div className="grid grid-cols-2 gap-4">
                                 <ClickToEditInput label="Dose AA (g/kg)" value={aminoAcidDose} onSave={setAminoAcidDose} unit="g/kg" />
                                 <div>
@@ -903,7 +903,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                     })}
                                 </div>
                                 {idealLipidDoseRange.maxDose > 0 && (
-                                    <p className="text-xs text-indigo-700 mt-2 pt-2 border-t border-slate-200">
+                                    <p className="text-xs text-primary-700 mt-2 pt-2 border-t border-slate-200">
                                         💡 Dose de lipídeos entre <strong>{idealLipidDoseRange.minDose.toFixed(1)}</strong> e <strong>{idealLipidDoseRange.maxDose.toFixed(1)} g/kg</strong> mantém {CALORIC_TARGETS.lipid.min}–{CALORIC_TARGETS.lipid.max}% das calorias.
                                     </p>
                                 )}
@@ -921,11 +921,11 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                 <label className="block text-sm font-medium text-slate-700 mb-2">Fonte de Fósforo</label>
                                 <div className="flex space-x-4">
                                     <label className="flex items-center space-x-2 cursor-pointer">
-                                        <input type="radio" name="phosphorusSource" value="sodium" checked={phosphorusSource === 'sodium'} onChange={() => setPhosphorusSource('sodium')} className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" />
+                                        <input type="radio" name="phosphorusSource" value="sodium" checked={phosphorusSource === 'sodium'} onChange={() => setPhosphorusSource('sodium')} className="h-4 w-4 text-primary-600 border-slate-300 focus:ring-primary-500" />
                                         <span className="text-sm text-slate-600">Glicerofosfato de Sódio</span>
                                     </label>
                                     <label className="flex items-center space-x-2 cursor-pointer">
-                                        <input type="radio" name="phosphorusSource" value="potassium" checked={phosphorusSource === 'potassium'} onChange={() => setPhosphorusSource('potassium')} className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" />
+                                        <input type="radio" name="phosphorusSource" value="potassium" checked={phosphorusSource === 'potassium'} onChange={() => setPhosphorusSource('potassium')} className="h-4 w-4 text-primary-600 border-slate-300 focus:ring-primary-500" />
                                         <span className="text-sm text-slate-600">Fosfato Ácido de Potássio</span>
                                     </label>
                                 </div>
@@ -938,21 +938,21 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                         <input type="radio" name="nptStages" value="1" 
                                             checked={nptStages === 1} 
                                             onChange={() => setNptStages(1)} 
-                                            className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" />
+                                            className="h-4 w-4 text-primary-600 border-slate-300 focus:ring-primary-500" />
                                         <span className="text-sm text-slate-600">1 Etapa (24/24h)</span>
                                     </label>
                                     <label className="flex items-center space-x-2 cursor-pointer">
                                         <input type="radio" name="nptStages" value="2" 
                                             checked={nptStages === 2} 
                                             onChange={() => setNptStages(2)} 
-                                            className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" />
+                                            className="h-4 w-4 text-primary-600 border-slate-300 focus:ring-primary-500" />
                                         <span className="text-sm text-slate-600">2 Etapas (12/12h)</span>
                                     </label>
                                     <label className="flex items-center space-x-2 cursor-pointer">
                                         <input type="radio" name="nptStages" value="4" 
                                             checked={nptStages === 4} 
                                             onChange={() => setNptStages(4)} 
-                                            className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" />
+                                            className="h-4 w-4 text-primary-600 border-slate-300 focus:ring-primary-500" />
                                         <span className="text-sm text-slate-600">4 Etapas (6/6h)</span>
                                     </label>
                                 </div>
@@ -964,21 +964,21 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                         <input type="radio" name="glucoseMixture" value="5-50" 
                                             checked={glucoseSources.includes(5) && glucoseSources.includes(50)} 
                                             onChange={() => setGlucoseSources([5, 50])} 
-                                            className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" />
+                                            className="h-4 w-4 text-primary-600 border-slate-300 focus:ring-primary-500" />
                                         <span className="text-sm text-slate-600">Glicose 5% e 50%</span>
                                     </label>
                                     <label className="flex items-center space-x-2 cursor-pointer">
                                         <input type="radio" name="glucoseMixture" value="5-25" 
                                             checked={glucoseSources.includes(5) && glucoseSources.includes(25)} 
                                             onChange={() => setGlucoseSources([5, 25])} 
-                                            className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" />
+                                            className="h-4 w-4 text-primary-600 border-slate-300 focus:ring-primary-500" />
                                         <span className="text-sm text-slate-600">Glicose 5% e 25%</span>
                                     </label>
                                     <label className="flex items-center space-x-2 cursor-pointer">
                                         <input type="radio" name="glucoseMixture" value="25-50" 
                                             checked={glucoseSources.includes(25) && glucoseSources.includes(50)} 
                                             onChange={() => setGlucoseSources([25, 50])} 
-                                            className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" />
+                                            className="h-4 w-4 text-primary-600 border-slate-300 focus:ring-primary-500" />
                                         <span className="text-sm text-slate-600">Glicose 25% e 50%</span>
                                     </label>
                                 </div>
@@ -1002,7 +1002,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                             <button 
                                 onClick={handlePrintPrescription}
                                 disabled={isPrintingPrescription}
-                                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <DocumentTextIcon />
                                 {isPrintingPrescription ? 'Gerando...' : 'Gerar Prescrição (Farmácia)'}
@@ -1011,12 +1011,12 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                 <button 
                                     onClick={handlePrintReport} 
                                     disabled={isPrinting}
-                                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <PrintIcon />
                                     {isPrinting ? 'Gerando...' : 'Relatório Detalhado'}
                                 </button>
-                                <button onClick={handleReset} className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
+                                <button onClick={handleReset} className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 border border-slate-300 text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all">
                                     Resetar
                                 </button>
                             </div>
@@ -1028,11 +1028,11 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                     <div className="lg:col-span-2 space-y-8">
                         {/* Resumo */}
                         <div className="bg-white p-6 rounded-xl shadow-sm">
-                            <SectionHeader icon={<CalculatorIcon className="w-6 h-6 text-indigo-500" />} title="Resumo da Prescrição" />
+                            <SectionHeader icon={<CalculatorIcon className="w-6 h-6 text-primary-500" />} title="Resumo da Prescrição" />
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                              <SummaryCard icon={<ScaleIcon className="w-8 h-8 text-sky-500" />} label="Superfície Corporal (Haycock)" value={bodySurfaceArea.toFixed(2)} unit="m²"/>
-                              <SummaryCard icon={<DropletIcon className="w-8 h-8 text-blue-500" />} label="Meta Hídrica Total" value={hydrationByBSA.toFixed(0)} unit="mL" />
-                              <SummaryCard icon={<BeakerIcon className="w-8 h-8 text-teal-500" />} label="Volume a Completar" value={volumeToComplete.toFixed(0)} unit="mL" />
+                              <SummaryCard icon={<ScaleIcon className="w-8 h-8 text-primary-500" />} label="Superfície Corporal (Haycock)" value={bodySurfaceArea.toFixed(2)} unit="m²"/>
+                              <SummaryCard icon={<DropletIcon className="w-8 h-8 text-primary-500" />} label="Meta Hídrica Total" value={hydrationByBSA.toFixed(0)} unit="mL" />
+                              <SummaryCard icon={<BeakerIcon className="w-8 h-8 text-primary-500" />} label="Volume a Completar" value={volumeToComplete.toFixed(0)} unit="mL" />
                               <SummaryCard icon={<CubeIcon className="w-8 h-8 text-slate-500" />} label="Volume Total (Componentes)" value={totalComponentVolume.toFixed(0)} unit="mL" />
                               <SummaryCard icon={<FireIcon className="w-8 h-8 text-orange-500" />} label="Kcal Totais" value={totalCalories.toFixed(0)} unit="kcal" />
                               <SummaryCard icon={<SparklesIcon className="w-8 h-8 text-purple-500" />} label="Osmolaridade Estimada" value={osmolarityCalculations.totalOsmolarity.toFixed(0)} unit="mOsm/L" />
@@ -1053,9 +1053,9 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                             </div>
                         )}
                         {caloricDistribution.warnings.length > 0 && (
-                            <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-800 p-4 rounded-md shadow-sm" role="alert">
+                            <div className="bg-primary-50 border-l-4 border-primary-500 text-primary-800 p-4 rounded-md shadow-sm" role="alert">
                                 <div className="flex">
-                                    <div className="py-1"><InformationCircleIcon className="h-6 w-6 text-blue-500 mr-4"/></div>
+                                    <div className="py-1"><InformationCircleIcon className="h-6 w-6 text-primary-500 mr-4"/></div>
                                     <div>
                                         <p className="font-bold">Sugestão de Distribuição Calórica</p>
                                         <ul className="text-sm list-disc list-inside mt-1 space-y-1">
@@ -1081,7 +1081,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                               <NutrientDetailRow label="Calorias (10 kcal/g)" value={lipidCalculations.calories.toFixed(0)} unit="kcal" />
                                <NutrientDetailRow label="% Calórico Total" value={caloricDistribution.lipid.toFixed(0)} unit="%" />
                             </NutrientResultCard>
-                            <NutrientResultCard icon={<CubeIcon className="w-6 h-6 text-blue-500"/>} title="Glicose" borderColor="border-blue-500">
+                            <NutrientResultCard icon={<CubeIcon className="w-6 h-6 text-primary-500"/>} title="Glicose" borderColor="border-primary-500">
                               <NutrientDetailRow label="Gramas Totais" value={glucoseCalculations.totalGrams.toFixed(1)} unit="g" />
                               <NutrientDetailRow label="Calorias" value={glucoseCalculations.calories.toFixed(0)} unit="kcal" />
                                <NutrientDetailRow label="% Calórico Total" value={caloricDistribution.glucose.toFixed(0)} unit="%" />
@@ -1108,7 +1108,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
 
                         {/* Eletrólitos */}
                         <div className="bg-white p-6 rounded-xl shadow-sm">
-                          <SectionHeader icon={<SparklesIcon className="w-6 h-6 text-indigo-500" />} title="Eletrólitos, Oligoelementos & Vitaminas" />
+                          <SectionHeader icon={<SparklesIcon className="w-6 h-6 text-primary-500" />} title="Eletrólitos, Oligoelementos & Vitaminas" />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
                               {/* Fósforo */}
                               <div className="space-y-1">

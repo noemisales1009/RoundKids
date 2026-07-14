@@ -81,7 +81,7 @@ const DestinoComponent: React.FC<DestinoComponentProps> = ({ patientId }) => {
               value={localTransferencia}
               onChange={(e) => handleLocalChange(e.target.value)}
               disabled={loading}
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-medium transition hover:border-slate-400 dark:hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-medium transition hover:border-slate-400 dark:hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="">Selecione um local</option>
               <option value="Alta">Alta</option>
@@ -93,9 +93,9 @@ const DestinoComponent: React.FC<DestinoComponentProps> = ({ patientId }) => {
 
           {/* Resumo */}
           {localTransferencia && (
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 space-y-2">
+            <div className="p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800 space-y-2">
               <p className="text-xs text-slate-600 dark:text-slate-400">Local Selecionado</p>
-              <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
+              <p className="text-sm font-medium text-primary-600 dark:text-primary-400">
                 {localTransferencia}
               </p>
             </div>

@@ -283,7 +283,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
         return (
             <div className="flex justify-center items-center h-64">
                 <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mb-4"></div>
                     <p className="text-slate-500 dark:text-slate-400">Carregando histórico...</p>
                 </div>
             </div>
@@ -300,7 +300,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                     <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-slate-800 dark:text-slate-200">Filtros</h3>
                         {activeFilterCount > 0 && (
-                            <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full">
+                            <span className="px-2 py-0.5 bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 text-xs font-medium rounded-full">
                                 {activeFilterCount} ativo{activeFilterCount !== 1 ? 's' : ''}
                             </span>
                         )}
@@ -313,7 +313,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                         )}
                         <button
                             onClick={handleGeneratePDF}
-                            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-3 rounded-lg transition text-sm"
+                            className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white font-bold py-1.5 px-3 rounded-lg transition text-sm"
                         >
                             <FileTextIcon className="w-4 h-4" />
                             Gerar PDF
@@ -328,7 +328,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                         <button
                             key={label}
                             onClick={() => applyDateShortcut(days)}
-                            className="px-3 py-1 text-xs bg-slate-100 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-slate-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300 rounded-full transition"
+                            className="px-3 py-1 text-xs bg-slate-100 dark:bg-slate-800 hover:bg-primary-100 dark:hover:bg-primary-900/50 text-slate-700 dark:text-slate-300 hover:text-primary-700 dark:hover:text-primary-300 rounded-full transition"
                         >
                             {label}
                         </button>
@@ -344,7 +344,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                             placeholder="Nome ou leito..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm text-slate-800 dark:text-slate-200"
+                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-sm text-slate-800 dark:text-slate-200"
                         />
                     </div>
                     <div>
@@ -353,7 +353,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                             type="date"
                             value={selectedDate}
                             onChange={(e) => setSelectedDate(e.target.value)}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm text-slate-800 dark:text-slate-200"
+                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-sm text-slate-800 dark:text-slate-200"
                         />
                     </div>
                 </div>
@@ -365,7 +365,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                         <select
                             value={selectedStatus}
                             onChange={(e) => setSelectedStatus(e.target.value)}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm text-slate-800 dark:text-slate-200"
+                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-sm text-slate-800 dark:text-slate-200"
                         >
                             <option value="todos">Todos os Status</option>
                             <option value="no_prazo">No Prazo</option>
@@ -378,7 +378,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                         <select
                             value={selectedProfessional}
                             onChange={(e) => setSelectedProfessional(e.target.value)}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-sm text-slate-800 dark:text-slate-200"
+                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-sm text-slate-800 dark:text-slate-200"
                         >
                             <option value="todos">Todos os Profissionais</option>
                             {professionals.map(prof => (
@@ -394,7 +394,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                     <div className="relative" ref={patientDropdownRef}>
                         <div
                             onClick={() => setPatientDropdownOpen(!patientDropdownOpen)}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg cursor-pointer flex items-center justify-between text-sm text-slate-800 dark:text-slate-200 hover:border-blue-400 transition"
+                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg cursor-pointer flex items-center justify-between text-sm text-slate-800 dark:text-slate-200 hover:border-primary-400 transition"
                         >
                             <span className={selectedPatients.length === 0 ? 'text-slate-400' : ''}>
                                 {selectedPatients.length === 0
@@ -422,13 +422,13 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                                     uniquePatients.map(patient => (
                                         <label
                                             key={patient.name}
-                                            className="flex items-center gap-3 px-4 py-2 hover:bg-blue-50 dark:hover:bg-slate-700 cursor-pointer transition"
+                                            className="flex items-center gap-3 px-4 py-2 hover:bg-primary-50 dark:hover:bg-slate-700 cursor-pointer transition"
                                         >
                                             <input
                                                 type="checkbox"
                                                 checked={selectedPatients.includes(patient.name)}
                                                 onChange={() => togglePatient(patient.name)}
-                                                className="w-4 h-4 rounded border-slate-300 text-blue-500 focus:ring-blue-500"
+                                                className="w-4 h-4 rounded border-slate-300 text-primary-500 focus:ring-primary-500"
                                             />
                                             <span className="text-sm text-slate-700 dark:text-slate-200">
                                                 {patient.bed_number ? `Leito ${patient.bed_number} — ` : ''}{patient.name}
@@ -442,7 +442,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                         {selectedPatients.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2">
                                 {selectedPatients.map(name => (
-                                    <span key={name} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full">
+                                    <span key={name} className="inline-flex items-center gap-1 px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 text-xs rounded-full">
                                         {name}
                                         <button onClick={() => togglePatient(name)} className="hover:text-red-500 transition">
                                             <CloseIcon className="w-3 h-3" />
@@ -476,13 +476,13 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                 ) : (
                     filteredAlerts.map((alert) => {
                         const statusBorderColor: Record<string, string> = {
-                            no_prazo: 'border-blue-500',
+                            no_prazo: 'border-primary-500',
                             fora_do_prazo: 'border-red-500',
                             concluido: 'border-green-500',
                             alerta: 'border-yellow-500',
                         };
                         const statusBadgeStyle: Record<string, string> = {
-                            no_prazo: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+                            no_prazo: 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300',
                             fora_do_prazo: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300',
                             concluido: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300',
                             alerta: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300',
@@ -505,7 +505,7 @@ export const AlertsHistoryScreen: React.FC<AlertsHistoryScreenProps> = ({ useHea
                                     <div className="flex-1 min-w-0">
                                         {alert.patient_name && (
                                             <div className="flex items-center gap-2 flex-wrap mb-1">
-                                                <Link to={`/patient/${alert.patient_id}`} className="font-bold text-blue-600 dark:text-blue-400 hover:underline text-base leading-tight">
+                                                <Link to={`/patient/${alert.patient_id}`} className="font-bold text-primary-600 dark:text-primary-400 hover:underline text-base leading-tight">
                                                     {alert.patient_name}
                                                 </Link>
                                                 {alert.bed_number && (

@@ -615,7 +615,7 @@ export const ArchivedPatientsScreen: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-300 dark:border-slate-600 border-t-blue-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-300 dark:border-slate-600 border-t-primary-500 mx-auto mb-4"></div>
           <p className="text-slate-500 dark:text-slate-400 text-sm">Carregando pacientes arquivados...</p>
         </div>
       </div>
@@ -629,7 +629,7 @@ export const ArchivedPatientsScreen: React.FC = () => {
     const m = motivo.toLowerCase();
     if (m.includes('alta')) return 'bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/60 dark:text-emerald-300 dark:border-emerald-700/50';
     if (m.includes('óbito') || m.includes('obito')) return 'bg-red-100 text-red-700 border border-red-200 dark:bg-red-900/60 dark:text-red-300 dark:border-red-700/50';
-    if (m.includes('transfer')) return 'bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900/60 dark:text-blue-300 dark:border-blue-700/50';
+    if (m.includes('transfer')) return 'bg-primary-100 text-primary-700 border border-primary-200 dark:bg-primary-900/60 dark:text-primary-300 dark:border-primary-700/50';
     return 'bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-900/60 dark:text-amber-300 dark:border-amber-700/50';
   };
 
@@ -670,7 +670,7 @@ export const ArchivedPatientsScreen: React.FC = () => {
             placeholder="Buscar por nome ou leito..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition"
+            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 transition"
           />
         </div>
 
@@ -684,10 +684,10 @@ export const ArchivedPatientsScreen: React.FC = () => {
             </div>
           </div>
           <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 flex items-center gap-2 sm:gap-3">
-            <span className="material-symbols-rounded text-blue-500 dark:text-blue-400 text-[16px] sm:text-[18px] shrink-0">filter_list</span>
+            <span className="material-symbols-rounded text-primary-500 dark:text-primary-400 text-[16px] sm:text-[18px] shrink-0">filter_list</span>
             <div className="min-w-0">
               <p className="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 uppercase tracking-wide truncate">Encontrados</p>
-              <p className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 leading-none">{filteredPatients.length}</p>
+              <p className="text-base sm:text-lg font-bold text-primary-600 dark:text-primary-400 leading-none">{filteredPatients.length}</p>
             </div>
           </div>
           <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 flex items-center gap-2 sm:gap-3">
@@ -701,16 +701,16 @@ export const ArchivedPatientsScreen: React.FC = () => {
 
         {/* Action bar */}
         {selectedIds.size > 0 && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800/50 rounded-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3 bg-primary-50 dark:bg-primary-950/50 border border-primary-200 dark:border-primary-800/50 rounded-xl">
             <div className="flex items-center gap-2">
-              <span className="material-symbols-rounded text-blue-500 dark:text-blue-400 text-[18px]">info</span>
-              <span className="text-sm text-blue-700 dark:text-blue-300 font-medium">{selectedIds.size} paciente(s) selecionado(s)</span>
+              <span className="material-symbols-rounded text-primary-500 dark:text-primary-400 text-[18px]">info</span>
+              <span className="text-sm text-primary-700 dark:text-primary-300 font-medium">{selectedIds.size} paciente(s) selecionado(s)</span>
             </div>
             <div className="flex items-center gap-2 sm:ml-auto">
               <button
                 onClick={handleGeneratePdfForSelected}
                 disabled={generatingPdf}
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-300 dark:disabled:bg-blue-800 disabled:text-white dark:disabled:text-blue-400 text-white text-sm font-medium rounded-lg transition"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-500 disabled:bg-primary-300 dark:disabled:bg-primary-800 disabled:text-white dark:disabled:text-primary-400 text-white text-sm font-medium rounded-lg transition"
               >
                 <span className="material-symbols-rounded text-[16px]">{generatingPdf ? 'hourglass_empty' : 'picture_as_pdf'}</span>
                 {generatingPdf ? 'Gerando...' : 'Gerar PDF'}
@@ -731,7 +731,7 @@ export const ArchivedPatientsScreen: React.FC = () => {
             {/* MOBILE: cards */}
             <div className="flex flex-col gap-2 md:hidden">
               <label className="flex items-center gap-2 px-1 py-1 cursor-pointer">
-                <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="w-4 h-4 accent-blue-500" />
+                <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="w-4 h-4 accent-primary-500" />
                 <span className="text-xs text-slate-500 dark:text-slate-400">Selecionar todos</span>
               </label>
 
@@ -740,7 +740,7 @@ export const ArchivedPatientsScreen: React.FC = () => {
                   key={patient.id}
                   className={`bg-white dark:bg-slate-800 border rounded-xl p-4 transition ${
                     selectedIds.has(patient.id)
-                      ? 'border-blue-400 dark:border-blue-600/60 bg-blue-50 dark:bg-blue-950/20'
+                      ? 'border-primary-400 dark:border-primary-600/60 bg-primary-50 dark:bg-primary-950/20'
                       : 'border-slate-200 dark:border-slate-700/50'
                   }`}
                 >
@@ -749,12 +749,12 @@ export const ArchivedPatientsScreen: React.FC = () => {
                       type="checkbox"
                       checked={selectedIds.has(patient.id)}
                       onChange={() => toggleSelect(patient.id)}
-                      className="w-4 h-4 accent-blue-500 mt-0.5 shrink-0"
+                      className="w-4 h-4 accent-primary-500 mt-0.5 shrink-0"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <span className="text-sm font-semibold text-slate-900 dark:text-white truncate">{patient.name}</span>
-                        <span className="inline-flex items-center justify-center px-2 h-5 bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700/50 rounded text-xs font-bold shrink-0">
+                        <span className="inline-flex items-center justify-center px-2 h-5 bg-primary-100 dark:bg-primary-900/60 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-700/50 rounded text-xs font-bold shrink-0">
                           {patient.bed_number || '—'}
                         </span>
                       </div>
@@ -794,7 +794,7 @@ export const ArchivedPatientsScreen: React.FC = () => {
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30">
                       <th className="px-4 py-3 text-center w-10">
-                        <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="w-4 h-4 cursor-pointer accent-blue-500" title="Selecionar todos" />
+                        <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="w-4 h-4 cursor-pointer accent-primary-500" title="Selecionar todos" />
                       </th>
                       <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Nome</th>
                       <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Leito</th>
@@ -808,16 +808,16 @@ export const ArchivedPatientsScreen: React.FC = () => {
                     {filteredPatients.map((patient) => (
                       <tr
                         key={patient.id}
-                        className={`transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/40 ${selectedIds.has(patient.id) ? 'bg-blue-50 dark:bg-blue-950/30' : ''}`}
+                        className={`transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/40 ${selectedIds.has(patient.id) ? 'bg-primary-50 dark:bg-primary-950/30' : ''}`}
                       >
                         <td className="px-4 py-3.5 text-center">
-                          <input type="checkbox" checked={selectedIds.has(patient.id)} onChange={() => toggleSelect(patient.id)} className="w-4 h-4 cursor-pointer accent-blue-500" />
+                          <input type="checkbox" checked={selectedIds.has(patient.id)} onChange={() => toggleSelect(patient.id)} className="w-4 h-4 cursor-pointer accent-primary-500" />
                         </td>
                         <td className="px-5 py-3.5">
                           <span className="text-sm font-semibold text-slate-900 dark:text-white">{patient.name}</span>
                         </td>
                         <td className="px-5 py-3.5">
-                          <span className="inline-flex items-center justify-center min-w-[32px] h-7 px-2 bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700/50 rounded-lg text-xs font-bold">
+                          <span className="inline-flex items-center justify-center min-w-[32px] h-7 px-2 bg-primary-100 dark:bg-primary-900/60 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-700/50 rounded-lg text-xs font-bold">
                             {patient.bed_number || '—'}
                           </span>
                         </td>

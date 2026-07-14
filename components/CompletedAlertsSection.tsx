@@ -177,7 +177,7 @@ export const CompletedAlertsSection: React.FC<{ patientId: string }> = ({ patien
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <p className="font-bold text-base text-slate-900 dark:text-slate-100">{alerta.description}</p>
-                                                <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded font-semibold">
+                                                <span className="text-xs bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 px-2 py-1 rounded font-semibold">
                                                     {alerta.source === 'alertas' ? '🏥 Clínico' : '📋 Task'}
                                                 </span>
                                             </div>

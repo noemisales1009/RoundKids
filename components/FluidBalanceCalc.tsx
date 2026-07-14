@@ -80,7 +80,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId, onCalcul
         className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
       >
         <div className="flex items-center gap-2">
-          <DropletIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <DropletIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Balanço Hídrico</h3>
         </div>
         <ChevronRightIcon className={`w-5 h-5 text-slate-400 transition transform ${isExpanded ? 'rotate-90' : ''}`} />
@@ -111,7 +111,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId, onCalcul
                 onClick={() => setIsPositive(true)}
                 className={`flex-1 p-2 rounded-lg font-medium transition ${
                   isPositive 
-                    ? 'bg-blue-600 text-white' 
+                    ? 'bg-primary-600 text-white' 
                     : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
                 }`}
               >
@@ -142,9 +142,9 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId, onCalcul
             />
           </div>
 
-          <div className={`p-3 rounded-lg border ${result > 0 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' : result < 0 ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600'}`}>
+          <div className={`p-3 rounded-lg border ${result > 0 ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800' : result < 0 ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600'}`}>
             <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Resultado</p>
-            <p className={`text-2xl font-bold ${result > 0 ? 'text-blue-600 dark:text-blue-400' : result < 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-400'}`}>
+            <p className={`text-2xl font-bold ${result > 0 ? 'text-primary-600 dark:text-primary-400' : result < 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-400'}`}>
               {result > 0 ? '+' : ''}{result.toFixed(2)}%
             </p>
           </div>
@@ -152,7 +152,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId, onCalcul
           <button
             onClick={handleSave}
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition"
+            className="w-full bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition"
           >
             <SaveIcon className="w-4 h-4" />
             {loading ? 'Salvando...' : 'Salvar'}

@@ -108,16 +108,16 @@ const BackIcon = () => (
 const QuestionCard = ({ item, valor, onChange, theme }) => {
   const isSelected = valor !== undefined && valor !== null && valor !== '';
 
-  const bgColor = theme === 'light' ? 'bg-gray-50' : 'bg-slate-800';
+  const bgColor = theme === 'light' ? 'bg-slate-50' : 'bg-slate-800';
   const borderColor = isSelected 
-    ? theme === 'light' ? 'border-blue-400' : 'border-indigo-600'
-    : theme === 'light' ? 'border-gray-300' : 'border-slate-700';
-  const textColor = theme === 'light' ? 'text-slate-900' : 'text-gray-100';
-  const descColor = theme === 'light' ? 'text-slate-600' : 'text-gray-400';
+    ? theme === 'light' ? 'border-primary-400' : 'border-primary-600'
+    : theme === 'light' ? 'border-slate-300' : 'border-slate-700';
+  const textColor = theme === 'light' ? 'text-slate-900' : 'text-slate-100';
+  const descColor = theme === 'light' ? 'text-slate-600' : 'text-slate-400';
   const selectBg = theme === 'light' ? 'bg-white' : 'bg-slate-900';
-  const selectBorder = theme === 'light' ? 'border-gray-300' : 'border-slate-700';
-  const selectText = theme === 'light' ? 'text-slate-900' : 'text-gray-100';
-  const hoverBg = theme === 'light' ? 'hover:border-gray-400' : 'hover:border-slate-600';
+  const selectBorder = theme === 'light' ? 'border-slate-300' : 'border-slate-700';
+  const selectText = theme === 'light' ? 'text-slate-900' : 'text-slate-100';
+  const hoverBg = theme === 'light' ? 'hover:border-slate-400' : 'hover:border-slate-600';
 
   return (
     <div 
@@ -139,7 +139,7 @@ const QuestionCard = ({ item, valor, onChange, theme }) => {
         <select
           value={valor === undefined || valor === null ? '' : valor ? 'true' : 'false'}
           onChange={(e) => onChange(e.target.value === 'true')}
-          className={`w-full ${selectBg} border ${selectBorder} ${selectText} p-3 pr-10 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
+          className={`w-full ${selectBg} border ${selectBorder} ${selectText} p-3 pr-10 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors`}
         >
           <option value="" disabled>
             Selecione o Resultado...
@@ -150,7 +150,7 @@ const QuestionCard = ({ item, valor, onChange, theme }) => {
             </option>
           ))}
         </select>
-        <div className={`pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 ${theme === 'light' ? 'text-slate-600' : 'text-gray-400'}`}>
+        <div className={`pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
           <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
         </div>
       </div>
@@ -178,15 +178,15 @@ export default function CAMICUPediatricoScale({ onSaveScore }: CAMICUScaleProps)
   const configAtual = escalaAtiva ? configsCAMICU[escalaAtiva] : null;
 
   // Cores dinâmicas baseadas no tema
-  const bgDinamic = theme === 'light' ? 'bg-gray-50' : 'bg-slate-950';
+  const bgDinamic = theme === 'light' ? 'bg-slate-50' : 'bg-slate-950';
   const bgFormDinamic = theme === 'light' ? 'bg-white' : 'bg-slate-800';
-  const textDinamic = theme === 'light' ? 'text-slate-900' : 'text-gray-100';
-  const borderDinamic = theme === 'light' ? 'border-gray-200' : 'border-slate-700';
-  const descDinamic = theme === 'light' ? 'text-slate-600' : 'text-gray-400';
+  const textDinamic = theme === 'light' ? 'text-slate-900' : 'text-slate-100';
+  const borderDinamic = theme === 'light' ? 'border-slate-200' : 'border-slate-700';
+  const descDinamic = theme === 'light' ? 'text-slate-600' : 'text-slate-400';
 
   // Lógica de Diagnóstico (C1 E C2 E (C3 OU C4))
   const diagnostico = useMemo(() => {
-    if (!configAtual) return { texto: 'Aguardando Avaliação', cor: 'text-gray-400' };
+    if (!configAtual) return { texto: 'Aguardando Avaliação', cor: 'text-slate-400' };
 
     const c1 = respostas.c1 === true;
     const c2 = respostas.c2 === true;
@@ -298,11 +298,11 @@ export default function CAMICUPediatricoScale({ onSaveScore }: CAMICUScaleProps)
     return (
       <div className={`w-full max-w-2xl mx-auto p-4 ${bgDinamic} min-h-screen ${textDinamic} font-sans`}>
         <header className="mb-8 text-center pt-6">
-          <div className={`inline-flex items-center justify-center w-16 h-16 ${theme === 'light' ? 'bg-blue-100' : 'bg-blue-900'} rounded-2xl mb-4 shadow-lg border ${borderDinamic}`}>
+          <div className={`inline-flex items-center justify-center w-16 h-16 ${theme === 'light' ? 'bg-primary-100' : 'bg-primary-900'} rounded-2xl mb-4 shadow-lg border ${borderDinamic}`}>
             <span className="text-3xl">⚕️</span>
           </div>
           <h1 className={`text-2xl font-bold ${theme === 'light' ? 'text-slate-900' : 'text-white'} mb-2`}>Escalas CAM-ICU Pediátrico</h1>
-          <p className={`text-sm ${theme === 'light' ? 'text-blue-600' : 'text-blue-300'} font-medium`}>psCAM-ICU e pCAM-ICU</p>
+          <p className={`text-sm ${theme === 'light' ? 'text-primary-600' : 'text-primary-300'} font-medium`}>psCAM-ICU e pCAM-ICU</p>
         </header>
 
         <div className={`${bgFormDinamic} p-6 rounded-2xl border ${borderDinamic} shadow-xl mb-6`}>
@@ -312,14 +312,14 @@ export default function CAMICUPediatricoScale({ onSaveScore }: CAMICUScaleProps)
 
           <button 
             onClick={() => iniciarAvaliacao('psCAMICU')}
-            className={`w-full ${theme === 'light' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-indigo-700 hover:bg-indigo-600'} text-white font-bold py-3 px-6 rounded-xl shadow-md transition mb-3`}
+            className={`w-full ${theme === 'light' ? 'bg-primary-600 hover:bg-primary-700' : 'bg-primary-700 hover:bg-primary-600'} text-white font-bold py-3 px-6 rounded-xl shadow-md transition mb-3`}
           >
             {configsCAMICU.psCAMICU.titulo} ({configsCAMICU.psCAMICU.idade})
           </button>
 
           <button 
             onClick={() => iniciarAvaliacao('pCAMICU')}
-            className={`w-full ${theme === 'light' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-indigo-700 hover:bg-indigo-600'} text-white font-bold py-3 px-6 rounded-xl shadow-md transition`}
+            className={`w-full ${theme === 'light' ? 'bg-primary-600 hover:bg-primary-700' : 'bg-primary-700 hover:bg-primary-600'} text-white font-bold py-3 px-6 rounded-xl shadow-md transition`}
           >
             {configsCAMICU.pCAMICU.titulo} ({configsCAMICU.pCAMICU.idade})
           </button>
@@ -344,23 +344,23 @@ export default function CAMICUPediatricoScale({ onSaveScore }: CAMICUScaleProps)
       <div className={`w-full max-w-2xl mx-auto p-4 ${bgDinamic} min-h-screen ${textDinamic} flex flex-col`}>
         <div className={`sticky top-0 z-10 ${bgDinamic}/95 backdrop-blur-sm pb-4 pt-2 border-b ${borderDinamic} mb-4`}>
           <div className="flex items-center justify-between mb-2">
-            <button onClick={() => setTela('intro')} className={`p-2 -ml-2 rounded-full transition ${theme === 'light' ? 'text-slate-600 hover:text-slate-900 hover:bg-gray-200' : 'text-gray-400 hover:text-white hover:bg-slate-800'}`}>
+            <button onClick={() => setTela('intro')} className={`p-2 -ml-2 rounded-full transition ${theme === 'light' ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
               <BackIcon />
             </button>
             <div className="text-center">
-              <span className={`text-sm font-bold ${theme === 'light' ? 'text-blue-600' : 'text-blue-300'}`}>{configAtual?.titulo} ({configAtual?.idade})</span>
+              <span className={`text-sm font-bold ${theme === 'light' ? 'text-primary-600' : 'text-primary-300'}`}>{configAtual?.titulo} ({configAtual?.idade})</span>
               <div className={`text-xs font-bold mt-1 ${diagnostico.cor}`}>{diagnostico.texto}</div>
             </div>
             <div className="w-8" />
           </div>
           
-          <div className={`w-full ${theme === 'light' ? 'bg-gray-200' : 'bg-slate-800'} h-2 rounded-full overflow-hidden`}>
+          <div className={`w-full ${theme === 'light' ? 'bg-slate-200' : 'bg-slate-800'} h-2 rounded-full overflow-hidden`}>
             <div 
-              className="bg-blue-500 h-full transition-all duration-500 ease-out"
+              className="bg-primary-500 h-full transition-all duration-500 ease-out"
               style={{ width: `${progresso}%` }}
             />
           </div>
-          <div className={`flex justify-between text-xs ${theme === 'light' ? 'text-slate-600' : 'text-gray-500'} mt-1`}>
+          <div className={`flex justify-between text-xs ${theme === 'light' ? 'text-slate-600' : 'text-slate-500'} mt-1`}>
             <span>{itensRespondidos} de {totalItens} respondidos</span>
           </div>
         </div>
@@ -383,8 +383,8 @@ export default function CAMICUPediatricoScale({ onSaveScore }: CAMICUScaleProps)
             className={`
               w-full py-4 rounded-xl font-bold text-lg shadow-xl transition-all mt-6
               ${itensRespondidos === totalItens 
-                ? `${theme === 'light' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-500'} text-white transform hover:scale-105` 
-                : `${theme === 'light' ? 'bg-gray-300 text-gray-600' : 'bg-slate-800 text-slate-500'} cursor-not-allowed`}
+                ? `${theme === 'light' ? 'bg-primary-600 hover:bg-primary-700' : 'bg-primary-600 hover:bg-primary-500'} text-white transform hover:scale-105` 
+                : `${theme === 'light' ? 'bg-slate-300 text-slate-600' : 'bg-slate-800 text-slate-500'} cursor-not-allowed`}
             `}
           >
             {itensRespondidos === totalItens ? 'Finalizar e Ver Diagnóstico' : `Responda tudo (${itensRespondidos}/${totalItens})`}
@@ -399,7 +399,7 @@ export default function CAMICUPediatricoScale({ onSaveScore }: CAMICUScaleProps)
     return (
       <div className={`w-full max-w-md mx-auto p-4 ${bgDinamic} min-h-screen ${textDinamic} font-sans flex flex-col items-center pt-10`}>
         <div className="w-full text-left mb-6">
-          <button onClick={() => setTela('intro')} className={`flex items-center transition-colors ${theme === 'light' ? 'text-slate-600 hover:text-slate-900' : 'text-gray-400 hover:text-white'}`}>
+          <button onClick={() => setTela('intro')} className={`flex items-center transition-colors ${theme === 'light' ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white'}`}>
             <BackIcon />
             <span className="ml-2">Voltar</span>
           </button>
@@ -427,10 +427,10 @@ export default function CAMICUPediatricoScale({ onSaveScore }: CAMICUScaleProps)
             disabled={isSaving || saveStatus === 'success'}
             className={`w-full py-4 rounded-xl font-bold text-lg shadow-xl transition-all
             ${isSaving
-              ? `${theme === 'light' ? 'bg-gray-400' : 'bg-slate-600'} text-white cursor-not-allowed`
+              ? `${theme === 'light' ? 'bg-slate-400' : 'bg-slate-600'} text-white cursor-not-allowed`
               : saveStatus === 'success'
                 ? `${theme === 'light' ? 'bg-green-600' : 'bg-green-700'} text-white cursor-not-allowed`
-                : `${theme === 'light' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-indigo-600 hover:bg-indigo-500'} text-white transform hover:scale-[1.02]`}
+                : `${theme === 'light' ? 'bg-primary-600 hover:bg-primary-700' : 'bg-primary-600 hover:bg-primary-500'} text-white transform hover:scale-[1.02]`}
             `}
           >
             {isSaving ? 'Salvando...' : saveStatus === 'success' ? '✓ Avaliação Salva!' : 'Salvar Avaliação'}
@@ -452,7 +452,7 @@ export default function CAMICUPediatricoScale({ onSaveScore }: CAMICUScaleProps)
 
         <button 
           onClick={() => iniciarAvaliacao(escalaAtiva!)}
-          className={`mt-8 w-full ${theme === 'light' ? 'bg-gray-300 hover:bg-gray-400 text-slate-900' : 'bg-slate-800 hover:bg-slate-700 text-white'} font-bold py-4 rounded-xl transition-colors border ${borderDinamic}`}
+          className={`mt-8 w-full ${theme === 'light' ? 'bg-slate-300 hover:bg-slate-400 text-slate-900' : 'bg-slate-800 hover:bg-slate-700 text-white'} font-bold py-4 rounded-xl transition-colors border ${borderDinamic}`}
         >
           Refazer Avaliação
         </button>

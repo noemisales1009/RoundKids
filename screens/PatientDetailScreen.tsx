@@ -19,7 +19,7 @@ import { useHeader } from '../hooks/useHeader';
 // --- LOADING COMPONENT ---
 const LoadingSpinner: React.FC = () => (
     <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
     </div>
 );
 
@@ -417,13 +417,13 @@ const PatientDetailScreen: React.FC = () => {
     return (
         <div className="space-y-6">
             {/* Card do Paciente */}
-            <div className="rounded-2xl shadow-lg overflow-hidden border border-blue-500/20 dark:border-blue-400/20">
+            <div className="rounded-2xl shadow-lg overflow-hidden border border-primary-500/20 dark:border-primary-400/20">
                 {/* Barra de gradiente no topo */}
-                <div className="h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+                <div className="h-1.5 bg-gradient-to-r from-primary-500 via-primary-500 to-purple-500" />
                 <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 relative">
                     <button
                         onClick={() => setEditInfoModalOpen(true)}
-                        className="absolute top-4 right-4 p-2 text-slate-400 hover:text-blue-500 transition bg-slate-100 dark:bg-slate-800 rounded-full"
+                        className="absolute top-4 right-4 p-2 text-slate-400 hover:text-primary-500 transition bg-slate-100 dark:bg-slate-800 rounded-full"
                         aria-label="Editar Informações do Paciente"
                     >
                         <PencilIcon className="w-4 h-4" />
@@ -431,13 +431,13 @@ const PatientDetailScreen: React.FC = () => {
 
                     {/* Nome + leito */}
                     <div className="flex items-center gap-3 pr-10 mb-4">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shrink-0 shadow-md">
                             <span className="text-white font-bold text-lg">{patient.name.charAt(0).toUpperCase()}</span>
                         </div>
                         <div>
                             <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white leading-tight">{patient.name}</h2>
                             <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Leito {patient.bedNumber}</span>
+                                <span className="text-xs font-semibold text-primary-600 dark:text-primary-400 uppercase tracking-wide">Leito {patient.bedNumber}</span>
                                 {patient.prontuario && <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">· Pront. {patient.prontuario}</span>}
                             </div>
                         </div>
@@ -475,7 +475,7 @@ const PatientDetailScreen: React.FC = () => {
                             <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Internação</p>
                             <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 break-words">
                                 {patient.admissionDate
-                                    ? <>{formatDateToBRL(patient.admissionDate)} <span className="text-blue-500 dark:text-blue-400 font-bold">· {calculateDays(patient.admissionDate)} {calculateDays(patient.admissionDate) === 1 ? 'dia' : 'dias'}</span></>
+                                    ? <>{formatDateToBRL(patient.admissionDate)} <span className="text-primary-500 dark:text-primary-400 font-bold">· {calculateDays(patient.admissionDate)} {calculateDays(patient.admissionDate) === 1 ? 'dia' : 'dias'}</span></>
                                     : <span className="text-orange-500 italic font-normal">Não informado</span>}
                             </p>
                         </div>
@@ -531,18 +531,18 @@ const PatientDetailScreen: React.FC = () => {
             {/* Category Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {([
-                    { id: 'medications' as const, label: 'Medicações', icon: PillIcon, count: patient.medications.filter(m => !m.isArchived).length, gradient: 'from-blue-500 to-blue-700' },
+                    { id: 'medications' as const, label: 'Medicações', icon: PillIcon, count: patient.medications.filter(m => !m.isArchived).length, gradient: 'from-primary-500 to-primary-700' },
                     { id: 'devices' as const, label: 'Dispositivos', icon: CpuIcon, count: patient.devices.filter(d => !d.isArchived).length, gradient: 'from-green-500 to-emerald-700' },
                     { id: 'cultures' as const, label: 'Culturas', icon: BeakerIcon, count: patient.cultures.filter(c => !c.isArchived).length, gradient: 'from-purple-500 to-violet-700' },
                     { id: 'surgical' as const, label: 'Cirúrgico', icon: ScalpelIcon, count: patient.surgicalProcedures.filter(p => !p.isArchived).length, gradient: 'from-orange-500 to-red-600' },
-                    { id: 'exams' as const, label: 'Exames', icon: FileTextIcon, count: patient.exams.filter(e => !e.isArchived).length, gradient: 'from-teal-400 to-cyan-600' },
+                    { id: 'exams' as const, label: 'Exames', icon: FileTextIcon, count: patient.exams.filter(e => !e.isArchived).length, gradient: 'from-primary-400 to-primary-600' },
                     { id: 'diets' as const, label: 'Dietas', icon: AppleIcon, count: patient.diets.filter(d => !d.isArchived).length, gradient: 'from-amber-400 to-orange-500' },
-                    { id: 'aportes' as const, label: 'Aportes', icon: DropletIcon, count: extraCounts.aportes, gradient: 'from-sky-400 to-blue-500' },
-                    { id: 'scales' as const, label: 'Escalas', icon: BarChartIcon, count: patient.scaleScores?.length ?? 0, gradient: 'from-indigo-500 to-purple-600' },
+                    { id: 'aportes' as const, label: 'Aportes', icon: DropletIcon, count: extraCounts.aportes, gradient: 'from-primary-400 to-primary-500' },
+                    { id: 'scales' as const, label: 'Escalas', icon: BarChartIcon, count: patient.scaleScores?.length ?? 0, gradient: 'from-primary-500 to-purple-600' },
                     { id: 'pareceres' as const, label: 'Pareceres', icon: ClipboardIcon, count: extraCounts.pareceres, gradient: 'from-pink-500 to-rose-600' },
                     { id: 'examesImagem' as const, label: 'Exame de Imagem', icon: CameraIcon, count: extraCounts.examesImagem, gradient: 'from-violet-600 to-fuchsia-600' },
                     { id: 'paPercentis' as const, label: 'PA Percentis', icon: HeartPulseIcon, count: extraCounts.paPercentis, gradient: 'from-red-500 to-rose-700' },
-                    { id: 'paineisVirais' as const, label: 'Painéis Virais / Sorologia', icon: VirusIcon, count: extraCounts.paineisVirais, gradient: 'from-cyan-600 to-teal-700' },
+                    { id: 'paineisVirais' as const, label: 'Painéis Virais / Sorologia', icon: VirusIcon, count: extraCounts.paineisVirais, gradient: 'from-primary-600 to-primary-700' },
                 ] as const).map(({ id, label, icon: Icon, count, gradient }) => (
                     <button
                         key={id}
@@ -582,7 +582,7 @@ const PatientDetailScreen: React.FC = () => {
                                 <button
                                     key={t.id}
                                     onClick={() => setMainTab(active ? null : t.id)}
-                                    className={`py-3 px-2 font-bold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 transition-colors duration-200 text-xs sm:text-base border-slate-200 dark:border-slate-700 ${notLastRow ? 'border-b' : ''} ${hasRight ? 'border-r' : ''} ${active ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                                    className={`py-3 px-2 font-bold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 transition-colors duration-200 text-xs sm:text-base border-slate-200 dark:border-slate-700 ${notLastRow ? 'border-b' : ''} ${hasRight ? 'border-r' : ''} ${active ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                                 >
                                     <t.Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                                     <span>{t.label}</span>
@@ -670,71 +670,71 @@ const PatientDetailScreen: React.FC = () => {
                             <div className="space-y-3">
                                 {/* List of Scales - (unchanged structure, just collapsed for brevity) */}
                                 <button onClick={() => setScaleView('comfort-b')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Escala COMFORT-B">
-                                    <div className="flex items-center gap-3"><BarChartIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala COMFORT-B</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{SCALE_VIEW_SISTEMA['comfort-b']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                    <div className="flex items-center gap-3"><BarChartIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala COMFORT-B</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{SCALE_VIEW_SISTEMA['comfort-b']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
                                 <button onClick={() => setScaleView('delirium')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Escala CAM-ICU Pediátrico">
-                                    <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala CAM-ICU Pediátrico</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{SCALE_VIEW_SISTEMA['delirium']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                    <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala CAM-ICU Pediátrico</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{SCALE_VIEW_SISTEMA['delirium']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
                                 <button onClick={() => setScaleView('glasgow')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Escala de Coma de Glasgow">
-                                    <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala de Coma de Glasgow</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{SCALE_VIEW_SISTEMA['glasgow']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                    <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala de Coma de Glasgow</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{SCALE_VIEW_SISTEMA['glasgow']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
                                 <button onClick={() => setScaleView('crs-r')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Escala CRS-R">
-                                    <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala de Recuperação de Coma (CRS-R)</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{SCALE_VIEW_SISTEMA['crs-r']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                    <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala de Recuperação de Coma (CRS-R)</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{SCALE_VIEW_SISTEMA['crs-r']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
                                 <button onClick={() => setScaleView('flacc')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Escala FLACC">
-                                    <div className="flex items-center gap-3"><PillIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala de Dor FLACC / FLACC-R</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{SCALE_VIEW_SISTEMA['flacc']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                    <div className="flex items-center gap-3"><PillIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala de Dor FLACC / FLACC-R</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{SCALE_VIEW_SISTEMA['flacc']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
                                 <button onClick={() => setScaleView('braden')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Escala de Braden">
-                                    <div className="flex items-center gap-3"><ShieldIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala de Braden</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{SCALE_VIEW_SISTEMA['braden']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                    <div className="flex items-center gap-3"><ShieldIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala de Braden</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{SCALE_VIEW_SISTEMA['braden']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
                                 <button onClick={() => setScaleView('braden-qd')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Escala de Braden QD">
-                                    <div className="flex items-center gap-3"><ShieldIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala de Braden QD (Ampliada)</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{SCALE_VIEW_SISTEMA['braden-qd']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                    <div className="flex items-center gap-3"><ShieldIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala de Braden QD (Ampliada)</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{SCALE_VIEW_SISTEMA['braden-qd']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
                                 <button onClick={() => setScaleView('vni-cnaf')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Escala VNI/CNAF">
-                                    <div className="flex items-center gap-3"><LungsIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala VNI/CNAF Pediatria</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{SCALE_VIEW_SISTEMA['vni-cnaf']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                    <div className="flex items-center gap-3"><LungsIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala VNI/CNAF Pediatria</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{SCALE_VIEW_SISTEMA['vni-cnaf']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
                                 <button onClick={() => setScaleView('respiratory')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Cálculo Respiratório">
-                                    <div className="flex items-center gap-3"><LungsIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Cálculo Respiratório</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{SCALE_VIEW_SISTEMA['respiratory']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                    <div className="flex items-center gap-3"><LungsIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Cálculo Respiratório</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{SCALE_VIEW_SISTEMA['respiratory']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
                                 <button onClick={() => setScaleView('avaliacao-respiratoria')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Escala para Avaliação Respiratória">
-                                    <div className="flex items-center gap-3"><LungsIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala para Avaliação Respiratória</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{SCALE_VIEW_SISTEMA['avaliacao-respiratoria']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                    <div className="flex items-center gap-3"><LungsIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala para Avaliação Respiratória</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{SCALE_VIEW_SISTEMA['avaliacao-respiratoria']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
                                 <button onClick={() => setScaleView('fss')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Escala FSS">
-                                    <div className="flex items-center gap-3"><DumbbellIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala de Status Funcional (FSS)</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{SCALE_VIEW_SISTEMA['fss']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                    <div className="flex items-center gap-3"><DumbbellIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala de Status Funcional (FSS)</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{SCALE_VIEW_SISTEMA['fss']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
                                 <button onClick={() => setScaleView('abstinencia')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Escala de Abstinência">
-                                    <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala de Abstinência (Finnegan & WAT-1)</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{SCALE_VIEW_SISTEMA['abstinencia']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                    <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala de Abstinência (Finnegan & WAT-1)</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{SCALE_VIEW_SISTEMA['abstinencia']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
                                 <button onClick={() => setScaleView('sos-pd')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Escala SOS-PD">
-                                    <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala SOS-PD (Delirium/Abstinência)</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{SCALE_VIEW_SISTEMA['sos-pd']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                    <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Escala SOS-PD (Delirium/Abstinência)</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{SCALE_VIEW_SISTEMA['sos-pd']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
                                 <button onClick={() => setScaleView('consciousness')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Avaliação de Consciência">
-                                    <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Avaliação Consciência (CRS-R/FOUR/JFK)</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{SCALE_VIEW_SISTEMA['consciousness']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                    <div className="flex items-center gap-3"><BrainIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Avaliação Consciência (CRS-R/FOUR/JFK)</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{SCALE_VIEW_SISTEMA['consciousness']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
                                 <button onClick={() => setScaleView('phoenix-sepsis')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Critérios de Sepse de Phoenix">
-                                    <div className="flex items-center gap-3"><ShieldIcon className="w-5 h-5 text-red-600 dark:text-red-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Critérios de Sepse de Phoenix (2024)</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{SCALE_VIEW_SISTEMA['phoenix-sepsis']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                    <div className="flex items-center gap-3"><ShieldIcon className="w-5 h-5 text-red-600 dark:text-red-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">Critérios de Sepse de Phoenix (2024)</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{SCALE_VIEW_SISTEMA['phoenix-sepsis']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
                                 <button onClick={() => setScaleView('kdigo')} className="w-full text-left bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center hover:bg-slate-100 dark:hover:bg-slate-700 transition" aria-label="Abrir Escala KDIGO – Lesão Renal Aguda">
-                                    <div className="flex items-center gap-3"><DropletIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">KDIGO – Lesão Renal Aguda</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{SCALE_VIEW_SISTEMA['kdigo']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                                    <div className="flex items-center gap-3"><DropletIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" /><div><p className="font-bold text-slate-800 dark:text-slate-200">KDIGO – Lesão Renal Aguda</p><span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{SCALE_VIEW_SISTEMA['kdigo']}</span></div></div><ChevronRightIcon className="w-5 h-5 text-slate-400" />
                                 </button>
                             </div>
                         )}
-                        {scaleView === 'comfort-b' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><ComfortBCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
-                        {scaleView === 'delirium' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><CAMICUCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
-                        {scaleView === 'glasgow' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><GlasgowCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
-                        {scaleView === 'crs-r' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><CRSRScale onSaveScore={handleSaveScaleScore} /></Suspense></div></div>)}
-                        {scaleView === 'flacc' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><FLACCCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></Suspense></div></div>)}
-                        {scaleView === 'braden' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><BradenCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></Suspense></div></div>)}
-                        {scaleView === 'braden-qd' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><BradenQDScale onSaveScore={handleSaveScaleScore} /></Suspense></div></div>)}
-                        {scaleView === 'vni-cnaf' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><VNICNAFCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
-                        {scaleView === 'fss' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><FSSScale onSaveScore={handleSaveScaleScore} /></Suspense></div></div>)}
-                        {scaleView === 'abstinencia' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><AbstinenciaCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
-                        {scaleView === 'sos-pd' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><SOSPDCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
-                        {scaleView === 'consciousness' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><ConsciousnessCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
-                        {scaleView === 'respiratory' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><RespiratoryCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></Suspense></div></div>)}
-                        {scaleView === 'phoenix-sepsis' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><PhoenixSepsisCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></Suspense></div></div>)}
-                        {scaleView === 'avaliacao-respiratoria' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><AvaliacaoRespiratoriaScale patientId={patient.id.toString()} /></Suspense></div></div>)}
-                        {scaleView === 'kdigo' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><KDIGOScale onSaveScore={handleSaveScaleScore} /></Suspense></div></div>)}
+                        {scaleView === 'comfort-b' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><ComfortBCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
+                        {scaleView === 'delirium' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><CAMICUCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
+                        {scaleView === 'glasgow' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><GlasgowCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
+                        {scaleView === 'crs-r' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><CRSRScale onSaveScore={handleSaveScaleScore} /></Suspense></div></div>)}
+                        {scaleView === 'flacc' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><FLACCCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></Suspense></div></div>)}
+                        {scaleView === 'braden' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><BradenCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></Suspense></div></div>)}
+                        {scaleView === 'braden-qd' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><BradenQDScale onSaveScore={handleSaveScaleScore} /></Suspense></div></div>)}
+                        {scaleView === 'vni-cnaf' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><VNICNAFCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
+                        {scaleView === 'fss' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><FSSScale onSaveScore={handleSaveScaleScore} /></Suspense></div></div>)}
+                        {scaleView === 'abstinencia' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><AbstinenciaCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
+                        {scaleView === 'sos-pd' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><SOSPDCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
+                        {scaleView === 'consciousness' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><ConsciousnessCalculator patientId={patient.id.toString()} /></Suspense></div></div>)}
+                        {scaleView === 'respiratory' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><RespiratoryCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></Suspense></div></div>)}
+                        {scaleView === 'phoenix-sepsis' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><PhoenixSepsisCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></Suspense></div></div>)}
+                        {scaleView === 'avaliacao-respiratoria' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><AvaliacaoRespiratoriaScale patientId={patient.id.toString()} /></Suspense></div></div>)}
+                        {scaleView === 'kdigo' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><KDIGOScale onSaveScore={handleSaveScaleScore} /></Suspense></div></div>)}
                     </div>
                 )}
             </div>
@@ -770,7 +770,7 @@ const PatientDetailScreen: React.FC = () => {
             </Suspense>
 
             {user?.access_level === 'adm' ? (
-                <Link to={`/patient/${patient.id}/round/categories`} className="w-full block text-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg">
+                <Link to={`/patient/${patient.id}/round/categories`} className="w-full block text-center bg-primary-500 hover:bg-primary-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg">
                     <div className="flex items-center justify-center gap-2">
                         <ClipboardIcon className="w-6 h-6" />
                         Iniciar/Ver Round
@@ -825,18 +825,18 @@ const PatientDetailScreen: React.FC = () => {
             {/* Category Modal */}
             {openCategoryModal && (() => {
                 const modalConfig: Record<string, { label: string; icon: React.FC<{ className?: string }>; gradient: string }> = {
-                    medications: { label: 'Medicações', icon: PillIcon, gradient: 'from-blue-500 to-blue-700' },
+                    medications: { label: 'Medicações', icon: PillIcon, gradient: 'from-primary-500 to-primary-700' },
                     devices: { label: 'Dispositivos', icon: CpuIcon, gradient: 'from-green-500 to-emerald-700' },
                     cultures: { label: 'Culturas', icon: BeakerIcon, gradient: 'from-purple-500 to-violet-700' },
                     surgical: { label: 'Cirúrgico', icon: ScalpelIcon, gradient: 'from-orange-500 to-red-600' },
-                    exams: { label: 'Exames', icon: FileTextIcon, gradient: 'from-teal-400 to-cyan-600' },
+                    exams: { label: 'Exames', icon: FileTextIcon, gradient: 'from-primary-400 to-primary-600' },
                     diets: { label: 'Dietas', icon: AppleIcon, gradient: 'from-amber-400 to-orange-500' },
-                    aportes: { label: 'Aportes', icon: DropletIcon, gradient: 'from-sky-400 to-blue-500' },
-                    scales: { label: 'Escalas', icon: BarChartIcon, gradient: 'from-indigo-500 to-purple-600' },
+                    aportes: { label: 'Aportes', icon: DropletIcon, gradient: 'from-primary-400 to-primary-500' },
+                    scales: { label: 'Escalas', icon: BarChartIcon, gradient: 'from-primary-500 to-purple-600' },
                     pareceres: { label: 'Pareceres', icon: ClipboardIcon, gradient: 'from-pink-500 to-rose-600' },
                     examesImagem: { label: 'Exame de Imagem', icon: CameraIcon, gradient: 'from-violet-600 to-fuchsia-600' },
                     paPercentis: { label: 'PA Percentis', icon: HeartPulseIcon, gradient: 'from-red-500 to-rose-700' },
-                    paineisVirais: { label: 'Painéis Virais / Sorologia', icon: VirusIcon, gradient: 'from-cyan-600 to-teal-700' },
+                    paineisVirais: { label: 'Painéis Virais / Sorologia', icon: VirusIcon, gradient: 'from-primary-600 to-primary-700' },
                 };
                 const config = modalConfig[openCategoryModal];
                 const ModalIcon = config.icon;
@@ -868,11 +868,11 @@ const PatientDetailScreen: React.FC = () => {
                             <div className="flex-1 overflow-y-auto p-4 space-y-3 relative">
                                 {((openCategoryModal === 'medications' && markingAllMeds) || (openCategoryModal === 'devices' && markingAllDevices) || (openCategoryModal === 'cultures' && markingAllCultures) || (openCategoryModal === 'exams' && markingAllExams) || (openCategoryModal === 'surgical' && markingAllSurgeries) || (openCategoryModal === 'diets' && markingAllDiets)) && (
                                     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-b-2xl gap-3">
-                                        <svg className="animate-spin w-8 h-8 text-blue-500" viewBox="0 0 24 24" fill="none">
+                                        <svg className="animate-spin w-8 h-8 text-primary-500" viewBox="0 0 24 24" fill="none">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
                                         </svg>
-                                        <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">Atualizando...</p>
+                                        <p className="text-sm font-semibold text-primary-600 dark:text-primary-400">Atualizando...</p>
                                     </div>
                                 )}
                                 {openCategoryModal === 'devices' && (<>
@@ -890,7 +890,7 @@ const PatientDetailScreen: React.FC = () => {
                                                         setMarkingAllDevices(false);
                                                     }}
                                                     disabled={markingAllDevices}
-                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline disabled:opacity-50"
+                                                    className="text-xs text-primary-500 dark:text-primary-400 hover:underline disabled:opacity-50"
                                                 >
                                                     {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
                                                 </button>
@@ -901,27 +901,27 @@ const PatientDetailScreen: React.FC = () => {
                                         <div key={device.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
-                                                    <CpuIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
+                                                    <CpuIcon className="w-5 h-5 text-primary-600 dark:text-primary-400 mt-1 shrink-0" />
                                                     <div>
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{device.name} - {device.location}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(device.startDate)}</p>
                                                         {device.removalDate ? <p className="text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/50 px-2 py-0.5 rounded-md inline-block mt-1">Retirada: {formatDateToBRL(device.removalDate)}</p> : <p className="text-sm text-slate-500 dark:text-slate-400">Dias: {calculateDays(device.startDate)}</p>}
-                                                        {(device as any).sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{(device as any).sistema}</span>}
+                                                        {(device as any).sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{(device as any).sistema}</span>}
                                                         {device.observacao && <p className="text-sm text-slate-600 dark:text-slate-400 italic mt-1.5 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded">💬 {device.observacao}</p>}
                                                         <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
                                                             <input
                                                                 type="checkbox"
                                                                 checked={device.mostrar_evolucao !== false}
                                                                 onChange={e => toggleMostrarEvolucaoDispositivo(device.id, e.target.checked)}
-                                                                className="w-3.5 h-3.5 accent-blue-500"
+                                                                className="w-3.5 h-3.5 accent-primary-500"
                                                             />
                                                             <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
                                                         </label>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0 ml-2">
-                                                    {!device.removalDate && <button onClick={() => setRemovalModalOpen(device.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Retirada</button>}
-                                                    <button onClick={() => device.removalDate ? setEditingDeviceRemovalDate(device) : setEditingDevice(device)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
+                                                    {!device.removalDate && <button onClick={() => setRemovalModalOpen(device.id)} className="text-xs text-primary-600 dark:text-primary-400 font-semibold hover:underline">Registrar Retirada</button>}
+                                                    <button onClick={() => device.removalDate ? setEditingDeviceRemovalDate(device) : setEditingDevice(device)} className="p-1.5 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
                                                     <button onClick={() => setArchiveDeviceModal(device)} className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"><CloseIcon className="w-4 h-4" /></button>
                                                 </div>
                                             </div>
@@ -954,7 +954,7 @@ const PatientDetailScreen: React.FC = () => {
                                                     {examSelectMode && selectedExamIds.size > 0 && (<>
                                                         <button
                                                             onClick={() => handleBulkMarkEvolution(true)}
-                                                            className="text-xs font-semibold px-2 py-1 rounded-lg bg-teal-600 hover:bg-teal-700 text-white transition"
+                                                            className="text-xs font-semibold px-2 py-1 rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition"
                                                         >
                                                             + Evolução ({selectedExamIds.size})
                                                         </button>
@@ -975,7 +975,7 @@ const PatientDetailScreen: React.FC = () => {
                                                             setMarkingAllExams(false);
                                                         }}
                                                         disabled={markingAllExams}
-                                                        className="text-xs text-blue-500 dark:text-blue-400 hover:underline disabled:opacity-50"
+                                                        className="text-xs text-primary-500 dark:text-primary-400 hover:underline disabled:opacity-50"
                                                     >
                                                         {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
                                                     </button>
@@ -999,16 +999,16 @@ const PatientDetailScreen: React.FC = () => {
                                                             className="w-4 h-4 mt-1 accent-amber-500 shrink-0 cursor-pointer"
                                                         />
                                                     ) : (
-                                                        <FileTextIcon className="w-5 h-5 text-teal-600 dark:text-teal-400 mt-1 shrink-0" />
+                                                        <FileTextIcon className="w-5 h-5 text-primary-600 dark:text-primary-400 mt-1 shrink-0" />
                                                     )}
                                                     <div>
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{exam.name}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(exam.date)}</p>
-                                                        {exam.sistema && <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800">{exam.sistema}</span>}
+                                                        {exam.sistema && <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{exam.sistema}</span>}
                                                         {exam.observation && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 italic">Obs: {exam.observation}</p>}
                                                         {!examSelectMode && (
                                                             <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit" onClick={e => e.stopPropagation()}>
-                                                                <input type="checkbox" checked={isExamNaEvolucao(exam)} onChange={e => toggleMostrarEvolucaoExame(exam.id, e.target.checked)} className="w-3.5 h-3.5 accent-blue-500" />
+                                                                <input type="checkbox" checked={isExamNaEvolucao(exam)} onChange={e => toggleMostrarEvolucaoExame(exam.id, e.target.checked)} className="w-3.5 h-3.5 accent-primary-500" />
                                                                 <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
                                                             </label>
                                                         )}
@@ -1016,7 +1016,7 @@ const PatientDetailScreen: React.FC = () => {
                                                 </div>
                                                 {!examSelectMode && (
                                                     <div className="flex items-center gap-1 shrink-0 ml-2">
-                                                        <button onClick={() => setEditingExam(exam)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
+                                                        <button onClick={() => setEditingExam(exam)} className="p-1.5 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
                                                         <button onClick={() => setArchiveExamModal(exam)} className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"><CloseIcon className="w-4 h-4" /></button>
                                                     </div>
                                                 )}
@@ -1039,7 +1039,7 @@ const PatientDetailScreen: React.FC = () => {
                                                         setMarkingAllMeds(false);
                                                     }}
                                                     disabled={markingAllMeds}
-                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline disabled:opacity-50"
+                                                    className="text-xs text-primary-500 dark:text-primary-400 hover:underline disabled:opacity-50"
                                                 >
                                                     {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
                                                 </button>
@@ -1062,7 +1062,7 @@ const PatientDetailScreen: React.FC = () => {
                                         ];
                                         return grupos.map(grupo => (
                                             <div key={grupo.label} className="mb-4">
-                                                <h4 className="text-sm font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 px-3 py-2 rounded-lg border-l-4 border-blue-500 mb-2">
+                                                <h4 className="text-sm font-bold text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/30 px-3 py-2 rounded-lg border-l-4 border-primary-500 mb-2">
                                                     {grupo.label} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">({grupo.meds.length})</span>
                                                 </h4>
                                                 <div className="space-y-2">
@@ -1075,7 +1075,7 @@ const PatientDetailScreen: React.FC = () => {
                                                             )}
                                                             <div className="flex justify-between items-start">
                                                                 <div className="flex items-start gap-3">
-                                                                    <PillIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 shrink-0" />
+                                                                    <PillIcon className="w-5 h-5 text-primary-600 dark:text-primary-400 mt-1 shrink-0" />
                                                                     <div>
                                                                         <p className="font-bold text-slate-800 dark:text-slate-200 wrap-break-word">{medication.name}{medication.dosage && medication.dosage !== medication.name ? ` - ${medication.dosage}` : ''}</p>
                                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Início: {formatDateToBRL(medication.startDate)}</p>
@@ -1087,15 +1087,15 @@ const PatientDetailScreen: React.FC = () => {
                                                                                 type="checkbox"
                                                                                 checked={medication.mostrar_evolucao !== false}
                                                                                 onChange={e => toggleMostrarEvolucao(medication.id, e.target.checked)}
-                                                                                className="w-3.5 h-3.5 accent-blue-500"
+                                                                                className="w-3.5 h-3.5 accent-primary-500"
                                                                             />
                                                                             <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
                                                                         </label>
                                                                     </div>
                                                                 </div>
                                                                 <div className="flex items-center gap-2 shrink-0 ml-2">
-                                                                    {!medication.endDate && <button onClick={() => setEndDateModalOpen(medication.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Fim</button>}
-                                                                    <button onClick={() => medication.endDate ? setEditingMedicationEndDate(medication) : setEditingMedication(medication)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
+                                                                    {!medication.endDate && <button onClick={() => setEndDateModalOpen(medication.id)} className="text-xs text-primary-600 dark:text-primary-400 font-semibold hover:underline">Registrar Fim</button>}
+                                                                    <button onClick={() => medication.endDate ? setEditingMedicationEndDate(medication) : setEditingMedication(medication)} className="p-1.5 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
                                                                     <button onClick={() => setArchiveMedicationModal(medication)} className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"><CloseIcon className="w-4 h-4" /></button>
                                                                 </div>
                                                             </div>
@@ -1121,7 +1121,7 @@ const PatientDetailScreen: React.FC = () => {
                                                         setMarkingAllSurgeries(false);
                                                     }}
                                                     disabled={markingAllSurgeries}
-                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline disabled:opacity-50"
+                                                    className="text-xs text-primary-500 dark:text-primary-400 hover:underline disabled:opacity-50"
                                                 >
                                                     {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
                                                 </button>
@@ -1136,17 +1136,17 @@ const PatientDetailScreen: React.FC = () => {
                                                     <div>
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{procedure.name}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(procedure.date)} - Dr(a): {procedure.surgeon}</p>
-                                                        <p className="text-sm text-blue-600 dark:text-blue-400 font-semibold mt-1">Dia Pós-Operatório: +{calculateDays(procedure.date)} dias</p>
-                                                        {(procedure as any).sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{(procedure as any).sistema}</span>}
+                                                        <p className="text-sm text-primary-600 dark:text-primary-400 font-semibold mt-1">Dia Pós-Operatório: +{calculateDays(procedure.date)} dias</p>
+                                                        {(procedure as any).sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{(procedure as any).sistema}</span>}
                                                         {procedure.notes && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 italic">Obs: {procedure.notes}</p>}
                                                         <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
-                                                            <input type="checkbox" checked={procedure.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucaoCirurgia(procedure.id, e.target.checked)} className="w-3.5 h-3.5 accent-blue-500" />
+                                                            <input type="checkbox" checked={procedure.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucaoCirurgia(procedure.id, e.target.checked)} className="w-3.5 h-3.5 accent-primary-500" />
                                                             <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
                                                         </label>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-1 shrink-0 ml-2">
-                                                    <button onClick={() => setEditingSurgicalProcedure(procedure)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
+                                                    <button onClick={() => setEditingSurgicalProcedure(procedure)} className="p-1.5 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
                                                     <button onClick={() => setArchiveSurgicalModal(procedure)} className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"><CloseIcon className="w-4 h-4" /></button>
                                                 </div>
                                             </div>
@@ -1168,7 +1168,7 @@ const PatientDetailScreen: React.FC = () => {
                                                         setMarkingAllCultures(false);
                                                     }}
                                                     disabled={markingAllCultures}
-                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline disabled:opacity-50"
+                                                    className="text-xs text-primary-500 dark:text-primary-400 hover:underline disabled:opacity-50"
                                                 >
                                                     {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
                                                 </button>
@@ -1184,16 +1184,16 @@ const PatientDetailScreen: React.FC = () => {
                                                         <p className="font-bold text-slate-800 dark:text-slate-200">{culture.site}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Microorganismo: {culture.microorganism}</p>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400">Data: {formatDateToBRL(culture.collectionDate)}</p>
-                                                        {culture.sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{culture.sistema}</span>}
+                                                        {culture.sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{culture.sistema}</span>}
                                                         {culture.observation && <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 font-medium">Observação: {culture.observation}</p>}
                                                         <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
-                                                            <input type="checkbox" checked={culture.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucaoCultura(culture.id, e.target.checked)} className="w-3.5 h-3.5 accent-blue-500" />
+                                                            <input type="checkbox" checked={culture.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucaoCultura(culture.id, e.target.checked)} className="w-3.5 h-3.5 accent-primary-500" />
                                                             <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
                                                         </label>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-1 shrink-0 ml-2">
-                                                    <button onClick={() => setEditingCulture(culture)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
+                                                    <button onClick={() => setEditingCulture(culture)} className="p-1.5 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
                                                     <button onClick={() => setArchiveCultureModal(culture)} className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"><CloseIcon className="w-4 h-4" /></button>
                                                 </div>
                                             </div>
@@ -1215,7 +1215,7 @@ const PatientDetailScreen: React.FC = () => {
                                                         setMarkingAllDiets(false);
                                                     }}
                                                     disabled={markingAllDiets}
-                                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline disabled:opacity-50"
+                                                    className="text-xs text-primary-500 dark:text-primary-400 hover:underline disabled:opacity-50"
                                                 >
                                                     {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
                                                 </button>
@@ -1238,23 +1238,23 @@ const PatientDetailScreen: React.FC = () => {
                                                         {diet.pt_g_dia && <p className="text-sm text-slate-500 dark:text-slate-400">PT Plena: {formatDecimalBR(diet.pt_g_dia)} g/dia</p>}
                                                         {diet.th && <p className="text-sm text-slate-500 dark:text-slate-400">Taxa Hídrica (TH): {formatDecimalBR(diet.th)} ml/m²/dia</p>}
                                                         {(diet.vet_at || diet.pt_at) && (
-                                                            <div className="mt-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2">
-                                                                <p className="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1">📊 Cálculos Automáticos</p>
-                                                                {diet.vet_at && diet.vet && diet.vet_pleno && <><p className="text-sm font-bold text-blue-900 dark:text-blue-200">VET AT: {formatDecimalBR(diet.vet_at.toFixed(1))}%</p><p className="text-xs text-blue-600 dark:text-blue-400">{formatDecimalBR(diet.vet)} kcal/dia de {formatDecimalBR(diet.vet_pleno)} kcal/dia</p></>}
-                                                                {diet.pt_at && diet.pt && diet.pt_g_dia && <><p className="text-sm font-bold text-blue-900 dark:text-blue-200 mt-1">PT AT: {formatDecimalBR(diet.pt_at.toFixed(1))}%</p><p className="text-xs text-blue-600 dark:text-blue-400">{formatDecimalBR(diet.pt)} g/dia de {formatDecimalBR(diet.pt_g_dia)} g/dia</p></>}
+                                                            <div className="mt-2 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-2">
+                                                                <p className="text-xs font-semibold text-primary-800 dark:text-primary-300 mb-1">📊 Cálculos Automáticos</p>
+                                                                {diet.vet_at && diet.vet && diet.vet_pleno && <><p className="text-sm font-bold text-primary-900 dark:text-primary-200">VET AT: {formatDecimalBR(diet.vet_at.toFixed(1))}%</p><p className="text-xs text-primary-600 dark:text-primary-400">{formatDecimalBR(diet.vet)} kcal/dia de {formatDecimalBR(diet.vet_pleno)} kcal/dia</p></>}
+                                                                {diet.pt_at && diet.pt && diet.pt_g_dia && <><p className="text-sm font-bold text-primary-900 dark:text-primary-200 mt-1">PT AT: {formatDecimalBR(diet.pt_at.toFixed(1))}%</p><p className="text-xs text-primary-600 dark:text-primary-400">{formatDecimalBR(diet.pt)} g/dia de {formatDecimalBR(diet.pt_g_dia)} g/dia</p></>}
                                                             </div>
                                                         )}
                                                         {diet.observacao && <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 font-medium">Observação: {diet.observacao}</p>}
-                                                        {diet.sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{diet.sistema}</span>}
+                                                        {diet.sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{diet.sistema}</span>}
                                                         <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
-                                                            <input type="checkbox" checked={diet.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucaoDieta(diet.id, e.target.checked)} className="w-3.5 h-3.5 accent-blue-500" />
+                                                            <input type="checkbox" checked={diet.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucaoDieta(diet.id, e.target.checked)} className="w-3.5 h-3.5 accent-primary-500" />
                                                             <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
                                                         </label>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0 ml-2">
-                                                    {!diet.data_remocao && <button onClick={() => setDietRemovalModalOpen(diet.id)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Registrar Retirada</button>}
-                                                    <button onClick={() => diet.data_remocao ? setEditingDietRemovalDate(diet) : setEditingDiet(diet)} className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
+                                                    {!diet.data_remocao && <button onClick={() => setDietRemovalModalOpen(diet.id)} className="text-xs text-primary-600 dark:text-primary-400 font-semibold hover:underline">Registrar Retirada</button>}
+                                                    <button onClick={() => diet.data_remocao ? setEditingDietRemovalDate(diet) : setEditingDiet(diet)} className="p-1.5 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900 rounded-full transition"><PencilIcon className="w-4 h-4" /></button>
                                                     <button onClick={() => setArchiveDietModal(diet)} className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-full transition"><CloseIcon className="w-4 h-4" /></button>
                                                 </div>
                                             </div>
@@ -1289,7 +1289,7 @@ const PatientDetailScreen: React.FC = () => {
                                     {(patient.scaleScores ?? []).slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(score => (
                                         <div key={score.id} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
                                             <div className="flex items-start gap-3">
-                                                <BarChartIcon className="w-5 h-5 text-indigo-500 dark:text-indigo-400 mt-0.5 shrink-0" />
+                                                <BarChartIcon className="w-5 h-5 text-primary-500 dark:text-primary-400 mt-0.5 shrink-0" />
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-bold text-slate-800 dark:text-slate-200">{score.scaleName}</p>
                                                     <p className="text-sm text-slate-600 dark:text-slate-300 mt-0.5">

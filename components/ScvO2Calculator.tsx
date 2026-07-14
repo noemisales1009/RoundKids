@@ -99,7 +99,7 @@ export const ScvO2Calculator: React.FC<Props> = ({ patientId }) => {
     <div className="space-y-4 pb-2">
       <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-          <span className="w-6 h-6 rounded-full bg-cyan-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">5</span>
+          <span className="w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">5</span>
           <div>
             <span className="font-semibold text-slate-800 dark:text-slate-100 text-sm">
               ScvO₂ – Saturação Venosa Central de O₂
@@ -123,13 +123,13 @@ export const ScvO2Calculator: React.FC<Props> = ({ patientId }) => {
               step="0.1"
               min="0"
               max="100"
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400"
+              className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:border-primary-500 dark:focus:border-primary-400"
             />
           </div>
 
           <button
             onClick={calcular}
-            className="w-full py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-semibold transition-colors"
+            className="w-full py-2.5 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-colors"
           >
             Interpretar ScvO₂ →
           </button>
@@ -167,7 +167,7 @@ export const ScvO2Calculator: React.FC<Props> = ({ patientId }) => {
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
               saved
                 ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 cursor-default'
-                : 'bg-cyan-600 hover:bg-cyan-700 text-white disabled:opacity-60'
+                : 'bg-primary-600 hover:bg-primary-700 text-white disabled:opacity-60'
             }`}
           >
             {saved ? '✓ Gravado no prontuário' : saving ? 'Gravando...' : 'Gravar no prontuário'}

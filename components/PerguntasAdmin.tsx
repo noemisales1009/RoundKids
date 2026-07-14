@@ -225,7 +225,7 @@ export const PerguntasAdmin: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
       </div>
     );
   }
@@ -255,7 +255,7 @@ export const PerguntasAdmin: React.FC = () => {
               className={`w-full px-3 py-2 rounded border ${isDark
                 ? 'bg-slate-700 border-slate-600 text-slate-200'
                 : 'bg-white border-slate-300 text-slate-800'
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              } focus:outline-none focus:ring-2 focus:ring-primary-500`}
             />
           </div>
 
@@ -270,7 +270,7 @@ export const PerguntasAdmin: React.FC = () => {
                 className={`w-full px-3 py-2 rounded border ${isDark
                   ? 'bg-slate-700 border-slate-600 text-slate-200'
                   : 'bg-white border-slate-300 text-slate-800'
-                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                } focus:outline-none focus:ring-2 focus:ring-primary-500`}
               >
                 <option value="">Sem categoria</option>
                 {categorias.map(cat => (
@@ -293,7 +293,7 @@ export const PerguntasAdmin: React.FC = () => {
                 className={`w-full px-3 py-2 rounded border ${isDark
                   ? 'bg-slate-700 border-slate-600 text-slate-200'
                   : 'bg-white border-slate-300 text-slate-800'
-                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                } focus:outline-none focus:ring-2 focus:ring-primary-500`}
               />
             </div>
           </div>
@@ -424,7 +424,7 @@ export const PerguntasAdmin: React.FC = () => {
                                 className={`flex-1 py-1 px-2 text-sm rounded font-semibold transition ${
                                   saving
                                     ? `${isDark ? 'bg-slate-600' : 'bg-slate-300'} cursor-not-allowed`
-                                    : `bg-blue-600 hover:bg-blue-700 text-white`
+                                    : `bg-primary-600 hover:bg-primary-700 text-white`
                                 }`}
                               >
                                 Adicionar
@@ -491,7 +491,7 @@ export const PerguntasAdmin: React.FC = () => {
                       {selectedPerguntaId !== pergunta.id && (
                         <button
                           onClick={() => setSelectedPerguntaId(pergunta.id)}
-                          className="w-full py-1 px-2 text-sm rounded font-semibold bg-blue-600 hover:bg-blue-700 text-white transition"
+                          className="w-full py-1 px-2 text-sm rounded font-semibold bg-primary-600 hover:bg-primary-700 text-white transition"
                         >
                           + Adicionar Opção
                         </button>

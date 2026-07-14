@@ -167,7 +167,7 @@ const AVALIACAO_SECTIONS = [
 
 
 const PREC_BADGE: Record<string, { label: string; cls: string }> = {
-  padrao:                     { label: 'Padrão',              cls: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
+  padrao:                     { label: 'Padrão',              cls: 'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200' },
   contato:                    { label: 'Contato',             cls: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' },
   goticula:                   { label: 'Gotículas',           cls: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' },
   aerossois:                  { label: 'Aerossóis',           cls: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
@@ -284,7 +284,7 @@ const calcDays = (startDate: string) => {
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 
-const inputCls = "w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg py-2.5 px-3 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm";
+const inputCls = "w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg py-2.5 px-3 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm";
 const labelCls = "block text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -1401,7 +1401,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           placeholder="Buscar por nome ou leito..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200"
+          className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-slate-800 dark:text-slate-200"
         />
 
         {filteredPatients.length === 0 ? (
@@ -1421,7 +1421,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                 >
                   <div className={`h-1.5 w-full shrink-0 ${cfg?.barBg ?? 'bg-slate-300'}`} />
                   <div className="p-3 flex flex-col flex-1 gap-2">
-                    <div className="w-10 h-10 flex items-center justify-center bg-blue-100 dark:bg-blue-900/80 text-blue-600 dark:text-blue-300 rounded-full font-bold text-lg shrink-0">
+                    <div className="w-10 h-10 flex items-center justify-center bg-primary-100 dark:bg-primary-900/80 text-primary-600 dark:text-primary-300 rounded-full font-bold text-lg shrink-0">
                       {patient.bedNumber}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -1467,13 +1467,13 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     <div className="space-y-4">
 
       {/* 1. Identificação — Patient card */}
-      <div className="rounded-2xl shadow-lg overflow-hidden border border-blue-500/20 dark:border-blue-400/20">
-        <div className="h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+      <div className="rounded-2xl shadow-lg overflow-hidden border border-primary-500/20 dark:border-primary-400/20">
+        <div className="h-1.5 bg-gradient-to-r from-primary-500 via-primary-500 to-purple-500" />
         <div className="bg-white dark:bg-slate-900 p-4 sm:p-5">
           <div className="flex justify-end mb-3">
             <button
               onClick={handleTrocarLeito}
-              className="text-xs font-semibold text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-200 bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-lg transition"
+              className="text-xs font-semibold text-primary-500 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-200 bg-primary-50 dark:bg-primary-900/30 px-3 py-1.5 rounded-lg transition"
             >
               Trocar Leito
             </button>
@@ -1500,7 +1500,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               selectedPatient.admissionDate
                 ? <>
                     {formatDateToBRL(selectedPatient.admissionDate)}{' '}
-                    <span className="text-blue-500 dark:text-blue-400 font-bold">
+                    <span className="text-primary-500 dark:text-primary-400 font-bold">
                       · {calcDays(selectedPatient.admissionDate)} {calcDays(selectedPatient.admissionDate) === 1 ? 'dia' : 'dias'}
                     </span>
                   </>
@@ -1518,7 +1518,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
             type="date"
             value={date}
             onChange={e => setDate(e.target.value)}
-            className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
         <div className="flex gap-2">
@@ -1554,7 +1554,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           </button>
           <button
             onClick={handleDownloadDoc}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
+            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-semibold transition"
           >
             Baixar Word
           </button>
@@ -1588,7 +1588,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Comorbidades</p>
           <div className="flex flex-wrap gap-2">
             {selectedPatient.comorbidade.split('|').filter(c => c.trim()).map((c, i) => (
-              <span key={i} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border border-blue-400 dark:border-blue-500 text-slate-700 dark:text-slate-200">
+              <span key={i} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border border-primary-400 dark:border-primary-500 text-slate-700 dark:text-slate-200">
                 {c.trim()}
               </span>
             ))}
@@ -1622,7 +1622,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       <Section title="5. Diagnósticos Principais" id="diagPrincipais" open={openSections.has('diagPrincipais')} onToggle={() => toggle('diagPrincipais')}>
         {diagLoading ? (
           <div className="flex justify-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" />
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" />
           </div>
         ) : (() => {
           const principais = diagItems.filter(d => d.tipo === 'principal');
@@ -1671,7 +1671,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                                 </span>
                               )}
                               <button onClick={() => toggleWordItem(wk)} title={off ? 'Incluir no Word' : 'Remover do Word'} className="absolute right-0 p-0.5 rounded transition-all hover:scale-110">
-                                <span className={`material-symbols-rounded text-[18px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span>
+                                <span className={`material-symbols-rounded text-[18px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-primary-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span>
                               </button>
                             </div>
                           );
@@ -1690,7 +1690,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       <Section title="6. Diagnósticos Secundários" id="diagSecundarios" open={openSections.has('diagSecundarios')} onToggle={() => toggle('diagSecundarios')}>
         {diagLoading ? (
           <div className="flex justify-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" />
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" />
           </div>
         ) : (() => {
           const secundarios = diagItems
@@ -1744,7 +1744,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                                 </span>
                               )}
                               <button onClick={() => toggleWordItem(wk)} title={off ? 'Incluir no Word' : 'Remover do Word'} className="absolute right-0 p-0.5 rounded transition-all hover:scale-110">
-                                <span className={`material-symbols-rounded text-[18px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span>
+                                <span className={`material-symbols-rounded text-[18px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-primary-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span>
                               </button>
                             </div>
                           );
@@ -1765,14 +1765,14 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       {/* 8. BH Diário */}
       <Section title="8. BH Diário" id="bhDiario" open={openSections.has('bhDiario')} onToggle={() => toggle('bhDiario')}>
         {bhLoading ? (
-          <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" /></div>
+          <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" /></div>
         ) : !bhBalance ? (
           <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum balanço hídrico registrado.</p>
         ) : (() => {
           const pct = bhBalance.volume / (bhBalance.peso * 10);
           const isGain = bhBalance.volume > 0;
-          const colorCls = isGain ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400';
-          const bgCls = isGain ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
+          const colorCls = isGain ? 'text-primary-600 dark:text-primary-400' : 'text-red-600 dark:text-red-400';
+          const bgCls = isGain ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
           return (
             <div className={`p-4 rounded-lg border ${bgCls}`}>
               <p className={`text-xs font-medium mb-1 ${colorCls}`}>BALANÇO HÍDRICO</p>
@@ -1792,7 +1792,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       {/* 9. BH Cumulativo */}
       <Section title="9. BH Cumulativo" id="bhCumulativo" open={openSections.has('bhCumulativo')} onToggle={() => toggle('bhCumulativo')}>
         {bhLoading ? (
-          <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" /></div>
+          <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" /></div>
         ) : !bhCumul || bhCumul.registros_ultimas_24h === 0 ? (
           <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum dado cumulativo disponível.</p>
         ) : (() => {
@@ -1800,10 +1800,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           const alert = Math.abs(val) > 200;
           const colorCls = alert
             ? val > 0 ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'
-            : val > 0 ? 'text-blue-600 dark:text-blue-400' : val < 0 ? 'text-green-600 dark:text-green-400' : 'text-slate-600 dark:text-slate-400';
+            : val > 0 ? 'text-primary-600 dark:text-primary-400' : val < 0 ? 'text-green-600 dark:text-green-400' : 'text-slate-600 dark:text-slate-400';
           const bgCls = alert
             ? val > 0 ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
-            : val > 0 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' : val < 0 ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-slate-50 dark:bg-slate-900/20 border-slate-200 dark:border-slate-700';
+            : val > 0 ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800' : val < 0 ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-slate-50 dark:bg-slate-900/20 border-slate-200 dark:border-slate-700';
           const label = alert
             ? val > 0 ? '⚠️ Retenção' : '⚠️ Perda'
             : val > 0 ? '💧 Ganho' : val < 0 ? '✓ Eliminação' : 'Neutro';
@@ -1823,16 +1823,16 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       {/* 10. Diurese */}
       <Section title="10. Diurese" id="diurese" open={openSections.has('diurese')} onToggle={() => toggle('diurese')}>
         {diureseLoading ? (
-          <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500" /></div>
+          <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" /></div>
         ) : !diureseRec ? (
           <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum registro de diurese.</p>
         ) : (
-          <div className="p-4 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800">
-            <p className="text-xs font-medium text-teal-700 dark:text-teal-400 mb-1">DIURESE</p>
-            <p className="text-2xl font-bold text-teal-600 dark:text-teal-400 mb-0.5">
+          <div className="p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
+            <p className="text-xs font-medium text-primary-700 dark:text-primary-400 mb-1">DIURESE</p>
+            <p className="text-2xl font-bold text-primary-600 dark:text-primary-400 mb-0.5">
               {((diureseRec.volume / diureseRec.horas) / diureseRec.peso).toFixed(2)}
             </p>
-            <p className="text-xs font-medium text-teal-600 dark:text-teal-400 mb-2">mL/kg/h</p>
+            <p className="text-xs font-medium text-primary-600 dark:text-primary-400 mb-2">mL/kg/h</p>
             <p className="text-xs text-slate-600 dark:text-slate-400">
               Volume: {diureseRec.volume}mL | {diureseRec.horas}h
             </p>
@@ -1846,7 +1846,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       {/* 11. Aportes */}
       <Section title="11. Aportes" id="aportes" open={openSections.has('aportes')} onToggle={() => toggle('aportes')}>
         {aportesLoading ? (
-          <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" /></div>
+          <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" /></div>
         ) : aportesList.length === 0 ? (
           <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum aporte registrado.</p>
         ) : (
@@ -1909,7 +1909,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       {/* 13. S — Situação Clínica */}
       <Section title="13. S — Situação Clínica" id="situacao" open={openSections.has('situacao')} onToggle={() => toggle('situacao')}>
         {situacaoLoading ? (
-          <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" /></div>
+          <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" /></div>
         ) : !situacaoRec ? (
           <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhuma situação clínica registrada nas últimas 24h.</p>
         ) : (
@@ -1947,10 +1947,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               <button
                 onClick={handleSalvarExame}
                 disabled={savingExame || archivingExame}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 border-blue-400 text-blue-600 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/20`}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 border-primary-400 text-primary-600 hover:bg-primary-50 dark:border-primary-600 dark:text-primary-400 dark:hover:bg-primary-900/20`}
               >
                 {savingExame
-                  ? <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+                  ? <div className="w-4 h-4 rounded-full border-2 border-primary-500 border-t-transparent animate-spin" />
                   : <span className="material-symbols-rounded text-[18px]">save</span>
                 }
                 Salvar
@@ -1974,7 +1974,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       {/* 14. AP — Avaliação x Propedêutica */}
       <Section title="14. AP — Avaliação x Propedêutica (Alertas)" id="avaliacoes" open={openSections.has('avaliacoes')} onToggle={() => toggle('avaliacoes')}>
         {alertasLoading ? (
-          <div className="flex justify-center py-6"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" /></div>
+          <div className="flex justify-center py-6"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" /></div>
         ) : (
           <div className="space-y-2">
             {apSystems.map(system => {
@@ -2063,7 +2063,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                               {(diag.data_inicio || diag.created_at) && <p className="text-xs text-slate-400 dark:text-slate-500">{new Date((diag.data_inicio || diag.created_at)!).toLocaleDateString('pt-BR')}</p>}
                             </div>
                             <button onClick={() => toggleWordItem(wkDiag)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110">
-                              <span className={`material-symbols-rounded text-[20px] ${offDiag ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{offDiag ? 'check_box_outline_blank' : 'check_box'}</span>
+                              <span className={`material-symbols-rounded text-[20px] ${offDiag ? 'text-slate-400 dark:text-slate-600' : 'text-primary-500'}`}>{offDiag ? 'check_box_outline_blank' : 'check_box'}</span>
                             </button>
                           </div>
 
@@ -2072,16 +2072,16 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                             <div className="px-3 pb-3 pt-2 space-y-2 bg-white dark:bg-slate-900/50">
                               {diagMeds.length > 0 && (
                                 <div>
-                                  <p className="text-xs font-bold text-blue-500 dark:text-blue-400 uppercase tracking-wide mb-1">Medicações</p>
+                                  <p className="text-xs font-bold text-primary-500 dark:text-primary-400 uppercase tracking-wide mb-1">Medicações</p>
                                   <div className="space-y-1">
                                     {diagMeds.map(m => {
                                       const wk = `med_${m.id}`; const off = wordExcluded.has(wk);
                                       return (
-                                        <div key={m.id} className={`relative p-2 pr-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                                        <div key={m.id} className={`relative p-2 pr-10 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
                                           <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{m.name}</p>
                                           {m.dosage && <p className="text-xs text-slate-500 dark:text-slate-400">{m.dosage}</p>}
                                           <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(m.startDate)}</p>
-                                          <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                                          <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-primary-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                                         </div>
                                       );
                                     })}
@@ -2099,7 +2099,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                                           <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{c.site}</p>
                                           {c.microorganism && <p className="text-xs text-slate-500 dark:text-slate-400">{c.microorganism}</p>}
                                           <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(c.collectionDate)}</p>
-                                          <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                                          <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-primary-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                                         </div>
                                       );
                                     })}
@@ -2118,7 +2118,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                                           <p className="text-xs text-slate-500 dark:text-slate-400">{pn.categoria}</p>
                                           {pn.resultado && <p className="text-xs text-slate-500 dark:text-slate-400">{pn.resultado}{pn.valor ? ` (${pn.valor})` : ''}</p>}
                                           <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(pn.data_coleta + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
-                                          <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                                          <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-primary-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                                         </div>
                                       );
                                     })}
@@ -2134,16 +2134,16 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                     {/* 2. Medicações sem diagnóstico */}
                     {allSecMeds.filter(m => !usedMedIds.has(m.id)).length > 0 && (
                       <div>
-                        <p className="text-xs font-bold text-blue-500 dark:text-blue-400 uppercase tracking-wide mb-1.5">Medicações</p>
+                        <p className="text-xs font-bold text-primary-500 dark:text-primary-400 uppercase tracking-wide mb-1.5">Medicações</p>
                         <div className="space-y-1">
                           {allSecMeds.filter(m => !usedMedIds.has(m.id)).map(m => {
                             const wk = `med_${m.id}`; const off = wordExcluded.has(wk);
                             return (
-                              <div key={m.id} className={`relative p-2 pr-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                              <div key={m.id} className={`relative p-2 pr-10 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
                                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{m.name}</p>
                                 {m.dosage && <p className="text-xs text-slate-500 dark:text-slate-400">{m.dosage}</p>}
                                 <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(m.startDate)}</p>
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-primary-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
                           })}
@@ -2154,15 +2154,15 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                     {/* 3. Exames */}
                     {secExames.length > 0 && (
                       <div>
-                        <p className="text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wide mb-1.5">Exames</p>
+                        <p className="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wide mb-1.5">Exames</p>
                         <div className="space-y-1">
                           {secExames.map(e => {
                             const wk = `exam_${e.id}`; const off = wordExcluded.has(wk);
                             return (
-                              <div key={e.id} className={`relative p-2 pr-10 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                              <div key={e.id} className={`relative p-2 pr-10 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
                                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{e.name}</p>
                                 <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(e.date)}</p>
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-primary-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
                           })}
@@ -2173,16 +2173,16 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                     {/* 3b. Escalas clínicas */}
                     {secEscalas.length > 0 && (
                       <div>
-                        <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide mb-1.5">Escalas</p>
+                        <p className="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wide mb-1.5">Escalas</p>
                         <div className="space-y-1">
                           {secEscalas.map(s => {
                             const wk = `scale_${s.id}`; const off = wordExcluded.has(wk);
                             return (
-                              <div key={s.id} className={`relative p-2 pr-10 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                              <div key={s.id} className={`relative p-2 pr-10 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
                                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{s.scale_name}: {s.score}</p>
                                 {s.interpretation && <p className="text-xs text-slate-500 dark:text-slate-400">{s.interpretation}</p>}
                                 <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(s.date).toLocaleDateString('pt-BR')}</p>
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-primary-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
                           })}
@@ -2202,7 +2202,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{c.site}</p>
                                 {c.microorganism && <p className="text-xs text-slate-500 dark:text-slate-400">{c.microorganism}</p>}
                                 <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(c.collectionDate)}</p>
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-primary-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
                           })}
@@ -2223,7 +2223,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                                 <p className="text-xs text-slate-500 dark:text-slate-400">{pn.categoria}</p>
                                 {pn.resultado && <p className="text-xs text-slate-500 dark:text-slate-400">{pn.resultado}{pn.valor ? ` (${pn.valor})` : ''}</p>}
                                 <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(pn.data_coleta + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-primary-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
                           })}
@@ -2243,7 +2243,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ei.exame}</p>
                                 {ei.resultado && <p className="text-xs text-slate-500 dark:text-slate-400">{ei.resultado}</p>}
                                 <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(ei.data_exame)}</p>
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-primary-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
                           })}
@@ -2263,7 +2263,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{p.especialista}</p>
                                 {p.parecer && <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{p.parecer}</p>}
                                 <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(p.data_parecer)}</p>
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-primary-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
                           })}
@@ -2282,7 +2282,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                               <div key={a.id} className={`relative p-2 pr-10 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
                                 <p className="text-sm text-slate-700 dark:text-slate-200">{a.alerta_descricao}</p>
                                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{formatDateToBRL(a.created_at)}</p>
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-primary-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
                           })}
@@ -2302,7 +2302,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{c.name}</p>
                                 {c.surgeon && <p className="text-xs text-slate-500 dark:text-slate-400">{c.surgeon}</p>}
                                 <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(c.date)}</p>
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-primary-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
                           })}
@@ -2322,13 +2322,13 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{d.type}</p>
                                 {d.volume && <p className="text-xs text-slate-500 dark:text-slate-400">Volume: {formatDecimalBR(d.volume)} ml</p>}
                                 {(d.vet_at != null || d.pt_at != null) && (
-                                  <div className="mt-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-1.5">
-                                    {d.vet_at != null && <p className="text-xs font-bold text-blue-900 dark:text-blue-200">VET AT: {d.vet_at.toFixed(0)}% <span className="font-normal text-blue-600 dark:text-blue-400">({formatDecimalBR(d.vet)} kcal/dia de {formatDecimalBR(d.vet_pleno)} kcal/dia)</span></p>}
-                                    {d.pt_at != null && <p className="text-xs font-bold text-blue-900 dark:text-blue-200">PT AT: {d.pt_at.toFixed(0)}% <span className="font-normal text-blue-600 dark:text-blue-400">({formatDecimalBR(d.pt)} g/dia de {formatDecimalBR(d.pt_g_dia)} g/dia)</span></p>}
+                                  <div className="mt-1 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded p-1.5">
+                                    {d.vet_at != null && <p className="text-xs font-bold text-primary-900 dark:text-primary-200">VET AT: {d.vet_at.toFixed(0)}% <span className="font-normal text-primary-600 dark:text-primary-400">({formatDecimalBR(d.vet)} kcal/dia de {formatDecimalBR(d.vet_pleno)} kcal/dia)</span></p>}
+                                    {d.pt_at != null && <p className="text-xs font-bold text-primary-900 dark:text-primary-200">PT AT: {d.pt_at.toFixed(0)}% <span className="font-normal text-primary-600 dark:text-primary-400">({formatDecimalBR(d.pt)} g/dia de {formatDecimalBR(d.pt_g_dia)} g/dia)</span></p>}
                                   </div>
                                 )}
                                 <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateToBRL(d.data_inicio)}</p>
-                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-blue-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                                <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-primary-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
                             );
                           })}
@@ -2353,10 +2353,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               <button
                 onClick={handleSalvarCondutas}
                 disabled={savingCondutas || archivingCondutas}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 border-blue-400 text-blue-600 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/20`}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 border-primary-400 text-primary-600 hover:bg-primary-50 dark:border-primary-600 dark:text-primary-400 dark:hover:bg-primary-900/20`}
               >
                 {savingCondutas
-                  ? <div className="w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+                  ? <div className="w-4 h-4 rounded-full border-2 border-primary-500 border-t-transparent animate-spin" />
                   : <span className="material-symbols-rounded text-[18px]">save</span>
                 }
                 Salvar

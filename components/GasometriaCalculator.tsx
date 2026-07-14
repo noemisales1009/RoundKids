@@ -41,7 +41,7 @@ interface Props {
 
 const TAG_COLORS: Record<string, string> = {
   acid: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
-  alc: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
+  alc: 'bg-primary-100 text-primary-800 dark:bg-primary-900/40 dark:text-primary-300',
   meta: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
   resp: 'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300',
   norm: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
@@ -174,7 +174,7 @@ export const GasometriaCalculator: React.FC<Props> = ({ patientId }) => {
       {/* Step 1 – Inputs */}
       <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-          <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">1</span>
+          <span className="w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">1</span>
           <span className="font-semibold text-slate-800 dark:text-slate-100 text-sm">Inserir valores da gasometria</span>
         </div>
         <div className="p-4 space-y-4">
@@ -194,7 +194,7 @@ export const GasometriaCalculator: React.FC<Props> = ({ patientId }) => {
                   step={step}
                   min={min}
                   max={max}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:border-blue-500 dark:focus:border-blue-400"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:border-primary-500 dark:focus:border-primary-400"
                 />
               </div>
             ))}
@@ -281,7 +281,7 @@ export const GasometriaCalculator: React.FC<Props> = ({ patientId }) => {
           {respResult !== '' && (
             <div className={`rounded-lg border px-4 py-3 text-sm leading-relaxed ${respResult === 'normal'
               ? 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
-              : 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-300'}`}>
+              : 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 text-primary-800 dark:text-primary-300'}`}>
               {respResult === 'normal' ? (
                 <>
                   <p className="font-semibold mb-1">Sem distúrbio respiratório primário</p>
@@ -312,7 +312,7 @@ export const GasometriaCalculator: React.FC<Props> = ({ patientId }) => {
             disabled={saving || saved}
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${saved
               ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 cursor-default'
-              : 'bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-60'}`}
+              : 'bg-primary-600 hover:bg-primary-700 text-white disabled:opacity-60'}`}
           >
             {saved ? '✓ Gravado no prontuário' : saving ? 'Gravando...' : 'Gravar no prontuário'}
           </button>

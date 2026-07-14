@@ -137,7 +137,7 @@ export const SecondaryNavigation: React.FC<SecondaryNavigationProps> = ({
                             onClick={() => onTabChange(tab.id)}
                             className={`shrink-0 py-3 px-4 text-center font-semibold flex items-center justify-center gap-2 transition-colors duration-200 text-sm whitespace-nowrap border-b-2 ${
                                 isActive
-                                    ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-900'
+                                    ? 'border-primary-500 text-primary-600 dark:text-primary-400 bg-white dark:bg-slate-900'
                                     : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                             }`}
                         >

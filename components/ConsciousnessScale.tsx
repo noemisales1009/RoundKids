@@ -64,12 +64,12 @@ const escalasConfig = {
 
 const colorConfig = {
   teal: {
-    bg: 'bg-teal-600 dark:bg-teal-700',
-    hover: 'hover:bg-teal-500 dark:hover:bg-teal-600',
-    text: 'text-teal-600 dark:text-teal-400',
-    border: 'border-teal-500 dark:border-teal-600',
-    progress: 'bg-teal-500 dark:bg-teal-600',
-    light: 'bg-teal-50 dark:bg-slate-700',
+    bg: 'bg-primary-600 dark:bg-primary-700',
+    hover: 'hover:bg-primary-500 dark:hover:bg-primary-600',
+    text: 'text-primary-600 dark:text-primary-400',
+    border: 'border-primary-500 dark:border-primary-600',
+    progress: 'bg-primary-500 dark:bg-primary-600',
+    light: 'bg-primary-50 dark:bg-slate-700',
   },
 };
 
@@ -253,7 +253,7 @@ export const ConsciousnessScale: React.FC<ScaleProps> = ({ onSaveScore }) => {
             className={`w-full py-3 px-4 rounded-lg font-bold text-white text-sm sm:text-base transition-all ${colorConfig.teal.bg} ${colorConfig.teal.hover}`}
           >
             {escalasConfig.four_score.titulo}
-            <div className={`text-xs mt-1 ${isDark ? 'text-teal-200' : 'text-teal-100'}`}>
+            <div className={`text-xs mt-1 ${isDark ? 'text-primary-200' : 'text-primary-100'}`}>
               0 - 16 pts
             </div>
           </button>

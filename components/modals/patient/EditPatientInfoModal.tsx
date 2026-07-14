@@ -91,7 +91,7 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
                             value={bedNumber}
                             onChange={e => setBedNumber(e.target.value)}
                             placeholder="Ex: 12"
-                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
                         />
                     </div>
                     <div>
@@ -101,7 +101,7 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
                             value={prontuario}
                             onChange={e => setProntuario(e.target.value)}
                             placeholder="Ex: 123456"
-                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
                         />
                     </div>
                     <div>
@@ -110,7 +110,7 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
                             type="text"
                             value={motherName}
                             onChange={e => setMotherName(e.target.value)}
-                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
                         />
                     </div>
 
@@ -126,7 +126,7 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
                                     className={`${btnBase} ${
                                         sexo === op
                                             ? op === 'Masculino'
-                                                ? 'bg-blue-500 border-blue-500 text-white'
+                                                ? 'bg-primary-500 border-primary-500 text-white'
                                                 : 'bg-pink-500 border-pink-500 text-white'
                                             : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                                     }`}
@@ -144,7 +144,7 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
                             step="0.1"
                             value={weight}
                             onChange={handleWeightChange}
-                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
                         />
                     </div>
                     <div>
@@ -155,12 +155,12 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
                             value={sc}
                             onChange={e => setSc(e.target.value)}
                             readOnly
-                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 cursor-not-allowed"
+                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 cursor-not-allowed"
                         />
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2">
                         <button type="button" onClick={onClose} className="w-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-lg">Cancelar</button>
-                        <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Salvar</button>
+                        <button type="submit" className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded-lg">Salvar</button>
                     </div>
                 </form>
             </div>

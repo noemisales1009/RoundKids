@@ -252,7 +252,7 @@ export const TriagemPAVCard: React.FC<TriagemPAVCardProps> = ({ patientId, dob }
     <div className="space-y-4">
       {/* Cabeçalho */}
       <div className="flex items-center gap-2">
-        <LungsAltIcon className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+        <LungsAltIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
         <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Triagem PAV</h3>
       </div>
       <p className="text-xs text-slate-500 dark:text-slate-400 -mt-2">
@@ -277,7 +277,7 @@ export const TriagemPAVCard: React.FC<TriagemPAVCardProps> = ({ patientId, dob }
               onClick={() => setBand(b.key)}
               className={`px-2 py-2 rounded-lg text-xs font-semibold border transition ${
                 band === b.key
-                  ? 'bg-sky-600 text-white border-sky-600'
+                  ? 'bg-primary-600 text-white border-primary-600'
                   : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'
               }`}
             >
@@ -296,7 +296,7 @@ export const TriagemPAVCard: React.FC<TriagemPAVCardProps> = ({ patientId, dob }
             key={g.key}
             className={`flex items-start gap-2 p-3 rounded-lg border cursor-pointer transition ${
               checked[g.key]
-                ? 'border-sky-300 dark:border-sky-700 bg-sky-50 dark:bg-sky-900/20'
+                ? 'border-primary-300 dark:border-primary-700 bg-primary-50 dark:bg-primary-900/20'
                 : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
@@ -304,10 +304,10 @@ export const TriagemPAVCard: React.FC<TriagemPAVCardProps> = ({ patientId, dob }
               type="checkbox"
               checked={!!checked[g.key]}
               onChange={() => toggle(g.key)}
-              className="mt-0.5 w-4 h-4 accent-sky-600 shrink-0"
+              className="mt-0.5 w-4 h-4 accent-primary-600 shrink-0"
             />
             <span className="text-sm text-slate-700 dark:text-slate-200">
-              <b className="text-sky-700 dark:text-sky-300">{g.letra}.</b>{' '}
+              <b className="text-primary-700 dark:text-primary-300">{g.letra}.</b>{' '}
               <span className="font-medium text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">obrigatório</span>
               <br />
               {g.label}
@@ -328,7 +328,7 @@ export const TriagemPAVCard: React.FC<TriagemPAVCardProps> = ({ patientId, dob }
         >
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              <span className="text-sky-700 dark:text-sky-300">{g.letra}.</span> {g.title}
+              <span className="text-primary-700 dark:text-primary-300">{g.letra}.</span> {g.title}
             </p>
             <span
               className={`text-xs font-bold px-2 py-0.5 rounded-full ${
@@ -350,7 +350,7 @@ export const TriagemPAVCard: React.FC<TriagemPAVCardProps> = ({ patientId, dob }
                   type="checkbox"
                   checked={!!checked[it.key]}
                   onChange={() => toggle(it.key)}
-                  className="mt-0.5 w-4 h-4 accent-sky-600 shrink-0"
+                  className="mt-0.5 w-4 h-4 accent-primary-600 shrink-0"
                 />
                 <span className="text-sm text-slate-700 dark:text-slate-200">{it.label}</span>
               </label>
@@ -403,7 +403,7 @@ export const TriagemPAVCard: React.FC<TriagemPAVCardProps> = ({ patientId, dob }
           value={observacao}
           onChange={e => setObservacao(e.target.value)}
           rows={2}
-          className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none"
+          className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
         />
       </div>
 
@@ -426,7 +426,7 @@ export const TriagemPAVCard: React.FC<TriagemPAVCardProps> = ({ patientId, dob }
         <button
           onClick={handleSalvar}
           disabled={saving || !avaliacao.anyChecked}
-          className="flex-1 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium flex items-center justify-center gap-2"
+          className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium flex items-center justify-center gap-2"
         >
           <SaveIcon className="w-4 h-4" />
           <span>{saving ? 'Salvando...' : 'Salvar triagem'}</span>

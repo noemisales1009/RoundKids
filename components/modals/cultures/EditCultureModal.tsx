@@ -134,7 +134,7 @@ export const EditCultureModal: React.FC<{ culture: Culture; patientId: number | 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Local</label>
-                        <select value={site} onChange={e => setSite(e.target.value)} className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200" required>
+                        <select value={site} onChange={e => setSite(e.target.value)} className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm sm:text-base text-slate-800 dark:text-slate-200" required>
                             <option value="">Selecione o local...</option>
                             <option value="Swab nasal">Swab nasal</option>
                             <option value="Swab orofaríngeo">Swab orofaríngeo</option>
@@ -161,12 +161,12 @@ export const EditCultureModal: React.FC<{ culture: Culture; patientId: number | 
                             <option value="Outros">Outros</option>
                         </select>
                         {site === 'Outros' && (
-                            <input type="text" value={customSite} onChange={(e) => setCustomSite(e.target.value)} placeholder="Digite o local da coleta..." className="mt-2 block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200" required />
+                            <input type="text" value={customSite} onChange={(e) => setCustomSite(e.target.value)} placeholder="Digite o local da coleta..." className="mt-2 block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base text-slate-800 dark:text-slate-200" required />
                         )}
                     </div>
                     <div>
                         <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Microorganismo</label>
-                        <select value={microorganism} onChange={e => setMicroorganism(e.target.value)} className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200" required>
+                        <select value={microorganism} onChange={e => setMicroorganism(e.target.value)} className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm sm:text-base text-slate-800 dark:text-slate-200" required>
                             <option value="">Selecione o microorganismo...</option>
                             <option value="Klebsiella pneumoniae">Klebsiella pneumoniae</option>
                             <option value="Escherichia coli">Escherichia coli</option>
@@ -190,12 +190,12 @@ export const EditCultureModal: React.FC<{ culture: Culture; patientId: number | 
                             <option value="Outros">Outros</option>
                         </select>
                         {microorganism === 'Outros' && (
-                            <input type="text" value={customMicroorganism} onChange={(e) => setCustomMicroorganism(e.target.value)} placeholder="Digite o microorganismo..." className="mt-2 block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200" required />
+                            <input type="text" value={customMicroorganism} onChange={(e) => setCustomMicroorganism(e.target.value)} placeholder="Digite o microorganismo..." className="mt-2 block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base text-slate-800 dark:text-slate-200" required />
                         )}
                     </div>
                     <div>
                         <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
-                        <input type="date" value={collectionDate} onChange={e => setCollectionDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-sm sm:text-base text-slate-800 dark:text-slate-200" required />
+                        <input type="date" value={collectionDate} onChange={e => setCollectionDate(e.target.value)} className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-slate-800 text-sm sm:text-base text-slate-800 dark:text-slate-200" required />
                     </div>
                     {diagnosticosAtivos.length > 0 && (
                         <div>
@@ -203,13 +203,13 @@ export const EditCultureModal: React.FC<{ culture: Culture; patientId: number | 
                                 Diagnóstico relacionado <span className="text-slate-400 font-normal">(opcional)</span>
                             </label>
                             <div className="border border-slate-300 dark:border-slate-700 rounded-md overflow-hidden max-h-48 overflow-y-auto">
-                                <div onClick={() => { setSelectedDiagnosticoId(''); setSistema(''); setSistemaOutros(''); }} className={`flex items-start gap-2 px-3 py-2 cursor-pointer text-sm ${selectedDiagnosticoId === '' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>
-                                    <span className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${selectedDiagnosticoId === '' ? 'border-blue-500 bg-blue-500' : 'border-slate-400'}`} />
+                                <div onClick={() => { setSelectedDiagnosticoId(''); setSistema(''); setSistemaOutros(''); }} className={`flex items-start gap-2 px-3 py-2 cursor-pointer text-sm ${selectedDiagnosticoId === '' ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>
+                                    <span className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${selectedDiagnosticoId === '' ? 'border-primary-500 bg-primary-500' : 'border-slate-400'}`} />
                                     Nenhum
                                 </div>
                                 {diagnosticosAtivos.map(d => (
-                                    <div key={d.id} onClick={() => { setSelectedDiagnosticoId(d.id); if (d.sistema) { if (ALERT_SYSTEMS.includes(d.sistema)) { setSistema(d.sistema); setSistemaOutros(''); } else { setSistema('Outros'); setSistemaOutros(d.sistema); } } }} className={`flex items-start gap-2 px-3 py-2 cursor-pointer text-sm border-t border-slate-200 dark:border-slate-700 ${selectedDiagnosticoId === d.id ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>
-                                        <span className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${selectedDiagnosticoId === d.id ? 'border-blue-500 bg-blue-500' : 'border-slate-400'}`} />
+                                    <div key={d.id} onClick={() => { setSelectedDiagnosticoId(d.id); if (d.sistema) { if (ALERT_SYSTEMS.includes(d.sistema)) { setSistema(d.sistema); setSistemaOutros(''); } else { setSistema('Outros'); setSistemaOutros(d.sistema); } } }} className={`flex items-start gap-2 px-3 py-2 cursor-pointer text-sm border-t border-slate-200 dark:border-slate-700 ${selectedDiagnosticoId === d.id ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>
+                                        <span className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${selectedDiagnosticoId === d.id ? 'border-primary-500 bg-primary-500' : 'border-slate-400'}`} />
                                         <span>
                                             {d.label}
                                             {d.created_at && (
@@ -226,17 +226,17 @@ export const EditCultureModal: React.FC<{ culture: Culture; patientId: number | 
                     <div>
                         <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Sistema <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
                         <div className="relative mt-1">
-                            <select value={sistema} onChange={e => setSistema(e.target.value)} className="block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200 appearance-none">
+                            <select value={sistema} onChange={e => setSistema(e.target.value)} className="block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base text-slate-800 dark:text-slate-200 appearance-none">
                                 <option value="">Selecione...</option>
                                 {ALERT_SYSTEMS.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
-                            <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
+                            <ChevronDownIcon className="absolute right-3 top-3 text-slate-400 pointer-events-none w-4 h-4" />
                         </div>
                         {sistema === 'Outros' && (
-                            <input type="text" value={sistemaOutros} onChange={e => setSistemaOutros(e.target.value)} placeholder="Especifique o sistema..." className="mt-2 block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-slate-800 dark:text-slate-200" />
+                            <input type="text" value={sistemaOutros} onChange={e => setSistemaOutros(e.target.value)} placeholder="Especifique o sistema..." className="mt-2 block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm text-slate-800 dark:text-slate-200" />
                         )}
                     </div>
-                    <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 sm:py-3 px-4 rounded-lg text-sm sm:text-base">Salvar Alterações</button>
+                    <button type="submit" className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-2 sm:py-3 px-4 rounded-lg text-sm sm:text-base">Salvar Alterações</button>
                 </form>
             </div>
         </div>

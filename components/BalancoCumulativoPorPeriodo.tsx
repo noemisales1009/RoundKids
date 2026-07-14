@@ -83,10 +83,10 @@ const BalancoCumulativoPorPeriodo: React.FC<BalancoCumulativoPorPeriodoProps> = 
       }
     } else if (value > 0) {
       return {
-        bg: 'bg-blue-50 dark:bg-blue-900/20',
-        border: 'border-blue-200 dark:border-blue-800',
-        label: 'text-blue-700 dark:text-blue-400',
-        value: 'text-blue-600 dark:text-blue-400',
+        bg: 'bg-primary-50 dark:bg-primary-900/20',
+        border: 'border-primary-200 dark:border-primary-800',
+        label: 'text-primary-700 dark:text-primary-400',
+        value: 'text-primary-600 dark:text-primary-400',
         status: '💧 Ganho',
       };
     } else if (value < 0) {
@@ -147,7 +147,7 @@ const BalancoCumulativoPorPeriodo: React.FC<BalancoCumulativoPorPeriodoProps> = 
                 onClick={() => setSelectedPeriod(period)}
                 className={`px-4 py-2 rounded-lg font-medium text-sm transition whitespace-nowrap ${
                   selectedPeriod === period
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    ? 'bg-primary-600 hover:bg-primary-700 text-white'
                     : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
                 }`}
               >
@@ -205,7 +205,7 @@ const BalancoCumulativoPorPeriodo: React.FC<BalancoCumulativoPorPeriodoProps> = 
                       ) : (
                         <p className={`text-2xl font-bold ${
                           data.bh_periodo_anterior > 0 
-                            ? 'text-blue-600 dark:text-blue-400' 
+                            ? 'text-primary-600 dark:text-primary-400' 
                             : data.bh_periodo_anterior < 0
                             ? 'text-green-600 dark:text-green-400'
                             : 'text-slate-600 dark:text-slate-400'
@@ -234,7 +234,7 @@ const BalancoCumulativoPorPeriodo: React.FC<BalancoCumulativoPorPeriodoProps> = 
                       ) : (
                         <p className={`text-2xl font-bold ${
                           data.bh_periodo_atual > 0 
-                            ? 'text-blue-600 dark:text-blue-400' 
+                            ? 'text-primary-600 dark:text-primary-400' 
                             : data.bh_periodo_atual < 0
                             ? 'text-green-600 dark:text-green-400'
                             : 'text-slate-600 dark:text-slate-400'

@@ -210,7 +210,7 @@ const DropdownResp = forwardRef<HTMLDivElement | null, DropdownProps>(
   ({ label, id, valor, onOpcaoChange, opcoes }, ref) => (
     <div ref={ref} className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg transition-all duration-300">
       <div className="flex justify-between items-center mb-2">
-        <label htmlFor={id} className="block text-sm font-medium text-slate-600 dark:text-gray-300">
+        <label htmlFor={id} className="block text-sm font-medium text-slate-600 dark:text-slate-300">
           {label}
         </label>
         {valor !== null && <IconeCheck />}
@@ -219,7 +219,7 @@ const DropdownResp = forwardRef<HTMLDivElement | null, DropdownProps>(
         id={id}
         value={valor === null ? '' : valor}
         onChange={(e) => onOpcaoChange(e.target.value === '' ? null : Number(e.target.value))}
-        className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none"
       >
         <option value="">Selecione...</option>
         {opcoes.map((opt) => (
@@ -355,7 +355,7 @@ export const AvaliacaoRespiratoriaScale: React.FC<AvaliacaoRespiratoriaScaleProp
   );
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-gray-300 rounded-lg min-h-[600px]">
+    <div className="w-full max-w-2xl mx-auto p-4 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 rounded-lg min-h-[600px]">
 
       {/* =================== TELA LISTA =================== */}
       {telaAtiva === 'lista' && (
@@ -371,7 +371,7 @@ export const AvaliacaoRespiratoriaScale: React.FC<AvaliacaoRespiratoriaScaleProp
             </div>
 
             <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 space-y-3">
-              <div className="font-bold text-blue-400 mb-2">Escalas disponíveis:</div>
+              <div className="font-bold text-primary-400 mb-2">Escalas disponíveis:</div>
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="font-semibold text-slate-600 dark:text-slate-300">0 – 28 dias</span>
@@ -390,7 +390,7 @@ export const AvaliacaoRespiratoriaScale: React.FC<AvaliacaoRespiratoriaScaleProp
 
             <button
               onClick={() => { resetForm(); setFaixaEtaria(null); setTelaAtiva('form'); }}
-              className="w-full py-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-all"
+              className="w-full py-4 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 transition-all"
             >
               Iniciar Nova Avaliação
             </button>
@@ -404,7 +404,7 @@ export const AvaliacaoRespiratoriaScale: React.FC<AvaliacaoRespiratoriaScaleProp
           <div className="flex items-center space-x-4 mb-2">
             <button
               onClick={() => { setFaixaEtaria(null); setTelaAtiva('lista'); }}
-              className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
+              className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
             >
               <IconeVoltar />
             </button>
@@ -422,29 +422,29 @@ export const AvaliacaoRespiratoriaScale: React.FC<AvaliacaoRespiratoriaScaleProp
 
               <button
                 onClick={() => handleSelecionarFaixa('rn')}
-                className="w-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500 p-4 rounded-xl text-left transition-all shadow-sm"
+                className="w-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 hover:border-primary-400 dark:hover:border-primary-500 p-4 rounded-xl text-left transition-all shadow-sm"
               >
                 <p className="font-bold text-slate-800 dark:text-slate-100 text-base">0 a 28 dias</p>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Boletim de Silverman-Anderson</p>
-                <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">Recém-nascidos · /10 pontos</p>
+                <p className="text-xs text-primary-500 dark:text-primary-400 mt-1">Recém-nascidos · /10 pontos</p>
               </button>
 
               <button
                 onClick={() => handleSelecionarFaixa('lactente')}
-                className="w-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500 p-4 rounded-xl text-left transition-all shadow-sm"
+                className="w-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 hover:border-primary-400 dark:hover:border-primary-500 p-4 rounded-xl text-left transition-all shadow-sm"
               >
                 <p className="font-bold text-slate-800 dark:text-slate-100 text-base">30 dias a 2 anos</p>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Escala de Wood-Downes Modificada por Ferres</p>
-                <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">Lactentes · /14 pontos</p>
+                <p className="text-xs text-primary-500 dark:text-primary-400 mt-1">Lactentes · /14 pontos</p>
               </button>
 
               <button
                 onClick={() => handleSelecionarFaixa('crianca')}
-                className="w-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500 p-4 rounded-xl text-left transition-all shadow-sm"
+                className="w-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 hover:border-primary-400 dark:hover:border-primary-500 p-4 rounded-xl text-left transition-all shadow-sm"
               >
                 <p className="font-bold text-slate-800 dark:text-slate-100 text-base">3 a 15 anos</p>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Escala de Avaliação da Insuficiência Respiratória</p>
-                <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">Pré-escolar · Escolar · Adolescente · /12 pontos</p>
+                <p className="text-xs text-primary-500 dark:text-primary-400 mt-1">Pré-escolar · Escolar · Adolescente · /12 pontos</p>
               </button>
             </div>
           )}
@@ -453,7 +453,7 @@ export const AvaliacaoRespiratoriaScale: React.FC<AvaliacaoRespiratoriaScaleProp
           {faixaEtaria === 'rn' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+                <p className="text-xs font-semibold text-primary-600 dark:text-primary-400 uppercase tracking-wide">
                   Silverman-Anderson · RN (0–28 dias) · /10 pts
                 </p>
                 <button onClick={() => setFaixaEtaria(null)} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 underline">
@@ -485,7 +485,7 @@ export const AvaliacaoRespiratoriaScale: React.FC<AvaliacaoRespiratoriaScaleProp
           {faixaEtaria === 'lactente' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+                <p className="text-xs font-semibold text-primary-600 dark:text-primary-400 uppercase tracking-wide">
                   Wood-Downes-Ferres · 30 dias–2 anos · /14 pts
                 </p>
                 <button onClick={() => setFaixaEtaria(null)} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 underline">
@@ -512,7 +512,7 @@ export const AvaliacaoRespiratoriaScale: React.FC<AvaliacaoRespiratoriaScaleProp
           {faixaEtaria === 'crianca' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+                <p className="text-xs font-semibold text-primary-600 dark:text-primary-400 uppercase tracking-wide">
                   Ins. Resp. Pediátrica · 3–15 anos · /12 pts
                 </p>
                 <button onClick={() => setFaixaEtaria(null)} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 underline">
@@ -544,7 +544,7 @@ export const AvaliacaoRespiratoriaScale: React.FC<AvaliacaoRespiratoriaScaleProp
               )}
               <button
                 onClick={handleCalcular}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200 mt-4"
+                className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200 mt-4"
               >
                 Calcular Pontuação
               </button>
@@ -559,7 +559,7 @@ export const AvaliacaoRespiratoriaScale: React.FC<AvaliacaoRespiratoriaScaleProp
           <div className="flex items-center space-x-4 mb-2">
             <button
               onClick={() => setTelaAtiva('form')}
-              className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
+              className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
             >
               <IconeVoltar />
             </button>
@@ -588,7 +588,7 @@ export const AvaliacaoRespiratoriaScale: React.FC<AvaliacaoRespiratoriaScaleProp
             <button
               onClick={handleSalvar}
               disabled={isSaving || saveStatus === 'success'}
-              className="w-full py-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-all"
+              className="w-full py-4 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-all"
             >
               {isSaving ? 'Salvando...' : saveStatus === 'success' ? '✓ Registrado!' : 'Salvar no Histórico'}
             </button>

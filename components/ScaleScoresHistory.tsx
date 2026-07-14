@@ -20,9 +20,9 @@ const getScaleColor = (scaleName: string) => {
   if (scaleName.includes('COMFORT')) return { bg: 'bg-purple-500/10', border: 'border-purple-500', text: 'text-purple-600 dark:text-purple-400' };
   if (scaleName.includes('CAM-ICU')) return { bg: 'bg-red-500/10', border: 'border-red-500', text: 'text-red-600 dark:text-red-400' };
   if (scaleName.includes('SOS-PD')) return { bg: 'bg-orange-500/10', border: 'border-orange-500', text: 'text-orange-600 dark:text-orange-400' };
-  if (scaleName.includes('Consciência') || scaleName.includes('CRS-R') || scaleName.includes('FOUR') || scaleName.includes('JFK')) return { bg: 'bg-blue-500/10', border: 'border-blue-500', text: 'text-blue-600 dark:text-blue-400' };
-  if (scaleName.includes('VNI') || scaleName.includes('CNAF')) return { bg: 'bg-cyan-500/10', border: 'border-cyan-500', text: 'text-cyan-600 dark:text-cyan-400' };
-  if (scaleName.includes('Glasgow')) return { bg: 'bg-indigo-500/10', border: 'border-indigo-500', text: 'text-indigo-600 dark:text-indigo-400' };
+  if (scaleName.includes('Consciência') || scaleName.includes('CRS-R') || scaleName.includes('FOUR') || scaleName.includes('JFK')) return { bg: 'bg-primary-500/10', border: 'border-primary-500', text: 'text-primary-600 dark:text-primary-400' };
+  if (scaleName.includes('VNI') || scaleName.includes('CNAF')) return { bg: 'bg-primary-500/10', border: 'border-primary-500', text: 'text-primary-600 dark:text-primary-400' };
+  if (scaleName.includes('Glasgow')) return { bg: 'bg-primary-500/10', border: 'border-primary-500', text: 'text-primary-600 dark:text-primary-400' };
   if (scaleName.includes('FLACC')) return { bg: 'bg-pink-500/10', border: 'border-pink-500', text: 'text-pink-600 dark:text-pink-400' };
   if (scaleName.includes('Braden')) return { bg: 'bg-yellow-500/10', border: 'border-yellow-500', text: 'text-yellow-600 dark:text-yellow-400' };
   if (scaleName.includes('Abstinência')) return { bg: 'bg-amber-500/10', border: 'border-amber-500', text: 'text-amber-600 dark:text-amber-400' };
@@ -35,7 +35,7 @@ const getInterpretationColor = (interpretation: string) => {
   if (lower.includes('grave') || lower.includes('falência') || lower.includes('severe') || lower.includes('extreme')) return 'text-red-600 dark:text-red-400';
   if (lower.includes('parcial') || lower.includes('partial') || lower.includes('moderate') || lower.includes('vegetative')) return 'text-yellow-600 dark:text-yellow-400';
   if (lower.includes('boa') || lower.includes('bom') || lower.includes('good') || lower.includes('preserved') || lower.includes('consistent')) return 'text-green-600 dark:text-green-400';
-  if (lower.includes('leve') || lower.includes('mild') || lower.includes('light')) return 'text-blue-600 dark:text-blue-400';
+  if (lower.includes('leve') || lower.includes('mild') || lower.includes('light')) return 'text-primary-600 dark:text-primary-400';
   return 'text-slate-500 dark:text-slate-400';
 };
 

@@ -40,7 +40,7 @@ const ArchivedPatientsScreen = lazy(() => import('./ArchivedPatientsScreen').the
 // --- LOADING COMPONENT ---
 const LoadingSpinner: React.FC = () => (
     <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
     </div>
 );
 
@@ -142,7 +142,7 @@ const PreviewModal: React.FC = () => {
                     {rebuildRef.current && (
                         <button
                             onClick={() => { const t = rebuildRef.current!(); setPreviewText(t); }}
-                            className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition"
+                            className="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-semibold transition"
                         >
                             Atualizar
                         </button>
@@ -173,7 +173,7 @@ const PreviewModal: React.FC = () => {
                     {downloadWordRef.current && (
                         <button
                             onClick={() => { handleClose(); downloadWordRef.current?.(); }}
-                            className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
+                            className="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-semibold transition"
                         >
                             Baixar Word
                         </button>

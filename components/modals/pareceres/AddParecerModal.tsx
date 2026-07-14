@@ -154,7 +154,7 @@ export const AddParecerModal: React.FC<{
                                 <option value="">Selecione...</option>
                                 {ALERT_SYSTEMS.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
-                            <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
+                            <ChevronDownIcon className="absolute right-3 top-3 text-slate-400 pointer-events-none w-4 h-4" />
                         </div>
                         {sistema === 'Outros' && (
                             <input type="text" value={sistemaOutros} onChange={e => setSistemaOutros(e.target.value)} placeholder="Especifique o sistema..." className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 text-slate-800 dark:text-slate-200" />

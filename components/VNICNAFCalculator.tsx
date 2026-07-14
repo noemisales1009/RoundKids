@@ -205,7 +205,7 @@ export default function VNICNAFCalculator({ patientId }: VNICNAFCalculatorProps)
                 setRespostas({});
                 setTela('form');
               }}
-              className="w-full py-4 bg-cyan-600 text-white font-bold rounded-lg hover:bg-cyan-700 transition-all"
+              className="w-full py-4 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 transition-all"
             >
               Iniciar Avaliação VNI/CNAF
             </button>
@@ -217,17 +217,17 @@ export default function VNICNAFCalculator({ patientId }: VNICNAFCalculatorProps)
         <div className="space-y-4 animate-in fade-in duration-500">
           <div className="flex justify-between items-end mb-4">
             <div>
-              <span className="text-[10px] font-bold text-cyan-400 uppercase">{VNICNAF_CONFIG.titulo}</span>
+              <span className="text-[10px] font-bold text-primary-400 uppercase">{VNICNAF_CONFIG.titulo}</span>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{respondidosCount}/{totalItens} Itens</p>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Score:</span>
-              <span className="text-3xl font-bold text-cyan-400">{pontuacaoTotal}</span>
+              <span className="text-3xl font-bold text-primary-400">{pontuacaoTotal}</span>
             </div>
           </div>
           
           <div className="h-1 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-6">
-            <div className="h-full bg-cyan-500 transition-all duration-500" style={{ width: `${progresso}%` }} />
+            <div className="h-full bg-primary-500 transition-all duration-500" style={{ width: `${progresso}%` }} />
           </div>
 
           {VNICNAF_CONFIG.itens.map((d) => (
@@ -250,7 +250,7 @@ export default function VNICNAFCalculator({ patientId }: VNICNAFCalculatorProps)
             }}
             className={`w-full py-4 rounded-lg font-bold transition-all mt-6
               ${respondidosCount === totalItens
-                ? 'bg-cyan-600 text-white hover:bg-cyan-700 active:scale-95'
+                ? 'bg-primary-600 text-white hover:bg-primary-700 active:scale-95'
                 : 'bg-slate-200 dark:bg-slate-700 text-slate-500 cursor-not-allowed'
               }`}
           >
@@ -278,7 +278,7 @@ export default function VNICNAFCalculator({ patientId }: VNICNAFCalculatorProps)
             <button
               onClick={salvarAvaliacao}
               disabled={isSaving || saveStatus === 'success'}
-              className="w-full py-4 bg-cyan-600 text-white font-bold rounded-lg hover:bg-cyan-700 disabled:opacity-50 transition-all"
+              className="w-full py-4 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-all"
             >
               {isSaving ? 'Salvando...' : saveStatus === 'success' ? 'Registrado!' : 'Salvar no Histórico'}
             </button>
@@ -318,7 +318,7 @@ function SelectDropdown({ id, label, desc, opcoes, valor, onSelect }: any) {
         <select
           value={valor ?? ''}
           onChange={(e) => onSelect(Number(e.target.value))}
-          className="w-full p-3 rounded text-sm font-medium bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none appearance-none pr-10"
+          className="w-full p-3 rounded text-sm font-medium bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:outline-none appearance-none pr-10"
         >
           <option value="">Selecione...</option>
           {opcoes.map((opt: any) => (

@@ -35,7 +35,7 @@ const PatientListScreen: React.FC = () => {
                 placeholder="Buscar por nome ou leito..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200"
+                className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-slate-800 dark:text-slate-200"
             />
 
             {/* Indicador de carregamento */}
@@ -71,7 +71,7 @@ const PatientListScreen: React.FC = () => {
                     };
                     const transferInfo = patient.localTransferencia ? { label: transferLabels[patient.localTransferencia] ?? patient.localTransferencia } : null;
                     const tipoBadgeConfig: Record<string, { label: string; cls: string }> = {
-                        padrao:                     { label: 'Padrão',               cls: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
+                        padrao:                     { label: 'Padrão',               cls: 'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200' },
                         contato:                    { label: 'Contato',              cls: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' },
                         goticula:                   { label: 'Gotículas',            cls: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' },
                         aerossois:                  { label: 'Aerossóis',            cls: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
@@ -83,7 +83,7 @@ const PatientListScreen: React.FC = () => {
                     return (
                         <Link to={`/patient/${patient.id}`} key={patient.id} className={`block bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm hover:shadow-md transition border-2 ${colors.border} ${colors.bg}`}>
                             <div className="flex items-center space-x-4">
-                                <div className="shrink-0 w-12 h-12 flex items-center justify-center bg-blue-100 dark:bg-blue-900/80 text-blue-600 dark:text-blue-300 rounded-full font-bold text-lg">
+                                <div className="shrink-0 w-12 h-12 flex items-center justify-center bg-primary-100 dark:bg-primary-900/80 text-primary-600 dark:text-primary-300 rounded-full font-bold text-lg">
                                     {patient.bedNumber}
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -101,7 +101,7 @@ const PatientListScreen: React.FC = () => {
                                             {precaucoesAtivas.map(p => {
                                                 const cfg = tipoBadgeConfig[p.tipo_precaucao];
                                                 return (
-                                                    <span key={p.id} className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${cfg?.cls ?? 'bg-gray-100 text-gray-800'}`}>
+                                                    <span key={p.id} className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${cfg?.cls ?? 'bg-slate-100 text-slate-800'}`}>
                                                         {cfg?.label ?? p.tipo_precaucao}
                                                     </span>
                                                 );

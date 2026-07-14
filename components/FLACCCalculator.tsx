@@ -28,7 +28,7 @@ const escalasConfig = {
     nomeCompleto: 'FLACC Revised - Não Verbal',
     idade: 'Pacientes intubados',
     maxScore: 10,
-    cores: { bg: 'bg-indigo-600', hover: 'hover:bg-indigo-500', text: 'text-indigo-300', bgProgress: 'bg-indigo-500', bgBase: 'bg-indigo-700', hoverBase: 'hover:bg-indigo-600' },
+    cores: { bg: 'bg-primary-600', hover: 'hover:bg-primary-500', text: 'text-primary-300', bgProgress: 'bg-primary-500', bgBase: 'bg-primary-700', hoverBase: 'hover:bg-primary-600' },
     dominios: [
       { id: 'face', label: 'Face', maxScore: 2, ranges: ['Relaxada', 'Incômodo ocasional', 'Careta intensa'] },
       { id: 'legs', label: 'Pernas', maxScore: 2, ranges: ['Relaxadas', 'Leve tensão', 'Rigidez/espasmos'] },
@@ -65,8 +65,8 @@ const FLACCQuestionCard = ({ item, valor, onChange }: any) => {
     >
       <div className="mb-4 flex justify-between items-start">
         <div>
-          <label className="block text-base font-bold text-slate-800 dark:text-gray-100">{item.label}</label>
-          <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">Pontuação: 0 a {item.maxScore}</p> 
+          <label className="block text-base font-bold text-slate-800 dark:text-slate-100">{item.label}</label>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Pontuação: 0 a {item.maxScore}</p> 
         </div>
         {isSelected && <CheckIcon />}
       </div>
@@ -75,7 +75,7 @@ const FLACCQuestionCard = ({ item, valor, onChange }: any) => {
         <select
           value={valor === undefined || valor === null ? '' : valor}
           onChange={(e) => onChange(parseInt(e.target.value))}
-          className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-gray-100 p-3 pr-12 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+          className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 p-3 pr-12 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
         >
           <option value="" disabled>
             Selecione a pontuação...
@@ -86,7 +86,7 @@ const FLACCQuestionCard = ({ item, valor, onChange }: any) => {
             </option>
           ))}
         </select>
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500 dark:text-gray-400">
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500 dark:text-slate-400">
           <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
             <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
           </svg>
@@ -196,7 +196,7 @@ export const FLACCCalculator: React.FC<FLACCCalculatorProps> = ({ patientId, onC
   if (tela === 'intro') {
     return (
       <div className="w-full bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-4 mb-4">
-        <button onClick={onClose} className="flex items-center text-gray-500 hover:text-gray-700 mb-4">
+        <button onClick={onClose} className="flex items-center text-slate-500 hover:text-slate-700 mb-4">
           <ChevronLeftIcon className="w-5 h-5 mr-2" />
           Fechar
         </button>
@@ -226,7 +226,7 @@ export const FLACCCalculator: React.FC<FLACCCalculatorProps> = ({ patientId, onC
     return (
       <div className="w-full bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-4 mb-4">
         <div className="flex items-center justify-between mb-4">
-          <button onClick={() => setTela('intro')} className="text-gray-500 hover:text-gray-700">
+          <button onClick={() => setTela('intro')} className="text-slate-500 hover:text-slate-700">
             ← Voltar
           </button>
           <h3 className={`font-bold ${corClasses.text}`}>{configAtual.titulo}</h3>
@@ -240,7 +240,7 @@ export const FLACCCalculator: React.FC<FLACCCalculatorProps> = ({ patientId, onC
           />
         </div>
 
-        <p className="text-xs text-gray-500 mb-4">{itensRespondidos} de {totalItens} respondidos • Pontos: {pontuacaoTotal}</p>
+        <p className="text-xs text-slate-500 mb-4">{itensRespondidos} de {totalItens} respondidos • Pontos: {pontuacaoTotal}</p>
 
         <div className="space-y-3 max-h-96 overflow-y-auto mb-4">
           {configAtual.dominios.map((item: any) => (
@@ -274,7 +274,7 @@ export const FLACCCalculator: React.FC<FLACCCalculatorProps> = ({ patientId, onC
 
     return (
       <div className="w-full bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-4 mb-4">
-        <button onClick={() => setTela('intro')} className="text-gray-500 hover:text-gray-700 mb-4">
+        <button onClick={() => setTela('intro')} className="text-slate-500 hover:text-slate-700 mb-4">
           ← Voltar
         </button>
 
@@ -288,7 +288,7 @@ export const FLACCCalculator: React.FC<FLACCCalculatorProps> = ({ patientId, onC
           {resultadoAvaliacao.texto}
         </h3>
 
-        <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <p className="text-center text-sm text-slate-600 dark:text-slate-400 mb-4">
           {resultadoAvaliacao.detalhe}
         </p>
 

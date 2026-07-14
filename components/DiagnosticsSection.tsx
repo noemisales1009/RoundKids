@@ -566,7 +566,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     return (
       <div className="flex justify-center items-center py-12">
         <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-blue-200 border-t-blue-500" />
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-primary-200 border-t-primary-500" />
           <span className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             Carregando diagnósticos...
           </span>
@@ -582,12 +582,12 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     ? dbOptions.filter(o => o.parent_id === selectedFormOpt.id)
     : [];
 
-  const inputCls = `w-full px-3 py-2 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+  const inputCls = `w-full px-3 py-2 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
     isDark
       ? 'bg-slate-800 border-slate-600 text-slate-200 placeholder-slate-500'
       : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
   }`;
-  const selectCls = `w-full px-3 py-2 text-sm rounded-lg border appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+  const selectCls = `w-full px-3 py-2 text-sm rounded-lg border appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 ${
     isDark ? 'bg-slate-800 border-slate-600 text-slate-200' : 'bg-white border-slate-300 text-slate-800'
   }`;
   const labelCls = `block text-xs font-semibold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`;
@@ -605,7 +605,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     const isResolved = diag.status === 'resolvido';
     const isPrincipal = diag.tipo === 'principal';
 
-    const borderColor = isResolved ? 'border-l-emerald-500' : isPrincipal ? 'border-l-blue-500' : 'border-l-violet-400';
+    const borderColor = isResolved ? 'border-l-emerald-500' : isPrincipal ? 'border-l-primary-500' : 'border-l-violet-400';
     const cardBg = isResolved
       ? isDark ? 'bg-emerald-950/40 border-emerald-800/40' : 'bg-emerald-50 border-emerald-200'
       : isPrincipal
@@ -616,7 +616,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       <div key={diag.tempId} className={`rounded-xl border border-l-4 overflow-hidden transition-all ${cardBg} ${borderColor}`}>
         <div className="flex items-start gap-3 px-3 py-2.5">
           <span className={`material-symbols-rounded text-[18px] mt-0.5 shrink-0 ${
-            isResolved ? 'text-emerald-500' : isPrincipal ? (isDark ? 'text-blue-400' : 'text-blue-500') : (isDark ? 'text-violet-400' : 'text-violet-500')
+            isResolved ? 'text-emerald-500' : isPrincipal ? (isDark ? 'text-primary-400' : 'text-primary-500') : (isDark ? 'text-violet-400' : 'text-violet-500')
           }`}>
             {isResolved ? 'check_circle' : 'radio_button_unchecked'}
           </span>
@@ -628,7 +628,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
             <div className="flex flex-wrap items-center gap-1.5 mt-1">
               <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold ${
                 isPrincipal
-                  ? isDark ? 'bg-blue-900/60 text-blue-300' : 'bg-blue-100 text-blue-700'
+                  ? isDark ? 'bg-primary-900/60 text-primary-300' : 'bg-primary-100 text-primary-700'
                   : isDark ? 'bg-violet-900/60 text-violet-300' : 'bg-violet-100 text-violet-700'
               }`}>
                 {isPrincipal ? 'Principal' : 'Secundário'}
@@ -674,7 +674,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
             <button
               onClick={() => setEditingTempId(isEditing ? null : diag.tempId)}
               className={`p-1.5 rounded-lg transition-colors ${
-                isDark ? 'text-slate-500 hover:text-blue-400 hover:bg-blue-900/30' : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'
+                isDark ? 'text-slate-500 hover:text-primary-400 hover:bg-primary-900/30' : 'text-slate-400 hover:text-primary-600 hover:bg-primary-50'
               }`}
               title={isEditing ? 'Fechar' : 'Editar'}
             >
@@ -723,7 +723,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                         }}
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
                           diag.opcaoId === child.id
-                            ? 'bg-blue-600 border-blue-500 text-white'
+                            ? 'bg-primary-600 border-primary-500 text-white'
                             : isDark
                               ? 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
                               : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
@@ -827,14 +827,14 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className={`material-symbols-rounded text-[22px] ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>biotech</span>
+          <span className={`material-symbols-rounded text-[22px] ${isDark ? 'text-primary-400' : 'text-primary-600'}`}>biotech</span>
           <h3 className={`font-bold text-lg sm:text-xl ${isDark ? 'text-white' : 'text-slate-900'}`}>Diagnósticos</h3>
         </div>
         {workingDiags.length > 0 && (
           <div className="flex items-center gap-1.5">
             {principalDiags.length > 0 && (
               <span className={`flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold ${
-                isDark ? 'bg-blue-900/50 text-blue-300 border border-blue-700' : 'bg-blue-100 text-blue-800 border border-blue-200'
+                isDark ? 'bg-primary-900/50 text-primary-300 border border-primary-700' : 'bg-primary-100 text-primary-800 border border-primary-200'
               }`}>
                 P: {principalDiags.length}
               </span>
@@ -862,7 +862,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
             onClick={() => { setFormTipo('principal'); setFormOpcaoId(''); setFormCategoria(''); }}
             className={`flex-1 py-2 transition-colors ${
               formTipo === 'principal'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-primary-600 text-white'
                 : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-white text-slate-500 hover:bg-slate-50'
             }`}
           >
@@ -927,7 +927,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                       onClick={() => setFormChildId(formChildId === child.id ? '' : child.id)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
                         formChildId === child.id
-                          ? 'bg-blue-600 border-blue-500 text-white'
+                          ? 'bg-primary-600 border-primary-500 text-white'
                           : isDark
                             ? 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
                             : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
@@ -1062,7 +1062,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                   (formOpcaoId === OUTROS_ID && !formCustomLabel.trim()) ||
                   (!!selectedFormOpt?.has_input && formChildId === '' && !formInputText.trim())
                 }
-                className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm transition-all"
+                className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-primary-600 hover:bg-primary-500 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm transition-all"
               >
                 <span className="material-symbols-rounded text-[18px]">add</span>
                 Adicionar
@@ -1078,7 +1078,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           {principalDiags.length > 0 && (
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 px-1">
-                <span className={`text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                <span className={`text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-primary-400' : 'text-primary-600'}`}>
                   Principais
                 </span>
                 <div className={`flex-1 h-px ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`} />
@@ -1122,7 +1122,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
         className={`w-full flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl font-bold text-sm sm:text-base transition-all duration-200 shadow-sm ${
           saving
             ? isDark ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-            : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 active:scale-[0.98] text-white shadow-blue-500/30 hover:shadow-blue-500/50 hover:shadow-md'
+            : 'bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 active:scale-[0.98] text-white shadow-primary-500/30 hover:shadow-primary-500/50 hover:shadow-md'
         }`}
       >
         {saving ? (

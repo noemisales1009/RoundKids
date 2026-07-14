@@ -137,16 +137,16 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Diurese - sempre mostra, mesmo sem dados */}
-            <div className="p-4 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800">
-              <div className="text-xs font-medium text-teal-700 dark:text-teal-400 mb-2">
+            <div className="p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
+              <div className="text-xs font-medium text-primary-700 dark:text-primary-400 mb-2">
                 DIURESE
               </div>
               {latestDiuresis ? (
                 <>
-                  <div className="text-2xl font-bold text-teal-600 dark:text-teal-400 mb-2">
+                  <div className="text-2xl font-bold text-primary-600 dark:text-primary-400 mb-2">
                     {((latestDiuresis.volume / latestDiuresis.horas) / latestDiuresis.peso).toFixed(2)}
                   </div>
-                  <div className="text-xs text-teal-600 dark:text-teal-400 font-medium mb-2">
+                  <div className="text-xs text-primary-600 dark:text-primary-400 font-medium mb-2">
                     mL/kg/h
                   </div>
                   <div className="text-xs text-slate-600 dark:text-slate-400 mb-2">
@@ -166,14 +166,14 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
             {/* Balanço Hídrico - sempre mostra, mesmo sem dados */}
             <div className={`p-4 rounded-lg border ${
               latestBalance && latestBalance.volume > 0
-                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800'
                 : latestBalance && latestBalance.volume < 0
                 ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
                 : 'bg-slate-50 dark:bg-slate-900/20 border-slate-200 dark:border-slate-700'
             }`}>
               <div className={`text-xs font-medium mb-2 ${
                 latestBalance && latestBalance.volume > 0
-                  ? 'text-blue-700 dark:text-blue-400'
+                  ? 'text-primary-700 dark:text-primary-400'
                   : latestBalance && latestBalance.volume < 0
                   ? 'text-red-700 dark:text-red-400'
                   : 'text-slate-700 dark:text-slate-400'
@@ -184,14 +184,14 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
                 <>
                   <div className={`text-2xl font-bold mb-2 ${
                     latestBalance.volume > 0
-                      ? 'text-blue-600 dark:text-blue-400'
+                      ? 'text-primary-600 dark:text-primary-400'
                       : 'text-red-600 dark:text-red-400'
                   }`}>
                     {latestBalance.volume > 0 ? '+' : ''}{((latestBalance.volume / (latestBalance.peso * 10))).toFixed(2)}%
                   </div>
                   <div className={`text-xs font-medium mb-2 ${
                     latestBalance.volume > 0
-                      ? 'text-blue-600 dark:text-blue-400'
+                      ? 'text-primary-600 dark:text-primary-400'
                       : 'text-red-600 dark:text-red-400'
                   }`}>
                     {latestBalance.volume > 0 ? 'Ganho' : 'Perda'}
@@ -218,7 +218,7 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
                     ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
                     : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
                   : balancoCumulativo.bh_cumulativo_pct > 0
-                  ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                  ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800'
                   : balancoCumulativo.bh_cumulativo_pct < 0
                   ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
                   : 'bg-slate-50 dark:bg-slate-900/20 border-slate-200 dark:border-slate-700'
@@ -229,7 +229,7 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
                       ? 'text-red-700 dark:text-red-400'
                       : 'text-orange-700 dark:text-orange-400'
                     : balancoCumulativo.bh_cumulativo_pct > 0
-                    ? 'text-blue-700 dark:text-blue-400'
+                    ? 'text-primary-700 dark:text-primary-400'
                     : balancoCumulativo.bh_cumulativo_pct < 0
                     ? 'text-green-700 dark:text-green-400'
                     : 'text-slate-700 dark:text-slate-400'
@@ -242,7 +242,7 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
                       ? 'text-red-600 dark:text-red-400'
                       : 'text-orange-600 dark:text-orange-400'
                     : balancoCumulativo.bh_cumulativo_pct > 0
-                    ? 'text-blue-600 dark:text-blue-400'
+                    ? 'text-primary-600 dark:text-primary-400'
                     : balancoCumulativo.bh_cumulativo_pct < 0
                     ? 'text-green-600 dark:text-green-400'
                     : 'text-slate-600 dark:text-slate-400'
@@ -255,7 +255,7 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
                       ? 'text-red-600 dark:text-red-400'
                       : 'text-orange-600 dark:text-orange-400'
                     : balancoCumulativo.bh_cumulativo_pct > 0
-                    ? 'text-blue-600 dark:text-blue-400'
+                    ? 'text-primary-600 dark:text-primary-400'
                     : balancoCumulativo.bh_cumulativo_pct < 0
                     ? 'text-green-600 dark:text-green-400'
                     : 'text-slate-600 dark:text-slate-400'

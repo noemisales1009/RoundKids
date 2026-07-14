@@ -115,13 +115,13 @@ const HistorySection: React.FC<HistorySectionProps> = ({ patientId }) => {
                     {diuresisHistory.map((record) => (
                       <div
                         key={record.id}
-                        className="p-3 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800"
+                        className="p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800"
                       >
                         <div className="flex justify-between items-start mb-2">
-                          <span className="text-xs font-medium text-teal-700 dark:text-teal-400">
+                          <span className="text-xs font-medium text-primary-700 dark:text-primary-400">
                             {formatDate(record.created_at)}
                           </span>
-                          <span className="text-lg font-bold text-teal-600 dark:text-teal-400">
+                          <span className="text-lg font-bold text-primary-600 dark:text-primary-400">
                             {((record.volume / record.horas) / record.peso).toFixed(2)} mL/kg/h
                           </span>
                         </div>
@@ -146,7 +146,7 @@ const HistorySection: React.FC<HistorySectionProps> = ({ patientId }) => {
                         key={record.id}
                         className={`p-3 rounded-lg border ${
                           record.volume > 0
-                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                            ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800'
                             : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
                         }`}
                       >
@@ -157,7 +157,7 @@ const HistorySection: React.FC<HistorySectionProps> = ({ patientId }) => {
                           <span
                             className={`text-lg font-bold ${
                               record.volume > 0
-                                ? 'text-blue-600 dark:text-blue-400'
+                                ? 'text-primary-600 dark:text-primary-400'
                                 : 'text-red-600 dark:text-red-400'
                             }`}
                           >

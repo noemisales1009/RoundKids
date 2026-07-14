@@ -40,10 +40,10 @@ function computeIdadeLabel(dob: string): string {
 
 function classBadge(classe: string) {
   switch (classe) {
-    case 'hipotensao':      return 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300';
+    case 'hipotensao':      return 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300';
     case 'pre_hipertensao': return 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300';
     case 'hipertensao':     return 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300';
-    case 'aceitavel':       return 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300';
+    case 'aceitavel':       return 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300';
     case 'normal':
     default:                return 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300';
   }

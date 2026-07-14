@@ -150,7 +150,7 @@ const BalanceCumulativeCard: React.FC<BalanceCumulativeCardProps> = ({
 
   if (!data) {
     return (
-      <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 p-4 text-center">
+      <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 p-4 text-center">
         <p className="text-sm text-slate-600 dark:text-slate-400">
           Nenhum registro de BH Cumulativo
         </p>

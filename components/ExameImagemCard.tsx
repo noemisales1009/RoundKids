@@ -67,7 +67,7 @@ export const ExameImagemCard: React.FC<ExameImagemCardProps> = ({ patientId, add
                             <div className="flex justify-end mb-1">
                                 <button
                                     onClick={() => exames.forEach(ex => toggleMostrarEvolucao(ex.id, !allChecked))}
-                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                    className="text-xs text-primary-500 dark:text-primary-400 hover:underline"
                                 >
                                     {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
                                 </button>
@@ -101,7 +101,7 @@ export const ExameImagemCard: React.FC<ExameImagemCardProps> = ({ patientId, add
                                             </p>
                                         )}
                                         <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
-                                            <input type="checkbox" checked={ex.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucao(ex.id, e.target.checked)} className="w-3.5 h-3.5 accent-blue-500" />
+                                            <input type="checkbox" checked={ex.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucao(ex.id, e.target.checked)} className="w-3.5 h-3.5 accent-primary-500" />
                                             <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
                                         </label>
                                     </div>
@@ -109,7 +109,7 @@ export const ExameImagemCard: React.FC<ExameImagemCardProps> = ({ patientId, add
                                 <div className="flex items-center gap-1 shrink-0 ml-2">
                                     <button
                                         onClick={() => setEditingExame(ex)}
-                                        className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"
+                                        className="p-1.5 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900 rounded-full transition"
                                         aria-label="Editar exame"
                                     >
                                         <PencilIcon className="w-4 h-4" />

@@ -44,7 +44,7 @@ export const CreateAlertScreen: React.FC = () => {
 
 
     return (
-        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl overflow-hidden max-w-md mx-auto shadow-lg relative">
+        <div className="bg-primary-50 dark:bg-primary-900/20 rounded-2xl overflow-hidden max-w-md mx-auto shadow-lg relative">
             <button
                 onClick={() => navigate(-1)}
                 className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 text-white rounded-full transition z-10"
@@ -52,9 +52,9 @@ export const CreateAlertScreen: React.FC = () => {
             >
                 <CloseIcon className="w-5 h-5" />
             </button>
-            <div className="p-6 bg-blue-500 dark:bg-blue-600 text-white text-center">
+            <div className="p-6 bg-primary-500 dark:bg-primary-600 text-white text-center">
                 <h2 className="text-xl font-bold">{patient.name}</h2>
-                {category && <p className="text-blue-100">{category.name}</p>}
+                {category && <p className="text-primary-100">{category.name}</p>}
             </div>
             <div className="p-6 bg-white dark:bg-slate-800">
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -66,26 +66,26 @@ export const CreateAlertScreen: React.FC = () => {
                             onChange={e => setDescription(e.target.value)}
                             placeholder="Digite o alerta identificado..."
                             required
-                            className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200"
+                            className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-slate-800 dark:text-slate-200"
                         />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Responsável</label>
-                        <select value={responsible} onChange={e => setResponsible(e.target.value)} required className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200">
+                        <select value={responsible} onChange={e => setResponsible(e.target.value)} required className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-slate-800 dark:text-slate-200">
                             <option value="" disabled>Selecione...</option>
                             {RESPONSIBLES.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Selecione a hora</label>
-                        <select value={deadline} onChange={e => setDeadline(e.target.value)} required className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200">
+                        <select value={deadline} onChange={e => setDeadline(e.target.value)} required className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-slate-800 dark:text-slate-200">
                             <option value="" disabled>Selecione...</option>
                             {ALERT_DEADLINES.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
                     </div>
                     <button
                         type="submit"
-                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition text-lg flex items-center justify-center gap-2"
+                        className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-3 px-4 rounded-lg transition text-lg flex items-center justify-center gap-2"
                     >
                         <PencilIcon className="w-5 h-5" />
                         Criar alerta

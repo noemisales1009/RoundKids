@@ -236,7 +236,7 @@ export const EditExameImagemModal: React.FC<{
                                 <option value="">Selecione...</option>
                                 {ALERT_SYSTEMS.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
-                            <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
+                            <ChevronDownIcon className="absolute right-3 top-3 text-slate-400 pointer-events-none w-4 h-4" />
                         </div>
                         {sistema === 'Outros' && (
                             <input

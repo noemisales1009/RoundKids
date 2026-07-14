@@ -331,7 +331,7 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                         <select 
                             value={selectedCategoria}
                             onChange={e => setSelectedCategoria(e.target.value)}
-                            className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+                            className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
                         >
                             <option value="">Selecione uma categoria...</option>
                             {categorias.map(cat => (
@@ -349,7 +349,7 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                             <select 
                                 value={selectedMedicamento}
                                 onChange={e => setSelectedMedicamento(e.target.value)}
-                                className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+                                className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
                             >
                                 <option value="">Selecione um medicamento...</option>
                                 {medicamentos.map(med => (
@@ -381,20 +381,20 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                                     value={customMedicamento}
                                     onChange={e => setCustomMedicamento(e.target.value)}
                                     placeholder="Ex: Epinefrina, Salbutamol spray..."
-                                    className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+                                    className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                                    Unidade de Dosagem <span className="text-gray-400 font-normal">(opcional)</span>
+                                    Unidade de Dosagem <span className="text-slate-400 font-normal">(opcional)</span>
                                 </label>
                                 <input
                                     type="text"
                                     value={customUnidade}
                                     onChange={e => setCustomUnidade(e.target.value)}
                                     placeholder="Ex: mg/kg/dia, ug/h, UI/ml..."
-                                    className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+                                    className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
                                 />
                             </div>
                         </>
@@ -413,7 +413,7 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                                 value={dosageValue}
                                 onChange={e => setDosageValue(e.target.value)}
                                 placeholder="Ex: 10, 5.5, 0.1"
-                                className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+                                className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
                             />
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                 ℹ️ Digite apenas o valor numérico. A unidade será "{unidadeFinal}"
@@ -423,8 +423,8 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
 
                     {/* Mensagem: Medicação sem unidade */}
                     {selectedMedicamento && !temUnidadeDose && !isOther && (
-                        <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-md p-3">
-                            <p className="text-sm text-blue-800 dark:text-blue-200">
+                        <div className="bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800 rounded-md p-3">
+                            <p className="text-sm text-primary-800 dark:text-primary-200">
                                 ℹ️ <strong>{selectedMedData?.nome}</strong> não requer dosagem com unidade (ex: spray, solução)
                             </p>
                         </div>
@@ -439,7 +439,7 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                             type="date" 
                             value={startDate} 
                             onChange={e => setStartDate(e.target.value)} 
-                            className="block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" 
+                            className="block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200" 
                         />
                     </div>
 
@@ -452,18 +452,18 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                             <div className="border border-slate-300 dark:border-slate-700 rounded-md overflow-hidden max-h-48 overflow-y-auto">
                                 <div
                                     onClick={() => { setSelectedDiagnosticoId(''); setSistema(''); setSistemaOutros(''); }}
-                                    className={`flex items-start gap-2 px-3 py-2 cursor-pointer text-sm ${selectedDiagnosticoId === '' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                    className={`flex items-start gap-2 px-3 py-2 cursor-pointer text-sm ${selectedDiagnosticoId === '' ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
                                 >
-                                    <span className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${selectedDiagnosticoId === '' ? 'border-blue-500 bg-blue-500' : 'border-slate-400'}`} />
+                                    <span className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${selectedDiagnosticoId === '' ? 'border-primary-500 bg-primary-500' : 'border-slate-400'}`} />
                                     Nenhum
                                 </div>
                                 {diagnosticosAtivos.map(d => (
                                     <div
                                         key={d.id}
                                         onClick={() => { setSelectedDiagnosticoId(d.id); if (d.sistema) { if (ALERT_SYSTEMS.includes(d.sistema)) { setSistema(d.sistema); setSistemaOutros(''); } else { setSistema('Outros'); setSistemaOutros(d.sistema); } } }}
-                                        className={`flex items-start gap-2 px-3 py-2 cursor-pointer text-sm border-t border-slate-200 dark:border-slate-700 ${selectedDiagnosticoId === d.id ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                        className={`flex items-start gap-2 px-3 py-2 cursor-pointer text-sm border-t border-slate-200 dark:border-slate-700 ${selectedDiagnosticoId === d.id ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
                                     >
-                                        <span className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${selectedDiagnosticoId === d.id ? 'border-blue-500 bg-blue-500' : 'border-slate-400'}`} />
+                                        <span className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${selectedDiagnosticoId === d.id ? 'border-primary-500 bg-primary-500' : 'border-slate-400'}`} />
                                         <span>
                                             {d.label}
                                             {d.created_at && (
@@ -512,11 +512,11 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                             Sistema <span className="text-slate-400 font-normal">(opcional)</span>
                         </label>
                         <div className="relative">
-                            <select value={sistema} onChange={e => setSistema(e.target.value)} className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200 appearance-none">
+                            <select value={sistema} onChange={e => setSistema(e.target.value)} className="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200 appearance-none">
                                 <option value="">Selecione...</option>
                                 {ALERT_SYSTEMS.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
-                            <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
+                            <ChevronDownIcon className="absolute right-3 top-3 text-slate-400 pointer-events-none w-4 h-4" />
                         </div>
                         {sistema === 'Outros' && (
                             <input
@@ -524,14 +524,14 @@ export const EditMedicationModal: React.FC<{ medication: Medication; patientId: 
                                 value={sistemaOutros}
                                 onChange={e => setSistemaOutros(e.target.value)}
                                 placeholder="Especifique o sistema..."
-                                className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+                                className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
                             />
                         )}
                     </div>
 
                     <button 
                         type="submit" 
-                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition"
+                        className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded-lg transition"
                     >
                         Salvar Alterações
                     </button>

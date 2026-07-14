@@ -74,7 +74,7 @@ const escalasConfig = {
     totalMax: 28,
     opcoes: scoreOptions1_4,
     interpreta: (score: number) => interpretarBraden(score, 'Braden Q Ampliada'),
-    cores: { bg: 'bg-teal-600', hover: 'hover:bg-teal-500', text: 'text-teal-300', bgProgress: 'bg-teal-500', bgBase: 'bg-teal-700', hoverBase: 'hover:bg-teal-600' },
+    cores: { bg: 'bg-primary-600', hover: 'hover:bg-primary-500', text: 'text-primary-300', bgProgress: 'bg-primary-500', bgBase: 'bg-primary-700', hoverBase: 'hover:bg-primary-600' },
     itens: [
       { id: 'c1', label: '1. Mobilidade', desc: 'Grau e tipo de movimentos espontâneos (versão detalhada).', pontos: [1, 2, 3, 4], scoreDesc: ['Não faz movimentos; completamente imóvel', 'Movimentos muito limitados; raramente muda de posição', 'Muda de posição ocasionalmente; pouca amplitude', 'Muda de posição frequentemente e de forma completa'] },
       { id: 'c2', label: '2. Atividade', desc: 'Nível de atividade física.', pontos: [1, 2, 3], scoreDesc: ['Acamado; não realiza mobilidade ativa', 'Restrito à cadeira; não deambula', 'Move-se no leito, engatinha ou senta sozinho'] }, 
@@ -106,13 +106,13 @@ const BradenQuestionCard = ({ item, valor, onChange }: any) => {
       id={item.id} 
       className={`p-4 rounded-xl shadow-md mb-3 transition-all duration-300
       ${isSelected 
-        ? 'bg-indigo-100 dark:bg-indigo-900/30 border border-indigo-400 dark:border-indigo-600'
+        ? 'bg-primary-100 dark:bg-primary-900/30 border border-primary-400 dark:border-primary-600'
         : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'}
     `}>
       <div className="mb-4 flex justify-between items-start">
         <div>
-          <label className="block text-base font-bold text-slate-800 dark:text-gray-100">{item.label}</label>
-          <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">{item.desc}</p> 
+          <label className="block text-base font-bold text-slate-800 dark:text-slate-100">{item.label}</label>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{item.desc}</p> 
         </div>
         {isSelected && <CheckIcon />}
       </div>
@@ -121,7 +121,7 @@ const BradenQuestionCard = ({ item, valor, onChange }: any) => {
         <select
           value={valor === undefined || valor === null ? '' : valor}
           onChange={(e) => onChange(parseInt(e.target.value))}
-          className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-gray-100 p-3 pr-12 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+          className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 p-3 pr-12 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
         >
           <option value="" disabled>
             Selecione: 1 a {item.pontos.length}
@@ -132,7 +132,7 @@ const BradenQuestionCard = ({ item, valor, onChange }: any) => {
             </option>
           ))}
         </select>
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500 dark:text-gray-400">
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500 dark:text-slate-400">
           <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
         </div>
       </div>
@@ -241,7 +241,7 @@ export const BradenCalculator: React.FC<BradenCalculatorProps> = ({ patientId, o
   if (tela === 'intro') {
     return (
       <div className="w-full bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-4 mb-4">
-        <button onClick={onClose} className="flex items-center text-gray-500 hover:text-gray-700 mb-4">
+        <button onClick={onClose} className="flex items-center text-slate-500 hover:text-slate-700 mb-4">
           <ChevronLeftIcon className="w-5 h-5 mr-2" />
           Fechar
         </button>
@@ -271,7 +271,7 @@ export const BradenCalculator: React.FC<BradenCalculatorProps> = ({ patientId, o
     return (
       <div className="w-full bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-4 mb-4">
         <div className="flex items-center justify-between mb-4">
-          <button onClick={() => setTela('intro')} className="text-gray-500 hover:text-gray-700">
+          <button onClick={() => setTela('intro')} className="text-slate-500 hover:text-slate-700">
             ← Voltar
           </button>
           <h3 className={`font-bold ${corClasses.text}`}>{configAtual.titulo}</h3>
@@ -285,7 +285,7 @@ export const BradenCalculator: React.FC<BradenCalculatorProps> = ({ patientId, o
           />
         </div>
 
-        <p className="text-xs text-gray-500 mb-4">{itensRespondidos} de {totalItens} respondidos</p>
+        <p className="text-xs text-slate-500 mb-4">{itensRespondidos} de {totalItens} respondidos</p>
 
         <div className="space-y-3 max-h-96 overflow-y-auto mb-4">
           {configAtual.itens.map((item: any) => (
@@ -319,7 +319,7 @@ export const BradenCalculator: React.FC<BradenCalculatorProps> = ({ patientId, o
 
     return (
       <div className="w-full bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-4 mb-4">
-        <button onClick={() => setTela('intro')} className="text-gray-500 hover:text-gray-700 mb-4">
+        <button onClick={() => setTela('intro')} className="text-slate-500 hover:text-slate-700 mb-4">
           ← Voltar
         </button>
 
@@ -333,7 +333,7 @@ export const BradenCalculator: React.FC<BradenCalculatorProps> = ({ patientId, o
           {resultadoAvaliacao.texto}
         </h3>
 
-        <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <p className="text-center text-sm text-slate-600 dark:text-slate-400 mb-4">
           {resultadoAvaliacao.detalhe}
         </p>
 

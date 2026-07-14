@@ -118,7 +118,7 @@ export default function ComfortBCalculator({ patientId }: ComfortBCalculatorProp
   const interpretacao = useMemo(() => {
     if (respondidosCount < totalEsperado) return null;
     const score = pontuacaoTotal;
-    if (score <= 10) return { texto: 'Sedação Excessiva', cor: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500', detalhe: 'Paciente muito sedado. Avalie reduzir medicação.' };
+    if (score <= 10) return { texto: 'Sedação Excessiva', cor: 'text-primary-400', bg: 'bg-primary-500/10', border: 'border-primary-500', detalhe: 'Paciente muito sedado. Avalie reduzir medicação.' };
     if (score <= 22) return { texto: 'Conforto Adequado', cor: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500', detalhe: 'Nível ideal de analgesia e sedação.' };
     return { texto: 'Dor / Desconforto', cor: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500', detalhe: 'Paciente em sofrimento. Reavaliar conduta imediatamente.' };
   }, [pontuacaoTotal, respondidosCount]);
@@ -176,7 +176,7 @@ export default function ComfortBCalculator({ patientId }: ComfortBCalculatorProp
                 onClick={() => setPacienteIntubado(false)}
                 className={`p-4 rounded-2xl border-2 transition-all text-xs font-bold ${
                   !pacienteIntubado
-                    ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                    ? 'border-primary-500 bg-primary-500/10 text-primary-400'
                     : 'border-transparent bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400'
                 }`}
               >
@@ -186,7 +186,7 @@ export default function ComfortBCalculator({ patientId }: ComfortBCalculatorProp
                 onClick={() => setPacienteIntubado(true)}
                 className={`p-4 rounded-2xl border-2 transition-all text-xs font-bold ${
                   pacienteIntubado
-                    ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                    ? 'border-primary-500 bg-primary-500/10 text-primary-400'
                     : 'border-transparent bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400'
                 }`}
               >
@@ -199,7 +199,7 @@ export default function ComfortBCalculator({ patientId }: ComfortBCalculatorProp
                 setRespostas({});
                 setTela('form');
               }}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl transition-all"
+              className="w-full py-4 bg-primary-600 hover:bg-primary-500 text-white font-bold rounded-2xl transition-all"
             >
               Começar
             </button>
@@ -213,11 +213,11 @@ export default function ComfortBCalculator({ patientId }: ComfortBCalculatorProp
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
               Progresso: {respondidosCount}/6
             </span>
-            <span className="text-sm font-black text-blue-400">Score: {pontuacaoTotal}</span>
+            <span className="text-sm font-black text-primary-400">Score: {pontuacaoTotal}</span>
           </div>
 
           <div className="h-1 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-6">
-            <div className="h-full bg-blue-500 transition-all" style={{ width: `${progresso}%` }} />
+            <div className="h-full bg-primary-500 transition-all" style={{ width: `${progresso}%` }} />
           </div>
 
           {/* Domínios 1 e 2 */}
@@ -261,7 +261,7 @@ export default function ComfortBCalculator({ patientId }: ComfortBCalculatorProp
               onClick={() => setTela('resultado')}
               className={`w-full py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 ${
                 respondidosCount === totalEsperado
-                  ? 'bg-blue-600 text-white hover:bg-blue-500'
+                  ? 'bg-primary-600 text-white hover:bg-primary-500'
                   : 'bg-slate-200 dark:bg-slate-700/50 text-slate-400 dark:text-slate-500 cursor-not-allowed'
               }`}
             >
@@ -290,7 +290,7 @@ export default function ComfortBCalculator({ patientId }: ComfortBCalculatorProp
               className={`w-full py-4 text-white font-black rounded-2xl transition-all flex items-center justify-center gap-2 ${
                 isSaving || saveStatus === 'success'
                   ? 'bg-slate-300 dark:bg-slate-700 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-500'
+                  : 'bg-primary-600 hover:bg-primary-500'
               }`}
             >
               {isSaving ? '⏳ Salvando...' : saveStatus === 'success' ? '✓ Salvo!' : '💾 Gravar Avaliação'}
@@ -331,7 +331,7 @@ const SelectDominio: React.FC<SelectDominioProps> = ({ dominio, valor, onSelect 
         <div className="flex-1">
           <h3 className="text-sm font-black text-slate-800 dark:text-slate-100">{dominio.label}</h3>
           {dominio.extra && (
-            <p className="text-[10px] text-blue-400 font-bold italic mt-0.5">{dominio.extra}</p>
+            <p className="text-[10px] text-primary-400 font-bold italic mt-0.5">{dominio.extra}</p>
           )}
         </div>
         {isSelected && (
@@ -345,7 +345,7 @@ const SelectDominio: React.FC<SelectDominioProps> = ({ dominio, valor, onSelect 
         <select
           value={valor || ''}
           onChange={(e) => onSelect(Number(e.target.value))}
-          className="w-full p-4 rounded-2xl appearance-none text-xs font-bold border-2 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500 transition-all cursor-pointer"
+          className="w-full p-4 rounded-2xl appearance-none text-xs font-bold border-2 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 outline-none focus:border-primary-500 transition-all cursor-pointer"
         >
           <option value="" disabled>
             Selecione uma opção...

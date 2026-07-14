@@ -447,7 +447,7 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
     return (
       <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
         <span className="text-6xl mb-4 block">📋</span>
-        <p className="text-gray-500">Selecione um paciente para ver o histórico</p>
+        <p className="text-slate-500">Selecione um paciente para ver o histórico</p>
       </div>
     )
   }
@@ -456,8 +456,8 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
     return (
       <div className="bg-white rounded-2xl shadow-lg p-8">
         <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          <span className="ml-3 text-gray-600">Carregando histórico...</span>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+          <span className="ml-3 text-slate-600">Carregando histórico...</span>
         </div>
       </div>
     )
@@ -477,7 +477,7 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
     <>
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6">
+        <div className="bg-gradient-to-r from-purple-600 to-primary-600 p-6">
           <div className="flex items-center gap-3">
             <span className="text-3xl">📜</span>
             <div>
@@ -492,20 +492,20 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
           {calculations.length === 0 ? (
             <div className="text-center py-12">
               <span className="text-6xl mb-4 block">🔍</span>
-              <p className="text-gray-500 text-lg">Nenhum cálculo encontrado</p>
-              <p className="text-gray-400 text-sm mt-2">Os cálculos salvos aparecerão aqui</p>
+              <p className="text-slate-500 text-lg">Nenhum cálculo encontrado</p>
+              <p className="text-slate-400 text-sm mt-2">Os cálculos salvos aparecerão aqui</p>
             </div>
           ) : (
             <div className="space-y-4">
               {calculations.map((calc) => (
                 <div 
                   key={calc.id}
-                  className="border-2 border-gray-200 rounded-xl p-5 hover:border-purple-300 hover:shadow-md transition-all"
+                  className="border-2 border-slate-200 rounded-xl p-5 hover:border-purple-300 hover:shadow-md transition-all"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-bold text-gray-800">
+                        <h3 className="text-lg font-bold text-slate-800">
                           📅 {new Date(calc.created_at).toLocaleString('pt-BR', {
                             day: '2-digit',
                             month: '2-digit',
@@ -517,13 +517,13 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
                         <span className={`
                           px-3 py-1 rounded-full text-xs font-bold uppercase
                           ${calc.status === 'ativo' ? 'bg-green-100 text-green-800' : 
-                            calc.status === 'revisado' ? 'bg-blue-100 text-blue-800' : 
-                            'bg-gray-100 text-gray-800'}
+                            calc.status === 'revisado' ? 'bg-primary-100 text-primary-800' : 
+                            'bg-slate-100 text-slate-800'}
                         `}>
                           {calc.status}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-slate-600">
                         👤 Criado por: <span className="font-medium">{calc.users?.name || 'Desconhecido'}</span>
                       </p>
                     </div>
@@ -532,14 +532,14 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
                       {calc.amino_acid_volume && (
                         <button
                           onClick={() => handlePrintPharmacy(calc)}
-                          className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 text-sm"
+                          className="bg-gradient-to-r from-primary-600 to-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:from-primary-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 text-sm"
                         >
                           📋 Prescrição Farmácia
                         </button>
                       )}
                       <button
                         onClick={() => handlePrint(calc)}
-                        className="bg-gray-100 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-200 transition-all flex items-center gap-2 text-sm border border-gray-300"
+                        className="bg-slate-100 text-slate-700 font-bold py-2 px-4 rounded-lg hover:bg-slate-200 transition-all flex items-center gap-2 text-sm border border-slate-300"
                       >
                         🖨️ Detalhado
                       </button>
@@ -547,25 +547,25 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
                   </div>
 
                   {/* Dados do Cálculo - Resumo Principal */}
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 mb-4 border-2 border-purple-200">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 bg-gradient-to-r from-primary-50 to-purple-50 rounded-lg p-4 mb-4 border-2 border-purple-200">
                     <div className="text-center">
-                      <p className="text-xs text-gray-500 uppercase font-medium">Peso</p>
-                      <p className="text-lg font-bold text-gray-800">{calc.weight} kg</p>
+                      <p className="text-xs text-slate-500 uppercase font-medium">Peso</p>
+                      <p className="text-lg font-bold text-slate-800">{calc.weight} kg</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-xs text-gray-500 uppercase font-medium">Volume Total</p>
-                      <p className="text-lg font-bold text-blue-600">{calc.total_volume?.toFixed(1)} mL</p>
+                      <p className="text-xs text-slate-500 uppercase font-medium">Volume Total</p>
+                      <p className="text-lg font-bold text-primary-600">{calc.total_volume?.toFixed(1)} mL</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-xs text-gray-500 uppercase font-medium">Calorias</p>
+                      <p className="text-xs text-slate-500 uppercase font-medium">Calorias</p>
                       <p className="text-lg font-bold text-green-600">{calc.total_calories?.toFixed(0)} kcal</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-xs text-gray-500 uppercase font-medium">Conc. Glicose</p>
+                      <p className="text-xs text-slate-500 uppercase font-medium">Conc. Glicose</p>
                       <p className="text-lg font-bold text-amber-600">{calc.glucose_concentration_final?.toFixed(1)}%</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-xs text-gray-500 uppercase font-medium">Osmolaridade</p>
+                      <p className="text-xs text-slate-500 uppercase font-medium">Osmolaridade</p>
                       <p className="text-lg font-bold text-purple-600">{calc.osmolarity?.toFixed(0)} mOsm/L</p>
                     </div>
                   </div>
@@ -574,19 +574,19 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-red-50 rounded-lg p-4 mb-4">
                     <div className="text-center">
                       <p className="text-xs text-red-600 font-semibold">TIG</p>
-                      <p className="text-sm font-bold text-gray-800">{((calc.total_volume * calc.glucose_concentration_final) / (calc.weight * 144)).toFixed(2)} mg/kg/min</p>
+                      <p className="text-sm font-bold text-slate-800">{((calc.total_volume * calc.glucose_concentration_final) / (calc.weight * 144)).toFixed(2)} mg/kg/min</p>
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-red-600 font-semibold">Cal/gN</p>
-                      <p className="text-sm font-bold text-gray-800">{calc.calorie_nitrogen_ratio}</p>
+                      <p className="text-sm font-bold text-slate-800">{calc.calorie_nitrogen_ratio}</p>
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-red-600 font-semibold">Vazão (24h)</p>
-                      <p className="text-sm font-bold text-gray-800">{(calc.total_volume / 24).toFixed(1)} mL/h</p>
+                      <p className="text-sm font-bold text-slate-800">{(calc.total_volume / 24).toFixed(1)} mL/h</p>
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-red-600 font-semibold">Hidratação</p>
-                      <p className="text-sm font-bold text-gray-800">{calc.hydration_target} mL/m²</p>
+                      <p className="text-sm font-bold text-slate-800">{calc.hydration_target} mL/m²</p>
                     </div>
                   </div>
 
@@ -594,19 +594,19 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-amber-50 rounded-lg p-4 mb-4">
                     <div className="text-center">
                       <p className="text-xs text-amber-600 font-semibold">Sódio</p>
-                      <p className="text-sm font-bold text-gray-800">{calc.sodium_dose} mEq</p>
+                      <p className="text-sm font-bold text-slate-800">{calc.sodium_dose} mEq</p>
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-amber-600 font-semibold">Potássio</p>
-                      <p className="text-sm font-bold text-gray-800">{calc.potassium_dose} mEq</p>
+                      <p className="text-sm font-bold text-slate-800">{calc.potassium_dose} mEq</p>
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-amber-600 font-semibold">Cálcio</p>
-                      <p className="text-sm font-bold text-gray-800">{calc.calcium_dose} mEq/kg</p>
+                      <p className="text-sm font-bold text-slate-800">{calc.calcium_dose} mEq/kg</p>
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-amber-600 font-semibold">Magnésio</p>
-                      <p className="text-sm font-bold text-gray-800">{calc.magnesium_dose} mEq/kg</p>
+                      <p className="text-sm font-bold text-slate-800">{calc.magnesium_dose} mEq/kg</p>
                     </div>
                   </div>
 
@@ -614,30 +614,30 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
                   <div className="bg-green-50 rounded-lg p-4 mb-4">
                     <div className="text-center">
                       <p className="text-xs text-green-600 font-semibold">Fósforo</p>
-                      <p className="text-sm font-bold text-gray-800">{calc.phosphorus_dose} mEq/kg ({calc.phosphorus_source === 'sodium' ? 'Glicerofosfato de Sódio' : 'Fosfato Ácido de Potássio'})</p>
+                      <p className="text-sm font-bold text-slate-800">{calc.phosphorus_dose} mEq/kg ({calc.phosphorus_source === 'sodium' ? 'Glicerofosfato de Sódio' : 'Fosfato Ácido de Potássio'})</p>
                     </div>
                   </div>
 
                   {/* Composição e Distribuição Calórica */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 bg-indigo-50 rounded-lg p-4 mb-4">
-                    <div className="text-center border-r border-indigo-200">
-                      <p className="text-xs text-indigo-600 font-semibold">Proteína %</p>
-                      <p className="text-sm font-bold text-gray-800">{calc.protein_concentration}%</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 bg-primary-50 rounded-lg p-4 mb-4">
+                    <div className="text-center border-r border-primary-200">
+                      <p className="text-xs text-primary-600 font-semibold">Proteína %</p>
+                      <p className="text-sm font-bold text-slate-800">{calc.protein_concentration}%</p>
                     </div>
-                    <div className="text-center border-r border-indigo-200">
-                      <p className="text-xs text-indigo-600 font-semibold">Lipídio %</p>
-                      <p className="text-sm font-bold text-gray-800">{calc.lipid_concentration}%</p>
+                    <div className="text-center border-r border-primary-200">
+                      <p className="text-xs text-primary-600 font-semibold">Lipídio %</p>
+                      <p className="text-sm font-bold text-slate-800">{calc.lipid_concentration}%</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-xs text-indigo-600 font-semibold">Glicose %</p>
-                      <p className="text-sm font-bold text-gray-800">{calc.glucose_source_1}% / {calc.glucose_source_2}%</p>
+                      <p className="text-xs text-primary-600 font-semibold">Glicose %</p>
+                      <p className="text-sm font-bold text-slate-800">{calc.glucose_source_1}% / {calc.glucose_source_2}%</p>
                     </div>
                   </div>
 
                   {/* Observações */}
                   {calc.notes && (
-                    <div className="mt-4 bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
-                      <p className="text-sm text-gray-700">
+                    <div className="mt-4 bg-primary-50 border-l-4 border-primary-500 p-3 rounded">
+                      <p className="text-sm text-slate-700">
                         <span className="font-semibold">💬 Observações:</span> {calc.notes}
                       </p>
                     </div>
@@ -650,8 +650,8 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
 
         {/* Footer */}
         {calculations.length > 0 && (
-          <div className="p-4 bg-gray-50 border-t border-gray-200">
-            <p className="text-sm text-gray-600 text-center font-medium">
+          <div className="p-4 bg-slate-50 border-t border-slate-200">
+            <p className="text-sm text-slate-600 text-center font-medium">
               📊 Total de cálculos: <span className="font-bold text-purple-600">{calculations.length}</span>
             </p>
           </div>

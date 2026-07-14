@@ -82,22 +82,22 @@ const CollapsibleHeader = ({
     className={`w-full flex items-center justify-between px-3 sm:px-4 py-3 rounded-xl border transition-all ${
       open
         ? isDark
-          ? 'bg-slate-800 border-blue-800/50 border-l-4 border-l-blue-500'
-          : 'bg-blue-50/50 border-blue-200 border-l-4 border-l-blue-500'
+          ? 'bg-slate-800 border-primary-800/50 border-l-4 border-l-primary-500'
+          : 'bg-primary-50/50 border-primary-200 border-l-4 border-l-primary-500'
         : isDark
-          ? 'bg-slate-800 border-slate-700 border-l-4 border-l-blue-700'
-          : 'bg-slate-50 border-slate-200 border-l-4 border-l-blue-300'
+          ? 'bg-slate-800 border-slate-700 border-l-4 border-l-primary-700'
+          : 'bg-slate-50 border-slate-200 border-l-4 border-l-primary-300'
     }`}
   >
     <div className="flex items-center gap-2.5">
-      <span className={`material-symbols-rounded text-[22px] ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+      <span className={`material-symbols-rounded text-[22px] ${isDark ? 'text-primary-400' : 'text-primary-600'}`}>
         {icon}
       </span>
       <span className={`font-bold text-sm sm:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
         {label}
       </span>
       {badge !== undefined && badge > 0 && (
-        <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-500 text-white">
+        <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-primary-500 text-white">
           {badge}
         </span>
       )}
@@ -307,7 +307,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
 
   const numCls = `w-20 bg-white dark:bg-slate-800 border ${
     isDark ? 'border-slate-600' : 'border-slate-300'
-  } rounded-md py-1.5 px-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-center disabled:opacity-60 disabled:cursor-default`;
+  } rounded-md py-1.5 px-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm text-center disabled:opacity-60 disabled:cursor-default`;
 
   const rowCls = 'flex items-center gap-2 flex-wrap';
   const labelCls = `text-sm font-bold shrink-0 ${isDark ? 'text-slate-300' : 'text-slate-700'}`;
@@ -322,7 +322,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
       {/* Header */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
-          <span className={`material-symbols-rounded text-[22px] ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+          <span className={`material-symbols-rounded text-[22px] ${isDark ? 'text-primary-400' : 'text-primary-600'}`}>
             monitor_heart
           </span>
           <h3 className={`font-bold text-lg sm:text-xl ${isDark ? 'text-white' : 'text-slate-900'}`}>
@@ -332,7 +332,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
           {!loading && rowId && !isArchived && (
             <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
               isEditing
-                ? 'bg-blue-500 text-white'
+                ? 'bg-primary-500 text-white'
                 : isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-100 text-slate-600'
             }`}>
               {isEditing ? 'Editando' : 'Visualizando'}
@@ -345,7 +345,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
             type="date"
             value={selectedDate}
             onChange={e => { setSelectedDate(e.target.value); setShowDatePicker(false); }}
-            className={`rounded-lg border px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`rounded-lg border px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 ${
               isDark
                 ? 'bg-slate-800 border-slate-600 text-slate-200'
                 : 'bg-white border-slate-300 text-slate-700'
@@ -357,10 +357,10 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
               title="Ver datas com registros"
               className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
                 showDatePicker
-                  ? 'bg-blue-500 border-blue-500 text-white'
+                  ? 'bg-primary-500 border-primary-500 text-white'
                   : isDark
-                    ? 'bg-slate-800 border-slate-600 text-slate-300 hover:border-blue-500'
-                    : 'bg-white border-slate-300 text-slate-600 hover:border-blue-400'
+                    ? 'bg-slate-800 border-slate-600 text-slate-300 hover:border-primary-500'
+                    : 'bg-white border-slate-300 text-slate-600 hover:border-primary-400'
               }`}
             >
               📅 {savedDates.length}
@@ -378,10 +378,10 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
               onClick={() => { setSelectedDate(d); setShowDatePicker(false); }}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors ${
                 d === selectedDate
-                  ? 'bg-blue-500 border-blue-500 text-white'
+                  ? 'bg-primary-500 border-primary-500 text-white'
                   : isDark
-                    ? 'bg-slate-800 border-slate-700 text-slate-300 hover:border-blue-500'
-                    : 'bg-white border-slate-200 text-slate-600 hover:border-blue-400'
+                    ? 'bg-slate-800 border-slate-700 text-slate-300 hover:border-primary-500'
+                    : 'bg-white border-slate-200 text-slate-600 hover:border-primary-400'
               }`}
             >
               {formatDateBR(d)}
@@ -404,7 +404,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
 
       {loading ? (
         <div className="flex justify-center py-4">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" />
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" />
         </div>
       ) : (
         <>
@@ -483,14 +483,14 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
                       </p>
                       {activeDrenos.size > 0 && (
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="px-1.5 py-0.5 rounded-full text-[11px] bg-blue-500 text-white font-bold">
+                          <span className="px-1.5 py-0.5 rounded-full text-[11px] bg-primary-500 text-white font-bold">
                             {activeDrenos.size}
                           </span>
                           {DRENO_OPTIONS.filter(({ key }) => activeDrenos.has(key)).map(({ key, label }) => (
                             <span key={key} className={`text-[11px] px-2 py-0.5 rounded-full font-semibold border ${
                               isDark
-                                ? 'bg-blue-900/40 text-blue-300 border-blue-700/60'
-                                : 'bg-blue-50 text-blue-700 border-blue-200'
+                                ? 'bg-primary-900/40 text-primary-300 border-primary-700/60'
+                                : 'bg-primary-50 text-primary-700 border-primary-200'
                             }`}>
                               {key === 'outros_drenos' && data.outros_drenos_label ? data.outros_drenos_label : label}
                             </span>
@@ -535,18 +535,18 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
                                   onClick={() => toggleDreno(key)}
                                   className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors ${
                                     isDark
-                                      ? isActive ? 'bg-blue-900/40 hover:bg-blue-900/60' : 'hover:bg-slate-700'
-                                      : isActive ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-slate-50'
+                                      ? isActive ? 'bg-primary-900/40 hover:bg-primary-900/60' : 'hover:bg-slate-700'
+                                      : isActive ? 'bg-primary-50 hover:bg-primary-100' : 'hover:bg-slate-50'
                                   }`}
                                 >
                                   <span className={`material-symbols-rounded text-[20px] ${
-                                    isActive ? 'text-blue-500' : isDark ? 'text-slate-600' : 'text-slate-300'
+                                    isActive ? 'text-primary-500' : isDark ? 'text-slate-600' : 'text-slate-300'
                                   }`}>
                                     {isActive ? 'check_box' : 'check_box_outline_blank'}
                                   </span>
                                   <span className={`text-sm ${
                                     isActive
-                                      ? isDark ? 'text-blue-300 font-semibold' : 'text-blue-700 font-semibold'
+                                      ? isDark ? 'text-primary-300 font-semibold' : 'text-primary-700 font-semibold'
                                       : isDark ? 'text-slate-300' : 'text-slate-700'
                                   }`}>
                                     {label}
@@ -568,7 +568,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
                     <div className="space-y-2">
                       {DRENO_OPTIONS.filter(({ key }) => activeDrenos.has(key)).map(({ key, label }) => (
                         <div key={key} className={`flex items-center gap-2 flex-wrap p-2 rounded-lg ${
-                          isDark ? 'bg-slate-700/50' : 'bg-blue-50/60'
+                          isDark ? 'bg-slate-700/50' : 'bg-primary-50/60'
                         }`}>
                           {isEditing && !isArchived && (
                             <button
@@ -588,7 +588,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
                               type="text"
                               className={`flex-1 min-w-[120px] bg-white dark:bg-slate-800 border ${
                                 isDark ? 'border-slate-600' : 'border-slate-300'
-                              } rounded-md py-1.5 px-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:opacity-60 disabled:cursor-default`}
+                              } rounded-md py-1.5 px-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm disabled:opacity-60 disabled:cursor-default`}
                               value={data.outros_drenos_label}
                               onChange={e => set('outros_drenos_label', e.target.value)}
                               placeholder="Descreva o dreno..."
@@ -655,8 +655,8 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
                   onClick={() => setIsEditing(true)}
                   className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm border transition-colors ${
                     isDark
-                      ? 'border-blue-600 text-blue-400 hover:bg-blue-900/20'
-                      : 'border-blue-400 text-blue-600 hover:bg-blue-50'
+                      ? 'border-primary-600 text-primary-400 hover:bg-primary-900/20'
+                      : 'border-primary-400 text-primary-600 hover:bg-primary-50'
                   }`}
                 >
                   <span className="material-symbols-rounded text-[20px]">edit</span>
@@ -675,7 +675,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
                         ? isDark ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                         : savedOk
                           ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                          : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white'
+                          : 'bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white'
                     }`}
                   >
                     {saving ? (

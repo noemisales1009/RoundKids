@@ -155,7 +155,7 @@ export const KDIGOScale: React.FC<KDIGOScaleProps> = ({ onSaveScore }) => {
 
         <button
           onClick={() => { resetForm(); setTelaAtiva('form'); }}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition flex items-center justify-center gap-2"
+          className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-4 rounded-xl transition flex items-center justify-center gap-2"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
             <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
@@ -193,7 +193,7 @@ export const KDIGOScale: React.FC<KDIGOScaleProps> = ({ onSaveScore }) => {
           <select
             value={estagioCreatinina === null ? '' : estagioCreatinina}
             onChange={(e) => setEstagioCreatinina(e.target.value === '' ? null : Number(e.target.value))}
-            className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+            className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none text-sm"
           >
             <option value="">Selecione...</option>
             {criterioCreatinina.map((op) => (
@@ -213,7 +213,7 @@ export const KDIGOScale: React.FC<KDIGOScaleProps> = ({ onSaveScore }) => {
           <select
             value={estagioDiurese === null ? '' : estagioDiurese}
             onChange={(e) => setEstagioDiurese(e.target.value === '' ? null : Number(e.target.value))}
-            className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+            className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none text-sm"
           >
             <option value="">Selecione...</option>
             {criterioDiurese.map((op) => (
@@ -241,7 +241,7 @@ export const KDIGOScale: React.FC<KDIGOScaleProps> = ({ onSaveScore }) => {
 
         <button
           onClick={handleCalcular}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition"
+          className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-4 rounded-xl transition"
         >
           Ver resultado
         </button>
@@ -276,14 +276,14 @@ export const KDIGOScale: React.FC<KDIGOScaleProps> = ({ onSaveScore }) => {
         <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Critérios selecionados</p>
 
         <div className="flex items-start gap-3">
-          <span className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-0.5 whitespace-nowrap">Creatinina</span>
+          <span className="text-xs font-bold text-primary-600 dark:text-primary-400 mt-0.5 whitespace-nowrap">Creatinina</span>
           <span className="text-sm text-slate-700 dark:text-slate-300">
             {criterioCreatinina.find(c => c.valor === estagioCreatinina)?.texto ?? '—'}
           </span>
         </div>
 
         <div className="flex items-start gap-3">
-          <span className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-0.5 whitespace-nowrap">Diurese</span>
+          <span className="text-xs font-bold text-primary-600 dark:text-primary-400 mt-0.5 whitespace-nowrap">Diurese</span>
           <span className="text-sm text-slate-700 dark:text-slate-300">
             {criterioDiurese.find(c => c.valor === estagioDiurese)?.texto ?? '—'}
           </span>
@@ -303,7 +303,7 @@ export const KDIGOScale: React.FC<KDIGOScaleProps> = ({ onSaveScore }) => {
         </button>
         <button
           onClick={handleSalvar}
-          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition"
+          className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-4 rounded-xl transition"
         >
           Salvar avaliação
         </button>

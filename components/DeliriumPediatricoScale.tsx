@@ -97,36 +97,36 @@ const escalasConfig = {
 // Helper para garantir que o Tailwind renderize as classes de cor corretamente
 const getScaleColorClasses = (scaleTitle: string) => {
   const primaryColorClasses = {
-    bg: 'bg-indigo-600',
-    hover: 'hover:bg-indigo-500',
-    text: 'text-indigo-300',
-    bgBase: 'bg-indigo-700',
-    hoverBase: 'hover:bg-indigo-600',
-    bgProgress: 'bg-indigo-500',
+    bg: 'bg-primary-600',
+    hover: 'hover:bg-primary-500',
+    text: 'text-primary-300',
+    bgBase: 'bg-primary-700',
+    hoverBase: 'hover:bg-primary-600',
+    bgProgress: 'bg-primary-500',
   };
 
   const secondaryColors: { [key: string]: typeof primaryColorClasses } = {
     CAPD: primaryColorClasses,
     'SOS-PD': { 
       ...primaryColorClasses,
-      bgBase: 'bg-indigo-700', 
-      hoverBase: 'hover:bg-indigo-600',
+      bgBase: 'bg-primary-700', 
+      hoverBase: 'hover:bg-primary-600',
       bgProgress: 'bg-red-500',
       text: 'text-red-300',
     },
     'psCAM-ICU': {
       ...primaryColorClasses,
-      bgBase: 'bg-indigo-700',
-      hoverBase: 'hover:bg-indigo-600',
-      bgProgress: 'bg-blue-500',
-      text: 'text-blue-300',
+      bgBase: 'bg-primary-700',
+      hoverBase: 'hover:bg-primary-600',
+      bgProgress: 'bg-primary-500',
+      text: 'text-primary-300',
     },
     'pCAM-ICU': {
       ...primaryColorClasses,
-      bgBase: 'bg-indigo-700',
-      hoverBase: 'hover:bg-indigo-600',
-      bgProgress: 'bg-blue-500',
-      text: 'text-blue-300',
+      bgBase: 'bg-primary-700',
+      hoverBase: 'hover:bg-primary-600',
+      bgProgress: 'bg-primary-500',
+      text: 'text-primary-300',
     },
   };
   
@@ -135,10 +135,10 @@ const getScaleColorClasses = (scaleTitle: string) => {
 
 // Helper para garantir que os botões do menu sejam todos azuis
 const getMenuButtonClasses = () => ({
-    bg: 'bg-indigo-600',
-    hover: 'hover:bg-indigo-500',
-    bgBase: 'bg-indigo-700',
-    hoverBase: 'hover:bg-indigo-600',
+    bg: 'bg-primary-600',
+    hover: 'hover:bg-primary-500',
+    bgBase: 'bg-primary-700',
+    hoverBase: 'hover:bg-primary-600',
 });
 
 // ==========================================
@@ -180,13 +180,13 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ item, valor, onChange, opco
       id={item.id} 
       className={`p-4 rounded-xl shadow-md mb-3 transition-all duration-300
       ${isSelected 
-        ? 'bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-300 dark:border-indigo-600'
+        ? 'bg-primary-50 dark:bg-primary-900/30 border border-primary-300 dark:border-primary-600'
         : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600'}
     `}>
       <div className="mb-4 flex justify-between items-start">
         <div>
-          <label className="block text-base font-bold text-slate-800 dark:text-gray-100">{item.label}</label>
-          <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">{item.desc}</p>
+          <label className="block text-base font-bold text-slate-800 dark:text-slate-100">{item.label}</label>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{item.desc}</p>
         </div>
         {isSelected && <CheckIcon />}
       </div>
@@ -195,7 +195,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ item, valor, onChange, opco
         <select
           value={valor === undefined || valor === null ? '' : (tipo === 'binary' ? (valor ? 'true' : 'false') : valor)}
           onChange={(e) => onChange(tipo === 'binary' ? e.target.value === 'true' : parseInt(e.target.value))}
-          className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-gray-100 p-3 pr-10 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+          className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 p-3 pr-10 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
         >
           <option value="" disabled>
             Selecione a resposta...
@@ -210,7 +210,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ item, valor, onChange, opco
             </option>
           ))}
         </select>
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500 dark:text-gray-400">
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500 dark:text-slate-400">
           <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
         </div>
       </div>
@@ -400,21 +400,21 @@ export default function DeliriumPediatricoScale({ onSaveScore }: DeliriumScalePr
   // 1. Menu Principal (INTRO)
   if (tela === 'intro') {
     const menuButtonColors = getMenuButtonClasses();
-    const capdLabelColor = 'bg-indigo-800';
-    const sospdLabelColor = 'bg-indigo-800';
+    const capdLabelColor = 'bg-primary-800';
+    const sospdLabelColor = 'bg-primary-800';
     
     return (
-      <div className="w-full max-w-md mx-auto p-4 bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-800 dark:text-gray-100 font-sans">
+      <div className="w-full max-w-md mx-auto p-4 bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 font-sans">
         <header className="mb-8 text-center pt-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-2xl mb-4 shadow-lg border border-blue-200 dark:border-blue-700">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 dark:bg-primary-900 rounded-2xl mb-4 shadow-lg border border-primary-200 dark:border-primary-700">
             <span className="text-3xl">🧠</span>
           </div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Avaliação de Delirium Pediátrico</h1>
-          <p className="text-sm text-blue-600 dark:text-blue-300 font-medium">Selecione a Escala Adequada</p>
+          <p className="text-sm text-primary-600 dark:text-primary-300 font-medium">Selecione a Escala Adequada</p>
         </header>
 
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl mb-6">
-          <h2 className="text-sm font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest mb-4">Escolha Rápida</h2>
+          <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4">Escolha Rápida</h2>
           
           <button 
             onClick={() => iniciarAvaliacao('capd')}
@@ -443,11 +443,11 @@ export default function DeliriumPediatricoScale({ onSaveScore }: DeliriumScalePr
         
         {historico.length > 0 && (
           <div className="mt-8">
-            <h3 className="text-sm font-bold text-slate-500 dark:text-gray-500 uppercase mb-3 px-2">Histórico Consolidado ({historico.length})</h3>
+            <h3 className="text-sm font-bold text-slate-500 dark:text-slate-500 uppercase mb-3 px-2">Histórico Consolidado ({historico.length})</h3>
             <div className="space-y-2">
               {historico.map((res) => (
                 <div key={res.id} className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 flex justify-between items-center text-sm">
-                  <span className="font-bold text-slate-700 dark:text-gray-300">{res.escala}</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300">{res.escala}</span>
                   <div className="flex items-center">
                     <span className={`font-bold mr-2 ${res.isPositivo ? 'text-red-400' : 'text-green-400'}`}>
                         {res.resultado}
@@ -470,19 +470,19 @@ export default function DeliriumPediatricoScale({ onSaveScore }: DeliriumScalePr
     const camicuColors = getScaleColorClasses('pCAM-ICU');
     const menuButtonColors = getMenuButtonClasses();
     return (
-        <div className="w-full max-w-md mx-auto p-4 bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-800 dark:text-gray-100 font-sans">
+        <div className="w-full max-w-md mx-auto p-4 bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 font-sans">
             <div className="w-full text-left mb-6 pt-6">
-                <button onClick={() => setTela('intro')} className="flex items-center text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                <button onClick={() => setTela('intro')} className="flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                     <BackIcon />
                     <span className="ml-2">Voltar ao Menu Principal</span>
                 </button>
             </div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Seleção CAM-ICU</h1>
-            <p className="text-sm text-slate-500 dark:text-gray-400 mb-6">Escolha a escala correta de acordo com a faixa etária e estado cognitivo do paciente.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Escolha a escala correta de acordo com a faixa etária e estado cognitivo do paciente.</p>
 
             <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl mb-6">
                 <h2 className={`text-base font-bold ${camicuColors.text}`}>psCAM-ICU</h2>
-                <p className="text-sm text-slate-500 dark:text-gray-400 mb-3">{(escalasConfig as any).psCAMICU.idade}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">{(escalasConfig as any).psCAMICU.idade}</p>
                 <button 
                     onClick={() => iniciarAvaliacao('psCAMICU')}
                     className={`w-full ${menuButtonColors.bg} ${menuButtonColors.hover} text-white font-bold py-3 rounded-xl transition`}
@@ -493,7 +493,7 @@ export default function DeliriumPediatricoScale({ onSaveScore }: DeliriumScalePr
 
             <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl mb-6">
                 <h2 className={`text-base font-bold ${camicuColors.text}`}>pCAM-ICU</h2>
-                <p className="text-sm text-slate-500 dark:text-gray-400 mb-3">{(escalasConfig as any).pCAMICU.idade}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">{(escalasConfig as any).pCAMICU.idade}</p>
                 <button 
                     onClick={() => iniciarAvaliacao('pCAMICU')}
                     className={`w-full ${menuButtonColors.bg} ${menuButtonColors.hover} text-white font-bold py-3 rounded-xl transition`}
@@ -510,10 +510,10 @@ export default function DeliriumPediatricoScale({ onSaveScore }: DeliriumScalePr
     const corClasses = getScaleColorClasses(configAtual.titulo);
 
     return (
-      <div className="w-full max-w-md mx-auto p-4 bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-800 dark:text-gray-100 flex flex-col">
+      <div className="w-full max-w-md mx-auto p-4 bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 flex flex-col">
         <div className="sticky top-0 z-10 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-sm pb-4 pt-2 border-b border-slate-200 dark:border-slate-800 mb-4">
           <div className="flex items-center justify-between mb-2">
-            <button onClick={() => setTela('intro')} className="p-2 -ml-2 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+            <button onClick={() => setTela('intro')} className="p-2 -ml-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
               <BackIcon />
             </button>
             <div className="text-center">
@@ -529,7 +529,7 @@ export default function DeliriumPediatricoScale({ onSaveScore }: DeliriumScalePr
               style={{ width: `${progresso}%` }}
             />
           </div>
-          <div className="flex justify-between text-xs text-slate-500 dark:text-gray-500 mt-1">
+          <div className="flex justify-between text-xs text-slate-500 dark:text-slate-500 mt-1">
             <span>{itensRespondidos} de {totalItens} respondidos</span>
             {configAtual.tipo === 'score' && <span>Total: {resultadoAvaliacao?.pontuacao || 0} pts</span>}
           </div>
@@ -573,9 +573,9 @@ export default function DeliriumPediatricoScale({ onSaveScore }: DeliriumScalePr
     const corClasses = getScaleColorClasses(configAtual.titulo);
 
     return (
-      <div className="w-full max-w-md mx-auto p-4 bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-800 dark:text-gray-100 font-sans flex flex-col items-center pt-10">
+      <div className="w-full max-w-md mx-auto p-4 bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 font-sans flex flex-col items-center pt-10">
         <div className="w-full text-left mb-6">
-          <button onClick={() => setTela('intro')} className="flex items-center text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <button onClick={() => setTela('intro')} className="flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
             <BackIcon />
             <span className="ml-2">Voltar ao Menu Principal</span>
           </button>
@@ -585,7 +585,7 @@ export default function DeliriumPediatricoScale({ onSaveScore }: DeliriumScalePr
           <div className={`absolute inset-0 rounded-full opacity-20 ${resultadoAvaliacao!.bg} blur-xl animate-pulse`}></div>
           <div className={`relative w-40 h-40 bg-white dark:bg-slate-900 rounded-full border-4 ${resultadoAvaliacao!.border} flex flex-col items-center justify-center shadow-2xl`}>
             <span className="text-5xl font-black text-slate-900 dark:text-white">{resultadoAvaliacao!.icone}</span>
-            <span className="text-xs text-slate-500 dark:text-gray-400 uppercase tracking-widest mt-1">{configAtual.titulo}</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1">{configAtual.titulo}</span>
           </div>
           <div className="absolute -bottom-4 bg-white dark:bg-slate-800 px-4 py-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-lg text-lg">
             Diagnóstico
@@ -594,17 +594,17 @@ export default function DeliriumPediatricoScale({ onSaveScore }: DeliriumScalePr
 
         <div className="text-center space-y-2 mb-8">
           <h2 className={`text-3xl font-bold ${resultadoAvaliacao!.cor}`}>{resultadoAvaliacao!.texto}</h2>
-          <p className="text-slate-500 dark:text-gray-400 max-w-xs mx-auto">{resultadoAvaliacao!.detalhe}</p>
+          <p className="text-slate-500 dark:text-slate-400 max-w-xs mx-auto">{resultadoAvaliacao!.detalhe}</p>
         </div>
 
         <div className="w-full bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 space-y-4">
-            <h3 className="font-bold text-slate-700 dark:text-gray-300 border-b border-slate-200 dark:border-slate-800 pb-2">Detalhes da Avaliação</h3>
+            <h3 className="font-bold text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800 pb-2">Detalhes da Avaliação</h3>
             {configAtual.tipo === 'score' ? (
-                <p className="text-sm text-slate-500 dark:text-gray-400">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                     Pontuação Total: <strong className="text-slate-900 dark:text-white">{resultadoAvaliacao!.pontuacao}</strong> (Corte: {configAtual.corte})
                 </p>
             ) : (
-                <p className="text-sm text-slate-500 dark:text-gray-400">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                     Critério: C1 E C2 E (C3 OU C4). Resultado: <strong className="text-slate-900 dark:text-white">{resultadoAvaliacao!.isPositivo ? 'Preenchido' : 'Não Preenchido'}</strong>
                 </p>
             )}

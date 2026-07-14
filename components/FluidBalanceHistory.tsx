@@ -60,7 +60,7 @@ const FluidBalanceHistory: React.FC<FluidBalanceHistoryProps> = ({ patientId }) 
         className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
       >
         <div className="flex items-center gap-2">
-          <DropletIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <DropletIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Histórico de Balanço Hídrico</h3>
         </div>
         <ChevronRightIcon className={`w-5 h-5 text-slate-400 transition transform ${isExpanded ? 'rotate-90' : ''}`} />
@@ -80,7 +80,7 @@ const FluidBalanceHistory: React.FC<FluidBalanceHistoryProps> = ({ patientId }) 
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
-                        Balanço: <span className={`font-bold ${record.resultado > 0 ? 'text-blue-600 dark:text-blue-400' : record.resultado < 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-400'}`}>
+                        Balanço: <span className={`font-bold ${record.resultado > 0 ? 'text-primary-600 dark:text-primary-400' : record.resultado < 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-400'}`}>
                           {record.resultado > 0 ? '+' : ''}{record.resultado?.toFixed(2) || '-'}%
                         </span>
                       </p>

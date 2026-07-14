@@ -77,7 +77,7 @@ const ComorbidadeComponent: React.FC<ComorbidadeComponentProps> = ({ patientId, 
           <span className="text-lg">🏥</span>
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Comorbidades</h3>
           {comorbidades.length > 0 && (
-            <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+            <span className="text-sm font-medium text-primary-600 dark:text-primary-400">
               ({comorbidades.length})
             </span>
           )}
@@ -93,7 +93,7 @@ const ComorbidadeComponent: React.FC<ComorbidadeComponentProps> = ({ patientId, 
             return (
               <div key={index}>
                 <span
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border border-blue-400 dark:border-blue-500 text-slate-700 dark:text-slate-200 bg-transparent"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border border-primary-400 dark:border-primary-500 text-slate-700 dark:text-slate-200 bg-transparent"
                 >
                   {comorbidade}
                   <button
@@ -136,12 +136,12 @@ const ComorbidadeComponent: React.FC<ComorbidadeComponentProps> = ({ patientId, 
                 onChange={(e) => setCurrentInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Digite uma comorbidade e clique em adicionar..."
-                className="flex-1 min-w-0 px-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-100"
+                className="flex-1 min-w-0 px-4 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-slate-800 dark:text-slate-100"
               />
               <button
                 onClick={handleAddComorbidade}
                 disabled={!currentInput.trim()}
-                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition flex items-center gap-1"
+                className="bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition flex items-center gap-1"
               >
                 <PlusIcon className="w-4 h-4" />
                 Adicionar

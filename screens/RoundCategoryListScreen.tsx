@@ -33,11 +33,11 @@ export const RoundCategoryListScreen: React.FC = () => {
                         key={category.id}
                         to={`/patient/${patientId}/round/category/${category.id}`}
                         className={`p-4 rounded-xl shadow-sm text-center font-semibold transition flex flex-col items-center justify-center gap-2 ${isCompleted
-                            ? 'bg-blue-500 text-white hover:bg-blue-600'
+                            ? 'bg-primary-500 text-white hover:bg-primary-600'
                             : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800'
                             }`}
                     >
-                        {category.icon && <category.icon className={`w-8 h-8 ${isCompleted ? 'text-white' : 'text-blue-600 dark:text-blue-400'}`} />}
+                        {category.icon && <category.icon className={`w-8 h-8 ${isCompleted ? 'text-white' : 'text-primary-600 dark:text-primary-400'}`} />}
                         <span className={isCompleted ? 'text-white' : 'text-slate-700 dark:text-slate-300'}>{category.name}</span>
                     </Link>
                 )

@@ -41,7 +41,7 @@ const GRAVIDADE_LABEL: Record<string, string> = {
 };
 
 const GRAVIDADE_COLOR: Record<string, string> = {
-  quase_evento:  'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+  quase_evento:  'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300',
   sem_dano:      'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
   dano_leve:     'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300',
   dano_moderado: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',

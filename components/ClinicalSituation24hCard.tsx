@@ -139,7 +139,7 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
                 type="button"
                 onClick={() => setEditing(true)}
                 disabled={saving}
-                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition disabled:opacity-60"
+                className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-semibold transition disabled:opacity-60"
               >
                 Editar
               </button>
@@ -159,7 +159,7 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
                 type="button"
                 onClick={handleSave}
                 disabled={saving || !userId}
-                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition disabled:opacity-60"
+                className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-semibold transition disabled:opacity-60"
               >
                 {saving ? 'Salvando...' : 'Salvar'}
               </button>
@@ -199,7 +199,7 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
               type="button"
               onClick={handleSave}
               disabled={saving || loading || !userId}
-              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition disabled:opacity-60"
+              className="px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-semibold transition disabled:opacity-60"
             >
               {saving ? 'Salvando...' : 'Salvar'}
             </button>
@@ -214,7 +214,7 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
         readOnly={!!activeNote && !editing}
         placeholder="Digite aqui a evolução/situação clínica das últimas 24 horas..."
         rows={4}
-        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-200 disabled:opacity-70"
+        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-800 dark:text-slate-200 disabled:opacity-70"
       />
 
       {loading && (

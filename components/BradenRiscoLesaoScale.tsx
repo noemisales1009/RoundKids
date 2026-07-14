@@ -177,13 +177,13 @@ const escalasConfig = {
         opcoes: scoreOptions1_4,
         interpreta: (score: number) => interpretarBraden(score, 'Braden Q Ampliada'),
         cores: { 
-            bg: 'bg-teal-600 dark:bg-teal-600', 
-            hover: 'hover:bg-teal-500 dark:hover:bg-teal-500', 
-            text: 'text-teal-300 dark:text-teal-300', 
-            bgProgress: 'bg-teal-500 dark:bg-teal-500', 
-            bgBase: 'bg-teal-700 dark:bg-teal-700', 
-            hoverBase: 'hover:bg-teal-600 dark:hover:bg-teal-600',
-            border: 'border-teal-500 dark:border-teal-500'
+            bg: 'bg-primary-600 dark:bg-primary-600', 
+            hover: 'hover:bg-primary-500 dark:hover:bg-primary-500', 
+            text: 'text-primary-300 dark:text-primary-300', 
+            bgProgress: 'bg-primary-500 dark:bg-primary-500', 
+            bgBase: 'bg-primary-700 dark:bg-primary-700', 
+            hoverBase: 'hover:bg-primary-600 dark:hover:bg-primary-600',
+            border: 'border-primary-500 dark:border-primary-500'
         },
         itens: [
             { 
@@ -276,14 +276,14 @@ const BradenQuestionCard = ({ item, valor, onChange, theme }: any) => {
             id={item.id}
             className={`p-4 rounded-xl shadow-md mb-3 transition-all duration-300
             ${isSelected
-                ? theme === 'light' ? 'bg-blue-50 border border-blue-300' : 'bg-indigo-900/30 border border-indigo-600'
-                : theme === 'light' ? 'bg-white border border-gray-300 hover:border-gray-400' : 'bg-slate-800 border border-slate-700 hover:border-slate-600'}
+                ? theme === 'light' ? 'bg-primary-50 border border-primary-300' : 'bg-primary-900/30 border border-primary-600'
+                : theme === 'light' ? 'bg-white border border-slate-300 hover:border-slate-400' : 'bg-slate-800 border border-slate-700 hover:border-slate-600'}
         `}
         >
             <div className="mb-4 flex justify-between items-start">
                 <div>
-                    <label className={`block text-base font-bold ${theme === 'light' ? 'text-slate-900' : 'text-gray-100'}`}>{item.label}</label>
-                    <p className={`text-sm mt-1 ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>{item.desc}</p>
+                    <label className={`block text-base font-bold ${theme === 'light' ? 'text-slate-900' : 'text-slate-100'}`}>{item.label}</label>
+                    <p className={`text-sm mt-1 ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>{item.desc}</p>
                 </div>
                 {isSelected && <CheckIcon />}
             </div>
@@ -292,10 +292,10 @@ const BradenQuestionCard = ({ item, valor, onChange, theme }: any) => {
                 <select
                     value={valor === undefined || valor === null ? '' : valor}
                     onChange={(e) => onChange(parseInt(e.target.value))}
-                    className={`w-full p-3 pr-12 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors
+                    className={`w-full p-3 pr-12 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors
                         ${theme === 'light' 
-                            ? 'bg-gray-50 border border-gray-300 text-slate-900' 
-                            : 'bg-slate-900 border border-slate-700 text-gray-100'}`}
+                            ? 'bg-slate-50 border border-slate-300 text-slate-900' 
+                            : 'bg-slate-900 border border-slate-700 text-slate-100'}`}
                 >
                     <option value="" disabled>
                         Pontuação: 1 a {item.pontos.length}
@@ -309,7 +309,7 @@ const BradenQuestionCard = ({ item, valor, onChange, theme }: any) => {
                         </option>
                     ))}
                 </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
                     <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                         <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                     </svg>
@@ -342,10 +342,10 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
     const corClasses = configAtual ? escalasConfig[escalaAtiva!].cores : { bg: '', hover: '', text: '', bgProgress: '', bgBase: '', hoverBase: '', border: '' };
     
     // Classes dinâmicas baseadas no tema
-    const bgDinamic = theme === 'light' ? 'bg-gray-50' : 'bg-slate-950';
+    const bgDinamic = theme === 'light' ? 'bg-slate-50' : 'bg-slate-950';
     const bgFormDinamic = theme === 'light' ? 'bg-white' : 'bg-slate-800';
-    const textDinamic = theme === 'light' ? 'text-slate-900' : 'text-gray-100';
-    const borderDinamic = theme === 'light' ? 'border-gray-200' : 'border-slate-700';
+    const textDinamic = theme === 'light' ? 'text-slate-900' : 'text-slate-100';
+    const borderDinamic = theme === 'light' ? 'border-slate-200' : 'border-slate-700';
 
     // CÁLCULO DE PROGRESSO
     const itensRespondidos = configAtual ? Object.keys(respostas).filter(key => respostas[key] !== undefined && respostas[key] !== null).length : 0;
@@ -465,7 +465,7 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                 </header>
 
                 <div className={`${bgFormDinamic} p-6 rounded-2xl border ${borderDinamic} shadow-xl mb-6 space-y-3`}>
-                    <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 border-b border-gray-700 pb-2">SELECIONE A ESCALA</h2>
+                    <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-700 pb-2">SELECIONE A ESCALA</h2>
 
                     {/* Braden (Adulto > 8 anos) */}
                     <button
@@ -492,11 +492,11 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                     {/* Braden Q Ampliada (UTI Neo e Pediátrica) */}
                     <button
                         onClick={() => iniciarAvaliacao('bradenq_ampliada')}
-                        className="w-full bg-teal-700 hover:bg-teal-600 text-white font-bold py-3 px-6 rounded-xl shadow-md transition text-left flex justify-between items-center"
+                        className="w-full bg-primary-700 hover:bg-primary-600 text-white font-bold py-3 px-6 rounded-xl shadow-md transition text-left flex justify-between items-center"
                     >
                         <div>
                             <span className="block font-bold">{escalasConfig.bradenq_ampliada.titulo}</span>
-                            <span className="text-xs text-teal-200">{escalasConfig.bradenq_ampliada.nomeCompleto}</span>
+                            <span className="text-xs text-primary-200">{escalasConfig.bradenq_ampliada.nomeCompleto}</span>
                         </div>
                     </button>
                 </div>
@@ -513,7 +513,7 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                 {/* Header Fixo */}
                 <div className={`sticky top-0 z-10 ${bgDinamic}/95 backdrop-blur-sm pb-4 pt-2 border-b ${borderDinamic} mb-4`}>
                     <div className="flex items-center justify-between mb-2">
-                        <button onClick={() => setTela('intro')} className="p-2 -ml-2 text-gray-400 hover:text-white rounded-full hover:bg-slate-800">
+                        <button onClick={() => setTela('intro')} className="p-2 -ml-2 text-slate-400 hover:text-white rounded-full hover:bg-slate-800">
                             <BackIcon />
                         </button>
                         <div className="text-center">
@@ -524,13 +524,13 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                     </div>
 
                     {/* Barra de Progresso */}
-                    <div className={`w-full ${theme === 'light' ? 'bg-gray-200' : 'bg-slate-800'} h-2 rounded-full overflow-hidden`}>
+                    <div className={`w-full ${theme === 'light' ? 'bg-slate-200' : 'bg-slate-800'} h-2 rounded-full overflow-hidden`}>
                         <div
                             className={`${corClasses.bgProgress} h-full transition-all duration-500 ease-out`}
                             style={{ width: `${progresso}%` }}
                         />
                     </div>
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <div className="flex justify-between text-xs text-slate-500 mt-1">
                         <span>{itensRespondidos} de {configAtual.itens.length} respondidos</span>
                         <span>Pontos: {resultadoAvaliacao?.pontuacao || 0}</span>
                     </div>
@@ -570,7 +570,7 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
         return (
             <div className={`w-full max-w-md mx-auto p-4 ${bgDinamic} min-h-screen ${textDinamic} font-sans flex flex-col items-center pt-10`}>
                 <div className="w-full text-left mb-6">
-                    <button onClick={() => setTela('intro')} className="flex items-center text-gray-400 hover:text-white transition-colors">
+                    <button onClick={() => setTela('intro')} className="flex items-center text-slate-400 hover:text-white transition-colors">
                         <BackIcon />
                         <span className="ml-2">Voltar ao Menu Principal</span>
                     </button>
@@ -581,19 +581,19 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                     <div className={`absolute inset-0 rounded-full opacity-20 ${resultadoAvaliacao.bg} blur-xl animate-pulse w-48 h-48 mx-auto`}></div>
                     <div className={`relative w-40 h-40 ${corClasses.bgBase} rounded-full border-4 ${resultadoAvaliacao.border} flex flex-col items-center justify-center shadow-2xl`}>
                         <span className="text-6xl font-black text-white">{resultadoAvaliacao.pontuacao}</span>
-                        <span className="text-xs text-gray-300 uppercase tracking-widest mt-1">{configAtual.titulo}</span>
+                        <span className="text-xs text-slate-300 uppercase tracking-widest mt-1">{configAtual.titulo}</span>
                     </div>
                 </div>
 
                 <div className="text-center mb-2 -mt-6">
-                    <span className="inline-block bg-slate-800 px-4 py-1 rounded-full border border-slate-700 shadow-lg text-sm font-semibold text-gray-300">
+                    <span className="inline-block bg-slate-800 px-4 py-1 rounded-full border border-slate-700 shadow-lg text-sm font-semibold text-slate-300">
                         Resultado
                     </span>
                 </div>
 
                 <div className="text-center space-y-2 mb-8 w-full">
                     <h2 className={`text-4xl font-bold ${resultadoAvaliacao.cor}`}>{resultadoAvaliacao.texto}</h2>
-                    <p className="text-gray-400 text-sm">{resultadoAvaliacao.detalhe}</p>
+                    <p className="text-slate-400 text-sm">{resultadoAvaliacao.detalhe}</p>
                 </div>
 
                 {/* Tabela de Classificação de Risco */}
@@ -601,19 +601,19 @@ export default function BradenRiscoLesaoScale({ onSaveScore, patientId }: Braden
                     <h3 className={`font-bold ${textDinamic} border-b ${borderDinamic} pb-3 text-sm`}>Classificação de Risco {configAtual.titulo}</h3>
                     {configAtual.titulo === 'Braden' && (
                         <ul className="text-sm space-y-2">
-                            <li className={`flex justify-between items-center text-green-400 ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">19–23</span><span>Sem risco</span></li>
-                            <li className={`flex justify-between items-center text-yellow-400 ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">15–18</span><span>Baixo risco</span></li>
-                            <li className={`flex justify-between items-center text-orange-400 ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">13–14</span><span>Risco moderado</span></li>
-                            <li className={`flex justify-between items-center text-red-400 ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">10–12</span><span>Alto risco</span></li>
-                            <li className={`flex justify-between items-center text-red-600 ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">≤ 9</span><span>Risco muito alto</span></li>
+                            <li className={`flex justify-between items-center text-green-400 ${theme === 'light' ? 'hover:bg-slate-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">19–23</span><span>Sem risco</span></li>
+                            <li className={`flex justify-between items-center text-yellow-400 ${theme === 'light' ? 'hover:bg-slate-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">15–18</span><span>Baixo risco</span></li>
+                            <li className={`flex justify-between items-center text-orange-400 ${theme === 'light' ? 'hover:bg-slate-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">13–14</span><span>Risco moderado</span></li>
+                            <li className={`flex justify-between items-center text-red-400 ${theme === 'light' ? 'hover:bg-slate-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">10–12</span><span>Alto risco</span></li>
+                            <li className={`flex justify-between items-center text-red-600 ${theme === 'light' ? 'hover:bg-slate-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">≤ 9</span><span>Risco muito alto</span></li>
                         </ul>
                     )}
                     {configAtual.titulo.includes('Braden Q') && (
                         <ul className="text-sm space-y-2">
-                            <li className={`flex justify-between items-center text-green-400 ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">20–28</span><span>Sem risco</span></li>
-                            <li className={`flex justify-between items-center text-yellow-400 ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">16–19</span><span>Risco moderado</span></li>
-                            <li className={`flex justify-between items-center text-red-400 ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">13–15</span><span>Risco alto</span></li>
-                            <li className={`flex justify-between items-center text-red-600 ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">≤ 12</span><span>Risco muito alto</span></li>
+                            <li className={`flex justify-between items-center text-green-400 ${theme === 'light' ? 'hover:bg-slate-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">20–28</span><span>Sem risco</span></li>
+                            <li className={`flex justify-between items-center text-yellow-400 ${theme === 'light' ? 'hover:bg-slate-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">16–19</span><span>Risco moderado</span></li>
+                            <li className={`flex justify-between items-center text-red-400 ${theme === 'light' ? 'hover:bg-slate-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">13–15</span><span>Risco alto</span></li>
+                            <li className={`flex justify-between items-center text-red-600 ${theme === 'light' ? 'hover:bg-slate-100' : 'hover:bg-slate-800/50'} px-2 py-1 rounded`}><span className="font-semibold">≤ 12</span><span>Risco muito alto</span></li>
                         </ul>
                     )}
                 </div>

@@ -81,12 +81,12 @@ export default function ConsciousnessCalculator({ patientId }: ConsciousnessCalc
     } 
     
     if (escalaAtiva === 'crsr') {
-      return { texto: 'Interpretação CRS-R', cor: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500', note: 'Quanto maior a pontuação, maior o nível de consciência.' };
+      return { texto: 'Interpretação CRS-R', cor: 'text-primary-500', bg: 'bg-primary-500/10', border: 'border-primary-500', note: 'Quanto maior a pontuação, maior o nível de consciência.' };
     }
 
     if (escalaAtiva === 'jfk') {
       if (score > 24) return { texto: 'Consciência Consistente', cor: 'text-green-500', bg: 'bg-green-500/10', border: 'border-green-500' };
-      if (score > 18) return { texto: 'Consciência Funcional Parcial', cor: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500' };
+      if (score > 18) return { texto: 'Consciência Funcional Parcial', cor: 'text-primary-500', bg: 'bg-primary-500/10', border: 'border-primary-500' };
       if (score >= 9) return { texto: 'Estado Minimamente Consciente', cor: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500' };
       return { texto: 'Estado Vegetativo / Ausência de Consciência', cor: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500' };
     }
@@ -156,7 +156,7 @@ export default function ConsciousnessCalculator({ patientId }: ConsciousnessCalc
                     setRespostas({});
                     setTela('form');
                   }}
-                  className="w-full p-4 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 hover:border-blue-500 hover:bg-blue-500/10 transition-all text-left"
+                  className="w-full p-4 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 hover:border-primary-500 hover:bg-primary-500/10 transition-all text-left"
                 >
                   <h3 className="font-bold text-slate-900 dark:text-white">{conf.titulo}</h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{conf.nomeCompleto}</p>
@@ -171,17 +171,17 @@ export default function ConsciousnessCalculator({ patientId }: ConsciousnessCalc
         <div className="space-y-4 animate-in fade-in duration-500">
           <div className="flex justify-between items-end mb-4">
             <div>
-              <span className="text-[10px] font-bold text-blue-400 uppercase">{configAtual.titulo}</span>
+              <span className="text-[10px] font-bold text-primary-400 uppercase">{configAtual.titulo}</span>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{respondidosCount}/{totalItens} Itens</p>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Score:</span>
-              <span className="text-3xl font-bold text-blue-400">{pontuacaoTotal}</span>
+              <span className="text-3xl font-bold text-primary-400">{pontuacaoTotal}</span>
             </div>
           </div>
           
           <div className="h-1 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-6">
-            <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${progresso}%` }} />
+            <div className="h-full bg-primary-500 transition-all duration-500" style={{ width: `${progresso}%` }} />
           </div>
 
           {configAtual.dominios.map((d) => (
@@ -203,7 +203,7 @@ export default function ConsciousnessCalculator({ patientId }: ConsciousnessCalc
             }}
             className={`w-full py-4 rounded-lg font-bold transition-all mt-6
               ${respondidosCount === totalItens
-                ? 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
+                ? 'bg-primary-600 text-white hover:bg-primary-700 active:scale-95'
                 : 'bg-slate-200 dark:bg-slate-700 text-slate-500 cursor-not-allowed'
               }`}
           >
@@ -228,7 +228,7 @@ export default function ConsciousnessCalculator({ patientId }: ConsciousnessCalc
             <button
               onClick={salvarAvaliacao}
               disabled={isSaving || saveStatus === 'success'}
-              className="w-full py-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-all"
+              className="w-full py-4 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-all"
             >
               {isSaving ? 'Salvando...' : saveStatus === 'success' ? 'Registrado!' : 'Salvar no Histórico'}
             </button>
@@ -265,7 +265,7 @@ function SelectDropdown({ id, label, opcoes, valor, onSelect }: any) {
         <select
           value={valor ?? ''}
           onChange={(e) => onSelect(Number(e.target.value))}
-          className="w-full p-3 rounded text-sm font-medium bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none appearance-none pr-10"
+          className="w-full p-3 rounded text-sm font-medium bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:outline-none appearance-none pr-10"
         >
           <option value="">Selecione...</option>
           {opcoes.map((opt: any) => (

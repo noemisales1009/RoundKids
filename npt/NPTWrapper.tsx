@@ -23,7 +23,7 @@ const NPTWrapper: React.FC<NPTWrapperProps> = ({ initialPatient }) => {
           onClick={() => setActiveTab('calculator')}
           className={`px-4 py-2 font-semibold text-sm transition-colors ${
             activeTab === 'calculator'
-              ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
+              ? 'border-b-2 border-primary-600 text-primary-600 dark:text-primary-400'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
           }`}
         >
@@ -33,7 +33,7 @@ const NPTWrapper: React.FC<NPTWrapperProps> = ({ initialPatient }) => {
           onClick={() => setActiveTab('history')}
           className={`px-4 py-2 font-semibold text-sm transition-colors ${
             activeTab === 'history'
-              ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400'
+              ? 'border-b-2 border-primary-600 text-primary-600 dark:text-primary-400'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
           }`}
         >

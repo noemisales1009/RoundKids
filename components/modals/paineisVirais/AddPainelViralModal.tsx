@@ -228,7 +228,7 @@ export const AddPainelViralModal: React.FC<{
                             value={categoria}
                             onChange={(e) => handleCategoriaChange(e.target.value)}
                             required
-                            className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 dark:text-slate-200"
+                            className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
                         >
                             <option value="">Selecione a categoria...</option>
                             {Object.keys(PAINEIS_POR_CATEGORIA).map(cat => (
@@ -246,7 +246,7 @@ export const AddPainelViralModal: React.FC<{
                                 value={painel}
                                 onChange={(e) => setPainel(e.target.value)}
                                 required
-                                className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 dark:text-slate-200"
+                                className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
                             >
                                 <option value="">Selecione o painel...</option>
                                 {PAINEIS_POR_CATEGORIA[categoria].map(p => (
@@ -264,7 +264,7 @@ export const AddPainelViralModal: React.FC<{
                             type="date"
                             value={dataColeta}
                             onChange={(e) => setDataColeta(e.target.value)}
-                            className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 dark:text-slate-200"
+                            className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
                         />
                     </div>
 
@@ -278,18 +278,18 @@ export const AddPainelViralModal: React.FC<{
                             <div className="mt-1 border border-slate-300 dark:border-slate-700 rounded-md overflow-hidden divide-y divide-slate-200 dark:divide-slate-700 max-h-40 overflow-y-auto">
                                 <div
                                     onClick={() => { setSelectedDiagnosticoId(''); setSistema(''); setSistemaOutros(''); }}
-                                    className={`flex items-center gap-2 px-3 py-2 cursor-pointer text-sm ${selectedDiagnosticoId === '' ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+                                    className={`flex items-center gap-2 px-3 py-2 cursor-pointer text-sm ${selectedDiagnosticoId === '' ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
                                 >
-                                    <span className={`w-3 h-3 rounded-full border-2 shrink-0 ${selectedDiagnosticoId === '' ? 'border-cyan-500 bg-cyan-500' : 'border-slate-400'}`} />
+                                    <span className={`w-3 h-3 rounded-full border-2 shrink-0 ${selectedDiagnosticoId === '' ? 'border-primary-500 bg-primary-500' : 'border-slate-400'}`} />
                                     Nenhum
                                 </div>
                                 {diagnosticosAtivos.map(d => (
                                     <div
                                         key={d.id}
                                         onClick={() => { setSelectedDiagnosticoId(d.id); if (d.sistema) { if (ALERT_SYSTEMS.includes(d.sistema)) { setSistema(d.sistema); setSistemaOutros(''); } else { setSistema('Outros'); setSistemaOutros(d.sistema); } } }}
-                                        className={`flex items-center gap-2 px-3 py-2 cursor-pointer text-sm ${selectedDiagnosticoId === d.id ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+                                        className={`flex items-center gap-2 px-3 py-2 cursor-pointer text-sm ${selectedDiagnosticoId === d.id ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
                                     >
-                                        <span className={`w-3 h-3 rounded-full border-2 shrink-0 ${selectedDiagnosticoId === d.id ? 'border-cyan-500 bg-cyan-500' : 'border-slate-400'}`} />
+                                        <span className={`w-3 h-3 rounded-full border-2 shrink-0 ${selectedDiagnosticoId === d.id ? 'border-primary-500 bg-primary-500' : 'border-slate-400'}`} />
                                         <span>
                                             {d.label}
                                             {d.created_at && (
@@ -311,7 +311,7 @@ export const AddPainelViralModal: React.FC<{
                         <select
                             value={sistema}
                             onChange={(e) => setSistema(e.target.value)}
-                            className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 dark:text-slate-200"
+                            className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
                         >
                             <option value="">Selecione...</option>
                             {ALERT_SYSTEMS.map(s => (
@@ -324,7 +324,7 @@ export const AddPainelViralModal: React.FC<{
                                 value={sistemaOutros}
                                 onChange={(e) => setSistemaOutros(e.target.value)}
                                 placeholder="Especifique o sistema..."
-                                className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 dark:text-slate-200"
+                                className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
                             />
                         )}
                     </div>
@@ -338,7 +338,7 @@ export const AddPainelViralModal: React.FC<{
                             onChange={(e) => setObservacao(e.target.value)}
                             rows={2}
                             placeholder="Digite aqui..."
-                            className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 text-slate-800 dark:text-slate-200 resize-none"
+                            className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200 resize-none"
                         />
                     </div>
 
@@ -354,7 +354,7 @@ export const AddPainelViralModal: React.FC<{
                         <button
                             type="submit"
                             disabled={loading}
-                            className="flex-1 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md transition disabled:opacity-50"
+                            className="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md transition disabled:opacity-50"
                         >
                             {loading ? 'Salvando...' : 'Salvar'}
                         </button>

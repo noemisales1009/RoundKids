@@ -65,12 +65,12 @@ const colorConfig = {
     light: 'bg-pink-50 dark:bg-slate-700',
   },
   cyan: {
-    bg: 'bg-cyan-600 dark:bg-cyan-700',
-    hover: 'hover:bg-cyan-500 dark:hover:bg-cyan-600',
-    text: 'text-cyan-600 dark:text-cyan-400',
-    border: 'border-cyan-500 dark:border-cyan-600',
-    progress: 'bg-cyan-500 dark:bg-cyan-600',
-    light: 'bg-cyan-50 dark:bg-slate-700',
+    bg: 'bg-primary-600 dark:bg-primary-700',
+    hover: 'hover:bg-primary-500 dark:hover:bg-primary-600',
+    text: 'text-primary-600 dark:text-primary-400',
+    border: 'border-primary-500 dark:border-primary-600',
+    progress: 'bg-primary-500 dark:bg-primary-600',
+    light: 'bg-primary-50 dark:bg-slate-700',
   },
 };
 
@@ -269,7 +269,7 @@ export const AbstinenceScale: React.FC<ScaleProps> = ({ onSaveScore }) => {
             className={`w-full py-3 px-4 rounded-lg font-bold text-white text-sm sm:text-base transition-all ${colorConfig.cyan.bg} ${colorConfig.cyan.hover}`}
           >
             {escalasConfig.wat1.titulo}
-            <div className={`text-xs mt-1 ${isDark ? 'text-cyan-200' : 'text-cyan-100'}`}>
+            <div className={`text-xs mt-1 ${isDark ? 'text-primary-200' : 'text-primary-100'}`}>
               {escalasConfig.wat1.idade}
             </div>
           </button>

@@ -1793,7 +1793,7 @@ const PatientHistoryScreen: React.FC = () => {
                     <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-slate-800 dark:text-slate-200">Filtros</h3>
                         {activeFilterCount > 0 && (
-                            <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full">
+                            <span className="px-2 py-0.5 bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 text-xs font-medium rounded-full">
                                 {activeFilterCount} ativo{activeFilterCount !== 1 ? 's' : ''}
                             </span>
                         )}
@@ -1816,7 +1816,7 @@ const PatientHistoryScreen: React.FC = () => {
                                 <button
                                     key={label}
                                     onClick={() => applyDateShortcut(days)}
-                                    className="px-3 py-1 text-xs bg-slate-100 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-slate-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300 rounded-full transition"
+                                    className="px-3 py-1 text-xs bg-slate-100 dark:bg-slate-800 hover:bg-primary-100 dark:hover:bg-primary-900/50 text-slate-700 dark:text-slate-300 hover:text-primary-700 dark:hover:text-primary-300 rounded-full transition"
                                 >
                                     {label}
                                 </button>
@@ -1831,7 +1831,7 @@ const PatientHistoryScreen: React.FC = () => {
                                     type="date"
                                     value={dataInicio}
                                     onChange={(e) => setDataInicio(e.target.value)}
-                                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                                 />
                             </div>
                             <div>
@@ -1840,7 +1840,7 @@ const PatientHistoryScreen: React.FC = () => {
                                     type="date"
                                     value={dataFinal}
                                     onChange={(e) => setDataFinal(e.target.value)}
-                                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                                 />
                             </div>
                         </div>
@@ -1850,7 +1850,7 @@ const PatientHistoryScreen: React.FC = () => {
                             <div className="flex items-center justify-between">
                                 <label className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Categorias</label>
                                 <div className="flex items-center gap-2 text-xs">
-                                    <button onClick={selectAllCategories} className="text-blue-600 dark:text-blue-400 hover:underline">Selecionar tudo</button>
+                                    <button onClick={selectAllCategories} className="text-primary-600 dark:text-primary-400 hover:underline">Selecionar tudo</button>
                                     <span className="text-slate-300 dark:text-slate-600">|</span>
                                     <button onClick={() => setSelectedCategories(new Set())} className="text-slate-500 dark:text-slate-400 hover:underline">Limpar</button>
                                 </div>
@@ -1868,8 +1868,8 @@ const PatientHistoryScreen: React.FC = () => {
                                                 onClick={() => toggleCategory(category)}
                                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 active:scale-95 ${
                                                     active
-                                                        ? 'bg-blue-500 border-blue-500 text-white shadow-md scale-105'
-                                                        : 'bg-transparent border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 hover:scale-105'
+                                                        ? 'bg-primary-500 border-primary-500 text-white shadow-md scale-105'
+                                                        : 'bg-transparent border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:border-primary-400 hover:text-primary-600 dark:hover:text-primary-400 hover:scale-105'
                                                 }`}
                                             >
                                                 {Icon && <Icon className="w-3 h-3 shrink-0" />}
@@ -1908,7 +1908,7 @@ const PatientHistoryScreen: React.FC = () => {
                                 <p className="text-xs text-slate-500 dark:text-slate-400">
                                     <span className="font-medium text-slate-700 dark:text-slate-300">Filtros ativos:</span>{' '}
                                     {Array.from(selectedCategories).join(', ')}{' · '}
-                                    <button onClick={() => setSelectedCategories(new Set())} className="text-blue-600 dark:text-blue-400 hover:underline">Limpar</button>
+                                    <button onClick={() => setSelectedCategories(new Set())} className="text-primary-600 dark:text-primary-400 hover:underline">Limpar</button>
                                 </p>
                             )}
                         </div>
@@ -1923,7 +1923,7 @@ const PatientHistoryScreen: React.FC = () => {
                             </button>
                             <button
                                 onClick={handleGeneratePdf}
-                                className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
+                                className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
                             >
                                 <FileTextIcon className="w-5 h-5" />
                                 Gerar PDF
@@ -1979,8 +1979,8 @@ const PatientHistoryScreen: React.FC = () => {
                                         const canReactivate = event.archiveInfo && /conclu[ií]do/i.test(event.archiveInfo.reason || '');
                                         return (
                                         <div key={index} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                                            <div className="shrink-0 w-8 h-8 flex items-center justify-center bg-blue-100 dark:bg-blue-900/80 rounded-full mt-1">
-                                                <event.icon className="w-5 h-5 text-blue-600 dark:text-blue-300" />
+                                            <div className="shrink-0 w-8 h-8 flex items-center justify-center bg-primary-100 dark:bg-primary-900/80 rounded-full mt-1">
+                                                <event.icon className="w-5 h-5 text-primary-600 dark:text-primary-300" />
                                             </div>
                                             <div className="flex-1">
                                                 <p className="text-slate-800 dark:text-slate-200 text-sm whitespace-pre-wrap">{event.description}</p>

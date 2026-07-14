@@ -61,7 +61,7 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
                                     <option value="">Selecione...</option>
                                     {ALERT_SYSTEMS.map(s => <option key={s} value={s}>{s}</option>)}
                                 </select>
-                                <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
+                                <ChevronDownIcon className="absolute right-3 top-3 text-slate-400 pointer-events-none w-4 h-4" />
                             </div>
                             {sistema === 'Outros' && (
                                 <input
@@ -81,7 +81,7 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
                                     <option value="" disabled>Selecione...</option>
                                     {RESPONSIBLES.map(r => <option key={r} value={r}>{r}</option>)}
                                 </select>
-                                <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
+                                <ChevronDownIcon className="absolute right-3 top-3 text-slate-400 pointer-events-none w-4 h-4" />
                             </div>
                         </div>
 
@@ -92,7 +92,7 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
                                     <option value="" disabled>Selecione...</option>
                                     {ALERT_DEADLINES.map(d => <option key={d} value={d}>{d}</option>)}
                                 </select>
-                                <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
+                                <ChevronDownIcon className="absolute right-3 top-3 text-slate-400 pointer-events-none w-4 h-4" />
                             </div>
                         </div>
 

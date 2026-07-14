@@ -9,11 +9,11 @@ const escalasConfig = {
     subtitulo: 'Lactentes (30 dias a 2 anos)',
     maxScore: 14,
     cores: { 
-      bg: 'bg-blue-600', 
-      hover: 'hover:bg-blue-500', 
-      text: 'text-blue-600 dark:text-blue-400', 
-      bgProgress: 'bg-blue-500', 
-      bgBase: 'bg-blue-700' 
+      bg: 'bg-primary-600', 
+      hover: 'hover:bg-primary-500', 
+      text: 'text-primary-600 dark:text-primary-400', 
+      bgProgress: 'bg-primary-500', 
+      bgBase: 'bg-primary-700' 
     },
     dominios: [
       { id: 'sibilos', label: 'Sibilos', ranges: ['Ausente', 'Expiratório', 'Contínuos', 'Insp + Exp'] },
@@ -67,9 +67,9 @@ const InfoIcon = () => (
 );
 
 const ReferenceTable = () => (
-  <div className="bg-white dark:bg-slate-900/80 p-4 rounded-xl border border-slate-200 dark:border-slate-700 text-[10px] text-slate-600 dark:text-gray-300 space-y-3 mb-4 animate-in fade-in duration-300 shadow-sm">
+  <div className="bg-white dark:bg-slate-900/80 p-4 rounded-xl border border-slate-200 dark:border-slate-700 text-[10px] text-slate-600 dark:text-slate-300 space-y-3 mb-4 animate-in fade-in duration-300 shadow-sm">
     <div>
-      <p className="font-bold text-blue-600 dark:text-blue-400 border-b border-slate-200 dark:border-slate-700 pb-1 mb-1 uppercase">Frequência Respiratória Normal</p>
+      <p className="font-bold text-primary-600 dark:text-primary-400 border-b border-slate-200 dark:border-slate-700 pb-1 mb-1 uppercase">Frequência Respiratória Normal</p>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1">
         <span>RN: 40-60 irpm</span> <span>Bebês 1-2m: 30-53</span>
         <span>1-2 anos: 22-37</span> <span>3-5 anos: 20-28</span>
@@ -91,12 +91,12 @@ const QuestionCard = ({ item, valor, onChange }: any) => {
   const isSelected = valor !== undefined && valor !== null && valor !== '';
 
   return (
-    <div className={`p-4 rounded-xl shadow-sm mb-3 transition-all border-l-4 ${isSelected ? 'bg-slate-100 dark:bg-slate-700 border-blue-500' : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}>
-      <label className="block text-sm font-bold text-slate-800 dark:text-gray-100 mb-2">{item.label}</label>
+    <div className={`p-4 rounded-xl shadow-sm mb-3 transition-all border-l-4 ${isSelected ? 'bg-slate-100 dark:bg-slate-700 border-primary-500' : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}>
+      <label className="block text-sm font-bold text-slate-800 dark:text-slate-100 mb-2">{item.label}</label>
       <select
         value={valor === undefined ? '' : valor}
         onChange={(e) => onChange(parseInt(e.target.value))}
-        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 transition-colors"
+        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 transition-colors"
       >
         <option value="" disabled>Escolha uma opção...</option>
         {item.ranges.map((desc: string, index: number) => (
@@ -159,12 +159,12 @@ export const RespiratoryCalculator: React.FC<Props> = ({ patientId, onClose }) =
   if (tela === 'intro') {
     return (
       <div className="w-full bg-slate-50 dark:bg-slate-900 rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 transition-colors">
-        <button onClick={onClose} className="flex items-center text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white mb-6 transition">
+        <button onClick={onClose} className="flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white mb-6 transition">
           <ChevronLeftIcon /> Voltar ao Prontuário
         </button>
         
         <h2 className="text-xl font-black text-slate-900 dark:text-white mb-1 tracking-tight">Cálculo Respiratório</h2>
-        <p className="text-slate-500 dark:text-gray-400 text-sm mb-8">Baseado no Protocolo de Urgência Pediátrica.</p>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mb-8">Baseado no Protocolo de Urgência Pediátrica.</p>
 
         <div className="space-y-4">
           {Object.values(escalasConfig).map((esc) => (
@@ -175,10 +175,10 @@ export const RespiratoryCalculator: React.FC<Props> = ({ patientId, onClose }) =
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <h4 className="font-bold text-slate-800 dark:text-gray-100 mb-1">{esc.titulo}</h4>
-                  <p className="text-[11px] text-slate-500 dark:text-gray-500 leading-relaxed uppercase tracking-wider font-semibold">{esc.subtitulo}</p>
+                  <h4 className="font-bold text-slate-800 dark:text-slate-100 mb-1">{esc.titulo}</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-500 leading-relaxed uppercase tracking-wider font-semibold">{esc.subtitulo}</p>
                 </div>
-                <div className={`w-3 h-3 rounded-full mt-1 ${esc.cores.bgProgress} shadow-lg shadow-blue-500/20`} />
+                <div className={`w-3 h-3 rounded-full mt-1 ${esc.cores.bgProgress} shadow-lg shadow-primary-500/20`} />
               </div>
             </button>
           ))}
@@ -191,12 +191,12 @@ export const RespiratoryCalculator: React.FC<Props> = ({ patientId, onClose }) =
     return (
       <div className="w-full bg-slate-50 dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 transition-colors">
         <div className="flex justify-between items-center mb-6">
-          <button onClick={() => { setTela('intro'); setRespostas({}); }} className="text-slate-500 dark:text-gray-400 text-sm flex items-center">
+          <button onClick={() => { setTela('intro'); setRespostas({}); }} className="text-slate-500 dark:text-slate-400 text-sm flex items-center">
             <ChevronLeftIcon /> Voltar
           </button>
           <button 
             onClick={() => setShowRef(!showRef)} 
-            className={`flex items-center text-[10px] px-3 py-1.5 rounded-full border transition-all ${showRef ? 'bg-blue-600 border-blue-400 text-white' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'}`}
+            className={`flex items-center text-[10px] px-3 py-1.5 rounded-full border transition-all ${showRef ? 'bg-primary-600 border-primary-400 text-white' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-primary-600 dark:text-primary-400 shadow-sm'}`}
           >
             <InfoIcon /> {showRef ? 'Ocultar Referências' : 'Ver Referências'}
           </button>
@@ -227,7 +227,7 @@ export const RespiratoryCalculator: React.FC<Props> = ({ patientId, onClose }) =
           className={`w-full mt-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all ${
             respondidos === totalItens 
             ? `${config.cores.bg} text-white shadow-xl` 
-            : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-gray-600 cursor-not-allowed'
+            : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
           }`}
         >
           Calcular Gravidade
@@ -239,7 +239,7 @@ export const RespiratoryCalculator: React.FC<Props> = ({ patientId, onClose }) =
   if (tela === 'resultado' && resultado && config) {
     return (
       <div className="w-full bg-slate-50 dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 text-center animate-in zoom-in-95 duration-300 transition-colors">
-        <p className="text-slate-500 dark:text-gray-500 text-[10px] mb-4 uppercase tracking-[0.2em] font-bold">Diagnóstico Final</p>
+        <p className="text-slate-500 dark:text-slate-500 text-[10px] mb-4 uppercase tracking-[0.2em] font-bold">Diagnóstico Final</p>
         
         <div className={`w-28 h-28 mx-auto rounded-full flex flex-col items-center justify-center mb-6 border-8 border-white dark:border-slate-800 shadow-xl ${resultado.bg}`}>
           <span className="text-5xl font-black text-white">{pontuacaoTotal}</span>
@@ -248,21 +248,21 @@ export const RespiratoryCalculator: React.FC<Props> = ({ patientId, onClose }) =
 
         <h2 className={`text-3xl font-black ${resultado.cor} mb-2`}>{resultado.texto}</h2>
         <div className="bg-white dark:bg-slate-800/80 p-5 rounded-3xl mb-10 border border-slate-200 dark:border-slate-700 shadow-lg">
-          <p className="text-[10px] text-slate-400 dark:text-gray-400 mb-2 uppercase font-bold tracking-widest italic underline decoration-blue-500/50">Conduta Clínica Recomendada</p>
-          <p className="text-slate-800 dark:text-gray-100 font-bold text-lg leading-tight">{resultado.conduta}</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-400 mb-2 uppercase font-bold tracking-widest italic underline decoration-primary-500/50">Conduta Clínica Recomendada</p>
+          <p className="text-slate-800 dark:text-slate-100 font-bold text-lg leading-tight">{resultado.conduta}</p>
         </div>
 
         <div className="flex flex-col gap-3">
           <button 
             onClick={saveToSupabase}
             disabled={isSaving}
-            className={`w-full py-4 rounded-2xl font-black text-white shadow-2xl transition-all ${isSaving ? 'bg-gray-400 dark:bg-gray-700' : 'bg-green-600 hover:bg-green-500 hover:scale-[1.02]'}`}
+            className={`w-full py-4 rounded-2xl font-black text-white shadow-2xl transition-all ${isSaving ? 'bg-slate-400 dark:bg-slate-700' : 'bg-green-600 hover:bg-green-500 hover:scale-[1.02]'}`}
           >
             {isSaving ? 'A Gravar...' : 'Gravar no Prontuário'}
           </button>
           <button 
             onClick={() => setTela('form')}
-            className="w-full py-3 rounded-2xl bg-white dark:bg-slate-800 text-slate-500 dark:text-gray-400 font-bold text-xs hover:text-slate-800 dark:hover:text-white transition shadow-sm"
+            className="w-full py-3 rounded-2xl bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-xs hover:text-slate-800 dark:hover:text-white transition shadow-sm"
           >
             Revisar Avaliação
           </button>

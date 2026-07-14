@@ -43,7 +43,7 @@ const calculateDays = (startDate: string): number => {
 type TipoPrecaucao = Precaution['tipo_precaucao'];
 
 const TIPO_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
-  padrao:                    { label: 'Padrão',                  bg: 'bg-blue-100 dark:bg-blue-900',   text: 'text-blue-800 dark:text-blue-200' },
+  padrao:                    { label: 'Padrão',                  bg: 'bg-primary-100 dark:bg-primary-900',   text: 'text-primary-800 dark:text-primary-200' },
   contato:                   { label: 'Contato',                 bg: 'bg-yellow-100 dark:bg-yellow-900', text: 'text-yellow-800 dark:text-yellow-200' },
   goticula:                  { label: 'Gotículas',               bg: 'bg-orange-100 dark:bg-orange-900', text: 'text-orange-800 dark:text-orange-200' },
   aerossois:                 { label: 'Aerossóis',               bg: 'bg-red-100 dark:bg-red-900',     text: 'text-red-800 dark:text-red-200' },
@@ -53,7 +53,7 @@ const TIPO_CONFIG: Record<string, { label: string; bg: string; text: string }> =
 };
 
 const PrecaucaoBadge: React.FC<{ tipo: string }> = ({ tipo }) => {
-  const config = TIPO_CONFIG[tipo] ?? { label: tipo, bg: 'bg-gray-100', text: 'text-gray-800' };
+  const config = TIPO_CONFIG[tipo] ?? { label: tipo, bg: 'bg-slate-100', text: 'text-slate-800' };
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${config.bg} ${config.text}`}>
       {config.label}
@@ -205,12 +205,12 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
     <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
-          <ShieldIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <ShieldIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
           <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Precauções</h3>
         </div>
         <button
           onClick={() => setAddModalOpen(true)}
-          className="flex items-center space-x-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+          className="flex items-center space-x-1 px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition text-sm font-medium"
         >
           <PlusIcon className="w-4 h-4" />
           <span>Adicionar</span>
@@ -325,7 +325,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                       setShowDropdown(true);
                     }}
                     onFocus={() => setShowDropdown(true)}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-8"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500 pr-8"
                   />
                   <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
 
@@ -336,7 +336,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                           key={d.id}
                           type="button"
                           onMouseDown={() => handleSelecionarDoenca(d)}
-                          className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors border-b border-slate-100 dark:border-slate-600"
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors border-b border-slate-100 dark:border-slate-600"
                         >
                           <span className="block font-medium text-slate-800 dark:text-slate-100">{d.nome}</span>
                           <span className="block text-xs text-slate-500 dark:text-slate-400">
@@ -362,7 +362,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                       <button
                         type="button"
                         onMouseDown={handleUsarManual}
-                        className="w-full text-left px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 border-t border-slate-100 dark:border-slate-600 transition-colors"
+                        className="w-full text-left px-3 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 border-t border-slate-100 dark:border-slate-600 transition-colors"
                       >
                         + Registrar "{doencaSearch}" manualmente
                       </button>
@@ -373,7 +373,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
 
               {/* Card de informações da doença do catálogo */}
               {selectedDoenca && (
-                <div className="rounded-lg border border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 p-3 space-y-2">
+                <div className="rounded-lg border border-primary-200 dark:border-primary-700 bg-primary-50 dark:bg-primary-900/20 p-3 space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide">Precaução:</span>
                     <PrecaucaoBadge tipo={selectedDoenca.tipo_precaucao} />
@@ -383,7 +383,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                     {selectedDoenca.duracao_observacao}
                   </p>
                   {dataFimSugerida && (
-                    <p className="text-xs text-blue-700 dark:text-blue-300 font-semibold">
+                    <p className="text-xs text-primary-700 dark:text-primary-300 font-semibold">
                       📅 Data fim sugerida: {formatDateToBRL(dataFimSugerida)}
                     </p>
                   )}
@@ -405,7 +405,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                       <select
                         value={manualTipoPrecaucao}
                         onChange={(e) => setManualTipoPrecaucao(e.target.value as TipoPrecaucao)}
-                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 appearance-none focus:outline-none focus:ring-2 focus:ring-primary-500"
                       >
                         {Object.entries(TIPO_CONFIG).map(([key, val]) => (
                           <option key={key} value={key}>{val.label}</option>
@@ -424,7 +424,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                       value={manualObservacao}
                       onChange={(e) => setManualObservacao(e.target.value)}
                       placeholder="Ex: Até resolução clínica..."
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
                     />
                   </div>
                 </>
@@ -439,7 +439,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                   type="date"
                   value={newDataInicio}
                   onChange={(e) => setNewDataInicio(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
             </div>
@@ -454,7 +454,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
               <button
                 onClick={handleAddPrecaution}
                 disabled={!selectedDoenca && !isManualMode}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium flex items-center justify-center space-x-2"
+                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium flex items-center justify-center space-x-2"
               >
                 <SaveIcon className="w-4 h-4" />
                 <span>Salvar</span>
@@ -492,7 +492,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                     <select
                       value={selectedPrecaution.tipo_precaucao}
                       onChange={(e) => setSelectedPrecaution({ ...selectedPrecaution, tipo_precaucao: e.target.value as TipoPrecaucao })}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 appearance-none focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
                       <option value="padrao">Padrão</option>
                       <option value="contato">Contato</option>
@@ -512,7 +512,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                   type="date"
                   value={selectedPrecaution.data_inicio}
                   onChange={(e) => setSelectedPrecaution({ ...selectedPrecaution, data_inicio: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
             </div>
@@ -526,7 +526,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
               </button>
               <button
                 onClick={handleEditPrecaution}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center justify-center space-x-2"
+                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-medium flex items-center justify-center space-x-2"
               >
                 <SaveIcon className="w-4 h-4" />
                 <span>Salvar</span>
@@ -595,7 +595,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                 type="date"
                 defaultValue={getTodayDateString()}
                 id="endDateInput"
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
 
@@ -611,7 +611,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                   const input = document.getElementById('endDateInput') as HTMLInputElement;
                   if (input.value) handleAddEndDate(isEndDateModalOpen, input.value);
                 }}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center justify-center space-x-2"
+                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-medium flex items-center justify-center space-x-2"
               >
                 <SaveIcon className="w-4 h-4" />
                 <span>Confirmar</span>

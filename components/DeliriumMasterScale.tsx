@@ -44,7 +44,7 @@ const escalasConfig = {
       { id: 'c7', label: '7. Inconsistência comportamental', desc: 'Respostas imprevisíveis ou conflitantes.' },
       { id: 'c8', label: '8. Alteração da percepção', desc: 'Alucinações, ilusões, medos intensos.' },
     ],
-    cores: { bg: 'bg-indigo-600', hover: 'hover:bg-indigo-500', bgBase: 'bg-indigo-700', bgProgress: 'bg-indigo-500' },
+    cores: { bg: 'bg-primary-600', hover: 'hover:bg-primary-500', bgBase: 'bg-primary-700', bgProgress: 'bg-primary-500' },
   },
   sospd: {
     titulo: 'SOS-PD',
@@ -78,7 +78,7 @@ const escalasConfig = {
       { id: 'c3', label: '3. Nível de consciência alterado', desc: 'Não está em estado alerta.' },
       { id: 'c4', label: '4. Pensamento desorganizado', desc: 'Respostas incoerentes ou comportamento incompatível.' },
     ],
-    cores: { bg: 'bg-blue-600', hover: 'hover:bg-blue-500', bgBase: 'bg-blue-700', bgProgress: 'bg-blue-500' },
+    cores: { bg: 'bg-primary-600', hover: 'hover:bg-primary-500', bgBase: 'bg-primary-700', bgProgress: 'bg-primary-500' },
   },
   pCAMICU: {
     titulo: 'pCAM-ICU',
@@ -93,7 +93,7 @@ const escalasConfig = {
       { id: 'c3', label: '3. Nível de consciência alterado', desc: 'Não está alerta.' },
       { id: 'c4', label: '4. Pensamento desorganizado', desc: 'Falha em perguntas simples.' },
     ],
-    cores: { bg: 'bg-blue-600', hover: 'hover:bg-blue-500', bgBase: 'bg-blue-700', bgProgress: 'bg-blue-500' },
+    cores: { bg: 'bg-primary-600', hover: 'hover:bg-primary-500', bgBase: 'bg-primary-700', bgProgress: 'bg-primary-500' },
   },
 };
 
@@ -143,17 +143,17 @@ const DeliriumQuestionCard: React.FC<DeliriumQuestionCardProps> = ({ item, valor
 
   const cardClasses = isDark
     ? isSelected
-      ? 'bg-slate-700 border-blue-500'
+      ? 'bg-slate-700 border-primary-500'
       : 'bg-slate-800 border-slate-700 hover:border-slate-600'
     : isSelected
-    ? 'bg-blue-50 border-blue-400'
+    ? 'bg-primary-50 border-primary-400'
     : 'bg-white border-slate-200 hover:border-slate-300';
 
-  const labelColor = isDark ? 'text-gray-100' : 'text-gray-900';
-  const textColor = isDark ? 'text-gray-400' : 'text-gray-600';
+  const labelColor = isDark ? 'text-slate-100' : 'text-slate-900';
+  const textColor = isDark ? 'text-slate-400' : 'text-slate-600';
   const selectClasses = isDark
-    ? 'bg-slate-900 border-slate-600 text-gray-100 focus:ring-2 focus:ring-blue-500'
-    : 'bg-white border-slate-300 text-gray-900 focus:ring-2 focus:ring-blue-500';
+    ? 'bg-slate-900 border-slate-600 text-slate-100 focus:ring-2 focus:ring-primary-500'
+    : 'bg-white border-slate-300 text-slate-900 focus:ring-2 focus:ring-primary-500';
 
   const labelText = tipo === 'binary' ? 'Resultado' : 'Pontuação';
 
@@ -206,7 +206,7 @@ const DeliriumQuestionCard: React.FC<DeliriumQuestionCardProps> = ({ item, valor
           ))}
         </select>
         <svg
-          className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none ${isDark ? 'text-gray-400' : 'text-gray-600'}`}
+          className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none ${isDark ? 'text-slate-400' : 'text-slate-600'}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -409,25 +409,25 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
     return (
       <div
         className={`w-full max-w-2xl mx-auto p-4 sm:p-6 min-h-screen ${
-          isDark ? 'bg-slate-950 text-gray-100' : 'bg-white text-gray-900'
+          isDark ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'
         }`}
       >
         <header className="mb-8 text-center pt-6">
           <div
             className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 shadow-lg border ${
-              isDark ? 'bg-blue-900 border-blue-700' : 'bg-blue-100 border-blue-300'
+              isDark ? 'bg-primary-900 border-primary-700' : 'bg-primary-100 border-primary-300'
             }`}
           >
             <span className="text-3xl">🧠</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold mb-2">Calculadora de Delirium</h1>
-          <p className={`text-sm sm:text-base ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+          <p className={`text-sm sm:text-base ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
             Três escalas essenciais para UTI Pediátrica
           </p>
         </header>
 
         <div className={`p-6 rounded-2xl border shadow-xl mb-6 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
-          <h2 className={`text-xs sm:text-sm font-bold uppercase tracking-widest mb-4 pb-2 border-b ${isDark ? 'text-gray-400 border-slate-800' : 'text-gray-600 border-slate-300'}`}>
+          <h2 className={`text-xs sm:text-sm font-bold uppercase tracking-widest mb-4 pb-2 border-b ${isDark ? 'text-slate-400 border-slate-800' : 'text-slate-600 border-slate-300'}`}>
             Escolha da Escala
           </h2>
 
@@ -441,7 +441,7 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
                 <span className="block text-sm sm:text-base">{escalasConfig.capd.titulo}</span>
                 <span className="text-xs opacity-90">{escalasConfig.capd.idade}</span>
               </div>
-              <span className="text-xs bg-indigo-900 px-2 py-1 rounded-full group-hover:scale-110 transition">Score 0–32</span>
+              <span className="text-xs bg-primary-900 px-2 py-1 rounded-full group-hover:scale-110 transition">Score 0–32</span>
             </button>
 
             {/* SOS-PD */}
@@ -477,13 +477,13 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
     return (
       <div
         className={`w-full max-w-2xl mx-auto p-4 sm:p-6 min-h-screen ${
-          isDark ? 'bg-slate-950 text-gray-100' : 'bg-white text-gray-900'
+          isDark ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'
         }`}
       >
         <div className="w-full text-left mb-6 pt-6">
           <button
             onClick={() => setTela('intro')}
-            className={`flex items-center gap-2 ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
+            className={`flex items-center gap-2 ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'} transition-colors`}
           >
             <BackArrowIcon />
             <span className="text-sm sm:text-base">Voltar ao Menu</span>
@@ -491,7 +491,7 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-bold mb-2">Seleção CAM-ICU</h1>
-        <p className={`text-sm sm:text-base ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-6`}>
+        <p className={`text-sm sm:text-base ${isDark ? 'text-slate-400' : 'text-slate-600'} mb-6`}>
           Escolha a escala correta para a faixa etária do paciente
         </p>
 
@@ -525,7 +525,7 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
     return (
       <div
         className={`w-full max-w-2xl mx-auto p-4 sm:p-6 min-h-screen flex flex-col ${
-          isDark ? 'bg-slate-950 text-gray-100' : 'bg-white text-gray-900'
+          isDark ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'
         }`}
       >
         {/* Header Fixo */}
@@ -537,12 +537,12 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
           <div className="flex items-center justify-between mb-3">
             <button
               onClick={() => setTela('intro')}
-              className={`p-2 -ml-2 rounded-full transition ${isDark ? 'text-gray-400 hover:text-white hover:bg-slate-800' : 'text-gray-600 hover:text-gray-900 hover:bg-slate-100'}`}
+              className={`p-2 -ml-2 rounded-full transition ${isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
             >
               <BackArrowIcon />
             </button>
             <div className="text-center">
-              <span className={`text-xs sm:text-sm font-bold block ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+              <span className={`text-xs sm:text-sm font-bold block ${isDark ? 'text-primary-400' : 'text-primary-600'}`}>
                 {configAtual.titulo}
               </span>
               <div className={`text-xs font-bold mt-1 ${resultadoAvaliacao?.cor}`}>{resultadoAvaliacao?.texto}</div>
@@ -554,7 +554,7 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
           <div className={`w-full h-2 rounded-full overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-slate-200'}`}>
             <div className={`${corClasses.bgProgress} h-full transition-all duration-500`} style={{ width: `${progresso}%` }} />
           </div>
-          <div className={`flex justify-between text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+          <div className={`flex justify-between text-xs mt-2 ${isDark ? 'text-slate-500' : 'text-slate-600'}`}>
             <span>
               {itensRespondidos} de {configAtual.itens.length}
             </span>
@@ -599,14 +599,14 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
     return (
       <div
         className={`w-full max-w-2xl mx-auto p-4 sm:p-6 min-h-screen flex flex-col items-center pt-6 ${
-          isDark ? 'bg-slate-950 text-gray-100' : 'bg-white text-gray-900'
+          isDark ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'
         }`}
       >
         {/* Botão Voltar */}
         <div className="w-full text-left mb-6">
           <button
             onClick={() => setTela('intro')}
-            className={`flex items-center gap-2 ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
+            className={`flex items-center gap-2 ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'} transition-colors`}
           >
             <BackArrowIcon />
             <span className="text-sm sm:text-base">Voltar ao Menu</span>
@@ -624,13 +624,13 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
             <span className="text-5xl sm:text-6xl font-black text-white">
               {configAtual.tipo === 'score' ? resultadoAvaliacao?.pontuacao : resultadoAvaliacao?.icone}
             </span>
-            <span className={`text-xs uppercase tracking-widest mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <span className={`text-xs uppercase tracking-widest mt-2 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
               {configAtual.tipo === 'score' ? `de ${(configAtual as any).maxScore}` : 'Resultado'}
             </span>
           </div>
           <div
             className={`absolute -bottom-4 px-4 py-1 rounded-full border shadow-lg text-sm font-bold ${
-              isDark ? 'bg-slate-800 border-slate-700 text-gray-100' : 'bg-white border-slate-300 text-gray-900'
+              isDark ? 'bg-slate-800 border-slate-700 text-slate-100' : 'bg-white border-slate-300 text-slate-900'
             }`}
           >
             {configAtual.titulo}
@@ -640,7 +640,7 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
         {/* Título e Detalhe */}
         <div className="text-center space-y-2 mb-8">
           <h2 className={`text-2xl sm:text-3xl font-bold ${resultadoAvaliacao?.cor}`}>{resultadoAvaliacao?.texto}</h2>
-          <p className={`text-sm sm:text-base ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{resultadoAvaliacao?.detalhe}</p>
+          <p className={`text-sm sm:text-base ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{resultadoAvaliacao?.detalhe}</p>
         </div>
 
         {/* Interpretação */}
@@ -649,10 +649,10 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
             isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'
           }`}
         >
-          <h3 className={`font-bold pb-3 border-b ${isDark ? 'text-gray-100 border-slate-800' : 'text-gray-900 border-slate-300'}`}>
+          <h3 className={`font-bold pb-3 border-b ${isDark ? 'text-slate-100 border-slate-800' : 'text-slate-900 border-slate-300'}`}>
             Interpretação
           </h3>
-          <p className={`text-sm mt-3 leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>
+          <p className={`text-sm mt-3 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-700'}`}>
             {configAtual.titulo === 'CAPD' && `Critério: CAPD ≥ 9 indica Delirium Provável.`}
             {configAtual.titulo === 'SOS-PD' && `Critério: SOS-PD ≥ 4 sugere Delirium ou Abstinência.`}
             {(configAtual.titulo === 'pCAM-ICU' || configAtual.titulo === 'psCAM-ICU') &&
@@ -705,7 +705,7 @@ export const DeliriumMasterScale: React.FC<DeliriumMasterScaleProps> = ({ onSave
             className={`w-full py-4 rounded-xl font-bold transition-colors border ${
               isDark
                 ? 'bg-slate-800 hover:bg-slate-700 text-white border-slate-700'
-                : 'bg-slate-100 hover:bg-slate-200 text-gray-900 border-slate-300'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-900 border-slate-300'
             }`}
           >
             Nova Avaliação

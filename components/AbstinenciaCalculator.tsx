@@ -161,8 +161,8 @@ export default function AbstinenciaCalculator({ patientId }: AbstinenciaCalculat
                   }}
                   className={`w-full p-4 rounded-2xl border-2 transition-all text-sm font-bold text-left flex justify-between items-center ${
                     escalaAtiva === conf.id
-                      ? 'border-blue-500 bg-blue-500/10 text-blue-400'
-                      : 'border-transparent bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 hover:border-blue-500/50'
+                      ? 'border-primary-500 bg-primary-500/10 text-primary-400'
+                      : 'border-transparent bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 hover:border-primary-500/50'
                   }`}
                 >
                   <div>
@@ -176,7 +176,7 @@ export default function AbstinenciaCalculator({ patientId }: AbstinenciaCalculat
 
             <button
               onClick={() => setTela('form')}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl transition-all"
+              className="w-full py-4 bg-primary-600 hover:bg-primary-500 text-white font-bold rounded-2xl transition-all"
             >
               Começar Avaliação
             </button>
@@ -188,14 +188,14 @@ export default function AbstinenciaCalculator({ patientId }: AbstinenciaCalculat
         <div className="space-y-4 animate-in fade-in duration-500">
           <div className="flex justify-between items-end mb-2">
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-blue-500 uppercase">{configAtual.titulo}</span>
+              <span className="text-[10px] font-bold text-primary-500 uppercase">{configAtual.titulo}</span>
               <span className="text-[10px] font-bold text-slate-500 uppercase">{respondidosCount} de {totalItens}</span>
             </div>
-            <span className="text-sm font-black text-blue-400">Score: {pontuacaoTotal}</span>
+            <span className="text-sm font-black text-primary-400">Score: {pontuacaoTotal}</span>
           </div>
 
           <div className="h-1 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-6">
-            <div className="h-full bg-blue-500 transition-all" style={{ width: `${progresso}%` }} />
+            <div className="h-full bg-primary-500 transition-all" style={{ width: `${progresso}%` }} />
           </div>
 
           {configAtual.dominios.map((d) => (
@@ -215,7 +215,7 @@ export default function AbstinenciaCalculator({ patientId }: AbstinenciaCalculat
               onClick={() => setTela('resultado')}
               className={`w-full py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 ${
                 respondidosCount === totalItens
-                  ? 'bg-blue-600 text-white hover:bg-blue-500'
+                  ? 'bg-primary-600 text-white hover:bg-primary-500'
                   : 'bg-slate-200 dark:bg-slate-700/50 text-slate-500 cursor-not-allowed'
               }`}
             >
@@ -247,7 +247,7 @@ export default function AbstinenciaCalculator({ patientId }: AbstinenciaCalculat
               className={`w-full py-4 text-white font-black rounded-2xl transition-all flex items-center justify-center gap-2 ${
                 isSaving || saveStatus === 'success'
                   ? 'bg-slate-200 dark:bg-slate-700 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-500'
+                  : 'bg-primary-600 hover:bg-primary-500'
               }`}
             >
               {isSaving ? '⏳ Salvando...' : saveStatus === 'success' ? '✓ Salvo!' : '💾 Gravar Avaliação'}
@@ -300,7 +300,7 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({ id, label, opcoes, valo
         <select
           value={valor || ''}
           onChange={(e) => onSelect(Number(e.target.value))}
-          className="w-full p-4 rounded-2xl appearance-none text-xs font-bold border-2 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500 transition-all cursor-pointer"
+          className="w-full p-4 rounded-2xl appearance-none text-xs font-bold border-2 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 outline-none focus:border-primary-500 transition-all cursor-pointer"
         >
           <option value="" disabled>
             Selecione uma opção...

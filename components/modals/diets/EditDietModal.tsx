@@ -71,7 +71,7 @@ export const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; o
                             <select
                                 value={type}
                                 onChange={(e) => setType(e.target.value)}
-                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                                 required
                             >
                                 <option value="">Selecione o tipo...</option>
@@ -86,7 +86,7 @@ export const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; o
                                 type="date"
                                 value={dataInicio}
                                 onChange={(e) => setDataInicio(e.target.value)}
-                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                                 required
                             />
                         </div>
@@ -102,7 +102,7 @@ export const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; o
                                 value={volume}
                                 onChange={(e) => setVolume(e.target.value)}
                                 placeholder="Ex: 1000"
-                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             />
                         </div>
                         <div>
@@ -112,7 +112,7 @@ export const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; o
                                 value={vet}
                                 onChange={(e) => setVet(e.target.value)}
                                 placeholder="Ex: 1800"
-                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             />
                         </div>
                         <div>
@@ -122,7 +122,7 @@ export const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; o
                                 value={vetPleno}
                                 onChange={(e) => setVetPleno(e.target.value)}
                                 placeholder="Ex: 2000"
-                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             />
                         </div>
                         <div>
@@ -132,7 +132,7 @@ export const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; o
                                 value={pt}
                                 onChange={(e) => setPt(e.target.value)}
                                 placeholder="Ex: 60"
-                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             />
                         </div>
                         <div>
@@ -142,7 +142,7 @@ export const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; o
                                 value={ptGDia}
                                 onChange={(e) => setPtGDia(e.target.value)}
                                 placeholder="Ex: 65"
-                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             />
                         </div>
                         <div>
@@ -152,21 +152,21 @@ export const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; o
                                 value={th}
                                 onChange={(e) => setTh(e.target.value)}
                                 placeholder="Ex: 220"
-                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             />
                         </div>
 
                         <div>
                             <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Sistema <span className="text-slate-500 dark:text-slate-400 font-normal">(opcional)</span></label>
                             <div className="relative">
-                                <select value={sistema} onChange={e => setSistema(e.target.value)} className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200 appearance-none">
+                                <select value={sistema} onChange={e => setSistema(e.target.value)} className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base text-slate-800 dark:text-slate-200 appearance-none">
                                     <option value="">Selecione...</option>
                                     {ALERT_SYSTEMS.map(s => <option key={s} value={s}>{s}</option>)}
                                 </select>
-                                <ChevronDownIcon className="absolute right-3 top-3 text-gray-400 pointer-events-none w-4 h-4" />
+                                <ChevronDownIcon className="absolute right-3 top-3 text-slate-400 pointer-events-none w-4 h-4" />
                             </div>
                             {sistema === 'Outros' && (
-                                <input type="text" value={sistemaOutros} onChange={e => setSistemaOutros(e.target.value)} placeholder="Especifique o sistema..." className="mt-2 w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200" />
+                                <input type="text" value={sistemaOutros} onChange={e => setSistemaOutros(e.target.value)} placeholder="Especifique o sistema..." className="mt-2 w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base text-slate-800 dark:text-slate-200" />
                             )}
                         </div>
 
@@ -175,18 +175,18 @@ export const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; o
 
                         {/* Card de Cálculo */}
                         {((vet && vetPleno) || (pt && ptGDia)) && (
-                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                                <h4 className="text-xs sm:text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2">📊 Cálculos Automáticos</h4>
+                            <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-3">
+                                <h4 className="text-xs sm:text-sm font-semibold text-primary-800 dark:text-primary-300 mb-2">📊 Cálculos Automáticos</h4>
                                 <div className="space-y-2">
                                     {vet && vetPleno && (
                                         <div className="space-y-0.5">
                                             <div className="flex justify-between items-center">
-                                                <span className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">VET AT:</span>
-                                                <span className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-200">
+                                                <span className="text-xs sm:text-sm text-primary-700 dark:text-primary-300">VET AT:</span>
+                                                <span className="text-sm sm:text-base font-bold text-primary-900 dark:text-primary-200">
                                                     {((parseFloat(vet.replace(',', '.')) * 100) / parseFloat(vetPleno.replace(',', '.'))).toFixed(1)}%
                                                 </span>
                                             </div>
-                                            <div className="text-xs text-blue-600 dark:text-blue-400 text-right">
+                                            <div className="text-xs text-primary-600 dark:text-primary-400 text-right">
                                                 {vet} kcal/dia de {vetPleno} kcal/dia
                                             </div>
                                         </div>
@@ -194,12 +194,12 @@ export const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; o
                                     {pt && ptGDia && (
                                         <div className="space-y-0.5">
                                             <div className="flex justify-between items-center">
-                                                <span className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">PT AT:</span>
-                                                <span className="text-sm sm:text-base font-bold text-blue-900 dark:text-blue-200">
+                                                <span className="text-xs sm:text-sm text-primary-700 dark:text-primary-300">PT AT:</span>
+                                                <span className="text-sm sm:text-base font-bold text-primary-900 dark:text-primary-200">
                                                     {((parseFloat(pt.replace(',', '.')) * 100) / parseFloat(ptGDia.replace(',', '.'))).toFixed(1)}%
                                                 </span>
                                             </div>
-                                            <div className="text-xs text-blue-600 dark:text-blue-400 text-right">
+                                            <div className="text-xs text-primary-600 dark:text-primary-400 text-right">
                                                 {pt} g/dia de {ptGDia} g/dia
                                             </div>
                                         </div>
@@ -216,12 +216,12 @@ export const EditDietModal: React.FC<{ diet: Diet; patientId: number | string; o
                                 onChange={(e) => setObservacao(e.target.value)}
                                 placeholder="Adicione observações sobre a dieta..."
                                 rows={2}
-                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm sm:text-base text-slate-800 dark:text-slate-200"
                             />
                         </div>
                         <button
                             type="submit"
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 sm:py-3 rounded-lg transition mt-2 text-sm sm:text-base"
+                            className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 sm:py-3 rounded-lg transition mt-2 text-sm sm:text-base"
                         >
                             Salvar Alterações
                         </button>

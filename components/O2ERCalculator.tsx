@@ -122,13 +122,13 @@ export const O2ERCalculator: React.FC<Props> = ({ patientId }) => {
     setResult(null); setError(''); setSaved(false);
   }
 
-  const inputClass = 'w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:border-sky-500 dark:focus:border-sky-400';
+  const inputClass = 'w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:border-primary-500 dark:focus:border-primary-400';
 
   return (
     <div className="space-y-4 pb-2">
       <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-          <span className="w-6 h-6 rounded-full bg-sky-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">6</span>
+          <span className="w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">6</span>
           <div>
             <span className="font-semibold text-slate-800 dark:text-slate-100 text-sm">
               O₂ER – Taxa de Extração de O₂
@@ -145,7 +145,7 @@ export const O2ERCalculator: React.FC<Props> = ({ patientId }) => {
             <button
               onClick={() => { setModo('simplificada'); setResult(null); setError(''); }}
               className={`flex-1 py-2 transition-colors ${modo === 'simplificada'
-                ? 'bg-sky-600 text-white'
+                ? 'bg-primary-600 text-white'
                 : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
             >
               Simplificada (SaO₂ / ScvO₂)
@@ -153,7 +153,7 @@ export const O2ERCalculator: React.FC<Props> = ({ patientId }) => {
             <button
               onClick={() => { setModo('completa'); setResult(null); setError(''); }}
               className={`flex-1 py-2 transition-colors ${modo === 'completa'
-                ? 'bg-sky-600 text-white'
+                ? 'bg-primary-600 text-white'
                 : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
             >
               Completa (com Hb)
@@ -203,7 +203,7 @@ export const O2ERCalculator: React.FC<Props> = ({ patientId }) => {
 
           <button
             onClick={calcular}
-            className="w-full py-2.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold transition-colors"
+            className="w-full py-2.5 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-colors"
           >
             Calcular O₂ER →
           </button>
@@ -248,7 +248,7 @@ export const O2ERCalculator: React.FC<Props> = ({ patientId }) => {
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
               saved
                 ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 cursor-default'
-                : 'bg-sky-600 hover:bg-sky-700 text-white disabled:opacity-60'
+                : 'bg-primary-600 hover:bg-primary-700 text-white disabled:opacity-60'
             }`}
           >
             {saved ? '✓ Gravado no prontuário' : saving ? 'Gravando...' : 'Gravar no prontuário'}

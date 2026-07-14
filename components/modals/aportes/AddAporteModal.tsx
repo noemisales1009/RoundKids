@@ -92,7 +92,7 @@ export const AddAporteModal: React.FC<{
               type="date"
               value={dataReferencia}
               onChange={(e) => setDataReferencia(e.target.value)}
-              className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+              className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
               required
             />
           </div>
@@ -108,7 +108,7 @@ export const AddAporteModal: React.FC<{
               value={vo}
               onChange={(e) => setVo(e.target.value)}
               placeholder="0"
-              className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+              className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
             />
           </div>
 
@@ -123,7 +123,7 @@ export const AddAporteModal: React.FC<{
               value={hvNpt}
               onChange={(e) => setHvNpt(e.target.value)}
               placeholder="0"
-              className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+              className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
             />
           </div>
 
@@ -138,7 +138,7 @@ export const AddAporteModal: React.FC<{
               value={medicacoes}
               onChange={(e) => setMedicacoes(e.target.value)}
               placeholder="0"
-              className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200"
+              className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
             />
           </div>
 
@@ -154,7 +154,7 @@ export const AddAporteModal: React.FC<{
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition disabled:opacity-50"
+              className="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md transition disabled:opacity-50"
             >
               {loading ? 'Salvando...' : 'Salvar'}
             </button>

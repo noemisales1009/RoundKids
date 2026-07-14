@@ -180,7 +180,7 @@ export const NotificacaoEventoCard: React.FC<Props> = ({ patientId, bedNumber, p
             <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
               <div>
                 {patientName && <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{patientName}</p>}
-                {bedNumber && <p className="text-xs text-blue-500 font-semibold uppercase tracking-wide">Leito {bedNumber}</p>}
+                {bedNumber && <p className="text-xs text-primary-500 font-semibold uppercase tracking-wide">Leito {bedNumber}</p>}
               </div>
             </div>
           )}

@@ -183,7 +183,7 @@ const DropdownGlasgow = forwardRef<HTMLDivElement, DropdownGlasgowProps>(({ labe
     <div className="flex justify-between items-center mb-2">
       <label
         htmlFor={id}
-        className="block text-sm font-medium text-slate-600 dark:text-gray-300"
+        className="block text-sm font-medium text-slate-600 dark:text-slate-300"
       >
         {label}
       </label>
@@ -193,7 +193,7 @@ const DropdownGlasgow = forwardRef<HTMLDivElement, DropdownGlasgowProps>(({ labe
       id={id}
       value={valor === null ? '' : valor}
       onChange={(e) => onOpcaoChange(e.target.value === '' ? null : Number(e.target.value))}
-      className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none"
     >
       <option value="">Selecione...</option>
       {opcoes.map((opt) => (
@@ -308,13 +308,13 @@ export const GlasgowScale: React.FC<GlasgowScaleProps> = ({ onSaveScore }) => {
 
   // --- Renderização ---
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-gray-300 rounded-lg min-h-screen">
+    <div className="w-full max-w-2xl mx-auto p-4 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 rounded-lg min-h-screen">
       
       {/* --- TELA 1: LISTA (Principal) --- */}
       {telaAtiva === 'lista' && (
         <div className="flex flex-col space-y-4">
           <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg text-center">
-            <h2 className="text-sm font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+            <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">
               ÚLTIMA AVALIAÇÃO GLASGOW (PEDIÁTRICA)
             </h2>
             <div className="flex items-baseline justify-center space-x-1">
@@ -338,7 +338,7 @@ export const GlasgowScale: React.FC<GlasgowScaleProps> = ({ onSaveScore }) => {
               resetForm();
               setTelaAtiva('form');
             }}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200"
+            className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200"
           >
             Registrar Nova Avaliação Glasgow
           </button>
@@ -352,7 +352,7 @@ export const GlasgowScale: React.FC<GlasgowScaleProps> = ({ onSaveScore }) => {
           <div className="flex items-center space-x-4 mb-2">
             <button
               onClick={() => setTelaAtiva('lista')}
-              className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
+              className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
             >
               <IconeVoltar />
             </button>
@@ -365,7 +365,7 @@ export const GlasgowScale: React.FC<GlasgowScaleProps> = ({ onSaveScore }) => {
           <div ref={refFaixaEtaria} className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg">
             <label
               htmlFor="faixaEtaria"
-              className="block text-sm font-medium text-slate-600 dark:text-gray-300 mb-2"
+              className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-2"
             >
               1. Selecione a Faixa Etária
             </label>
@@ -373,7 +373,7 @@ export const GlasgowScale: React.FC<GlasgowScaleProps> = ({ onSaveScore }) => {
               id="faixaEtaria"
               value={faixaEtaria}
               onChange={(e) => handleTrocaFaixaEtaria(e.target.value as EscalaGlasgowKey)}
-              className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none"
             >
               {(Object.keys(escalasGlasgowOpcoes) as EscalaGlasgowKey[]).map((key) => (
                 <option key={key} value={key}>
@@ -418,7 +418,7 @@ export const GlasgowScale: React.FC<GlasgowScaleProps> = ({ onSaveScore }) => {
           
           <button
             onClick={handleCalcular}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200 mt-4"
+            className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200 mt-4"
           >
             Calcular Pontuação
           </button>
@@ -432,7 +432,7 @@ export const GlasgowScale: React.FC<GlasgowScaleProps> = ({ onSaveScore }) => {
           <div className="flex items-center space-x-4 mb-2">
             <button
               onClick={() => setTelaAtiva('form')} // Volta para o formulário
-              className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
+              className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
             >
               <IconeVoltar />
             </button>
@@ -459,7 +459,7 @@ export const GlasgowScale: React.FC<GlasgowScaleProps> = ({ onSaveScore }) => {
               </div>
             </div>
             {/* Card de detalhe da interpretação */}
-            <div className="bg-white dark:bg-slate-800 p-4 rounded-lg text-sm text-slate-500 dark:text-gray-400">
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-lg text-sm text-slate-500 dark:text-slate-400">
               {interpretacaoAtual.texto.includes('Coma Grave') && 'Interpretação: Coma grave. Indicação de via aérea definitiva.'}
               {interpretacaoAtual.texto.includes('Extremamente Grave') && 'Interpretação: Risco de dano neurológico extenso. Avaliar via aérea definitiva.'}
               {interpretacaoAtual.texto.includes('Moderado') && 'Interpretação: Rebaixamento moderado do nível de consciência.'}
@@ -469,7 +469,7 @@ export const GlasgowScale: React.FC<GlasgowScaleProps> = ({ onSaveScore }) => {
           
           <button
             onClick={handleSalvar}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200 mt-6"
+            className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200 mt-6"
           >
             Salvar e Fechar
           </button>

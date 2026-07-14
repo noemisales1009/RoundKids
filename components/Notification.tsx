@@ -15,7 +15,7 @@ export const Notification: React.FC<{ message: string; type: 'success' | 'error'
     const bgColor = {
         success: 'bg-green-500',
         error: 'bg-red-500',
-        info: 'bg-blue-500',
+        info: 'bg-primary-500',
     }[type];
 
     const icon = {

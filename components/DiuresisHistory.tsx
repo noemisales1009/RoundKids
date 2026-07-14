@@ -60,7 +60,7 @@ const DiuresisHistory: React.FC<DiuresisHistoryProps> = ({ patientId }) => {
         className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
       >
         <div className="flex items-center gap-2">
-          <DropletIcon className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+          <DropletIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Histórico de Diurese</h3>
         </div>
         <ChevronRightIcon className={`w-5 h-5 text-slate-400 transition transform ${isExpanded ? 'rotate-90' : ''}`} />
@@ -80,7 +80,7 @@ const DiuresisHistory: React.FC<DiuresisHistoryProps> = ({ patientId }) => {
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
-                        Débito: <span className="text-teal-600 dark:text-teal-400 font-bold">{record.resultado?.toFixed(2) || '-'}</span> mL/kg/h
+                        Débito: <span className="text-primary-600 dark:text-primary-400 font-bold">{record.resultado?.toFixed(2) || '-'}</span> mL/kg/h
                       </p>
                       <p className="text-xs text-slate-600 dark:text-slate-400">
                         {record.volume}mL / {record.horas}h / {record.peso}kg

@@ -183,7 +183,7 @@ export default function SOSPDCalculator({ patientId }: SOSPDProps) {
             </div>
 
             <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-[12px] text-slate-500 dark:text-slate-400 space-y-2">
-              <p className="font-bold text-blue-400">ℹ️ Informação Clínica:</p>
+              <p className="font-bold text-primary-400">ℹ️ Informação Clínica:</p>
               <p>"SOS-PD ≥ 4 sugere delirium ou abstinência e requer avaliação clínica imediata."</p>
             </div>
 
@@ -192,7 +192,7 @@ export default function SOSPDCalculator({ patientId }: SOSPDProps) {
                 setRespostas({});
                 setTela('form');
               }}
-              className="w-full py-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-all"
+              className="w-full py-4 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 transition-all"
             >
               Começar Exame
             </button>
@@ -204,17 +204,17 @@ export default function SOSPDCalculator({ patientId }: SOSPDProps) {
         <div className="space-y-4 animate-in fade-in duration-500">
           <div className="flex justify-between items-end mb-4">
             <div>
-              <span className="text-[10px] font-bold text-blue-400 uppercase">{SOS_PD_CONFIG.titulo}</span>
+              <span className="text-[10px] font-bold text-primary-400 uppercase">{SOS_PD_CONFIG.titulo}</span>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{respondidosCount}/{totalItens} Itens</p>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Score:</span>
-              <span className="text-3xl font-bold text-blue-400">{pontuacaoTotal}</span>
+              <span className="text-3xl font-bold text-primary-400">{pontuacaoTotal}</span>
             </div>
           </div>
           
           <div className="h-1 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-6">
-            <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${progresso}%` }} />
+            <div className="h-full bg-primary-500 transition-all duration-500" style={{ width: `${progresso}%` }} />
           </div>
 
           {SOS_PD_CONFIG.dominios.map((d) => (
@@ -237,7 +237,7 @@ export default function SOSPDCalculator({ patientId }: SOSPDProps) {
             }}
             className={`w-full py-4 rounded-lg font-bold transition-all mt-6
               ${respondidosCount === totalItens
-                ? 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
+                ? 'bg-primary-600 text-white hover:bg-primary-700 active:scale-95'
                 : 'bg-slate-200 dark:bg-slate-700 text-slate-500 cursor-not-allowed'
               }`}
           >
@@ -262,7 +262,7 @@ export default function SOSPDCalculator({ patientId }: SOSPDProps) {
             <button
               onClick={salvarAvaliacao}
               disabled={isSaving || saveStatus === 'success'}
-              className="w-full py-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-all"
+              className="w-full py-4 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-all"
             >
               {isSaving ? 'Salvando...' : saveStatus === 'success' ? 'Registrado!' : 'Salvar no Histórico'}
             </button>
@@ -302,7 +302,7 @@ function SelectDropdown({ id, label, desc, opcoes, valor, onSelect }: any) {
         <select
           value={valor ?? ''}
           onChange={(e) => onSelect(Number(e.target.value))}
-          className="w-full p-3 rounded text-sm font-medium bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none appearance-none pr-10"
+          className="w-full p-3 rounded text-sm font-medium bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:outline-none appearance-none pr-10"
         >
           <option value="">Selecione...</option>
           {opcoes.map((opt: any) => (

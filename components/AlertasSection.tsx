@@ -372,7 +372,7 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
             case 'low':
                 return 'bg-green-100 dark:bg-green-900/30 border-l-4 border-green-500 text-green-800 dark:text-green-200';
             default:
-                return 'bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500 text-blue-800 dark:text-blue-200';
+                return 'bg-primary-100 dark:bg-primary-900/30 border-l-4 border-primary-500 text-primary-800 dark:text-primary-200';
         }
     };
 
@@ -473,7 +473,7 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                                                         type="checkbox"
                                                         checked={alerta.mostrar_evolucao !== false}
                                                         onChange={e => toggleMostrarEvolucao(alerta.id, e.target.checked)}
-                                                        className="w-3.5 h-3.5 accent-blue-500"
+                                                        className="w-3.5 h-3.5 accent-primary-500"
                                                     />
                                                     <span className="text-xs text-slate-600 dark:text-slate-400">Exibir na Evolução Diária</span>
                                                 </label>
@@ -482,7 +482,7 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                                         <div className="flex flex-col gap-2 shrink-0">
                                             <button
                                                 onClick={() => handleOpenJustificationModal(alerta)}
-                                                className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition"
+                                                className="flex items-center gap-1 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded transition"
                                                 title="Adicionar/Editar justificativa"
                                             >
                                                 <DocumentTextIcon className="w-4 h-4" />
@@ -533,7 +533,7 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                             <textarea
                                 value={justificationText}
                                 onChange={(e) => setJustificationText(e.target.value)}
-                                className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200"
+                                className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200"
                                 rows={4}
                                 placeholder="Digite a justificativa para este alerta..."
                             />
@@ -542,7 +542,7 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                         <div className="flex flex-col sm:flex-row gap-3">
                             <button
                                 onClick={handleSaveJustification}
-                                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition"
+                                className="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition"
                             >
                                 Salvar
                             </button>
@@ -574,8 +574,8 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                             <p className="text-sm text-slate-600 dark:text-slate-400">{selectedAlert.description}</p>
                         </div>
 
-                        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
-                            <p className="text-sm text-blue-800 dark:text-blue-300">
+                        <div className="mb-4 p-3 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded">
+                            <p className="text-sm text-primary-800 dark:text-primary-300">
                                 ℹ️ O alerta será arquivado e não aparecerá mais na lista ativa, mas ficará registrado no histórico do paciente com o motivo do arquivamento.
                             </p>
                         </div>

@@ -79,7 +79,7 @@ export const ParecerCard: React.FC<ParecerCardProps> = ({ patientId, addTrigger 
                             <div className="flex justify-end mb-1">
                                 <button
                                     onClick={() => pareceres.forEach(p => toggleMostrarEvolucao(p.id, !allChecked))}
-                                    className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                                    className="text-xs text-primary-500 dark:text-primary-400 hover:underline"
                                 >
                                     {allChecked ? 'Desmarcar todos' : 'Marcar todos'}
                                 </button>
@@ -101,9 +101,9 @@ export const ParecerCard: React.FC<ParecerCardProps> = ({ patientId, addTrigger 
                                                 {p.parecer}
                                             </p>
                                         )}
-                                        {p.sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{p.sistema}</span>}
+                                        {p.sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{p.sistema}</span>}
                                         <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
-                                            <input type="checkbox" checked={p.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucao(p.id, e.target.checked)} className="w-3.5 h-3.5 accent-blue-500" />
+                                            <input type="checkbox" checked={p.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucao(p.id, e.target.checked)} className="w-3.5 h-3.5 accent-primary-500" />
                                             <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
                                         </label>
                                     </div>
@@ -111,7 +111,7 @@ export const ParecerCard: React.FC<ParecerCardProps> = ({ patientId, addTrigger 
                                 <div className="flex items-center gap-1 shrink-0 ml-2">
                                     <button
                                         onClick={() => setEditingParecer(p)}
-                                        className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition"
+                                        className="p-1.5 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900 rounded-full transition"
                                         aria-label="Editar parecer"
                                     >
                                         <PencilIcon className="w-4 h-4" />

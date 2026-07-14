@@ -73,7 +73,7 @@ const StatusComponent: React.FC<StatusComponentProps> = ({ patientId }) => {
         value={status}
         onChange={handleStatusChange}
         disabled={loading}
-        className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-slate-800 dark:text-slate-100 disabled:opacity-50"
+        className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-slate-800 dark:text-slate-100 disabled:opacity-50"
       >
         <option value="">Selecionar...</option>
         {statusOptions.map((opt) => (

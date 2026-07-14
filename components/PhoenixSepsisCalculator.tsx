@@ -168,15 +168,15 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
   if (tela === 'infeccao') {
     return (
       <div className="w-full bg-slate-50 dark:bg-slate-900 rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 transition-colors">
-        <button onClick={onClose} className="flex items-center text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white mb-6 transition">
+        <button onClick={onClose} className="flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white mb-6 transition">
           <ChevronLeftIcon /> {"Voltar ao Prontuário"}
         </button>
 
         <h2 className="text-xl font-black text-slate-900 dark:text-white mb-1 tracking-tight">Escore de Sepse de Phoenix (2024)</h2>
-        <p className="text-slate-500 dark:text-gray-400 text-sm mb-8">{"Critérios de Sepse Pediátrica - Phoenix Sepsis Score"}</p>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mb-8">{"Critérios de Sepse Pediátrica - Phoenix Sepsis Score"}</p>
 
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-800 dark:text-gray-100 mb-6 text-center">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 text-center">
             {"Infecção suspeita ou confirmada?"}
           </h3>
 
@@ -185,8 +185,8 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
               onClick={() => { setInfeccao(true); setTela('criterios'); }}
               className={`w-full py-4 rounded-xl font-bold text-sm uppercase tracking-wider transition-all border-2 ${
                 infeccao === true
-                  ? 'bg-blue-600 border-blue-600 text-white shadow-lg'
-                  : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-gray-200 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-600'
+                  ? 'bg-primary-600 border-primary-600 text-white shadow-lg'
+                  : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-slate-600'
               }`}
             >
               Sim
@@ -197,7 +197,7 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
               className={`w-full py-4 rounded-xl font-bold text-sm uppercase tracking-wider transition-all border-2 ${
                 infeccao === false
                   ? 'bg-slate-600 border-slate-600 text-white shadow-lg'
-                  : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-gray-200 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-600'
+                  : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-600'
               }`}
             >
               {"Não"}
@@ -228,16 +228,16 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
       <div className="w-full bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 transition-colors flex flex-col" style={{ maxHeight: 'calc(100dvh - 120px)' }}>
         <div className="p-4 sm:p-5 shrink-0">
           <div className="flex justify-between items-center mb-4">
-            <button onClick={resetAll} className="text-slate-500 dark:text-gray-400 text-sm flex items-center">
+            <button onClick={resetAll} className="text-slate-500 dark:text-slate-400 text-sm flex items-center">
               <ChevronLeftIcon /> Voltar
             </button>
-            <span className="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               Phoenix 2024
             </span>
           </div>
 
           <h3 className="text-center font-bold text-lg mb-2 text-rose-600 dark:text-rose-400">{"Critérios de Avaliação"}</h3>
-          <p className="text-center text-xs text-slate-500 dark:text-gray-400 mb-4">{"Selecione a pontuação para cada sistema"}</p>
+          <p className="text-center text-xs text-slate-500 dark:text-slate-400 mb-4">{"Selecione a pontuação para cada sistema"}</p>
 
           <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
             <div className="h-full bg-rose-500 transition-all duration-700 ease-out" style={{ width: `${progresso}%` }} />
@@ -247,13 +247,13 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
         <div className="flex-1 overflow-y-auto px-4 sm:px-5 pb-2 space-y-4 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
 
           <div className={`p-4 rounded-xl shadow-sm transition-all border-l-4 ${respiratorio !== null ? 'bg-slate-100 dark:bg-slate-700 border-rose-500' : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}>
-            <label className="block text-sm font-bold text-slate-800 dark:text-gray-100 mb-2">
+            <label className="block text-sm font-bold text-slate-800 dark:text-slate-100 mb-2">
               {sistemasConfig.respiratorio.label}
             </label>
             <select
               value={respiratorio === null ? '' : respiratorio}
               onChange={(e) => setRespiratorio(parseInt(e.target.value))}
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
             >
               <option value="" disabled>{"Escolha uma opção..."}</option>
               {sistemasConfig.respiratorio.opcoes.map((op) => (
@@ -263,13 +263,13 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
           </div>
 
           <div className={`p-4 rounded-xl shadow-sm transition-all border-l-4 ${neurologico !== null ? 'bg-slate-100 dark:bg-slate-700 border-rose-500' : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}>
-            <label className="block text-sm font-bold text-slate-800 dark:text-gray-100 mb-2">
+            <label className="block text-sm font-bold text-slate-800 dark:text-slate-100 mb-2">
               {sistemasConfig.neurologico.label}
             </label>
             <select
               value={neurologico === null ? '' : neurologico}
               onChange={(e) => setNeurologico(parseInt(e.target.value))}
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
             >
               <option value="" disabled>{"Escolha uma opção..."}</option>
               {sistemasConfig.neurologico.opcoes.map((op) => (
@@ -279,17 +279,17 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
           </div>
 
           <div className={`p-4 rounded-xl shadow-sm transition-all border-l-4 ${cardiovascularPreenchido ? 'bg-slate-100 dark:bg-slate-700 border-rose-500' : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}>
-            <label className="block text-sm font-bold text-slate-800 dark:text-gray-100 mb-3">
-              {cardioConfig.label} <span className="text-xs font-normal text-slate-500 dark:text-gray-400">(avalie os 3 itens — pontos se somam, máx 6)</span>
+            <label className="block text-sm font-bold text-slate-800 dark:text-slate-100 mb-3">
+              {cardioConfig.label} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">(avalie os 3 itens — pontos se somam, máx 6)</span>
             </label>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-200 mb-1">Drogas vasoativas (DVA)</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">Drogas vasoativas (DVA)</label>
                 <select
                   value={cardioDVA === null ? '' : cardioDVA}
                   onChange={(e) => setCardioDVA(parseInt(e.target.value))}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
                 >
                   <option value="" disabled>Escolha uma opção...</option>
                   <option value={0}>0 pts — Sem DVA</option>
@@ -299,11 +299,11 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-200 mb-1">Lactato</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">Lactato</label>
                 <select
                   value={cardioLactato === null ? '' : cardioLactato}
                   onChange={(e) => setCardioLactato(parseInt(e.target.value))}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
                 >
                   <option value="" disabled>Escolha uma opção...</option>
                   <option value={0}>0 pts — {"< 45 mg/dL ou < 5 mmol/L"}</option>
@@ -313,11 +313,11 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-200 mb-1">Pressão arterial média (PAM)</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">Pressão arterial média (PAM)</label>
                 <select
                   value={cardioPAM === null ? '' : cardioPAM}
                   onChange={(e) => setCardioPAM(parseInt(e.target.value))}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
                 >
                   <option value="" disabled>Escolha uma opção...</option>
                   <option value={0}>0 pts — Normal para a idade</option>
@@ -328,7 +328,7 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
 
               {cardiovascularPreenchido && (
                 <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 text-right">
-                  <span className="text-xs text-slate-500 dark:text-gray-400 uppercase font-bold">Subtotal: </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Subtotal: </span>
                   <span className="text-sm font-black text-rose-600 dark:text-rose-400">{scoreCardiovascular} pontos</span>
                 </div>
               )}
@@ -336,17 +336,17 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
           </div>
 
           <div className={`p-4 rounded-xl shadow-sm transition-all border-l-4 ${coagulacaoPreenchida ? 'bg-slate-100 dark:bg-slate-700 border-rose-500' : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}>
-            <label className="block text-sm font-bold text-slate-800 dark:text-gray-100 mb-3">
-              {coagConfig.label} <span className="text-xs font-normal text-slate-500 dark:text-gray-400">(avalie os 4 itens — 1 pt cada, máx 2)</span>
+            <label className="block text-sm font-bold text-slate-800 dark:text-slate-100 mb-3">
+              {coagConfig.label} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">(avalie os 4 itens — 1 pt cada, máx 2)</span>
             </label>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-200 mb-1">Plaquetas</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">Plaquetas</label>
                 <select
                   value={coagPlaquetas === null ? '' : coagPlaquetas}
                   onChange={(e) => setCoagPlaquetas(parseInt(e.target.value))}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
                 >
                   <option value="" disabled>Escolha uma opção...</option>
                   <option value={0}>0 pts — ≥ 100.000/µL</option>
@@ -355,11 +355,11 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-200 mb-1">INR</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">INR</label>
                 <select
                   value={coagINR === null ? '' : coagINR}
                   onChange={(e) => setCoagINR(parseInt(e.target.value))}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
                 >
                   <option value="" disabled>Escolha uma opção...</option>
                   <option value={0}>0 pts — ≤ 1,3</option>
@@ -368,11 +368,11 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-200 mb-1">Dímero D</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">Dímero D</label>
                 <select
                   value={coagDimeroD === null ? '' : coagDimeroD}
                   onChange={(e) => setCoagDimeroD(parseInt(e.target.value))}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
                 >
                   <option value="" disabled>Escolha uma opção...</option>
                   <option value={0}>0 pts — ≤ 2 mg/L</option>
@@ -381,11 +381,11 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-200 mb-1">Fibrinogênio</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">Fibrinogênio</label>
                 <select
                   value={coagFibrinogenio === null ? '' : coagFibrinogenio}
                   onChange={(e) => setCoagFibrinogenio(parseInt(e.target.value))}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-gray-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 transition-colors"
                 >
                   <option value="" disabled>Escolha uma opção...</option>
                   <option value={0}>0 pts — ≥ 100 mg/dL</option>
@@ -395,7 +395,7 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
 
               {coagulacaoPreenchida && (
                 <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 text-right">
-                  <span className="text-xs text-slate-500 dark:text-gray-400 uppercase font-bold">Subtotal: </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">Subtotal: </span>
                   <span className="text-sm font-black text-rose-600 dark:text-rose-400">{scoreCoagulacao} pontos</span>
                   {(coagPlaquetas ?? 0) + (coagINR ?? 0) + (coagDimeroD ?? 0) + (coagFibrinogenio ?? 0) > 2 && (
                     <span className="text-xs text-slate-400 ml-1">(limitado ao máx 2)</span>
@@ -408,26 +408,26 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
 
         <div className="shrink-0 px-4 sm:px-5 pb-4 sm:pb-5 pt-2 space-y-3">
           <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div className="grid grid-cols-4 gap-1 text-center text-[10px] sm:text-xs uppercase tracking-wider font-bold text-slate-500 dark:text-gray-400">
+            <div className="grid grid-cols-4 gap-1 text-center text-[10px] sm:text-xs uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
               <div>
-                <span className="block text-base sm:text-lg text-slate-800 dark:text-gray-100">{respiratorio ?? '-'}</span>
+                <span className="block text-base sm:text-lg text-slate-800 dark:text-slate-100">{respiratorio ?? '-'}</span>
                 Resp.
               </div>
               <div>
-                <span className="block text-base sm:text-lg text-slate-800 dark:text-gray-100">{neurologico ?? '-'}</span>
+                <span className="block text-base sm:text-lg text-slate-800 dark:text-slate-100">{neurologico ?? '-'}</span>
                 Neuro.
               </div>
               <div>
-                <span className="block text-base sm:text-lg text-slate-800 dark:text-gray-100">{cardiovascularPreenchido ? scoreCardiovascular : '-'}</span>
+                <span className="block text-base sm:text-lg text-slate-800 dark:text-slate-100">{cardiovascularPreenchido ? scoreCardiovascular : '-'}</span>
                 Cardio.
               </div>
               <div>
-                <span className="block text-base sm:text-lg text-slate-800 dark:text-gray-100">{coagulacaoPreenchida ? scoreCoagulacao : '-'}</span>
+                <span className="block text-base sm:text-lg text-slate-800 dark:text-slate-100">{coagulacaoPreenchida ? scoreCoagulacao : '-'}</span>
                 Coag.
               </div>
             </div>
             <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700 text-center">
-              <span className="text-xs text-slate-500 dark:text-gray-400 uppercase font-bold tracking-wider">Total: </span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">Total: </span>
               <span className="text-xl font-black text-rose-600 dark:text-rose-400">{todosPreenchidos ? scoreTotal : '-'}</span>
               <span className="text-xs text-slate-400"> pontos</span>
             </div>
@@ -439,7 +439,7 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
             className={`w-full py-3 sm:py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all ${
               todosPreenchidos
                 ? 'bg-rose-600 text-white shadow-xl hover:bg-rose-500 hover:scale-[1.02] active:scale-[0.98]'
-                : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-gray-600 cursor-not-allowed'
+                : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
             }`}
           >
             Classificar
@@ -453,7 +453,7 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
   if (tela === 'resultado' && classificacao) {
     return (
       <div className="w-full bg-slate-50 dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 text-center animate-in zoom-in-95 duration-300 transition-colors">
-        <p className="text-slate-500 dark:text-gray-500 text-xs mb-4 uppercase tracking-[0.2em] font-bold">{"Classificação Final"}</p>
+        <p className="text-slate-500 dark:text-slate-500 text-xs mb-4 uppercase tracking-[0.2em] font-bold">{"Classificação Final"}</p>
 
         <div className={`w-28 h-28 mx-auto rounded-full flex flex-col items-center justify-center mb-6 border-8 border-white dark:border-slate-800 shadow-xl ${classificacao.bg}`}>
           <span className="text-5xl font-black text-white">{scoreTotal}</span>
@@ -461,7 +461,7 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
         </div>
 
         <h2 className={`text-3xl font-black ${classificacao.cor} mb-2`}>{classificacao.titulo}</h2>
-        <p className="text-sm text-slate-500 dark:text-gray-400 mb-6">{classificacao.descricao}</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{classificacao.descricao}</p>
 
         <div className="grid grid-cols-4 gap-2 mb-6">
           {[
@@ -471,28 +471,28 @@ export const PhoenixSepsisCalculator: React.FC<Props> = ({ patientId, onClose })
             { label: 'Coag.', score: scoreCoagulacao },
           ].map((s) => (
             <div key={s.label} className="bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
-              <span className="block text-lg font-black text-slate-800 dark:text-gray-100">{s.score}</span>
+              <span className="block text-lg font-black text-slate-800 dark:text-slate-100">{s.score}</span>
               <span className="text-xs text-slate-400 uppercase font-bold">{s.label}</span>
             </div>
           ))}
         </div>
 
         <div className="bg-white dark:bg-slate-800/80 p-5 rounded-3xl mb-10 border border-slate-200 dark:border-slate-700 shadow-lg">
-          <p className="text-xs text-slate-600 dark:text-gray-300 mb-2 uppercase font-bold tracking-widest">{"Conduta Clínica Recomendada"}</p>
-          <p className="text-slate-800 dark:text-gray-100 font-bold text-lg leading-tight">{classificacao.conduta}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-300 mb-2 uppercase font-bold tracking-widest">{"Conduta Clínica Recomendada"}</p>
+          <p className="text-slate-800 dark:text-slate-100 font-bold text-lg leading-tight">{classificacao.conduta}</p>
         </div>
 
         <div className="flex flex-col gap-3">
           <button
             onClick={saveToSupabase}
             disabled={isSaving}
-            className={`w-full py-4 rounded-2xl font-black text-white shadow-2xl transition-all ${isSaving ? 'bg-gray-400 dark:bg-gray-700' : 'bg-green-600 hover:bg-green-500 hover:scale-[1.02]'}`}
+            className={`w-full py-4 rounded-2xl font-black text-white shadow-2xl transition-all ${isSaving ? 'bg-slate-400 dark:bg-slate-700' : 'bg-green-600 hover:bg-green-500 hover:scale-[1.02]'}`}
           >
             {isSaving ? 'A Gravar...' : 'Gravar no Prontuário'}
           </button>
           <button
             onClick={() => setTela('criterios')}
-            className="w-full py-3 rounded-2xl bg-white dark:bg-slate-800 text-slate-500 dark:text-gray-400 font-bold text-xs hover:text-slate-800 dark:hover:text-white transition shadow-sm"
+            className="w-full py-3 rounded-2xl bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-xs hover:text-slate-800 dark:hover:text-white transition shadow-sm"
           >
             {"Revisar Avaliação"}
           </button>

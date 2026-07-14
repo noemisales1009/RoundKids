@@ -80,7 +80,7 @@ const IconeSireneVermelha = () => (
 const getInterpretacaoComfortB = (total: number) => {
   if (total <= 10) {
     // 6 a 10
-    return { texto: 'Sedação Excessiva (6-10)', cor: 'text-blue-400', icone: <IconeLuaAzul /> };
+    return { texto: 'Sedação Excessiva (6-10)', cor: 'text-primary-400', icone: <IconeLuaAzul /> };
   }
   if (total <= 22) {
     // 11 a 22
@@ -132,7 +132,7 @@ const DropdownComfortB = forwardRef<HTMLDivElement, { label: string, id: string,
     <div className="flex justify-between items-center mb-2">
       <label
         htmlFor={id}
-        className="block text-sm font-medium text-slate-600 dark:text-gray-300"
+        className="block text-sm font-medium text-slate-600 dark:text-slate-300"
       >
         {label}
       </label>
@@ -142,7 +142,7 @@ const DropdownComfortB = forwardRef<HTMLDivElement, { label: string, id: string,
       id={id}
       value={valor === null ? '' : valor}
       onChange={(e) => onOpcaoChange(e.target.value === '' ? null : Number(e.target.value))}
-      className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none"
     >
       <option value="">Selecione...</option>
       {opcoes.map((opt) => (
@@ -269,13 +269,13 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
 
   // --- Renderização ---
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-gray-300 rounded-lg min-h-[600px]">
+    <div className="w-full max-w-2xl mx-auto p-4 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 rounded-lg min-h-[600px]">
       
       {/* --- TELA 1: LISTA (Principal) --- */}
       {telaAtiva === 'lista' && (
         <div className="flex flex-col space-y-4">
           <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg text-center">
-            <h2 className="text-sm font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+            <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">
               ÚLTIMA AVALIAÇÃO COMFORT-B
             </h2>
             <div className="flex items-baseline justify-center space-x-1">
@@ -300,7 +300,7 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
               resetForm();
               setTelaAtiva('form');
             }}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200"
+            className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200"
           >
             Registrar Nova Avaliação COMFORT-B
           </button>
@@ -314,7 +314,7 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
           <div className="flex items-center space-x-4 mb-2">
             <button
               onClick={() => setTelaAtiva('lista')}
-              className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
+              className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
             >
               <IconeVoltar />
             </button>
@@ -325,14 +325,14 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
 
           {/* Toggle Intubado */}
           <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg flex items-center justify-between">
-            <label htmlFor="intubadoToggle" className="text-sm font-medium text-gray-300">
+            <label htmlFor="intubadoToggle" className="text-sm font-medium text-slate-300">
               O paciente está INTUBADO?
             </label>
             <button
               id="intubadoToggle"
               onClick={handleToggleIntubado}
               className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${
-                isIntubado ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'
+                isIntubado ? 'bg-primary-600' : 'bg-slate-300 dark:bg-slate-700'
               }`}
             >
               <span
@@ -416,7 +416,7 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
           
           <button
             onClick={handleCalcular}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200 mt-4"
+            className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200 mt-4"
           >
             Calcular Pontuação
           </button>
@@ -430,7 +430,7 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
           <div className="flex items-center space-x-4 mb-2">
             <button
               onClick={() => setTelaAtiva('form')} // Volta para o formulário
-              className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
+              className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
             >
               <IconeVoltar />
             </button>
@@ -461,7 +461,7 @@ export const ComfortBScale: React.FC<ComfortBScaleProps> = ({ onSaveScore }) => 
           
           <button
             onClick={handleSalvar}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200 mt-6"
+            className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200 mt-6"
           >
             Salvar e Fechar
           </button>

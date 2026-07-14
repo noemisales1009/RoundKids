@@ -79,7 +79,7 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId, onCalculationSav
         className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
       >
         <div className="flex items-center gap-2">
-          <DropletIcon className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+          <DropletIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Diurese</h3>
         </div>
         <ChevronRightIcon className={`w-5 h-5 text-slate-400 transition transform ${isExpanded ? 'rotate-90' : ''}`} />
@@ -126,15 +126,15 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId, onCalculationSav
             />
           </div>
 
-          <div className="bg-teal-50 dark:bg-teal-900/20 p-3 rounded-lg border border-teal-200 dark:border-teal-800">
+          <div className="bg-primary-50 dark:bg-primary-900/20 p-3 rounded-lg border border-primary-200 dark:border-primary-800">
             <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Débito Urinário</p>
-            <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">{result.toFixed(2)} mL/kg/h</p>
+            <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">{result.toFixed(2)} mL/kg/h</p>
           </div>
 
           <button
             onClick={handleSave}
             disabled={loading}
-            className="w-full bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition"
+            className="w-full bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition"
           >
             <SaveIcon className="w-4 h-4" />
             {loading ? 'Salvando...' : 'Salvar'}

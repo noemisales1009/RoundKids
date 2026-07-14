@@ -186,7 +186,7 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({ label, id, valor, onOpc
     <div className="flex justify-between items-center mb-2">
       <label
         htmlFor={id}
-        className="block text-sm font-medium text-slate-600 dark:text-gray-300"
+        className="block text-sm font-medium text-slate-600 dark:text-slate-300"
       >
         {label}
       </label>
@@ -200,7 +200,7 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({ label, id, valor, onOpc
       id={id}
       value={valor === null ? '' : String(valor)}
       onChange={(e) => onOpcaoChange(e.target.value === '' ? null : e.target.value === 'true')}
-      className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+      className="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white p-3 rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none text-sm"
     >
       <option value="">Selecione uma resposta...</option>
       {opcoes.map((opt, idx) => (
@@ -270,7 +270,7 @@ export const CAMICUCalculator: React.FC<CAMICUCalculatorProps> = ({ patientId })
       <div className="space-y-4">
         <div className="p-6 rounded-lg bg-white dark:bg-slate-800 shadow-lg text-center">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">CAM-ICU Pediátrico</h2>
-          <p className="text-sm text-slate-600 dark:text-gray-300 mb-4">
+          <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
             Selecione a escala com base na idade do paciente
           </p>
 
@@ -283,17 +283,17 @@ export const CAMICUCalculator: React.FC<CAMICUCalculatorProps> = ({ patientId })
                   setRespostas({});
                   setTela('form');
                 }}
-                className="w-full p-4 rounded-lg border-2 border-slate-300 dark:border-slate-600 hover:border-blue-500 hover:bg-blue-500/10 text-left transition-all"
+                className="w-full p-4 rounded-lg border-2 border-slate-300 dark:border-slate-600 hover:border-primary-500 hover:bg-primary-500/10 text-left transition-all"
               >
                 <h3 className="font-bold text-slate-900 dark:text-white">{conf.titulo}</h3>
-                <p className="text-xs text-slate-500 dark:text-gray-400">{conf.faixaEtaria}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{conf.faixaEtaria}</p>
               </button>
             ))}
           </div>
 
           <div className="mt-6 p-4 bg-slate-100 dark:bg-slate-700 rounded-lg text-left border border-slate-300 dark:border-slate-600">
-            <p className="text-xs text-slate-600 dark:text-gray-300 font-medium">
-              <span className="text-blue-400 font-bold">Regra de Interpretação:</span> O diagnóstico é confirmado se houver
+            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+              <span className="text-primary-400 font-bold">Regra de Interpretação:</span> O diagnóstico é confirmado se houver
               alteração aguda (1) E déficit de atenção (2), somados a alteração de consciência (3) OU pensamento desorganizado (4).
             </p>
           </div>
@@ -312,19 +312,19 @@ export const CAMICUCalculator: React.FC<CAMICUCalculatorProps> = ({ patientId })
               setEscalaAtiva(null);
               setRespostas({});
             }}
-            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white"
+            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
           >
             <ChevronLeftIcon className="w-5 h-5" />
           </button>
           <div>
             <h2 className="font-bold text-slate-900 dark:text-white">{configAtual.titulo}</h2>
-            <p className="text-xs text-slate-500 dark:text-gray-400">{respondidosCount}/{totalItens} Itens</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{respondidosCount}/{totalItens} Itens</p>
           </div>
         </div>
 
         <div className="h-1 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
           <div
-            className="h-full bg-blue-500 transition-all duration-500"
+            className="h-full bg-primary-500 transition-all duration-500"
             style={{ width: `${(respondidosCount / totalItens) * 100}%` }}
           />
         </div>
@@ -347,8 +347,8 @@ export const CAMICUCalculator: React.FC<CAMICUCalculatorProps> = ({ patientId })
           onClick={() => setTela('resultado')}
           className={`w-full py-3 rounded-lg font-bold mt-6 transition-all ${
             respondidosCount === totalItens
-              ? 'bg-blue-600 text-white hover:bg-blue-700'
-              : 'bg-slate-200 dark:bg-slate-700 text-gray-500 cursor-not-allowed'
+              ? 'bg-primary-600 text-white hover:bg-primary-700'
+              : 'bg-slate-200 dark:bg-slate-700 text-slate-500 cursor-not-allowed'
           }`}
         >
           Concluir Diagnóstico
@@ -363,7 +363,7 @@ export const CAMICUCalculator: React.FC<CAMICUCalculatorProps> = ({ patientId })
         <div className="flex items-center gap-2 mb-4">
           <button
             onClick={() => setTela('form')}
-            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white"
+            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
           >
             <ChevronLeftIcon className="w-5 h-5" />
           </button>
@@ -382,9 +382,9 @@ export const CAMICUCalculator: React.FC<CAMICUCalculatorProps> = ({ patientId })
           <h3 className={`text-2xl font-bold mb-2 uppercase ${interpretacao.cor}`}>
             {interpretacao.texto}
           </h3>
-          <p className="text-sm text-slate-600 dark:text-gray-300 mb-4">{interpretacao.detalhe}</p>
-          <div className="border-t border-gray-300 dark:border-gray-400 opacity-20 my-4" />
-          <p className="text-xs text-slate-500 dark:text-gray-400 italic">
+          <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">{interpretacao.detalhe}</p>
+          <div className="border-t border-slate-300 dark:border-slate-400 opacity-20 my-4" />
+          <p className="text-xs text-slate-500 dark:text-slate-400 italic">
             <span className="font-bold">Conduta:</span> {interpretacao.conduta}
           </p>
         </div>
@@ -398,7 +398,7 @@ export const CAMICUCalculator: React.FC<CAMICUCalculatorProps> = ({ patientId })
                 ? 'bg-green-600 text-white'
                 : saveStatus === 'error'
                 ? 'bg-red-600 text-white'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-primary-600 text-white hover:bg-primary-700'
             }`}
           >
             {isSaving ? 'Salvando...' : saveStatus === 'success' ? 'Registrado!' : saveStatus === 'error' ? 'Erro ao salvar' : 'Salvar Avaliação'}
@@ -410,7 +410,7 @@ export const CAMICUCalculator: React.FC<CAMICUCalculatorProps> = ({ patientId })
               setEscalaAtiva(null);
               setRespostas({});
             }}
-            className="w-full py-3 rounded-lg border-2 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:border-blue-500 font-bold transition-all"
+            className="w-full py-3 rounded-lg border-2 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:border-primary-500 font-bold transition-all"
           >
             Nova Avaliação
           </button>
