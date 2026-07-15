@@ -22,6 +22,7 @@ interface DashboardData {
   diagnosticosPrincipaisTop5: Array<{ nome: string; total: number }>;
   diagnosticosSecundariosTop5: Array<{ nome: string; total: number }>;
   microorganismosPorTipo: Array<{ tipo: string; total: number }>;
+  microganismosComPacientes: Array<{ tipo: string; total: number; pacientes: string[] }>;
 }
 
 export const DashboardAnalyticsScreen: React.FC = () => {
@@ -146,25 +147,31 @@ export const DashboardAnalyticsScreen: React.FC = () => {
       // Microorganismos por tipo (Top 5 + Outros)
       const { data: culturaData } = await supabase
         .from('culturas_pacientes')
-        .select('microorganismo')
+        .select('microorganismo, paciente_id, patients(name)')
         .eq('is_archived', false);
 
-      const microMap = new Map<string, number>();
+      const microMap = new Map<string, { total: number; pacientes: Set<string> }>();
       culturaData?.forEach(c => {
         if (c.microorganismo) {
-          microMap.set(c.microorganismo, (microMap.get(c.microorganismo) || 0) + 1);
+          const existing = microMap.get(c.microorganismo) || { total: 0, pacientes: new Set<string>() };
+          const pacienteName = (c.patients as any)?.name || 'Sem nome';
+          existing.total++;
+          existing.pacientes.add(pacienteName);
+          microMap.set(c.microorganismo, existing);
         }
       });
 
       const microSorted = Array.from(microMap.entries())
-        .map(([tipo, total]) => ({ tipo, total }))
+        .map(([tipo, data]) => ({ tipo, total: data.total, pacientes: Array.from(data.pacientes) }))
         .sort((a, b) => b.total - a.total);
 
       const microTop5 = microSorted.slice(0, 5);
       const microOutros = microSorted.slice(5).reduce((sum, m) => sum + m.total, 0);
-      const microorganismosPorTipo = microOutros > 0
-        ? [...microTop5, { tipo: 'Outros', total: microOutros }]
+      const microganismosComPacientes = microOutros > 0
+        ? [...microTop5, { tipo: 'Outros', total: microOutros, pacientes: [] }]
         : microTop5;
+
+      const microorganismosPorTipo = microganismosComPacientes.map(m => ({ tipo: m.tipo, total: m.total }));
 
       // Precauções Ativas (apenas de pacientes ativos) com nomes
       const { data: precauctionsFull } = await supabase
@@ -262,6 +269,7 @@ export const DashboardAnalyticsScreen: React.FC = () => {
         diagnosticosPrincipaisTop5,
         diagnosticosSecundariosTop5,
         microorganismosPorTipo,
+        microganismosComPacientes,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar dados');
@@ -357,9 +365,14 @@ export const DashboardAnalyticsScreen: React.FC = () => {
             <div className="space-y-4">
               {data.microorganismosPorTipo.map((micro, idx) => {
                 const colors = ['from-primary-400 to-primary-600', 'from-danger-400 to-danger-600', 'from-accent-400 to-accent-600', 'from-success-400 to-success-600', 'from-warning-400 to-warning-600', 'from-slate-400 to-slate-600'];
-                const maxTotal = Math.max(...data.microorganismosPorTipo.map(m => m.total));
+                const microData = data.microganismosComPacientes.find(m => m.tipo === micro.tipo);
+                const totalGeral = data.microorganismosPorTipo.reduce((sum, m) => sum + m.total, 0);
+                const percentual = Math.round((micro.total / totalGeral) * 100);
+                const pacientesStr = microData?.pacientes.slice(0, 3).join(', ') + (microData && microData.pacientes.length > 3 ? '...' : '');
+                const tooltipText = `${micro.tipo}\n${micro.total} culturas (${percentual}%)\nPacientes: ${pacientesStr || 'N/A'}`;
+
                 return (
-                  <div key={micro.tipo} className="flex items-center gap-3">
+                  <div key={micro.tipo} className="flex items-center gap-3" title={tooltipText}>
                     <div className="min-w-7 w-7 h-7 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold">
                       {idx + 1}
                     </div>
