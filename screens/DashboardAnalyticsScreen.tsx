@@ -18,6 +18,7 @@ interface DashboardData {
   dietasAtivas: number;
   precaucoesAtivas: number;
   precaucoesPorTipo: Array<{ tipo: string; total: number }>;
+  precaucoesPorTipoComPacientes: Array<{ tipo: string; total: number; pacientes: string[] }>;
   isolamentosDetalhados: Array<{ pacienteNome: string; doenca: string; tipo: string; dataInicio: string; dataFim: string; diasRestantes: number }>;
   isolamentosStatus: { indefinido: number; vencida: number; breve: number; prazo: number };
   diagnosticosPrincipaisTop5: Array<{ nome: string; total: number }>;
@@ -205,14 +206,19 @@ export const DashboardAnalyticsScreen: React.FC = () => {
       const precaucoesAtivas = activePrecautions.length;
 
       // Precauções por Tipo (pacientes ativos)
-      const tipoMap = new Map<string, number>();
+      const tipoMap = new Map<string, { total: number; pacientes: Set<string> }>();
       activePrecautions.forEach(p => {
         const tipo = p.tipo_precaucao || 'padrão';
-        tipoMap.set(tipo, (tipoMap.get(tipo) || 0) + 1);
+        const existing = tipoMap.get(tipo) || { total: 0, pacientes: new Set<string>() };
+        existing.total++;
+        if (p.pacienteNome) existing.pacientes.add(p.pacienteNome);
+        tipoMap.set(tipo, existing);
       });
-      const precaucoesPorTipo = Array.from(tipoMap.entries())
-        .map(([tipo, total]) => ({ tipo, total }))
+      const precaucoesPorTipoComPacientes = Array.from(tipoMap.entries())
+        .map(([tipo, data]) => ({ tipo, total: data.total, pacientes: Array.from(data.pacientes) }))
         .sort((a, b) => b.total - a.total);
+
+      const precaucoesPorTipo = precaucoesPorTipoComPacientes.map(p => ({ tipo: p.tipo, total: p.total }));
 
       // Status dos Isolamentos (TODOS os ativos)
       const hoje = new Date().toISOString().split('T')[0];
@@ -274,6 +280,7 @@ export const DashboardAnalyticsScreen: React.FC = () => {
         dietasAtivas: dietasCount || 0,
         precaucoesAtivas: precaucoesAtivas || 0,
         precaucoesPorTipo,
+        precaucoesPorTipoComPacientes,
         isolamentosDetalhados,
         isolamentosStatus: statusCounts,
         diagnosticosPrincipaisTop5,
@@ -325,29 +332,29 @@ export const DashboardAnalyticsScreen: React.FC = () => {
 
         {/* KPIs Grid */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-          <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900 dark:to-primary-800 rounded-lg border border-primary-200 dark:border-primary-700 p-6 shadow-lg hover:shadow-xl transition">
-            <p className="text-xs uppercase font-bold text-primary-600 dark:text-primary-300 tracking-wider mb-3">
+          <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900 dark:to-primary-800 rounded-lg border border-primary-200 dark:border-primary-700 p-6 shadow-lg hover:shadow-xl transition flex flex-col">
+            <p className="text-xs uppercase font-bold text-primary-600 dark:text-primary-300 tracking-wider min-h-[2rem] flex items-start">
               👥 Pacientes
             </p>
-            <p className="text-4xl font-bold text-primary-700 dark:text-primary-200 mb-2">{data.totalPacientes}</p>
-            <div className="flex gap-2 text-xs font-semibold flex-wrap">
-              <span className="px-2 py-1 bg-primary-200 dark:bg-primary-700 text-primary-700 dark:text-primary-200 rounded">
+            <p className="text-4xl font-bold text-primary-700 dark:text-primary-200 mb-3">{data.totalPacientes}</p>
+            <div className="flex flex-col gap-1.5 text-xs font-semibold">
+              <span className="px-2 py-1 bg-primary-200 dark:bg-primary-700 text-primary-700 dark:text-primary-200 rounded whitespace-nowrap w-fit">
                 {data.pacientesEstavel} estável
               </span>
-              <span className="px-2 py-1 bg-danger-200 dark:bg-danger-700 text-danger-700 dark:text-danger-200 rounded">
+              <span className="px-2 py-1 bg-danger-200 dark:bg-danger-700 text-danger-700 dark:text-danger-200 rounded whitespace-nowrap w-fit">
                 {data.pacientesCriticos} instável
               </span>
-              <span className="px-2 py-1 bg-warning-200 dark:bg-warning-700 text-warning-700 dark:text-warning-200 rounded">
+              <span className="px-2 py-1 bg-warning-200 dark:bg-warning-700 text-warning-700 dark:text-warning-200 rounded whitespace-nowrap w-fit">
                 {data.pacientesEmRisco} risco
               </span>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-danger-50 to-danger-100 dark:from-danger-900 dark:to-danger-800 rounded-lg border border-danger-200 dark:border-danger-700 p-6 shadow-lg hover:shadow-xl transition">
-            <p className="text-xs uppercase font-bold text-danger-600 dark:text-danger-300 tracking-wider mb-3">
+          <div className="bg-gradient-to-br from-danger-50 to-danger-100 dark:from-danger-900 dark:to-danger-800 rounded-lg border border-danger-200 dark:border-danger-700 p-6 shadow-lg hover:shadow-xl transition flex flex-col">
+            <p className="text-xs uppercase font-bold text-danger-600 dark:text-danger-300 tracking-wider min-h-[2rem] flex items-start">
               🚨 Alertas
             </p>
-            <p className="text-4xl font-bold text-danger-700 dark:text-danger-200 mb-2">{data.totalAlertas}</p>
+            <p className="text-4xl font-bold text-danger-700 dark:text-danger-200 mb-3">{data.totalAlertas}</p>
             <div className="flex flex-col gap-1.5 text-xs font-semibold">
               <span className="px-2 py-1 bg-success-200 dark:bg-success-700 text-success-700 dark:text-success-200 rounded whitespace-nowrap w-fit">
                 {data.alertasNoPrazo} no prazo
@@ -358,27 +365,27 @@ export const DashboardAnalyticsScreen: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-accent-50 to-accent-100 dark:from-accent-900 dark:to-accent-800 rounded-lg border border-accent-200 dark:border-accent-700 p-6 shadow-lg hover:shadow-xl transition">
-            <p className="text-xs uppercase font-bold text-accent-600 dark:text-accent-300 tracking-wider mb-3">
+          <div className="bg-gradient-to-br from-accent-50 to-accent-100 dark:from-accent-900 dark:to-accent-800 rounded-lg border border-accent-200 dark:border-accent-700 p-6 shadow-lg hover:shadow-xl transition flex flex-col">
+            <p className="text-xs uppercase font-bold text-accent-600 dark:text-accent-300 tracking-wider min-h-[2rem] flex items-start">
               💊 Medicações
             </p>
-            <p className="text-4xl font-bold text-accent-700 dark:text-accent-200">{data.medicacoesAtivas}</p>
-            <p className="text-xs text-accent-600 dark:text-accent-300 mt-2">Prescrições ativas</p>
+            <p className="text-4xl font-bold text-accent-700 dark:text-accent-200 mb-3">{data.medicacoesAtivas}</p>
+            <p className="text-xs text-accent-600 dark:text-accent-300">Prescrições ativas</p>
           </div>
 
-          <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 p-6 shadow-lg hover:shadow-xl transition">
-            <p className="text-xs uppercase font-bold text-slate-600 dark:text-slate-300 tracking-wider mb-3">
+          <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 rounded-lg border border-slate-300 dark:border-slate-600 p-6 shadow-lg hover:shadow-xl transition flex flex-col">
+            <p className="text-xs uppercase font-bold text-slate-600 dark:text-slate-300 tracking-wider min-h-[2rem] flex items-start">
               🛏️ Dispositivos
             </p>
-            <p className="text-4xl font-bold text-slate-900 dark:text-slate-100">{data.dispositivosAtivos}</p>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">Ativos</p>
+            <p className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-3">{data.dispositivosAtivos}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400">Ativos</p>
           </div>
 
-          <div className="bg-gradient-to-br from-accent-50 to-accent-100 dark:from-accent-900 dark:to-accent-800 rounded-lg border border-accent-200 dark:border-accent-700 p-6 shadow-lg hover:shadow-xl transition">
-            <p className="text-xs uppercase font-bold tracking-wider text-accent-700 dark:text-accent-300 mb-3">
+          <div className="bg-gradient-to-br from-accent-50 to-accent-100 dark:from-accent-900 dark:to-accent-800 rounded-lg border border-accent-200 dark:border-accent-700 p-6 shadow-lg hover:shadow-xl transition flex flex-col">
+            <p className="text-xs uppercase font-bold tracking-wider text-accent-700 dark:text-accent-300 min-h-[2rem] flex items-start">
               🛡️ Isolamento (Ativas)
             </p>
-            <p className="text-4xl font-bold mb-2 text-accent-700 dark:text-accent-200">{data.precaucoesAtivas}</p>
+            <p className="text-4xl font-bold text-accent-700 dark:text-accent-200 mb-3">{data.precaucoesAtivas}</p>
             <p className="text-xs text-accent-700 dark:text-accent-400">Pacientes em isolamento</p>
           </div>
         </div>
@@ -615,13 +622,37 @@ export const DashboardAnalyticsScreen: React.FC = () => {
               {data.precaucoesPorTipo.slice(0, 5).map((tipo, idx) => {
                 const colors = ['from-success-400 to-success-600', 'from-accent-400 to-accent-600', 'from-primary-400 to-primary-600', 'from-warning-400 to-warning-600', 'from-danger-400 to-danger-600'];
                 const maxTotal = Math.max(...data.precaucoesPorTipo.map(t => t.total));
+                const totalGeral = data.precaucoesPorTipo.reduce((sum, t) => sum + t.total, 0);
+                const percentual = Math.round((tipo.total / totalGeral) * 100);
+                const tipoData = data.precaucoesPorTipoComPacientes.find(t => t.tipo === tipo.tipo);
                 return (
-                  <div key={tipo.tipo} className="flex items-center gap-2">
+                  <div
+                    key={tipo.tipo}
+                    className="relative flex items-center gap-2 cursor-pointer select-none hover:bg-slate-50 dark:hover:bg-slate-700/50 -mx-2 px-2 py-1 rounded transition"
+                    onMouseEnter={() => setTooltipData({ tipo: tipo.tipo, total: tipo.total, percentual, pacientes: tipoData?.pacientes || [] })}
+                    onMouseLeave={() => setTooltipData(null)}
+                  >
                     <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 min-w-24 truncate">{tipo.tipo}</p>
                     <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
                       <div className={`bg-gradient-to-r ${colors[idx]} h-3 rounded-full flex items-center justify-end pr-2`} style={{ width: `${(tipo.total / maxTotal) * 100}%` }}></div>
                     </div>
                     <p className="text-xs font-bold text-slate-900 dark:text-slate-100 min-w-8 text-right">{tipo.total}</p>
+
+                    {/* Tooltip Visual */}
+                    {tooltipData?.tipo === tipo.tipo && tooltipData.pacientes.length > 0 && (
+                      <div className="absolute top-full left-0 mt-1 bg-slate-900 dark:bg-slate-700 text-white dark:text-slate-100 px-4 py-3 rounded shadow-xl z-30 text-sm w-72 pointer-events-none">
+                        <p className="font-bold text-base mb-2">{tooltipData.tipo}</p>
+                        <p className="text-slate-300 dark:text-slate-400 mb-3">{tooltipData.total} pacientes ({tooltipData.percentual}%)</p>
+                        <p className="text-xs font-semibold text-slate-400 mb-2 uppercase">Pacientes:</p>
+                        <ul className="space-y-1 max-h-48 overflow-y-auto">
+                          {tooltipData.pacientes.map(paciente => (
+                            <li key={paciente} className="text-sm text-slate-200 break-words">
+                              • {paciente}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -773,16 +804,6 @@ export const DashboardAnalyticsScreen: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Refresh Button */}
-        <div className="flex justify-center">
-          <button
-            onClick={fetchDashboardData}
-            className="px-6 py-3 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white rounded-lg font-semibold transition shadow-lg"
-          >
-            🔄 Atualizar Dados
-          </button>
         </div>
       </div>
     </div>
