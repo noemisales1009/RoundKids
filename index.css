@@ -183,3 +183,20 @@ html.dark ::-webkit-scrollbar-thumb:hover {
   left: -9999px;
   top: 0;
 }
+
+/* Animação de entrada das barras dos gráficos (cresce da esquerda) */
+@keyframes barGrow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.animate-bar {
+  transform-origin: left center;
+  animation: barGrow 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-bar {
+    animation: none;
+  }
+}
