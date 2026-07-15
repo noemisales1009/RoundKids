@@ -32,6 +32,7 @@ import {
     TaskStatusScreen,
     EvolucaoDiariaScreen,
 } from './screens';
+import { DashboardAnalyticsScreen } from './screens/DashboardAnalyticsScreen';
 
 // Lazy-loaded screens
 const AlertsHistoryScreen = lazy(() => import('./AlertsHistoryScreen').then(m => ({ default: m.AlertsHistoryScreen })));
@@ -209,6 +210,7 @@ const App: React.FC = () => {
                                         <Route path="/" element={<LoginScreen />} />
                                         <Route path="/" element={<AppLayout />}>
                                             <Route path="dashboard" element={<ErrorBoundary><DashboardScreen /></ErrorBoundary>} />
+                                            <Route path="analytics" element={<ErrorBoundary><DashboardAnalyticsScreen /></ErrorBoundary>} />
                                             <Route path="patients" element={<ErrorBoundary><PatientListScreen /></ErrorBoundary>} />
                                             <Route path="patient/:patientId" element={<ErrorBoundary><PatientDetailScreen /></ErrorBoundary>} />
                                             <Route path="patient/:patientId/history" element={<ErrorBoundary><PatientHistoryScreen /></ErrorBoundary>} />

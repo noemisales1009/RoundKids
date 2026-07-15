@@ -19,6 +19,9 @@ interface DashboardData {
   precaucoesPorTipo: Array<{ tipo: string; total: number }>;
   isolamentosDetalhados: Array<{ pacienteNome: string; doenca: string; tipo: string; dataInicio: string; dataFim: string; diasRestantes: number }>;
   isolamentosStatus: { indefinido: number; vencida: number; breve: number; prazo: number };
+  diagnosticosPrincipaisTop5: Array<{ nome: string; total: number }>;
+  diagnosticosSecundariosTop5: Array<{ nome: string; total: number }>;
+  microorganismosPorTipo: Array<{ tipo: string; total: number }>;
 }
 
 export const DashboardAnalyticsScreen: React.FC = () => {
@@ -97,6 +100,34 @@ export const DashboardAnalyticsScreen: React.FC = () => {
         .sort((a, b) => b.total - a.total)
         .slice(0, 5);
 
+      // Top 5 Diagnósticos Principais e Secundários
+      const { data: allDiagnosticos } = await supabase.from('paciente_diagnosticos')
+        .select('opcao_label, pergunta_id')
+        .eq('arquivado', false);
+
+      const diagnosPrincipaisMap = new Map<string, number>();
+      const diagnosSecundariosMap = new Map<string, number>();
+
+      allDiagnosticos?.forEach(d => {
+        if (d.opcao_label) {
+          if (d.pergunta_id === 1) { // Ajustar pergunta_id conforme necessário
+            diagnosPrincipaisMap.set(d.opcao_label, (diagnosPrincipaisMap.get(d.opcao_label) || 0) + 1);
+          } else if (d.pergunta_id === 2) { // Ajustar pergunta_id conforme necessário
+            diagnosSecundariosMap.set(d.opcao_label, (diagnosSecundariosMap.get(d.opcao_label) || 0) + 1);
+          }
+        }
+      });
+
+      const diagnosticosPrincipaisTop5 = Array.from(diagnosPrincipaisMap.entries())
+        .map(([nome, total]) => ({ nome, total }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5);
+
+      const diagnosticosSecundariosTop5 = Array.from(diagnosSecundariosMap.entries())
+        .map(([nome, total]) => ({ nome, total }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5);
+
       const { count: medicacoesCount } = await supabase
         .from('medicacoes_pacientes')
         .select('*', { count: 'exact', head: true })
@@ -111,6 +142,29 @@ export const DashboardAnalyticsScreen: React.FC = () => {
         .from('dietas_pacientes')
         .select('*', { count: 'exact', head: true })
         .eq('is_archived', false);
+
+      // Microorganismos por tipo (Top 5 + Outros)
+      const { data: culturaData } = await supabase
+        .from('culturas_pacientes')
+        .select('microorganismo')
+        .eq('is_archived', false);
+
+      const microMap = new Map<string, number>();
+      culturaData?.forEach(c => {
+        if (c.microorganismo) {
+          microMap.set(c.microorganismo, (microMap.get(c.microorganismo) || 0) + 1);
+        }
+      });
+
+      const microSorted = Array.from(microMap.entries())
+        .map(([tipo, total]) => ({ tipo, total }))
+        .sort((a, b) => b.total - a.total);
+
+      const microTop5 = microSorted.slice(0, 5);
+      const microOutros = microSorted.slice(5).reduce((sum, m) => sum + m.total, 0);
+      const microorganismosPorTipo = microOutros > 0
+        ? [...microTop5, { tipo: 'Outros', total: microOutros }]
+        : microTop5;
 
       // Precauções Ativas (apenas de pacientes ativos) com nomes
       const { data: precauctionsFull } = await supabase
@@ -205,6 +259,9 @@ export const DashboardAnalyticsScreen: React.FC = () => {
         precaucoesPorTipo,
         isolamentosDetalhados,
         isolamentosStatus: statusCounts,
+        diagnosticosPrincipaisTop5,
+        diagnosticosSecundariosTop5,
+        microorganismosPorTipo,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar dados');
@@ -293,6 +350,87 @@ export const DashboardAnalyticsScreen: React.FC = () => {
           </div>
         </div>
 
+        {/* Microorganismos por Tipo - Gráfico Rosca */}
+        {data.microorganismosPorTipo.length > 0 && (
+          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 shadow-lg mb-8">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-6">🦠 Microorganismos Identificados</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Gráfico Rosca */}
+              <div className="lg:col-span-1 flex flex-col items-center justify-center">
+                <div className="relative w-48 h-48">
+                  <svg className="w-48 h-48" viewBox="0 0 120 120">
+                    {(() => {
+                      const total = data.microorganismosPorTipo.reduce((sum, m) => sum + m.total, 0);
+                      const colors = ['#3785a3', '#ef4444', '#8cb134', '#10b981', '#f59e0b', '#64748b'];
+                      let currentAngle = 0;
+
+                      return data.microorganismosPorTipo.map((micro, idx) => {
+                        const percentage = (micro.total / total) * 100;
+                        const angle = (percentage / 100) * 360;
+                        const startAngle = currentAngle;
+                        const endAngle = currentAngle + angle;
+                        currentAngle = endAngle;
+
+                        const startRad = (startAngle - 90) * (Math.PI / 180);
+                        const endRad = (endAngle - 90) * (Math.PI / 180);
+
+                        const x1 = 60 + 45 * Math.cos(startRad);
+                        const y1 = 60 + 45 * Math.sin(startRad);
+                        const x2 = 60 + 45 * Math.cos(endRad);
+                        const y2 = 60 + 45 * Math.sin(endRad);
+
+                        const largeArc = angle > 180 ? 1 : 0;
+
+                        const path = `M 60 60 L ${x1} ${y1} A 45 45 0 ${largeArc} 1 ${x2} ${y2} Z`;
+
+                        return (
+                          <path
+                            key={micro.tipo}
+                            d={path}
+                            fill={colors[idx % colors.length]}
+                            stroke="white"
+                            strokeWidth="1"
+                            className="dark:stroke-slate-800"
+                          />
+                        );
+                      });
+                    })()}
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                        {data.microorganismosPorTipo.reduce((sum, m) => sum + m.total, 0)}
+                      </p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">culturas</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Legenda */}
+              <div className="lg:col-span-2 space-y-3">
+                {data.microorganismosPorTipo.map((micro, idx) => {
+                  const colors = ['bg-primary-500', 'bg-danger-500', 'bg-accent-500', 'bg-success-500', 'bg-warning-500', 'bg-slate-500'];
+                  const total = data.microorganismosPorTipo.reduce((sum, m) => sum + m.total, 0);
+                  const percentual = Math.round((micro.total / total) * 100);
+                  return (
+                    <div key={micro.tipo} className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded-full ${colors[idx % colors.length]} flex-shrink-0`}></div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 truncate">{micro.tipo}</p>
+                        <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400">
+                          <span>{micro.total} culturas</span>
+                          <span className="font-bold">{percentual}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Distribuição de Diagnósticos */}
         {data.diagnosticos.length > 0 && (
           <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 shadow-lg mb-8">
@@ -318,6 +456,55 @@ export const DashboardAnalyticsScreen: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Top 5 Diagnósticos Principais e Secundários */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Top 5 Diagnósticos Principais */}
+          {data.diagnosticosPrincipaisTop5.length > 0 && (
+            <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 shadow-lg">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-6">📋 Top 5 Diagnósticos Principais</h2>
+              <div className="space-y-4">
+                {data.diagnosticosPrincipaisTop5.map((diag, idx) => (
+                  <div key={diag.nome} className="flex items-center gap-3">
+                    <div className="min-w-7 w-7 h-7 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold">
+                      {idx + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 truncate">{diag.nome}</p>
+                      <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 mt-1">
+                        <div className="bg-gradient-to-r from-primary-400 to-primary-600 h-2 rounded-full" style={{ width: `${(diag.total / Math.max(...data.diagnosticosPrincipaisTop5.map(d => d.total), 1)) * 100}%` }}></div>
+                      </div>
+                    </div>
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100 min-w-6 text-right">{diag.total}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Top 5 Diagnósticos Secundários */}
+          {data.diagnosticosSecundariosTop5.length > 0 && (
+            <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 shadow-lg">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-6">📋 Top 5 Diagnósticos Secundários</h2>
+              <div className="space-y-4">
+                {data.diagnosticosSecundariosTop5.map((diag, idx) => (
+                  <div key={diag.nome} className="flex items-center gap-3">
+                    <div className="min-w-7 w-7 h-7 rounded-full bg-gradient-to-br from-danger-400 to-danger-600 flex items-center justify-center text-white text-xs font-bold">
+                      {idx + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 truncate">{diag.nome}</p>
+                      <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 mt-1">
+                        <div className="bg-gradient-to-r from-danger-400 to-danger-600 h-2 rounded-full" style={{ width: `${(diag.total / Math.max(...data.diagnosticosSecundariosTop5.map(d => d.total), 1)) * 100}%` }}></div>
+                      </div>
+                    </div>
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100 min-w-6 text-right">{diag.total}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Gráficos Principais */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">

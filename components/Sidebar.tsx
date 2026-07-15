@@ -11,6 +11,7 @@ export const Sidebar: React.FC = () => {
     const isAdmin = user?.access_level === 'adm';
     const navItems = [
         { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
+        { path: '/analytics', label: 'Análises', icon: FileTextIcon },
         { path: '/patients', label: 'Leitos', icon: BedIcon },
         { path: '/history', label: 'Histórico Geral', icon: FileTextIcon },
         { path: '/evolucao-diaria', label: 'Evolução Diária', icon: EvolucaoIcon },
