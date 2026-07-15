@@ -397,7 +397,7 @@ export const DashboardAnalyticsScreen: React.FC = () => {
                 return (
                   <div
                     key={micro.tipo}
-                    className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 p-2 rounded transition"
+                    className="relative flex items-center gap-3 cursor-pointer select-none hover:bg-slate-50 dark:hover:bg-slate-700/50 p-2 rounded transition"
                     onMouseEnter={() => setTooltipData({ tipo: micro.tipo, total: micro.total, percentual, pacientes: microData?.pacientes || [] })}
                     onMouseLeave={() => setTooltipData(null)}
                   >
@@ -414,29 +414,25 @@ export const DashboardAnalyticsScreen: React.FC = () => {
                       <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{micro.total}</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">culturas</p>
                     </div>
+
+                    {/* Tooltip Visual */}
+                    {tooltipData?.tipo === micro.tipo && tooltipData.pacientes.length > 0 && (
+                      <div className="absolute top-full left-12 mt-1 bg-slate-900 dark:bg-slate-700 text-white dark:text-slate-100 px-4 py-3 rounded shadow-xl z-30 text-sm w-72 pointer-events-none">
+                        <p className="font-bold text-base mb-2">{tooltipData.tipo}</p>
+                        <p className="text-slate-300 dark:text-slate-400 mb-3">{tooltipData.total} culturas ({tooltipData.percentual}%)</p>
+                        <p className="text-xs font-semibold text-slate-400 mb-2 uppercase">Pacientes:</p>
+                        <ul className="space-y-1 max-h-48 overflow-y-auto">
+                          {tooltipData.pacientes.map(paciente => (
+                            <li key={paciente} className="text-sm text-slate-200 break-words">
+                              • {paciente}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 );
               })}
-
-              {/* Tooltip Visual */}
-              {tooltipData && (
-                <div className="absolute top-full left-0 mt-2 bg-slate-900 dark:bg-slate-700 text-white dark:text-slate-100 px-4 py-3 rounded shadow-lg z-20 text-sm w-72 pointer-events-none ml-12">
-                  <p className="font-bold text-base mb-2">{tooltipData.tipo}</p>
-                  <p className="text-slate-300 dark:text-slate-400 mb-3">{tooltipData.total} culturas ({tooltipData.percentual}%)</p>
-                  {tooltipData.pacientes.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold text-slate-400 mb-2 uppercase">Pacientes:</p>
-                      <ul className="space-y-1 max-h-48 overflow-y-auto">
-                        {tooltipData.pacientes.map(paciente => (
-                          <li key={paciente} className="text-sm text-slate-200 break-words">
-                            • {paciente}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -448,8 +444,14 @@ export const DashboardAnalyticsScreen: React.FC = () => {
             <div className="space-y-4">
               {data.diagnosticos.map((diag, idx) => {
                 const colors = ['from-primary-400 to-primary-600', 'from-danger-400 to-danger-600', 'from-accent-400 to-accent-600', 'from-success-400 to-success-600', 'from-warning-400 to-warning-600'];
+                const diagData = data.diagnosticosComPacientes.find(d => d.nome === diag.nome);
                 return (
-                  <div key={diag.nome} className="flex items-center gap-3">
+                  <div
+                    key={diag.nome}
+                    className="relative flex items-center gap-3 cursor-pointer select-none hover:bg-slate-50 dark:hover:bg-slate-700/50 -mx-2 px-2 py-1 rounded transition"
+                    onMouseEnter={() => setTooltipData({ tipo: diag.nome, total: diag.total, percentual: diag.percentual, pacientes: diagData?.pacientes || [] })}
+                    onMouseLeave={() => setTooltipData(null)}
+                  >
                     <div className="flex-1 flex items-center gap-3">
                       <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 min-w-40">{diag.nome}</p>
                       <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-6 overflow-hidden relative">
@@ -460,6 +462,22 @@ export const DashboardAnalyticsScreen: React.FC = () => {
                       </div>
                     </div>
                     <p className="text-sm font-bold text-slate-900 dark:text-slate-100 min-w-8 text-right">{diag.total}</p>
+
+                    {/* Tooltip Visual */}
+                    {tooltipData?.tipo === diag.nome && tooltipData.pacientes.length > 0 && (
+                      <div className="absolute top-full left-0 mt-1 bg-slate-900 dark:bg-slate-700 text-white dark:text-slate-100 px-4 py-3 rounded shadow-xl z-30 text-sm w-72 pointer-events-none">
+                        <p className="font-bold text-base mb-2">{tooltipData.tipo}</p>
+                        <p className="text-slate-300 dark:text-slate-400 mb-3">{tooltipData.total} pacientes ({tooltipData.percentual}%)</p>
+                        <p className="text-xs font-semibold text-slate-400 mb-2 uppercase">Pacientes:</p>
+                        <ul className="space-y-1 max-h-48 overflow-y-auto">
+                          {tooltipData.pacientes.map(paciente => (
+                            <li key={paciente} className="text-sm text-slate-200 break-words">
+                              • {paciente}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 );
               })}
