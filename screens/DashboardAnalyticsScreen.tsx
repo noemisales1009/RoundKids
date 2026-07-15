@@ -32,6 +32,7 @@ export const DashboardAnalyticsScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tooltipData, setTooltipData] = useState<{ tipo: string; total: number; percentual: number; pacientes: string[] } | null>(null);
+  const [modalData, setModalData] = useState<{ titulo: string; total: number; percentual: number; pacientes: string[] } | null>(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -625,38 +626,24 @@ export const DashboardAnalyticsScreen: React.FC = () => {
                 const totalGeral = data.precaucoesPorTipo.reduce((sum, t) => sum + t.total, 0);
                 const percentual = Math.round((tipo.total / totalGeral) * 100);
                 const tipoData = data.precaucoesPorTipoComPacientes.find(t => t.tipo === tipo.tipo);
+                const tipoLabel = tipo.tipo.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' + ');
                 return (
-                  <div
+                  <button
                     key={tipo.tipo}
-                    className="relative flex items-center gap-2 cursor-pointer select-none hover:bg-slate-50 dark:hover:bg-slate-700/50 -mx-2 px-2 py-1 rounded transition"
-                    onMouseEnter={() => setTooltipData({ tipo: tipo.tipo, total: tipo.total, percentual, pacientes: tipoData?.pacientes || [] })}
-                    onMouseLeave={() => setTooltipData(null)}
+                    type="button"
+                    className="w-full flex items-center gap-2 cursor-pointer select-none hover:bg-slate-50 dark:hover:bg-slate-700/50 -mx-2 px-2 py-1 rounded transition text-left"
+                    onClick={() => setModalData({ titulo: tipoLabel, total: tipo.total, percentual, pacientes: tipoData?.pacientes || [] })}
                   >
-                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 min-w-24 truncate">{tipo.tipo}</p>
+                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 min-w-24 truncate">{tipoLabel}</p>
                     <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
                       <div className={`bg-gradient-to-r ${colors[idx]} h-3 rounded-full flex items-center justify-end pr-2`} style={{ width: `${(tipo.total / maxTotal) * 100}%` }}></div>
                     </div>
                     <p className="text-xs font-bold text-slate-900 dark:text-slate-100 min-w-8 text-right">{tipo.total}</p>
-
-                    {/* Tooltip Visual */}
-                    {tooltipData?.tipo === tipo.tipo && tooltipData.pacientes.length > 0 && (
-                      <div className="absolute top-full left-0 mt-1 bg-slate-900 dark:bg-slate-700 text-white dark:text-slate-100 px-4 py-3 rounded shadow-xl z-30 text-sm w-72 pointer-events-none">
-                        <p className="font-bold text-base mb-2">{tooltipData.tipo}</p>
-                        <p className="text-slate-300 dark:text-slate-400 mb-3">{tooltipData.total} pacientes ({tooltipData.percentual}%)</p>
-                        <p className="text-xs font-semibold text-slate-400 mb-2 uppercase">Pacientes:</p>
-                        <ul className="space-y-1 max-h-48 overflow-y-auto">
-                          {tooltipData.pacientes.map(paciente => (
-                            <li key={paciente} className="text-sm text-slate-200 break-words">
-                              • {paciente}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
+                  </button>
                 );
               })}
             </div>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-4 text-center">Clique em um tipo para ver os pacientes</p>
           </div>
         </div>
 
@@ -749,6 +736,48 @@ export const DashboardAnalyticsScreen: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de Pacientes por Tipo */}
+      {modalData && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setModalData(null)}
+        >
+          <div
+            className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md flex flex-col max-h-[80vh]"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">🛡️ {modalData.titulo}</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{modalData.total} pacientes ({modalData.percentual}%)</p>
+              </div>
+              <button
+                onClick={() => setModalData(null)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              {modalData.pacientes.length > 0 ? (
+                <ul className="space-y-2">
+                  {modalData.pacientes.map(paciente => (
+                    <li key={paciente} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+                      <span className="text-primary-500 mt-0.5">•</span>
+                      <span>{paciente}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-slate-500 dark:text-slate-400">Nenhum paciente encontrado.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
