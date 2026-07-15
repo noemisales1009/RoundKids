@@ -348,12 +348,12 @@ export const DashboardAnalyticsScreen: React.FC = () => {
               🚨 Alertas
             </p>
             <p className="text-4xl font-bold text-danger-700 dark:text-danger-200 mb-2">{data.totalAlertas}</p>
-            <div className="flex gap-2 text-xs font-semibold">
-              <span className="px-2 py-1 bg-success-200 dark:bg-success-700 text-success-700 dark:text-success-200 rounded">
-                {data.alertasNoPrazo} OK
+            <div className="flex flex-col gap-1.5 text-xs font-semibold">
+              <span className="px-2 py-1 bg-success-200 dark:bg-success-700 text-success-700 dark:text-success-200 rounded whitespace-nowrap w-fit">
+                {data.alertasNoPrazo} no prazo
               </span>
-              <span className="px-2 py-1 bg-danger-200 dark:bg-danger-700 text-danger-700 dark:text-danger-200 rounded">
-                {data.alertasForaDoPrazo} crítico
+              <span className="px-2 py-1 bg-danger-200 dark:bg-danger-700 text-danger-700 dark:text-danger-200 rounded whitespace-nowrap w-fit">
+                {data.alertasForaDoPrazo} fora do prazo
               </span>
             </div>
           </div>
