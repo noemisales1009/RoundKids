@@ -12,6 +12,7 @@ interface DashboardData {
   alertasForaDoPrazo: number;
   escalasAtivas: Array<{ scale_name: string; total: number; media: number }>;
   diagnosticos: Array<{ nome: string; total: number; percentual: number }>;
+  diagnosticosComPacientes: Array<{ nome: string; total: number; percentual: number; pacientes: string[] }>;
   medicacoesAtivas: number;
   dispositivosAtivos: number;
   dietasAtivas: number;
@@ -82,25 +83,32 @@ export const DashboardAnalyticsScreen: React.FC = () => {
 
       // Diagnósticos
       const { data: diagnosData } = await supabase.from('paciente_diagnosticos')
-        .select('opcao_label')
+        .select('opcao_label, patient_id, patients(name)')
         .eq('arquivado', false);
 
-      const diagnosMap = new Map<string, number>();
+      const diagnosMap = new Map<string, { total: number; pacientes: Set<string> }>();
       diagnosData?.forEach(d => {
         if (d.opcao_label) {
-          diagnosMap.set(d.opcao_label, (diagnosMap.get(d.opcao_label) || 0) + 1);
+          const existing = diagnosMap.get(d.opcao_label) || { total: 0, pacientes: new Set<string>() };
+          const pacienteName = (d.patients as any)?.name || 'Sem nome';
+          existing.total++;
+          existing.pacientes.add(pacienteName);
+          diagnosMap.set(d.opcao_label, existing);
         }
       });
 
-      const totalDiagnos = diagnosMap.size > 0 ? Math.max(...diagnosMap.values()) : 1;
-      const diagnosticos = Array.from(diagnosMap.entries())
-        .map(([nome, total]) => ({
+      const totalDiagnos = diagnosMap.size > 0 ? Math.max(...Array.from(diagnosMap.values()).map(v => v.total)) : 1;
+      const diagnosticosComPacientes = Array.from(diagnosMap.entries())
+        .map(([nome, data]) => ({
           nome,
-          total,
-          percentual: parseFloat((totalDiagnos > 0 ? (total / totalDiagnos) * 100 : 0).toFixed(1)),
+          total: data.total,
+          percentual: parseFloat((totalDiagnos > 0 ? (data.total / totalDiagnos) * 100 : 0).toFixed(1)),
+          pacientes: Array.from(data.pacientes),
         }))
         .sort((a, b) => b.total - a.total)
         .slice(0, 5);
+
+      const diagnosticos = diagnosticosComPacientes.map(d => ({ nome: d.nome, total: d.total, percentual: d.percentual }));
 
       // Top 5 Diagnósticos Principais e Secundários
       const { data: allDiagnosticos } = await supabase.from('paciente_diagnosticos')
@@ -260,6 +268,7 @@ export const DashboardAnalyticsScreen: React.FC = () => {
         alertasForaDoPrazo,
         escalasAtivas,
         diagnosticos,
+        diagnosticosComPacientes,
         medicacoesAtivas: medicacoesCount || 0,
         dispositivosAtivos: dispositivosCount || 0,
         dietasAtivas: dietasCount || 0,
@@ -290,13 +299,28 @@ export const DashboardAnalyticsScreen: React.FC = () => {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-            Análises Clínicas
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400">
-            Round Kids • UTI Pediátrica
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+              Análises Clínicas
+            </h1>
+            <p className="text-slate-600 dark:text-slate-400">
+              Round Kids • UTI Pediátrica
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setLoading(true);
+              fetchDashboardData();
+            }}
+            disabled={loading}
+            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 disabled:bg-slate-400 text-white rounded-lg font-semibold transition flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {loading ? 'Atualizando...' : 'Atualizar Dados'}
+          </button>
         </div>
 
         {/* KPIs Grid */}
@@ -419,13 +443,21 @@ export const DashboardAnalyticsScreen: React.FC = () => {
 
         {/* Distribuição de Diagnósticos */}
         {data.diagnosticos.length > 0 && (
-          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 shadow-lg mb-8">
+          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 shadow-lg mb-8 relative">
             <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-6">🏥 Distribuição de Diagnósticos</h2>
             <div className="space-y-4">
               {data.diagnosticos.map((diag, idx) => {
                 const colors = ['from-primary-400 to-primary-600', 'from-danger-400 to-danger-600', 'from-accent-400 to-accent-600', 'from-success-400 to-success-600', 'from-warning-400 to-warning-600'];
                 return (
-                  <div key={diag.nome} className="flex items-center gap-3">
+                  <div
+                    key={diag.nome}
+                    className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 p-2 rounded transition"
+                    onMouseEnter={() => {
+                      const diagData = data.diagnosticosComPacientes.find(d => d.nome === diag.nome);
+                      setTooltipData({ tipo: diag.nome, total: diag.total, percentual: diag.percentual, pacientes: diagData?.pacientes || [] });
+                    }}
+                    onMouseLeave={() => setTooltipData(null)}
+                  >
                     <div className="flex-1 flex items-center gap-3">
                       <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 min-w-40">{diag.nome}</p>
                       <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-6 overflow-hidden relative">
@@ -440,6 +472,26 @@ export const DashboardAnalyticsScreen: React.FC = () => {
                 );
               })}
             </div>
+
+            {/* Tooltip Visual */}
+            {tooltipData && tooltipData.pacientes !== undefined && (
+              <div className="absolute top-0 right-0 bg-slate-900 dark:bg-slate-700 text-white dark:text-slate-100 px-4 py-3 rounded shadow-lg z-10 text-sm w-80 pointer-events-none">
+                <p className="font-bold text-base mb-2">{tooltipData.tipo}</p>
+                <p className="text-slate-300 dark:text-slate-400 mb-3">{tooltipData.total} pacientes ({tooltipData.percentual}%)</p>
+                {tooltipData.pacientes.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-slate-400 mb-2 uppercase">Pacientes:</p>
+                    <ul className="space-y-1 max-h-48 overflow-y-auto">
+                      {tooltipData.pacientes.map(paciente => (
+                        <li key={paciente} className="text-sm text-slate-200 break-words">
+                          • {paciente}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
