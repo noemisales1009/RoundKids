@@ -43,7 +43,7 @@ export const DashboardAnalyticsScreen: React.FC = () => {
 
       const { data: patientsData } = await supabase
         .from('patients')
-        .select('id, status')
+        .select('id, status, name')
         .is('archived_at', null);
 
       const totalPacientes = patientsData?.length || 0;
@@ -660,55 +660,6 @@ export const DashboardAnalyticsScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Isolamentos - Gráfico + Tabela */}
-        {data.isolamentosDetalhados.length > 0 && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* Gráfico de Distribuição */}
-            <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 shadow-lg">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-6">🛡️ Isolamentos por Tipo</h2>
-              <div className="space-y-3">
-                {data.precaucoesPorTipo.slice(0, 5).map((tipo, idx) => {
-                  const colors = ['from-success-400 to-success-600', 'from-accent-400 to-accent-600', 'from-primary-400 to-primary-600', 'from-warning-400 to-warning-600', 'from-danger-400 to-danger-600'];
-                  const maxTotal = Math.max(...data.precaucoesPorTipo.map(t => t.total));
-                  const percentual = Math.round((tipo.total / maxTotal) * 100);
-                  return (
-                    <div key={tipo.tipo} className="flex items-center gap-2">
-                      <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 min-w-28 truncate">{tipo.tipo}</p>
-                      <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
-                        <div className={`bg-gradient-to-r ${colors[idx]} h-3 rounded-full`} style={{ width: `${percentual}%` }}></div>
-                      </div>
-                      <p className="text-xs font-bold text-slate-900 dark:text-slate-100 min-w-12 text-right">{tipo.total}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Resumo de Isolamentos */}
-            <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 shadow-lg">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-6">📊 Resumo de Isolamentos</h2>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-600 dark:text-slate-400">Total Ativo</span>
-                  <span className="text-2xl font-bold text-primary-600 dark:text-primary-400">{data.precaucoesAtivas}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-600 dark:text-slate-400">Tipos diferentes</span>
-                  <span className="text-2xl font-bold text-success-600 dark:text-success-400">{data.precaucoesPorTipo.length}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-600 dark:text-slate-400">Com data definida</span>
-                  <span className="text-2xl font-bold text-accent-600 dark:text-accent-400">{data.isolamentosDetalhados.filter(i => i.dataFim !== 'Indefinido').length}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-600 dark:text-slate-400">Indefinido</span>
-                  <span className="text-2xl font-bold text-slate-600 dark:text-slate-400">{data.isolamentosDetalhados.filter(i => i.dataFim === 'Indefinido').length}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Isolamentos Ativos - Detalhado */}
         {data.isolamentosDetalhados.length > 0 && (
           <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 shadow-lg mb-8">
@@ -721,8 +672,6 @@ export const DashboardAnalyticsScreen: React.FC = () => {
                     <th className="text-left px-4 py-3 font-bold text-sm text-slate-800 dark:text-slate-200">Doença</th>
                     <th className="text-left px-4 py-3 font-bold text-sm text-slate-800 dark:text-slate-200">Tipo</th>
                     <th className="text-left px-4 py-3 font-bold text-sm text-slate-800 dark:text-slate-200">Início</th>
-                    <th className="text-left px-4 py-3 font-bold text-sm text-slate-800 dark:text-slate-200">Fim</th>
-                    <th className="text-center px-4 py-3 font-bold text-sm text-slate-800 dark:text-slate-200">Dias</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -736,12 +685,6 @@ export const DashboardAnalyticsScreen: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-sm font-medium">{iso.dataInicio}</td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-sm font-medium">{iso.dataFim}</td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`px-3 py-1.5 rounded-md font-bold text-sm ${iso.diasRestantes <= 2 ? 'bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300' : 'bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-300'}`}>
-                          {iso.diasRestantes}d
-                        </span>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
