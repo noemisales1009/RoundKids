@@ -5,12 +5,14 @@ import { PatientsContext } from '../contexts';
 import { useHeader } from '../hooks/useHeader';
 import { ChevronRightIcon, MapPinIcon } from '../components/icons';
 import { LoadingIndicator } from '../components/LoadingIndicator';
+import { AddPatientModal } from '../components/modals/AddPatientModal';
 
 const PatientListScreen: React.FC = () => {
     useHeader('Leitos');
     const { patients } = useContext(PatientsContext)!;
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    const [showAddModal, setShowAddModal] = useState(false);
 
     // Detectar quando os pacientes terminaram de carregar
     useEffect(() => {
@@ -32,11 +34,25 @@ const PatientListScreen: React.FC = () => {
         <div className="space-y-4">
             <input
                 type="text"
-                placeholder="Buscar por nome ou leito..."
+                placeholder="Buscar paciente por nome ou leito..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition text-slate-800 dark:text-slate-200"
             />
+
+            <div className="flex justify-end">
+                <button
+                    onClick={() => setShowAddModal(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold transition shadow-sm"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
+                    Cadastrar Paciente
+                </button>
+            </div>
+
+            {showAddModal && <AddPatientModal onClose={() => setShowAddModal(false)} />}
 
             {/* Indicador de carregamento */}
             {isLoading ? (

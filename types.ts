@@ -259,6 +259,7 @@ export interface PatientsContextType {
   deletePrecautionFromPatient: (patientId: number | string, precautionId: number | string, motivo?: string) => void;
   updatePrecautionInPatient: (patientId: number | string, precautionData: Precaution) => void;
   addEndDateToPrecaution: (patientId: number | string, precautionId: number | string, endDate: string) => void;
+  addPatient: (data: { name: string; bedNumber: number; dob: string; dtInternacao?: string; motherName?: string; sexo?: string }) => Promise<void>;
   refreshPatients: () => Promise<void>;
 }
 

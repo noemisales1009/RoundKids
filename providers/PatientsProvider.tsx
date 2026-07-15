@@ -454,6 +454,36 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
     };
 
+    // Cadastrar novo paciente — mesma lógica do fluxo n8n (mesmos campos da tabela patients).
+    // Importante: NUNCA enviar nomepaciente_norm (é coluna GENERATED ALWAYS no banco) nem status
+    // (tem DEFAULT 'estavel'). dob e dt_internacao precisam estar em ISO (yyyy-MM-dd).
+    const addPatient = async (data: { name: string; bedNumber: number; dob: string; dtInternacao?: string; motherName?: string; sexo?: string }) => {
+        const nome = sanitizeText(data.name).trim().toUpperCase();
+        if (!nome) throw new Error('O nome do paciente é obrigatório.');
+        if (!Number.isFinite(data.bedNumber)) throw new Error('O número do leito é obrigatório.');
+        if (!data.dob) throw new Error('A data de nascimento é obrigatória.');
+        if (data.sexo && data.sexo !== 'Masculino' && data.sexo !== 'Feminino') {
+            throw new Error("Sexo inválido (use 'Masculino' ou 'Feminino').");
+        }
+
+        const payload = {
+            name: nome,
+            bed_number: data.bedNumber,
+            dob: data.dob,
+            ...(data.dtInternacao ? { dt_internacao: data.dtInternacao } : {}),
+            ...(data.motherName ? { mother_name: sanitizeTextOrNull(data.motherName) } : {}),
+            ...(data.sexo ? { sexo: data.sexo } : {}),
+        };
+
+        const { error } = await supabase.from('patients').insert([payload]);
+        if (error) {
+            console.error('Erro ao cadastrar paciente:', error);
+            throw new Error(error.message);
+        }
+
+        await fetchPatients();
+    };
+
     const addDeviceToPatient = async (patientId: number | string, device: Omit<Device, 'id'>, userId?: string) => {
         try {
             const { data, error } = await supabase.from('dispositivos_pacientes').insert([{
@@ -1024,6 +1054,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         deletePrecautionFromPatient,
         updatePrecautionInPatient,
         addEndDateToPrecaution,
+        addPatient,
         refreshPatients: fetchPatients,
     };
 
