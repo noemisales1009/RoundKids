@@ -350,83 +350,29 @@ export const DashboardAnalyticsScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Microorganismos por Tipo - Gráfico Rosca */}
+        {/* Microorganismos por Tipo */}
         {data.microorganismosPorTipo.length > 0 && (
           <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 shadow-lg mb-8">
             <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-6">🦠 Microorganismos Identificados</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Gráfico Rosca */}
-              <div className="lg:col-span-1 flex flex-col items-center justify-center">
-                <div className="relative w-48 h-48">
-                  <svg className="w-48 h-48" viewBox="0 0 120 120">
-                    {(() => {
-                      const total = data.microorganismosPorTipo.reduce((sum, m) => sum + m.total, 0);
-                      const colors = ['#3785a3', '#ef4444', '#8cb134', '#10b981', '#f59e0b', '#64748b'];
-                      let currentAngle = 0;
-
-                      return data.microorganismosPorTipo.map((micro, idx) => {
-                        const percentage = (micro.total / total) * 100;
-                        const angle = (percentage / 100) * 360;
-                        const startAngle = currentAngle;
-                        const endAngle = currentAngle + angle;
-                        currentAngle = endAngle;
-
-                        const startRad = (startAngle - 90) * (Math.PI / 180);
-                        const endRad = (endAngle - 90) * (Math.PI / 180);
-
-                        const x1 = 60 + 45 * Math.cos(startRad);
-                        const y1 = 60 + 45 * Math.sin(startRad);
-                        const x2 = 60 + 45 * Math.cos(endRad);
-                        const y2 = 60 + 45 * Math.sin(endRad);
-
-                        const largeArc = angle > 180 ? 1 : 0;
-
-                        const path = `M 60 60 L ${x1} ${y1} A 45 45 0 ${largeArc} 1 ${x2} ${y2} Z`;
-
-                        return (
-                          <path
-                            key={micro.tipo}
-                            d={path}
-                            fill={colors[idx % colors.length]}
-                            stroke="white"
-                            strokeWidth="1"
-                            className="dark:stroke-slate-800"
-                          />
-                        );
-                      });
-                    })()}
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                        {data.microorganismosPorTipo.reduce((sum, m) => sum + m.total, 0)}
-                      </p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">culturas</p>
+            <div className="space-y-4">
+              {data.microorganismosPorTipo.map((micro, idx) => {
+                const colors = ['from-primary-400 to-primary-600', 'from-danger-400 to-danger-600', 'from-accent-400 to-accent-600', 'from-success-400 to-success-600', 'from-warning-400 to-warning-600', 'from-slate-400 to-slate-600'];
+                const maxTotal = Math.max(...data.microorganismosPorTipo.map(m => m.total));
+                return (
+                  <div key={micro.tipo} className="flex items-center gap-3">
+                    <div className="min-w-7 w-7 h-7 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold">
+                      {idx + 1}
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Legenda */}
-              <div className="lg:col-span-2 space-y-3">
-                {data.microorganismosPorTipo.map((micro, idx) => {
-                  const colors = ['bg-primary-500', 'bg-danger-500', 'bg-accent-500', 'bg-success-500', 'bg-warning-500', 'bg-slate-500'];
-                  const total = data.microorganismosPorTipo.reduce((sum, m) => sum + m.total, 0);
-                  const percentual = Math.round((micro.total / total) * 100);
-                  return (
-                    <div key={micro.tipo} className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full ${colors[idx % colors.length]} flex-shrink-0`}></div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 truncate">{micro.tipo}</p>
-                        <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400">
-                          <span>{micro.total} culturas</span>
-                          <span className="font-bold">{percentual}%</span>
-                        </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 truncate">{micro.tipo}</p>
+                      <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 mt-1">
+                        <div className={`bg-gradient-to-r ${colors[idx % colors.length]} h-2 rounded-full`} style={{ width: `${(micro.total / Math.max(...data.microorganismosPorTipo.map(m => m.total), 1)) * 100}%` }}></div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100 min-w-6 text-right">{micro.total}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
