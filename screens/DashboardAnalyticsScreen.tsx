@@ -29,6 +29,7 @@ export const DashboardAnalyticsScreen: React.FC = () => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [tooltipData, setTooltipData] = useState<{ tipo: string; total: number; percentual: number; pacientes: string[] } | null>(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -362,18 +363,21 @@ export const DashboardAnalyticsScreen: React.FC = () => {
         {data.microorganismosPorTipo.length > 0 && (
           <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 shadow-lg mb-8">
             <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-6">🦠 Microorganismos Identificados</h2>
-            <div className="space-y-4">
+            <div className="space-y-4 relative">
               {data.microorganismosPorTipo.map((micro, idx) => {
                 const colors = ['from-primary-400 to-primary-600', 'from-danger-400 to-danger-600', 'from-accent-400 to-accent-600', 'from-success-400 to-success-600', 'from-warning-400 to-warning-600', 'from-slate-400 to-slate-600'];
                 const microData = data.microganismosComPacientes.find(m => m.tipo === micro.tipo);
                 const totalGeral = data.microorganismosPorTipo.reduce((sum, m) => sum + m.total, 0);
                 const percentual = Math.round((micro.total / totalGeral) * 100);
-                const pacientesStr = microData?.pacientes.slice(0, 3).join(', ') + (microData && microData.pacientes.length > 3 ? '...' : '');
-                const tooltipText = `${micro.tipo}\n${micro.total} culturas (${percentual}%)\nPacientes: ${pacientesStr || 'N/A'}`;
 
                 return (
-                  <div key={micro.tipo} className="flex items-center gap-3" title={tooltipText}>
-                    <div className="min-w-7 w-7 h-7 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold">
+                  <div
+                    key={micro.tipo}
+                    className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 p-2 rounded transition"
+                    onMouseEnter={() => setTooltipData({ tipo: micro.tipo, total: micro.total, percentual, pacientes: microData?.pacientes || [] })}
+                    onMouseLeave={() => setTooltipData(null)}
+                  >
+                    <div className="min-w-7 w-7 h-7 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                       {idx + 1}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -382,10 +386,23 @@ export const DashboardAnalyticsScreen: React.FC = () => {
                         <div className={`bg-gradient-to-r ${colors[idx % colors.length]} h-2 rounded-full`} style={{ width: `${(micro.total / Math.max(...data.microorganismosPorTipo.map(m => m.total), 1)) * 100}%` }}></div>
                       </div>
                     </div>
-                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100 min-w-6 text-right">{micro.total}</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100 min-w-6 text-right flex-shrink-0">{micro.total}</p>
                   </div>
                 );
               })}
+
+              {/* Tooltip Visual */}
+              {tooltipData && (
+                <div className="absolute top-0 right-0 bg-slate-900 dark:bg-slate-700 text-white dark:text-slate-100 px-3 py-2 rounded shadow-lg z-10 text-xs whitespace-nowrap">
+                  <p className="font-bold">{tooltipData.tipo}</p>
+                  <p>{tooltipData.total} culturas ({tooltipData.percentual}%)</p>
+                  {tooltipData.pacientes.length > 0 && (
+                    <p className="text-slate-300 dark:text-slate-400 mt-1 max-w-xs truncate">
+                      {tooltipData.pacientes.slice(0, 3).join(', ')}{tooltipData.pacientes.length > 3 && '...'}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
