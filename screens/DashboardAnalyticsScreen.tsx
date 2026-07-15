@@ -386,20 +386,30 @@ export const DashboardAnalyticsScreen: React.FC = () => {
                         <div className={`bg-gradient-to-r ${colors[idx % colors.length]} h-2 rounded-full`} style={{ width: `${(micro.total / Math.max(...data.microorganismosPorTipo.map(m => m.total), 1)) * 100}%` }}></div>
                       </div>
                     </div>
-                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100 min-w-6 text-right flex-shrink-0">{micro.total}</p>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{micro.total}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">culturas</p>
+                    </div>
                   </div>
                 );
               })}
 
               {/* Tooltip Visual */}
               {tooltipData && (
-                <div className="absolute top-0 right-0 bg-slate-900 dark:bg-slate-700 text-white dark:text-slate-100 px-3 py-2 rounded shadow-lg z-10 text-xs whitespace-nowrap">
-                  <p className="font-bold">{tooltipData.tipo}</p>
-                  <p>{tooltipData.total} culturas ({tooltipData.percentual}%)</p>
+                <div className="absolute top-0 right-0 bg-slate-900 dark:bg-slate-700 text-white dark:text-slate-100 px-4 py-3 rounded shadow-lg z-10 text-sm w-80 pointer-events-none">
+                  <p className="font-bold text-base mb-2">{tooltipData.tipo}</p>
+                  <p className="text-slate-300 dark:text-slate-400 mb-3">{tooltipData.total} culturas ({tooltipData.percentual}%)</p>
                   {tooltipData.pacientes.length > 0 && (
-                    <p className="text-slate-300 dark:text-slate-400 mt-1 max-w-xs truncate">
-                      {tooltipData.pacientes.slice(0, 3).join(', ')}{tooltipData.pacientes.length > 3 && '...'}
-                    </p>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-400 mb-2 uppercase">Pacientes:</p>
+                      <ul className="space-y-1 max-h-48 overflow-y-auto">
+                        {tooltipData.pacientes.map(paciente => (
+                          <li key={paciente} className="text-sm text-slate-200 break-words">
+                            • {paciente}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 </div>
               )}
