@@ -420,7 +420,7 @@ export const DashboardAnalyticsScreen: React.FC = () => {
 
               {/* Tooltip Visual */}
               {tooltipData && (
-                <div className="fixed bg-slate-900 dark:bg-slate-700 text-white dark:text-slate-100 px-4 py-3 rounded shadow-2xl z-50 text-sm w-96 pointer-events-none" style={{ top: '50%', right: '20px', transform: 'translateY(-50%)' }}>
+                <div className="absolute top-full left-0 mt-2 bg-slate-900 dark:bg-slate-700 text-white dark:text-slate-100 px-4 py-3 rounded shadow-lg z-20 text-sm w-72 pointer-events-none ml-12">
                   <p className="font-bold text-base mb-2">{tooltipData.tipo}</p>
                   <p className="text-slate-300 dark:text-slate-400 mb-3">{tooltipData.total} culturas ({tooltipData.percentual}%)</p>
                   {tooltipData.pacientes.length > 0 && (
