@@ -420,7 +420,7 @@ export const DashboardAnalyticsScreen: React.FC = () => {
 
               {/* Tooltip Visual */}
               {tooltipData && (
-                <div className="absolute top-0 right-0 bg-slate-900 dark:bg-slate-700 text-white dark:text-slate-100 px-4 py-3 rounded shadow-lg z-10 text-sm w-80 pointer-events-none">
+                <div className="fixed bg-slate-900 dark:bg-slate-700 text-white dark:text-slate-100 px-4 py-3 rounded shadow-2xl z-50 text-sm w-96 pointer-events-none" style={{ top: '50%', right: '20px', transform: 'translateY(-50%)' }}>
                   <p className="font-bold text-base mb-2">{tooltipData.tipo}</p>
                   <p className="text-slate-300 dark:text-slate-400 mb-3">{tooltipData.total} culturas ({tooltipData.percentual}%)</p>
                   {tooltipData.pacientes.length > 0 && (
@@ -443,21 +443,13 @@ export const DashboardAnalyticsScreen: React.FC = () => {
 
         {/* Distribuição de Diagnósticos */}
         {data.diagnosticos.length > 0 && (
-          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 shadow-lg mb-8 relative">
+          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 shadow-lg mb-8">
             <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-6">🏥 Distribuição de Diagnósticos</h2>
             <div className="space-y-4">
               {data.diagnosticos.map((diag, idx) => {
                 const colors = ['from-primary-400 to-primary-600', 'from-danger-400 to-danger-600', 'from-accent-400 to-accent-600', 'from-success-400 to-success-600', 'from-warning-400 to-warning-600'];
                 return (
-                  <div
-                    key={diag.nome}
-                    className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 p-2 rounded transition"
-                    onMouseEnter={() => {
-                      const diagData = data.diagnosticosComPacientes.find(d => d.nome === diag.nome);
-                      setTooltipData({ tipo: diag.nome, total: diag.total, percentual: diag.percentual, pacientes: diagData?.pacientes || [] });
-                    }}
-                    onMouseLeave={() => setTooltipData(null)}
-                  >
+                  <div key={diag.nome} className="flex items-center gap-3">
                     <div className="flex-1 flex items-center gap-3">
                       <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 min-w-40">{diag.nome}</p>
                       <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-6 overflow-hidden relative">
@@ -472,26 +464,6 @@ export const DashboardAnalyticsScreen: React.FC = () => {
                 );
               })}
             </div>
-
-            {/* Tooltip Visual */}
-            {tooltipData && tooltipData.pacientes !== undefined && (
-              <div className="absolute top-0 right-0 bg-slate-900 dark:bg-slate-700 text-white dark:text-slate-100 px-4 py-3 rounded shadow-lg z-10 text-sm w-80 pointer-events-none">
-                <p className="font-bold text-base mb-2">{tooltipData.tipo}</p>
-                <p className="text-slate-300 dark:text-slate-400 mb-3">{tooltipData.total} pacientes ({tooltipData.percentual}%)</p>
-                {tooltipData.pacientes.length > 0 && (
-                  <div>
-                    <p className="text-xs font-semibold text-slate-400 mb-2 uppercase">Pacientes:</p>
-                    <ul className="space-y-1 max-h-48 overflow-y-auto">
-                      {tooltipData.pacientes.map(paciente => (
-                        <li key={paciente} className="text-sm text-slate-200 break-words">
-                          • {paciente}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         )}
 
