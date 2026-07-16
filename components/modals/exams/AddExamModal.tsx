@@ -19,6 +19,7 @@ export const AddExamModal: React.FC<{ patientId: number | string; onClose: () =>
     const [date, setDate] = useState(getTodayDateString());
     const [sistema, setSistema] = useState('');
     const [sistemaOutros, setSistemaOutros] = useState('');
+    const [fixarEvolucao, setFixarEvolucao] = useState(false);
 
     const handleSubmit = (e: { preventDefault: () => void }) => {
         e.preventDefault();
@@ -29,7 +30,7 @@ export const AddExamModal: React.FC<{ patientId: number | string; onClose: () =>
             return;
         }
 
-        addExamToPatient(patientId, { name, date, result: 'Pendente', sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined }, user.id);
+        addExamToPatient(patientId, { name, date, result: 'Pendente', sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined, mostrar_evolucao: fixarEvolucao ? true : null }, user.id);
         showNotification({ message: 'Exame cadastrado com sucesso!', type: 'success' });
         onClose();
     };
@@ -68,6 +69,13 @@ export const AddExamModal: React.FC<{ patientId: number | string; onClose: () =>
                                 className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
                             />
                         )}
+                    </div>
+                    <div>
+                        <label className="flex items-center gap-1.5 cursor-pointer select-none w-fit">
+                            <input type="checkbox" checked={fixarEvolucao} onChange={e => setFixarEvolucao(e.target.checked)} className="w-3.5 h-3.5 accent-primary-500" />
+                            <span className="text-sm text-slate-700 dark:text-slate-300">Fixar na Evolução Diária</span>
+                        </label>
+                        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Se desmarcado, o exame aparece na evolução apenas nas primeiras 48h.</p>
                     </div>
                     <button type="submit" className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded-lg">Cadastrar</button>
                 </form>

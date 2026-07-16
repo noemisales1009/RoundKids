@@ -516,9 +516,9 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             data_exame: exam.date,
             observacao: sanitizeTextOrNull(exam.observation),
             criado_por_id: userId || null,
-            // NULL = segue a regra automática das 48h; true fica reservado para inclusão manual
-            // (sobrescreve o DEFAULT true da coluna no banco)
-            mostrar_evolucao: null,
+            // NULL = segue a regra automática das 48h; true = fixado manualmente na evolução
+            // (sobrescreve o DEFAULT true da coluna no banco; false nunca é enviado no cadastro)
+            mostrar_evolucao: exam.mostrar_evolucao === true ? true : null,
             ...(exam.sistema ? { sistema: exam.sistema } : {}),
         };
         const { data, error } = await supabase.from('exames_pacientes').insert([payload]);
@@ -690,6 +690,8 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 data_exame: examData.date,
                 observacao: sanitizeTextOrNull(examData.observation),
                 sistema: examData.sistema || null,
+                // undefined = chamador não quis mexer na coluna (preserva NULL/true/false do banco)
+                ...(examData.mostrar_evolucao !== undefined ? { mostrar_evolucao: examData.mostrar_evolucao } : {}),
             })
             .eq('id', examData.id);
         if (!error) fetchPatients();

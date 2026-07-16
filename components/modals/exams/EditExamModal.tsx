@@ -16,11 +16,22 @@ export const EditExamModal: React.FC<{ exam: Exam; patientId: number | string; o
     const [sistemaOutros, setSistemaOutros] = useState(
         exam.sistema && !ALERT_SYSTEMS.includes(exam.sistema) ? exam.sistema : ''
     );
+    // mesma regra da lista (isExamNaEvolucao): true = fixado, NULL = só dentro das 48h
+    const _cutoff48h = new Date(Date.now() - 3 * 60 * 60 * 1000 - 48 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const exibidoInicial = exam.mostrar_evolucao === true || (exam.mostrar_evolucao !== false && exam.date >= _cutoff48h);
+    const [exibir, setExibir] = useState(exibidoInicial);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!name || !date) return;
-        updateExamInPatient(patientId, { ...exam, name, date, sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined });
+        updateExamInPatient(patientId, {
+            ...exam,
+            name,
+            date,
+            sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined,
+            // só sobrescreve se o usuário mexeu no checkbox; senão preserva o valor do banco (NULL continua NULL)
+            mostrar_evolucao: exibir !== exibidoInicial ? exibir : exam.mostrar_evolucao,
+        });
         showNotification({ message: 'Exame atualizado com sucesso!', type: 'success' });
         onClose();
     };
@@ -53,6 +64,13 @@ export const EditExamModal: React.FC<{ exam: Exam; patientId: number | string; o
                         {sistema === 'Outros' && (
                             <input type="text" value={sistemaOutros} onChange={e => setSistemaOutros(e.target.value)} placeholder="Especifique o sistema..." className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200" />
                         )}
+                    </div>
+                    <div>
+                        <label className="flex items-center gap-1.5 cursor-pointer select-none w-fit">
+                            <input type="checkbox" checked={exibir} onChange={e => setExibir(e.target.checked)} className="w-3.5 h-3.5 accent-primary-500" />
+                            <span className="text-sm text-slate-700 dark:text-slate-300">Exibir na Evolução Diária</span>
+                        </label>
+                        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Marcar fixa o exame na evolução; desmarcar o exclui dela.</p>
                     </div>
                     <button type="submit" className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded-lg">Salvar Alterações</button>
                 </form>
