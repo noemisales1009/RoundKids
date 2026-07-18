@@ -68,9 +68,9 @@ export const EditExamModal: React.FC<{ exam: Exam; patientId: number | string; o
                     <div>
                         <label className="flex items-center gap-1.5 cursor-pointer select-none w-fit">
                             <input type="checkbox" checked={exibir} onChange={e => setExibir(e.target.checked)} className="w-3.5 h-3.5 accent-primary-500" />
-                            <span className="text-sm text-slate-700 dark:text-slate-300">Exibir na Evolução Diária</span>
+                            <span className="text-sm text-slate-700 dark:text-slate-300">Deixar este exame fixo permanentemente na Evolução Diária</span>
                         </label>
-                        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Marcar fixa o exame na evolução; desmarcar o exclui dela.</p>
+                        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Marcado: o exame fica sempre visível na evolução. Desmarcado: ele é removido da evolução.</p>
                     </div>
                     <button type="submit" className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded-lg">Salvar Alterações</button>
                 </form>
