@@ -124,7 +124,7 @@ export const DashboardAnalyticsScreen: React.FC = () => {
 
       const patientsData = patientsRes.data;
       const totalPacientes = patientsData?.length || 0;
-      const pacientesCriticos = patientsData?.filter(p => p.status === 'critico').length || 0;
+      const pacientesCriticos = patientsData?.filter(p => p.status === 'instavel').length || 0;
       const pacientesEstavel = patientsData?.filter(p => p.status === 'estavel').length || 0;
       const pacientesEmRisco = patientsData?.filter(p => p.status === 'em_risco').length || 0;
 

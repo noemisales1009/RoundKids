@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { ThemeContext } from '../contexts';
+import { ThemeContext, NotificationContext } from '../contexts';
 import { supabase } from '../supabaseClient';
 import { ChevronRightIcon } from './icons';
 
@@ -56,6 +56,19 @@ const DRENO_OPTIONS = [
 
 type DrenoKey = typeof DRENO_OPTIONS[number]['key'];
 
+interface DxtMedicao { hora: string; valor: string }
+// key é só para o React (linhas estáveis na edição) — não vai para o banco
+type DxtMedicaoRow = DxtMedicao & { key: number };
+
+// Calcula o delta mín–máx a partir das medições de Dextro do dia
+const dxtRange = (meds: DxtMedicao[]): { min: string; max: string } | null => {
+  const vals = meds
+    .map(m => parseFloat(m.valor.replace(',', '.')))
+    .filter(v => !isNaN(v));
+  if (vals.length === 0) return null;
+  return { min: String(Math.min(...vals)), max: String(Math.max(...vals)) };
+};
+
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
 const formatDateBR = (iso: string) => {
@@ -109,9 +122,15 @@ const CollapsibleHeader = ({
 export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = false }) => {
   const themeContext = useContext(ThemeContext);
   const isDark = themeContext?.theme === 'dark';
+  const { showNotification } = useContext(NotificationContext)!;
 
   const [selectedDate, setSelectedDate] = useState(todayStr());
   const [data, setData] = useState<Data>(EMPTY);
+  const [dxtMeds, setDxtMeds] = useState<DxtMedicaoRow[]>([]);
+  const dxtSeq = useRef(0);
+  // true quando o dia carregado já tinha medições salvas — permite limpar o
+  // mín–máx derivado se o usuário remover todas as medições
+  const [dxtHadMeds, setDxtHadMeds] = useState(false);
   const [savedDates, setSavedDates] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -174,6 +193,15 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
         dialise_peritoneal:  row.dialise_peritoneal  ?? '',
       };
       setData(d);
+      const loadedMeds: DxtMedicaoRow[] = Array.isArray(row.dxt_medicoes)
+        ? row.dxt_medicoes.map((m: { hora?: string; valor?: string | number }) => ({
+            key: ++dxtSeq.current,
+            hora: m?.hora ?? '',
+            valor: String(m?.valor ?? ''),
+          }))
+        : [];
+      setDxtMeds(loadedMeds);
+      setDxtHadMeds(loadedMeds.length > 0);
       const active = new Set<DrenoKey>();
       DRENO_OPTIONS.forEach(({ key }) => {
         if (d[key as keyof Data]) active.add(key);
@@ -186,6 +214,8 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
       setUpdatedBy(row.updated_by || null);
     } else {
       setData(EMPTY);
+      setDxtMeds([]);
+      setDxtHadMeds(false);
       setActiveDrenos(new Set());
       setRowId(null);
       setIsArchived(false);
@@ -201,7 +231,9 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
     loadForDate(selectedDate);
   }, [patientId]);
 
+  const selectedDateRef = useRef(selectedDate);
   useEffect(() => {
+    selectedDateRef.current = selectedDate;
     loadForDate(selectedDate);
   }, [selectedDate]);
 
@@ -216,6 +248,25 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
 
   const set = (key: keyof Data, val: string) =>
     setData(prev => ({ ...prev, [key]: val }));
+
+  const setDxtMed = (key: number, field: 'hora' | 'valor', val: string) =>
+    setDxtMeds(prev => prev.map(m =>
+      m.key === key ? { ...m, [field]: field === 'valor' ? val.replace(',', '.') : val } : m
+    ));
+
+  const addDxtMed = () =>
+    setDxtMeds(prev => [...prev, { key: ++dxtSeq.current, hora: '', valor: '' }]);
+
+  const removeDxtMed = (key: number) =>
+    setDxtMeds(prev => {
+      const next = prev.filter(m => m.key !== key);
+      // Removeu a última medição de um dia que tinha medições salvas:
+      // limpa o mín–máx derivado para não deixar um delta órfão no banco
+      if (next.length === 0 && dxtHadMeds) {
+        setData(d => ({ ...d, dxt_min: '', dxt_max: '' }));
+      }
+      return next;
+    });
 
   // Campos numéricos: aceita vírgula e normaliza para ponto, evitando que
   // "1,5" seja descartado (type="number" rejeita vírgula em pt-BR).
@@ -236,34 +287,77 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
 
   const handleSave = async () => {
     setSaving(true);
+    const dateAtSave = selectedDate;
     const userName = await getCurrentUserName();
     const now = new Date().toISOString();
 
+    // Medições de Dextro: valida, ordena por hora e deriva o delta mín–máx delas
+    const preenchidas = dxtMeds.filter(m => m.hora !== '' || m.valor.trim() !== '');
+    const invalidas = preenchidas.filter(m => isNaN(parseFloat(m.valor.replace(',', '.'))));
+    if (invalidas.length > 0) {
+      showNotification({
+        message: 'Preencha um valor numérico em todas as medições de Dextro (ou remova a linha).',
+        type: 'error',
+      });
+      setSaving(false);
+      return;
+    }
+    const medsClean = preenchidas
+      .sort((a, b) => a.hora.localeCompare(b.hora))
+      .map(({ hora, valor }) => ({ hora, valor }));
+    const range = dxtRange(medsClean);
+    const payload = {
+      ...data,
+      ...(range ? { dxt_min: range.min, dxt_max: range.max } : {}),
+      dxt_medicoes: medsClean.length > 0 ? medsClean : null,
+    };
+
+    let savedRowId = rowId;
+    const wasInsert = !rowId;
     if (!rowId) {
-      const { data: newRow } = await supabase
+      const { data: newRow, error } = await supabase
         .from('patient_controles_saidas')
         .insert({
           patient_id: patientId,
-          data: selectedDate,
-          ...data,
+          data: dateAtSave,
+          ...payload,
           created_by: userName,
           updated_by: userName,
           updated_at: now,
         })
         .select('id')
         .single();
-      if (newRow) {
-        setRowId(newRow.id);
-        setCreatedBy(userName);
-        setUpdatedBy(userName);
+      if (error || !newRow) {
+        showNotification({ message: `Erro ao salvar: ${error?.message ?? 'sem resposta do servidor'}`, type: 'error' });
+        setSaving(false);
+        return;
       }
+      savedRowId = newRow.id;
     } else {
-      await supabase
+      const { error } = await supabase
         .from('patient_controles_saidas')
-        .update({ ...data, updated_by: userName, updated_at: now })
+        .update({ ...payload, updated_by: userName, updated_at: now })
         .eq('id', rowId);
-      setUpdatedBy(userName);
+      if (error) {
+        showNotification({ message: `Erro ao salvar: ${error.message}`, type: 'error' });
+        setSaving(false);
+        return;
+      }
     }
+
+    // Usuário trocou de dia enquanto salvava: não aplicar o estado do dia antigo por cima do novo
+    if (selectedDateRef.current !== dateAtSave) {
+      setSaving(false);
+      await loadSavedDates();
+      return;
+    }
+
+    setRowId(savedRowId);
+    if (wasInsert) setCreatedBy(userName);
+    setUpdatedBy(userName);
+    if (range) setData(prev => ({ ...prev, dxt_min: range.min, dxt_max: range.max }));
+    setDxtMeds(medsClean.map(m => ({ ...m, key: ++dxtSeq.current })));
+    setDxtHadMeds(medsClean.length > 0);
 
     setSaving(false);
     setSavedOk(true);
@@ -279,14 +373,23 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
   const handleArchive = async () => {
     if (!rowId) return;
     setArchiving(true);
-    await supabase
+    const { error } = await supabase
       .from('patient_controles_saidas')
       .update({ archived_at: new Date().toISOString() })
       .eq('id', rowId);
     setArchiving(false);
+    if (error) {
+      showNotification({ message: `Erro ao arquivar: ${error.message}`, type: 'error' });
+      return;
+    }
     setArchiveConfirm(false);
     await loadSavedDates();
-    setSelectedDate(todayStr());
+    // Se o dia arquivado é hoje, setSelectedDate(hoje) não dispara recarga — força o reload
+    if (selectedDate === todayStr()) {
+      await loadForDate(selectedDate);
+    } else {
+      setSelectedDate(todayStr());
+    }
   };
 
   const handleDelete = async () => {
@@ -297,17 +400,21 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
     setDeleteConfirm(false);
     setRowId(null);
     setData(EMPTY);
+    setDxtMeds([]);
     setIsArchived(false);
     setIsEditing(true);
     await loadSavedDates();
   };
 
-  // Inputs desabilitados quando em modo leitura ou arquivado
-  const inputDisabled = !isEditing || isArchived;
+  // Inputs desabilitados quando em modo leitura, arquivado ou na tela somente leitura
+  const inputDisabled = !isEditing || isArchived || readOnly;
+  const canEditNow = isEditing && !isArchived && !readOnly;
 
-  const numCls = `w-20 bg-white dark:bg-slate-800 border ${
+  const baseFieldCls = `bg-white dark:bg-slate-800 border ${
     isDark ? 'border-slate-600' : 'border-slate-300'
-  } rounded-md py-1.5 px-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm text-center disabled:opacity-60 disabled:cursor-default`;
+  } rounded-md py-1.5 px-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm disabled:opacity-60 disabled:cursor-default`;
+  const numCls = `w-20 text-center ${baseFieldCls}`;
+  const timeCls = `w-24 ${baseFieldCls}`;
 
   const rowCls = 'flex items-center gap-2 flex-wrap';
   const labelCls = `text-sm font-bold shrink-0 ${isDark ? 'text-slate-300' : 'text-slate-700'}`;
@@ -344,6 +451,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
           <input
             type="date"
             value={selectedDate}
+            disabled={saving}
             onChange={e => { setSelectedDate(e.target.value); setShowDatePicker(false); }}
             className={`rounded-lg border px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 ${
               isDark
@@ -424,24 +532,80 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
                 <p className={`text-xs font-bold uppercase tracking-wide ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                   Delta de Sinais Vitais
                 </p>
-                {VITAIS.map(({ minKey, maxKey, label, unit, desc }) => (
-                  <div key={minKey} className={rowCls}>
-                    <span className={`${labelCls} w-16`}>{label}:</span>
-                    <input type="text" inputMode="decimal" className={numCls}
-                      value={data[minKey as keyof Data]}
-                      onChange={e => setNum(minKey as keyof Data, e.target.value)}
-                      placeholder="mín"
-                      disabled={inputDisabled} />
-                    <span className={unitCls}>a</span>
-                    <input type="text" inputMode="decimal" className={numCls}
-                      value={data[maxKey as keyof Data]}
-                      onChange={e => setNum(maxKey as keyof Data, e.target.value)}
-                      placeholder="máx"
-                      disabled={inputDisabled} />
-                    <span className={unitCls}>{unit}</span>
-                    <span className={descCls}>({desc})</span>
-                  </div>
-                ))}
+                {VITAIS.map(({ minKey, maxKey, label, unit, desc }) => {
+                  const isDxt = minKey === 'dxt_min';
+                  const computed = isDxt ? dxtRange(dxtMeds) : null;
+                  return (
+                    <div key={minKey} className={isDxt ? 'space-y-1.5' : undefined}>
+                      <div className={rowCls}>
+                        <span className={`${labelCls} w-16`}>{label}:</span>
+                        {computed ? (
+                          <span className={`text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                            {computed.min} a {computed.max}
+                          </span>
+                        ) : (
+                          <>
+                            <input type="text" inputMode="decimal" className={numCls}
+                              value={data[minKey as keyof Data]}
+                              onChange={e => setNum(minKey as keyof Data, e.target.value)}
+                              placeholder="mín"
+                              disabled={inputDisabled} />
+                            <span className={unitCls}>a</span>
+                            <input type="text" inputMode="decimal" className={numCls}
+                              value={data[maxKey as keyof Data]}
+                              onChange={e => setNum(maxKey as keyof Data, e.target.value)}
+                              placeholder="máx"
+                              disabled={inputDisabled} />
+                          </>
+                        )}
+                        <span className={unitCls}>{unit}</span>
+                        <span className={descCls}>({desc})</span>
+                        {isDxt && canEditNow && (
+                          <button
+                            type="button"
+                            onClick={addDxtMed}
+                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors ${
+                              isDark
+                                ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600'
+                                : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
+                            }`}
+                          >
+                            <span className="material-symbols-rounded text-[16px]">add</span>
+                            Medição
+                          </button>
+                        )}
+                      </div>
+                      {isDxt && dxtMeds.length > 0 && (
+                        <div className="space-y-1.5 sm:pl-[4.5rem]">
+                          {dxtMeds.map(m => (
+                            <div key={m.key} className={rowCls}>
+                              <input type="time" className={timeCls}
+                                value={m.hora}
+                                onChange={e => setDxtMed(m.key, 'hora', e.target.value)}
+                                disabled={inputDisabled} />
+                              <input type="text" inputMode="decimal" className={numCls}
+                                value={m.valor}
+                                onChange={e => setDxtMed(m.key, 'valor', e.target.value)}
+                                placeholder="valor"
+                                disabled={inputDisabled} />
+                              <span className={unitCls}>mg/dl</span>
+                              {canEditNow && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeDxtMed(m.key)}
+                                  title="Remover medição"
+                                  className={`shrink-0 transition-colors ${isDark ? 'text-slate-500 hover:text-red-400' : 'text-slate-400 hover:text-red-500'}`}
+                                >
+                                  <span className="material-symbols-rounded text-[18px]">close</span>
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -499,7 +663,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
                       )}
                     </div>
 
-                    {isEditing && !isArchived && (
+                    {canEditNow && (
                       <div className="relative" ref={dropdownRef}>
                         <button
                           type="button"
@@ -570,7 +734,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
                         <div key={key} className={`flex items-center gap-2 flex-wrap p-2 rounded-lg ${
                           isDark ? 'bg-slate-700/50' : 'bg-primary-50/60'
                         }`}>
-                          {isEditing && !isArchived && (
+                          {canEditNow && (
                             <button
                               type="button"
                               onClick={() => toggleDreno(key)}

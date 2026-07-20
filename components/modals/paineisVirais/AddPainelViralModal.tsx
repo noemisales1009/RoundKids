@@ -3,6 +3,7 @@ import { supabase } from '../../../supabaseClient';
 import { NotificationContext, UserContext } from '../../../contexts';
 import { CloseIcon } from '../../icons';
 import { ALERT_SYSTEMS } from '../../../constants';
+import { RESULTADO_OPTIONS } from './EditPainelViralModal';
 
 interface DiagnosticoAtivo {
   id: number;
@@ -126,8 +127,9 @@ export const AddPainelViralModal: React.FC<{
     const { user } = useContext(UserContext)!;
 
     const [categoria, setCategoria] = useState('');
-    const [painel, setPainel] = useState('');
+    const [paineisSelecionados, setPaineisSelecionados] = useState<{ categoria: string; painel: string }[]>([]);
     const [dataColeta, setDataColeta] = useState(getTodayDateString());
+    const [resultado, setResultado] = useState('Em andamento');
 
     const [sistema, setSistema] = useState('');
     const [sistemaOutros, setSistemaOutros] = useState('');
@@ -161,16 +163,18 @@ export const AddPainelViralModal: React.FC<{
         fetchDiagnosticos();
     }, [patientId]);
 
-    const handleCategoriaChange = (cat: string) => {
-        setCategoria(cat);
-        setPainel('');
-    };
+    const togglePainel = (cat: string, p: string) =>
+        setPaineisSelecionados(prev =>
+            prev.some(x => x.categoria === cat && x.painel === p)
+                ? prev.filter(x => !(x.categoria === cat && x.painel === p))
+                : [...prev, { categoria: cat, painel: p }]
+        );
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!painel) {
-            showNotification({ message: 'Por favor, selecione o painel/exame', type: 'error' });
+        if (paineisSelecionados.length === 0) {
+            showNotification({ message: 'Por favor, selecione ao menos um painel/exame', type: 'error' });
             return;
         }
         if (!user?.id) {
@@ -181,25 +185,33 @@ export const AddPainelViralModal: React.FC<{
         setLoading(true);
         try {
             const diagSelecionado = diagnosticosAtivos.find(d => d.id === selectedDiagnosticoId);
+            const comum = {
+                paciente_id: patientId,
+                data_coleta: dataColeta,
+                resultado: resultado || 'Em andamento',
+                sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || null,
+                observacao: observacao.trim() || null,
+                created_by: user.id,
+                diagnostico_id: diagSelecionado?.id ?? null,
+                diagnostico_label: diagSelecionado?.label ?? null,
+                diagnostico_data_inicio: diagSelecionado?.data_inicio || diagSelecionado?.created_at?.split('T')[0] || null,
+            };
             const { error } = await supabase
                 .from('paineis_virais_pacientes')
-                .insert([{
-                    paciente_id: patientId,
-                    categoria,
-                    painel,
-                    data_coleta: dataColeta,
-
-                    sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || null,
-                    observacao: observacao.trim() || null,
-                    created_by: user.id,
-                    diagnostico_id: diagSelecionado?.id ?? null,
-                    diagnostico_label: diagSelecionado?.label ?? null,
-                    diagnostico_data_inicio: diagSelecionado?.data_inicio || diagSelecionado?.created_at?.split('T')[0] || null,
-                }]);
+                .insert(paineisSelecionados.map(sel => ({
+                    ...comum,
+                    categoria: sel.categoria,
+                    painel: sel.painel,
+                })));
 
             if (error) throw error;
 
-            showNotification({ message: 'Painel viral/sorologia cadastrado com sucesso!', type: 'success' });
+            showNotification({
+                message: paineisSelecionados.length === 1
+                    ? 'Painel viral/sorologia cadastrado com sucesso!'
+                    : `${paineisSelecionados.length} painéis cadastrados com sucesso!`,
+                type: 'success',
+            });
             onSuccess();
             onClose();
         } catch (error: any) {
@@ -222,12 +234,11 @@ export const AddPainelViralModal: React.FC<{
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Categoria <span className="text-red-500">*</span>
+                            Categoria
                         </label>
                         <select
                             value={categoria}
-                            onChange={(e) => handleCategoriaChange(e.target.value)}
-                            required
+                            onChange={(e) => setCategoria(e.target.value)}
                             className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
                         >
                             <option value="">Selecione a categoria...</option>
@@ -240,19 +251,57 @@ export const AddPainelViralModal: React.FC<{
                     {categoria && (
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                Painel / Exame <span className="text-red-500">*</span>
+                                Painéis / Exames <span className="text-red-500">*</span>{' '}
+                                <span className="text-slate-400 font-normal">(marque um ou mais)</span>
                             </label>
-                            <select
-                                value={painel}
-                                onChange={(e) => setPainel(e.target.value)}
-                                required
-                                className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
-                            >
-                                <option value="">Selecione o painel...</option>
-                                {PAINEIS_POR_CATEGORIA[categoria].map(p => (
-                                    <option key={p} value={p}>{p}</option>
+                            <div className="mt-1 border border-slate-300 dark:border-slate-700 rounded-md overflow-hidden divide-y divide-slate-200 dark:divide-slate-700 max-h-48 overflow-y-auto">
+                                {PAINEIS_POR_CATEGORIA[categoria].map(p => {
+                                    const checked = paineisSelecionados.some(x => x.categoria === categoria && x.painel === p);
+                                    return (
+                                        <div
+                                            key={p}
+                                            role="checkbox"
+                                            aria-checked={checked}
+                                            tabIndex={0}
+                                            onClick={() => togglePainel(categoria, p)}
+                                            onKeyDown={e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); togglePainel(categoria, p); } }}
+                                            className={`flex items-center gap-2 px-3 py-2 cursor-pointer text-sm focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 ${checked ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+                                        >
+                                            <span className={`material-symbols-rounded text-[18px] shrink-0 ${checked ? 'text-primary-500' : 'text-slate-400'}`}>
+                                                {checked ? 'check_box' : 'check_box_outline_blank'}
+                                            </span>
+                                            {p}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {paineisSelecionados.length > 0 && (
+                        <div>
+                            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                                Selecionados ({paineisSelecionados.length}):
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                                {paineisSelecionados.map(sel => (
+                                    <span
+                                        key={`${sel.categoria}|${sel.painel}`}
+                                        title={sel.categoria}
+                                        className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-full text-xs font-semibold bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300"
+                                    >
+                                        {sel.painel}
+                                        <button
+                                            type="button"
+                                            onClick={() => togglePainel(sel.categoria, sel.painel)}
+                                            title="Remover"
+                                            className="hover:text-red-500 transition-colors"
+                                        >
+                                            <span className="material-symbols-rounded text-[14px] block">close</span>
+                                        </button>
+                                    </span>
                                 ))}
-                            </select>
+                            </div>
                         </div>
                     )}
 
@@ -266,6 +315,24 @@ export const AddPainelViralModal: React.FC<{
                             onChange={(e) => setDataColeta(e.target.value)}
                             className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
                         />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Resultado
+                        </label>
+                        <select
+                            value={resultado}
+                            onChange={(e) => setResultado(e.target.value)}
+                            className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
+                        >
+                            {RESULTADO_OPTIONS.map(r => (
+                                <option key={r} value={r}>{r}</option>
+                            ))}
+                        </select>
+                        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                            Vale para todos os painéis selecionados — dá para ajustar individualmente depois, na edição.
+                        </p>
                     </div>
 
                     <div>
@@ -356,7 +423,7 @@ export const AddPainelViralModal: React.FC<{
                             disabled={loading}
                             className="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md transition disabled:opacity-50"
                         >
-                            {loading ? 'Salvando...' : 'Salvar'}
+                            {loading ? 'Salvando...' : paineisSelecionados.length > 1 ? `Salvar (${paineisSelecionados.length})` : 'Salvar'}
                         </button>
                     </div>
                 </form>

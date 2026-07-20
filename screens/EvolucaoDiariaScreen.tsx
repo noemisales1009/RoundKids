@@ -207,6 +207,10 @@ const SYSTEM_EXTRA_MATCHES: Record<string, string[]> = {
   'Avaliação respiratória': ['Sist. respiratório'],
 };
 
+// Período "início - fim"; com uma data só, mantém o rótulo correspondente
+const formatPeriodo = (inicio: string, fim: string, fimLabel: string): string =>
+  inicio && fim ? `${inicio} - ${fim}` : inicio ? `Início: ${inicio}` : fim ? `${fimLabel}: ${fim}` : '';
+
 // ─── Escalas clínicas na Evolução ────────────────────────────────────────────
 interface ScaleScoreRecord {
   id: number;
@@ -938,13 +942,13 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
     if (p.comorbidade) {
       title('3. COMORBIDADES');
-      p.comorbidade.split('|').filter(c => c.trim()).forEach(c => add(`• ${c.trim()}`));
+      p.comorbidade.split('|').filter(c => c.trim()).forEach(c => add(c.trim()));
     }
 
     const precAtivas = (p.precautions ?? []).filter(pr => !pr.isArchived && !pr.data_fim);
     if (precAtivas.length > 0) {
       title('4. PRECAUÇÕES');
-      precAtivas.forEach(pr => add(`• ${PREC_BADGE[pr.tipo_precaucao]?.label ?? pr.tipo_precaucao}`));
+      precAtivas.forEach(pr => add(PREC_BADGE[pr.tipo_precaucao]?.label ?? pr.tipo_precaucao));
     }
 
     const we = wordExcluded;
@@ -956,7 +960,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         const det = d.label !== 'Outros' && d.texto_digitado ? ` (${d.texto_digitado})` : '';
         const dataCriacao = d.created_at ? `  Em ${formatDateToBRL(d.created_at)}` : '';
         const resolvidoText = d.status === 'resolvido' ? `  [RESOLVIDO${d.resolved_at ? ` em ${formatDateToBRL(d.resolved_at)}` : ''}]` : '';
-        add(`• ${lbl}${det}${dataCriacao}${resolvidoText}`);
+        add(`${lbl}${det}${dataCriacao}${resolvidoText}`);
       });
     }
 
@@ -969,21 +973,22 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       secundarios.forEach(d => {
         const lbl = d.label === 'Outros' && d.texto_digitado ? d.texto_digitado : d.label;
         const det = d.label !== 'Outros' && d.texto_digitado ? ` (${d.texto_digitado})` : '';
-        const dataInicio = d.data_inicio ? `Início: ${formatDateToBRL(d.data_inicio)}` : '';
-        const dataResolvido = d.resolved_at ? `Resolução: ${formatDateToBRL(d.resolved_at)}` : '';
-        const dataPart = [dataInicio, dataResolvido].filter(Boolean).join('  |  ');
-        add(`• ${lbl}${det}${dataPart ? `  [${dataPart}]` : ''}`);
+        const dataPart = formatPeriodo(
+          d.data_inicio ? formatDateToBRL(d.data_inicio) : '',
+          d.resolved_at ? formatDateToBRL(d.resolved_at) : '',
+          'Resolução'
+        );
+        add(`${lbl}${det}${dataPart ? `  [${dataPart}]` : ''}`);
         const linkedMeds = allMedsExport.filter(m => m.diagnosticoId != null && d.allIds.includes(Number(m.diagnosticoId)) && !we.has(`med_${m.id}`));
         linkedMeds.forEach(m => {
-          const dosagePart = m.dosage && m.dosage !== m.name ? ` (${m.dosage})` : '';
           const medInicio = m.startDate ? formatDateToBRL(m.startDate) : '';
           const medFim = m.endDate ? formatDateToBRL(m.endDate) : '';
           const medDias = m.startDate && m.endDate
-            ? Math.round((new Date(m.endDate).getTime() - new Date(m.startDate).getTime()) / 86400000) + 1
+            ? Math.max(1, Math.round((new Date(m.endDate).getTime() - new Date(m.startDate).getTime()) / 86400000) + 1)
             : null;
           const medDiasPart = medDias !== null ? `${medDias} dia${medDias !== 1 ? 's' : ''}` : '';
-          const medDatas = [medInicio, medFim, medDiasPart].filter(Boolean).join('  |  ');
-          add(`    ◦ ${m.name}${dosagePart}${medDatas ? `  [${medDatas}]` : ''}`);
+          const medDatas = [formatPeriodo(medInicio, medFim, 'Fim'), medDiasPart].filter(Boolean).join('  ');
+          add(`    ${m.name}${medDatas ? `  [${medDatas}]` : ''}`);
         });
       });
     }
@@ -1146,7 +1151,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       secDiags.forEach(diag => {
         const lbl = diag.label === 'Outros' && diag.texto_digitado ? diag.texto_digitado : diag.label;
         const det = diag.label !== 'Outros' && diag.texto_digitado ? ` (${diag.texto_digitado})` : '';
-        apLines.push(`  • ${lbl}${det}`);
+        apLines.push(`  ${lbl}${det}`);
 
         const diagMeds  = allSecMeds.filter(m => m.diagnosticoId != null && diag.allIds.includes(m.diagnosticoId));
         const diagCults = allSecCults.filter(c => c.diagnosticoId != null && diag.allIds.includes(c.diagnosticoId));
@@ -1158,8 +1163,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
             const medDias = m.endDate
               ? Math.max(0, Math.floor((new Date(m.endDate + 'T00:00:00').getTime() - new Date(m.startDate + 'T00:00:00').getTime()) / 86400000))
               : Math.max(0, Math.floor((_today.getTime() - new Date(m.startDate + 'T00:00:00').getTime()) / 86400000));
-            const dosagePart = m.dosage && m.dosage !== m.name ? ` (${m.dosage})` : '';
-            apLines.push(`      • ${m.name}${dosagePart} — ${formatDateToBRL(m.startDate)} — Dia ${medDias}`);
+            apLines.push(`      ${m.name}  Início: ${formatDateToBRL(m.startDate)}  Dia ${medDias}`);
             usedMedIds.add(m.id);
           });
         }
@@ -1167,7 +1171,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         if (diagCults.length) {
           apLines.push('    CULTURAS:');
           diagCults.forEach(c => {
-            apLines.push(`      • ${c.site}${c.microorganism ? ` — ${c.microorganism}` : ''} — ${formatDateToBRL(c.collectionDate)}`);
+            apLines.push(`      ${c.site}${c.microorganism ? ` — ${c.microorganism}` : ''} — ${formatDateToBRL(c.collectionDate)}`);
             if (c.observation) apLines.push(`        ${c.observation}`);
             usedCultIds.add(c.id);
           });
@@ -1176,7 +1180,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         if (diagPnls.length) {
           apLines.push('    PAINÉIS VIRAIS:');
           diagPnls.forEach(pn => {
-            apLines.push(`      • ${pn.painel} — ${pn.categoria}${pn.resultado ? ` — ${pn.resultado}` : ''}${pn.valor ? ` (${pn.valor})` : ''} — Em ${formatDateToBRL(pn.data_coleta)}`);
+            apLines.push(`      ${pn.painel} — ${pn.categoria}${pn.resultado ? ` — ${pn.resultado}` : ''}${pn.valor ? ` (${pn.valor})` : ''} — Em ${formatDateToBRL(pn.data_coleta)}`);
             usedPnlIds.add(pn.id);
           });
         }
@@ -1191,8 +1195,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           const medDias = m.endDate
             ? Math.max(0, Math.floor((new Date(m.endDate + 'T00:00:00').getTime() - new Date(m.startDate + 'T00:00:00').getTime()) / 86400000))
             : Math.max(0, Math.floor((_today.getTime() - new Date(m.startDate + 'T00:00:00').getTime()) / 86400000));
-          const dosagePart = m.dosage && m.dosage !== m.name ? ` (${m.dosage})` : '';
-          apLines.push(`    • ${m.name}${dosagePart} — ${formatDateToBRL(m.startDate)} — Dia ${medDias}`);
+          apLines.push(`    ${m.name}  Início: ${formatDateToBRL(m.startDate)}  Dia ${medDias}`);
         });
       }
 
@@ -1200,7 +1203,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       if (exs.length) {
         apLines.push('  EXAMES:');
         exs.forEach(e => {
-          apLines.push(`    • Em ${formatDateToBRL(e.date)} — ${e.name}`);
+          apLines.push(`    Em ${formatDateToBRL(e.date)} — ${e.name}`);
         });
       }
 
@@ -1208,7 +1211,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       if (scs.length) {
         apLines.push('  ESCALAS:');
         scs.forEach(s => {
-          apLines.push(`    • ${s.scale_name}: ${s.score}${s.interpretation ? ` — ${s.interpretation}` : ''} — Em ${new Date(s.date).toLocaleDateString('pt-BR')}`);
+          apLines.push(`    ${s.scale_name}: ${s.score}${s.interpretation ? ` — ${s.interpretation}` : ''} — Em ${new Date(s.date).toLocaleDateString('pt-BR')}`);
         });
       }
 
@@ -1217,7 +1220,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       if (orphanCults.length) {
         apLines.push('  CULTURAS:');
         orphanCults.forEach(c => {
-          apLines.push(`    • ${c.site}${c.microorganism ? ` — ${c.microorganism}` : ''} — ${formatDateToBRL(c.collectionDate)}`);
+          apLines.push(`    ${c.site}${c.microorganism ? ` — ${c.microorganism}` : ''} — ${formatDateToBRL(c.collectionDate)}`);
           if (c.observation) apLines.push(`      ${c.observation}`);
         });
       }
@@ -1227,7 +1230,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       if (orphanPnls.length) {
         apLines.push('  PAINÉIS VIRAIS:');
         orphanPnls.forEach(pn => {
-          apLines.push(`    • ${pn.painel} — ${pn.categoria}${pn.resultado ? ` — ${pn.resultado}` : ''}${pn.valor ? ` (${pn.valor})` : ''} — Em ${formatDateToBRL(pn.data_coleta)}`);
+          apLines.push(`    ${pn.painel} — ${pn.categoria}${pn.resultado ? ` — ${pn.resultado}` : ''}${pn.valor ? ` (${pn.valor})` : ''} — Em ${formatDateToBRL(pn.data_coleta)}`);
         });
       }
 
@@ -1235,27 +1238,27 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       if (imgs.length) {
         apLines.push('  IMAGEM:');
         imgs.forEach(i => {
-          apLines.push(`    • ${i.exame}${i.resultado ? ` — ${i.resultado}` : ''} — Em ${formatDateToBRL(i.data_exame)}`);
+          apLines.push(`    ${i.exame}${i.resultado ? ` — ${i.resultado}` : ''} — Em ${formatDateToBRL(i.data_exame)}`);
         });
       }
 
       // 7. Pareceres
       if (pars.length) {
         apLines.push('  PARECERES:');
-        pars.forEach(par => apLines.push(`    • ${par.especialista} — ${formatDateToBRL(par.data_parecer)}: ${par.parecer ?? '—'}`));
+        pars.forEach(par => apLines.push(`    ${par.especialista} — ${formatDateToBRL(par.data_parecer)}: ${par.parecer ?? '—'}`));
       }
 
       // 8. Condutas
       if (activeAlts.length) {
         apLines.push('  CONDUTAS:');
-        activeAlts.forEach(a => apLines.push(`    • ${a.alerta_descricao}`));
+        activeAlts.forEach(a => apLines.push(`    ${a.alerta_descricao}`));
       }
 
       // Cirurgias (específico da avaliação cirúrgica)
       if (cirgs.length) {
         apLines.push('  CIRURGIAS:');
         cirgs.forEach(c => {
-          apLines.push(`    • ${c.name} — ${formatDateToBRL(c.date)} (${calcDias(c.date)})`);
+          apLines.push(`    ${c.name} — ${formatDateToBRL(c.date)} (${calcDias(c.date)})`);
           if (c.notes) apLines.push(`      ${c.notes}`);
         });
       }
@@ -1292,7 +1295,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
     blank();
     add(`Gerado em: ${new Date().toLocaleString('pt-BR')} | RoundKids`);
-    return lines.join('\n');
+    // Remove marcadores "*" de início de linha (vindos de textos digitados, ex: pareceres/condutas).
+    // Exige espaço após os asteriscos para não mutilar ênfases como "**Importante**".
+    return lines.join('\n').replace(/^([ \t]*)\*+[ \t]+/gm, '$1');
   };
 
   const buildDevicesText = (): string => {
@@ -1309,9 +1314,12 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const endSP = d.removalDate ? (() => { const [ry, rm, rd] = d.removalDate!.split('T')[0].split('-').map(Number); return Date.UTC(ry, rm - 1, rd); })() : todaySP;
       const days = Math.floor((endSP - startSP) / 86400000);
       const loc = d.location ? ` – ${d.location}` : '';
-      const start = formatDateToBRL(d.startDate);
-      const removal = d.removalDate ? ` | Retirada: ${formatDateToBRL(d.removalDate)}` : '';
-      return `  • ${d.name}${loc} | Início: ${start}${removal} | ${days} dia${days !== 1 ? 's' : ''}`;
+      const periodo = formatPeriodo(
+        formatDateToBRL(d.startDate),
+        d.removalDate ? formatDateToBRL(d.removalDate) : '',
+        'Retirada'
+      );
+      return `  ${d.name}${loc}  ${periodo}  ${days} dia${days !== 1 ? 's' : ''}`;
     }).join('\n');
   };
 

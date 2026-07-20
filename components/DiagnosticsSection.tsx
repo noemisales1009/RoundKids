@@ -257,6 +257,11 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   const handleAdd = () => {
     if (formOpcaoId === '') return;
 
+    if (!formDataInicio) {
+      showNotification({ message: 'Selecione a data de início antes de adicionar o diagnóstico.', type: 'error' });
+      return;
+    }
+
     // Impede duplicata do mesmo diagnóstico
     if (formOpcaoId !== OUTROS_ID) {
       const jaExiste = workingDiags.some(
@@ -512,6 +517,15 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   };
 
   const handleSave = async () => {
+    // Valida só os novos: diagnósticos antigos (salvos antes da regra) não bloqueiam o salvamento
+    const semData = workingDiags.filter(d => d.isNew && !d.dataInicio);
+    if (semData.length > 0) {
+      showNotification({
+        message: `Preencha a data de início antes de salvar: ${semData.map(d => d.label).join(', ')}`,
+        type: 'error',
+      });
+      return;
+    }
     setSaving(true);
     try {
       const now = new Date().toISOString();
@@ -525,9 +539,12 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           supabase.from('paciente_diagnosticos').update({
             status: d.status,
             sistema: d.sistema || null,
-            data_inicio: d.dataInicio || null,
+            // Datas vazias no estado local não sobrescrevem o que está no banco
+            ...(d.dataInicio ? { data_inicio: d.dataInicio } : {}),
             texto_digitado: d.inputComplement ?? d.observacao ?? null,
-            resolved_at: d.status === 'resolvido' ? (d.resolvedAt || now) : null,
+            ...(d.status === 'resolvido'
+              ? (d.resolvedAt ? { resolved_at: d.resolvedAt } : {})
+              : { resolved_at: null }),
           }).eq('id', d.dbId!)
         ));
       }
@@ -990,7 +1007,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className={labelCls}>Data de início</label>
+                <label className={labelCls}>Data de início <span className="text-rose-500">*</span></label>
                 <input
                   type="date"
                   value={formDataInicio}
@@ -1059,6 +1076,7 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
               <button
                 onClick={handleAdd}
                 disabled={
+                  !formDataInicio ||
                   (formOpcaoId === OUTROS_ID && !formCustomLabel.trim()) ||
                   (!!selectedFormOpt?.has_input && formChildId === '' && !formInputText.trim())
                 }

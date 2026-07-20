@@ -13,9 +13,10 @@ DO $$ BEGIN
     SELECT 1 FROM information_schema.columns
     WHERE table_name = 'patients' AND column_name = 'status'
   ) THEN
+    -- Vocabulário do app (StatusComponent): estavel | instavel | em_risco
     ALTER TABLE patients
     ADD COLUMN status TEXT DEFAULT 'estavel'
-    CHECK (status IN ('estavel', 'critico', 'em_risco'));
+    CHECK (status IN ('estavel', 'instavel', 'em_risco'));
 
     CREATE INDEX idx_patients_status ON patients(status)
       WHERE is_archived = false;

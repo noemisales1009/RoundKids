@@ -112,6 +112,18 @@ const PAINEIS_POR_CATEGORIA: Record<string, string[]> = {
 };
 
 
+// Compartilhada com AddPainelViralModal — manter uma lista única
+export const RESULTADO_OPTIONS = [
+    'Em andamento',
+    'Detectado',
+    'Não Detectado',
+    'Positivo',
+    'Negativo',
+    'Reagente',
+    'Não Reagente',
+    'Indeterminado',
+];
+
 export type PainelViralRow = {
     id: string;
     paciente_id: number | string;
@@ -141,6 +153,7 @@ export const EditPainelViralModal: React.FC<{
     const [categoria, setCategoria] = useState(painelData.categoria);
     const [painel, setPainel] = useState(painelData.painel);
     const [dataColeta, setDataColeta] = useState(painelData.data_coleta);
+    const [resultado, setResultado] = useState(painelData.resultado || 'Em andamento');
 
     const [sistema, setSistema] = useState(
         painelData.sistema && !ALERT_SYSTEMS.includes(painelData.sistema) ? 'Outros' : (painelData.sistema ?? '')
@@ -204,7 +217,7 @@ export const EditPainelViralModal: React.FC<{
                     categoria,
                     painel,
                     data_coleta: dataColeta,
-
+                    resultado: resultado || 'Em andamento',
                     sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || null,
                     observacao: observacao.trim() || null,
                     updated_by: user.id,
@@ -286,6 +299,24 @@ export const EditPainelViralModal: React.FC<{
                             onChange={(e) => setDataColeta(e.target.value)}
                             className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
                         />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Resultado
+                        </label>
+                        <select
+                            value={resultado}
+                            onChange={(e) => setResultado(e.target.value)}
+                            className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
+                        >
+                            {RESULTADO_OPTIONS.map(r => (
+                                <option key={r} value={r}>{r}</option>
+                            ))}
+                            {painelData.resultado && !RESULTADO_OPTIONS.includes(painelData.resultado) && (
+                                <option value={painelData.resultado}>{painelData.resultado}</option>
+                            )}
+                        </select>
                     </div>
 
                     {diagnosticosAtivos.length > 0 && (
