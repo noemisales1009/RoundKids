@@ -25,6 +25,7 @@ const ESPECIALISTAS = [
     'Oftalmologista',
     'Oncologia Ped',
     'Ortopedia',
+    'Otorrinolaringologista',
     'Pneumologia',
     'Psicologia',
     'Psiquiatria',

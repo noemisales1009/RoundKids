@@ -256,6 +256,7 @@ const ESPECIALISTA_TO_SISTEMAS: Record<string, string[]> = {
   'Neurocirurgia':        ['Avaliação cirúrgica'],
   'Oftalmologista':       ['Outros'],
   'Ortopedia':            ['Avaliação cirúrgica'],
+  'Otorrinolaringologista': ['Outros'],
   'Oncologia Ped':        ['Avaliação hematológica/ oncológica'],
   'Pneumologia':          ['Avaliação respiratória'],
   'Psiquiatria':          ['Avaliação psiquiátrica'],
