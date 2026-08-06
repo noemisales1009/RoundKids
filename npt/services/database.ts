@@ -253,7 +253,7 @@ export const convertCalculationDataForDB = (
     magnesiumDose: number
     phosphorusDose: number
     phosphorusSource: 'sodium' | 'potassium'
-    nptStages: 1 | 2 | 4
+    nptStages: 1 | 2 | 3 | 4
   },
   calculatedResults: {
     totalVolume: number

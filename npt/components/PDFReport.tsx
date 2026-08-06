@@ -115,7 +115,7 @@ interface PDFReportProps {
     vitaminsVolume: number;
     precipitationWarnings: string[];
   };
-  nptStages?: 1 | 2 | 4;
+  nptStages?: 1 | 2 | 3 | 4;
 }
 
 const ReportRow: React.FC<{ label: string; value: string | number; unit?: string }> = ({ label, value, unit }) => (
@@ -176,6 +176,8 @@ export const PDFReport: React.FC<PDFReportProps> = ({ reportData, nptStages = 2 
 
   const phosphorusSourceName = phosphorusSource === 'sodium' ? 'Glicerofosfato de Sódio' : 'Fosfato Ácido de Potássio';
 
+  const stagesLabel = nptStages === 1 ? '1 (24/24h)' : nptStages === 2 ? '2 (12/12h)' : nptStages === 3 ? '3 (8/8h)' : '4 (6/6h)';
+
   const sodiumScenario = phosphorusSource === 'sodium' 
     ? { phosphorus: phosphorusCalculations, electrolytes: electrolyteCalculations } 
     : { phosphorus: alternativeCalculations.phosphorusCalculations, electrolytes: alternativeCalculations.electrolyteCalculations };
@@ -221,7 +223,7 @@ export const PDFReport: React.FC<PDFReportProps> = ({ reportData, nptStages = 2 
                     <p><span className="font-semibold">Nome:</span> {patientName || 'Não informado'}</p>
                     <p><span className="font-semibold">Data de Nascimento:</span> {formattedDob}</p>
                     <p><span className="font-semibold">Peso:</span> {weight} kg</p>
-                    <p><span className="font-semibold">Etapas de NPT:</span> {nptStages === 1 ? '1 (24/24h)' : nptStages === 2 ? '2 (12/12h)' : '4 (6/6h)'}</p>
+                    <p><span className="font-semibold">Etapas de NPT:</span> {stagesLabel}</p>
                     {idealWeight > 0 && <p><span className="font-semibold">Peso ideal/ajustado:</span> {idealWeight} kg (usado no cálculo de proteína)</p>}
                 </div>
             </section>
@@ -241,7 +243,7 @@ export const PDFReport: React.FC<PDFReportProps> = ({ reportData, nptStages = 2 
             <section className="mb-3">
                 <h2 className="text-lg font-bold border-b border-slate-300 pb-1 mb-2">Resumo da Prescrição</h2>
                 <div className="space-y-0 text-xs">
-                    <ReportRow label="Etapas de NPT" value={nptStages === 1 ? '1 (24/24h)' : nptStages === 2 ? '2 (12/12h)' : '4 (6/6h)'} />
+                    <ReportRow label="Etapas de NPT" value={stagesLabel} />
                     <ReportRow label={`Superfície Corporal (SC - Haycock)`} value={bodySurfaceArea.toFixed(2)} unit="m²" />
                     <ReportRow label="Meta Hídrica (Dose)" value={hydrationTarget} unit="mL/m²" />
                     <ReportRow label="Meta Hídrica Total" value={hydrationByBSA.toFixed(0)} unit="mL" />
@@ -250,8 +252,26 @@ export const PDFReport: React.FC<PDFReportProps> = ({ reportData, nptStages = 2 
                     <ReportRow label="Relação Cal-NP/gN Alvo" value={calorieNitrogenRatio} />
                     <ReportRow label="Calorias Não Proteicas" value={(lipidCalculations.calories + glucoseCalculations.calories).toFixed(0)} unit="kcal" />
                     <ReportRow label="Distribuição Não Proteica" value={`Glicose ${100 - lipidPercent}% · Lipídios ${lipidPercent}%`} />
+                    <ReportRow label="Calorias de Proteínas" value={`${aminoAcidCalculations.calories.toFixed(0)} kcal (${caloricDistribution.protein.toFixed(0)}%)`} />
+                    <ReportRow label="Calorias de Glicose" value={`${glucoseCalculations.calories.toFixed(0)} kcal (${caloricDistribution.glucose.toFixed(0)}%)`} />
+                    <ReportRow label="Calorias de Lipídeos" value={`${lipidCalculations.calories.toFixed(0)} kcal (${caloricDistribution.lipid.toFixed(0)}%)`} />
                     <ReportRow label="Calorias Totais" value={totalCalories.toFixed(0)} unit="kcal" />
+                    <ReportRow label="TIG" value={glucoseCalculations.tig.toFixed(2)} unit="mg/kg/min" />
+                    <ReportRow label="Concentração Final de Glicose" value={finalGlucoseConcentrationInBag.toFixed(1)} unit="%" />
                     <ReportRow label="Osmolaridade Estimada" value={osmolarityCalculations.totalOsmolarity.toFixed(0)} unit="mOsm/L" />
+                    <ReportRow label="Recomendação de Acesso" value={osmolarityCalculations.isPeripheralRouteWarning ? 'CENTRAL' : 'PERIFÉRICO'} />
+                </div>
+            </section>
+
+            <section className="mb-3">
+                <h2 className="text-lg font-bold border-b border-slate-300 pb-1 mb-2">Doses Prescritas de Eletrólitos</h2>
+                <div className="grid grid-cols-2 gap-x-6 text-xs">
+                    <ReportRow label="Sódio" value={sodiumDose} unit="mEq/100mL" />
+                    <ReportRow label="Potássio" value={potassiumDose} unit="mEq/100mL" />
+                    <ReportRow label="Cálcio" value={calciumDose} unit="mEq/kg" />
+                    <ReportRow label="Magnésio" value={magnesiumDose} unit="mEq/kg" />
+                    <ReportRow label="Fósforo" value={phosphorusDose} unit="mEq/kg" />
+                    <ReportRow label="Fonte de Fósforo" value={phosphorusSourceName} />
                 </div>
             </section>
             
@@ -383,9 +403,12 @@ export const PDFReport: React.FC<PDFReportProps> = ({ reportData, nptStages = 2 
                  <section className="mb-6">
                     <h2 className="text-xl font-bold border-b border-slate-300 pb-2 mb-3">Análise da Distribuição Calórica</h2>
                     <div className="space-y-1 text-sm bg-slate-50 p-3 rounded-md border border-slate-200">
-                        <ReportRow label="Calorias de Proteínas" value={`${caloricDistribution.protein.toFixed(1)} %`} />
-                        <ReportRow label="Calorias de Lipídeos" value={`${caloricDistribution.lipid.toFixed(1)} %`} />
-                        <ReportRow label="Calorias de Glicose" value={`${caloricDistribution.glucose.toFixed(1)} %`} />
+                        <ReportRow label="Calorias de Proteínas" value={`${aminoAcidCalculations.calories.toFixed(0)} kcal (${caloricDistribution.protein.toFixed(1)} %)`} />
+                        <ReportRow label="Calorias de Lipídeos" value={`${lipidCalculations.calories.toFixed(0)} kcal (${caloricDistribution.lipid.toFixed(1)} %)`} />
+                        <ReportRow label="Calorias de Glicose" value={`${glucoseCalculations.calories.toFixed(0)} kcal (${caloricDistribution.glucose.toFixed(1)} %)`} />
+                        <div className="!mt-2 !pt-2 border-t font-bold">
+                            <ReportRow label="CALORIAS TOTAIS" value={totalCalories.toFixed(0)} unit="kcal" />
+                        </div>
                     </div>
                     {caloricDistribution.warnings.length > 0 && (
                         <div className="mt-2 p-2 bg-yellow-50 border border-yellow-300 text-yellow-800 rounded-md text-xs space-y-1">

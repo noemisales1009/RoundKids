@@ -116,7 +116,7 @@ export interface Database {
           magnesium_dose: number
           phosphorus_dose: number
           phosphorus_source: 'sodium' | 'potassium'
-          npt_stages: 1 | 2 | 4
+          npt_stages: 1 | 2 | 3 | 4
           total_volume: number | null
           total_calories: number | null
           glucose_concentration_final: number | null
@@ -153,7 +153,7 @@ export interface Database {
           magnesium_dose: number
           phosphorus_dose: number
           phosphorus_source: 'sodium' | 'potassium'
-          npt_stages: 1 | 2 | 4
+          npt_stages: 1 | 2 | 3 | 4
           total_volume?: number | null
           total_calories?: number | null
           glucose_concentration_final?: number | null
@@ -190,7 +190,7 @@ export interface Database {
           magnesium_dose?: number
           phosphorus_dose?: number
           phosphorus_source?: 'sodium' | 'potassium'
-          npt_stages?: 1 | 2 | 4
+          npt_stages?: 1 | 2 | 3 | 4
           total_volume?: number | null
           total_calories?: number | null
           glucose_concentration_final?: number | null

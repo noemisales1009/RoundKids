@@ -18,10 +18,11 @@ declare global {
 }
 
 // Tipo para opções de etapas NPT
-type NPTStages = 1 | 2 | 4;
+type NPTStages = 1 | 2 | 3 | 4;
 const NPT_STAGES_HOURS: Record<NPTStages, number> = {
     1: 24, // 1 etapa = 24h
     2: 12, // 2 etapas = 12h cada
+    3: 8,  // 3 etapas = 8h cada
     4: 6   // 4 etapas = 6h cada
 };
 
@@ -63,6 +64,10 @@ const CLINICAL_PROFILES: Record<ClinicalProfileKey, ClinicalProfile> = {
 // Distribuição das calorias não proteicas: lipídios 30–40% (a glicose completa com 60–70%)
 const LIPID_PERCENT_RANGE = { min: 30, max: 40 };
 
+// Faixa usual de proteína como % das calorias totais — indicador informativo, não bloqueia
+// (fora da faixa é esperado em relações baixas/altas conforme o perfil clínico)
+const PROTEIN_TOTAL_TARGET = { min: 15, max: 20 };
+
 // Tipagem para os dados do relatório, para ser usada por ambos os componentes de PDF
 type ReportData = ReturnType<typeof useAppCalculations>['reportData'];
 
@@ -74,6 +79,7 @@ interface PharmacyPrescriptionProps {
 const PharmacyPrescription: React.FC<PharmacyPrescriptionProps> = ({ reportData, nptStages }) => {
     const {
         patientName, dateOfBirth, weight,
+        hydrationTarget, hydrationByBSA,
         totalComponentVolume, proteinConcentration, lipidConcentration,
         aminoAcidCalculations, lipidCalculations,
         glucoseCalculations, glucoseMixtureCalculations,
@@ -175,7 +181,27 @@ const PharmacyPrescription: React.FC<PharmacyPrescriptionProps> = ({ reportData,
                     )}
                 </main>
                 
-                <footer className="mt-auto pt-2 text-xs font-sans">
+                <div className="text-center pt-10 pb-4">
+                    <p className="inline-block border-t-2 border-black px-12 py-1 text-sm">Assinatura e Carimbo do Médico</p>
+                </div>
+            </div>
+
+            {/* Página 2: Parâmetros & Indicadores */}
+            <div className="p-8" style={{ width: '210mm', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+                <header className="text-center mb-4">
+                    <p style={{ color: '#0d8a8a', fontSize: '15px', fontWeight: 'bold', lineHeight: 1.1, margin: 0 }}>
+                        Hospital Infantil Dr. Juvêncio Mattos
+                    </p>
+                    <h2 className="text-xl font-bold mt-2">Prescrição NPT — Parâmetros & Indicadores</h2>
+                    <div className="grid grid-cols-2 gap-x-4 text-sm mt-3 font-sans text-left">
+                        <p><strong>Paciente:</strong> {patientName}</p>
+                        <p><strong>Data Nasc:</strong> {formattedDob}</p>
+                        <p><strong>Peso:</strong> {weight} kg{idealWeight > 0 ? ` (ideal/ajustado: ${idealWeight} kg)` : ''}</p>
+                        <p><strong>Data:</strong> {generatedDate}</p>
+                    </div>
+                </header>
+
+                <footer className="pt-2 text-xs font-sans">
                     <h4 className="font-bold text-center mb-2 text-sm border-t-2 border-black pt-2">PARÂMETROS PRESCRITOS & INDICADORES</h4>
                     
                     <div className="grid grid-cols-4 gap-y-1 gap-x-2 mb-3 border-b border-slate-300 pb-2">
@@ -187,6 +213,7 @@ const PharmacyPrescription: React.FC<PharmacyPrescriptionProps> = ({ reportData,
                         <p><strong>Magnésio:</strong> {magnesiumDose} mEq/kg</p>
                         <p><strong>Fósforo:</strong> {phosphorusDose} mEq/kg</p>
                         <p><strong>Cal/gN:</strong> {calorieNitrogenRatio}</p>
+                        <p><strong>Meta hídrica:</strong> {hydrationTarget} mL/m² ({hydrationByBSA.toFixed(0)} mL)</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-x-4 mb-2">
@@ -199,15 +226,17 @@ const PharmacyPrescription: React.FC<PharmacyPrescriptionProps> = ({ reportData,
                         <div className="text-right">
                             <p><strong>Conc. Glicose:</strong> {finalGlucoseConcentrationInBag.toFixed(1)}%</p>
                             <p><strong>TIG:</strong> {glucoseCalculations.tig.toFixed(2)} mg/kg/min</p>
-                            <p><strong>Calorias:</strong> {totalCalories.toFixed(0)} kcal</p>
                         </div>
                     </div>
                     
-                    <div className="text-center pt-1 text-[10px] text-slate-600">
-                         Distribuição Calórica: Proteínas {caloricDistribution.protein.toFixed(0)}% | Lipídeos {caloricDistribution.lipid.toFixed(0)}% | Glicose {caloricDistribution.glucose.toFixed(0)}%
+                    <div className="grid grid-cols-4 gap-x-2 pt-1.5 mb-1 border-t border-slate-300 text-center">
+                        <p><strong>Calorias Totais</strong><br/>{totalCalories.toFixed(0)} kcal</p>
+                        <p><strong>Proteínas</strong><br/>{aminoAcidCalculations.calories.toFixed(0)} kcal ({caloricDistribution.protein.toFixed(0)}%)</p>
+                        <p><strong>Lipídeos</strong><br/>{lipidCalculations.calories.toFixed(0)} kcal ({caloricDistribution.lipid.toFixed(0)}%)</p>
+                        <p><strong>Glicose</strong><br/>{glucoseCalculations.calories.toFixed(0)} kcal ({caloricDistribution.glucose.toFixed(0)}%)</p>
                     </div>
 
-                    <div className="text-center pt-8">
+                    <div className="text-center pt-16">
                         <p className="inline-block border-t-2 border-black px-12 py-1">Assinatura e Carimbo do Médico</p>
                     </div>
                 </footer>
@@ -740,6 +769,9 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
       electrolyteConcentrations, precipitationWarnings,
     } = reportData;
 
+    // Indicador informativo: proteína dentro da faixa usual de 15–20% das calorias totais
+    const proteinPctInBand = caloricDistribution.protein >= PROTEIN_TOTAL_TARGET.min && caloricDistribution.protein <= PROTEIN_TOTAL_TARGET.max;
+
     const generatePdfFromElement = async (elementId: string, setPrintingState: (isPrinting: boolean) => void) => {
         const reportElement = document.getElementById(elementId);
         const jsPDFConstructor = window.jspdf?.jsPDF;
@@ -999,9 +1031,18 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                     <p className="font-bold text-slate-600 uppercase tracking-wide">Calorias Totais</p>
                                     <span className="font-semibold text-slate-700">{totalCalories.toFixed(0)} kcal</span>
                                 </div>
-                                <p className="text-xs text-slate-500 mt-1">
-                                    Proteínas {caloricDistribution.protein.toFixed(0)}% · Glicose {caloricDistribution.glucose.toFixed(0)}% · Lipídios {caloricDistribution.lipid.toFixed(0)}%
+                                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                                    Proteínas{' '}
+                                    <span className={`font-bold px-1.5 py-0.5 rounded ${proteinPctInBand ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                                        {caloricDistribution.protein.toFixed(0)}%
+                                    </span>
+                                    {' '}· Glicose {caloricDistribution.glucose.toFixed(0)}% · Lipídios {caloricDistribution.lipid.toFixed(0)}%
                                 </p>
+                                {totalCalories > 0 && !proteinPctInBand && (
+                                    <p className="text-xs text-amber-700 mt-1.5 pt-1.5 border-t border-slate-200">
+                                        ℹ️ Proteína {caloricDistribution.protein > PROTEIN_TOTAL_TARGET.max ? 'acima' : 'abaixo'} da faixa usual de {PROTEIN_TOTAL_TARGET.min}–{PROTEIN_TOTAL_TARGET.max}% das calorias totais — consequência esperada da relação {calorieNitrogenRatio} kcal/g N; não inviabiliza o cálculo.
+                                    </p>
+                                )}
                             </div>
 
                             <div className="mt-4 pt-4 border-t border-slate-200 grid grid-cols-2 gap-4">
@@ -1044,9 +1085,16 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                         <span className="text-sm text-slate-600">2 Etapas (12/12h)</span>
                                     </label>
                                     <label className="flex items-center space-x-2 cursor-pointer">
-                                        <input type="radio" name="nptStages" value="4" 
-                                            checked={nptStages === 4} 
-                                            onChange={() => setNptStages(4)} 
+                                        <input type="radio" name="nptStages" value="3"
+                                            checked={nptStages === 3}
+                                            onChange={() => setNptStages(3)}
+                                            className="h-4 w-4 text-primary-600 border-slate-300 focus:ring-primary-500" />
+                                        <span className="text-sm text-slate-600">3 Etapas (8/8h)</span>
+                                    </label>
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                        <input type="radio" name="nptStages" value="4"
+                                            checked={nptStages === 4}
+                                            onChange={() => setNptStages(4)}
                                             className="h-4 w-4 text-primary-600 border-slate-300 focus:ring-primary-500" />
                                         <span className="text-sm text-slate-600">4 Etapas (6/6h)</span>
                                     </label>
@@ -1154,7 +1202,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                               <NutrientDetailRow label="Gramas Totais" value={aminoAcidCalculations.totalGrams.toFixed(1)} unit="g" />
                               <NutrientDetailRow label="Volume" value={aminoAcidCalculations.volume.toFixed(0)} unit="mL" />
                               <NutrientDetailRow label="Calorias" value={aminoAcidCalculations.calories.toFixed(0)} unit="kcal" />
-                              <NutrientDetailRow label="% Calórico Total" value={caloricDistribution.protein.toFixed(0)} unit="%" />
+                              <NutrientDetailRow label="% Calórico Total" value={<span className={`px-1.5 py-0.5 rounded ${proteinPctInBand ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{caloricDistribution.protein.toFixed(0)}</span>} unit="%" />
                               <NutrientDetailRow label="Nitrogênio (g de N)" value={aminoAcidCalculations.nitrogen.toFixed(1)} unit="g" />
                               <NutrientDetailRow label="Conc. Final (Bolsa)" value={finalAminoAcidConcentrationInBag.toFixed(1)} unit="%" />
                             </NutrientResultCard>

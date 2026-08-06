@@ -102,7 +102,7 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
     const formattedDob = new Date(calc.date_of_birth).toLocaleDateString('pt-BR')
     const generatedDate = new Date(calc.created_at).toLocaleDateString('pt-BR')
     const stages = calc.npt_stages || 1
-    const stagesHours: Record<number, number> = { 1: 24, 2: 12, 4: 6 }
+    const stagesHours: Record<number, number> = { 1: 24, 2: 12, 3: 8, 4: 6 }
     const infusionHours = stagesHours[stages] || 24
     const phosphorusSourceName = calc.phosphorus_source === 'sodium' ? 'Glicerofosfato de Sódio' : 'Fosfato Ácido de Potássio'
 
@@ -172,7 +172,12 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
 
           ${bagsHtml}
 
-          <div style="border-top: 2px solid #000; padding-top: 8px; margin-top: 8px; font-size: 9pt;">
+          <div style="text-align: center; padding-top: 30px;">
+            <span style="display: inline-block; border-top: 2px solid #000; padding: 4px 40px;">Assinatura e Carimbo do Médico</span>
+          </div>
+
+          <div style="page-break-before: always; padding-top: 8px; font-size: 9pt;">
+            <h1 style="text-align: center; font-size: 14pt; margin-bottom: 12px;">Prescrição NPT — Parâmetros & Indicadores</h1>
             <h4 style="text-align: center; font-weight: bold; margin-bottom: 8px;">PARÂMETROS PRESCRITOS & INDICADORES</h4>
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 4px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #ccc;">
               <p><strong>Aminoácidos:</strong> ${calc.amino_acid_dose} g/kg</p>
@@ -195,14 +200,16 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
               <div style="text-align: right;">
                 <p><strong>Conc. Glicose:</strong> ${calc.glucose_concentration_final?.toFixed(1)}%</p>
                 <p><strong>TIG:</strong> ${calc.tig?.toFixed(2) || 'N/A'} mg/kg/min</p>
-                <p><strong>Calorias:</strong> ${calc.total_calories?.toFixed(0)} kcal</p>
               </div>
             </div>
-            ${calc.caloric_dist_protein ? `
-              <div style="text-align: center; font-size: 8pt; color: #666;">
-                Distribuição Calórica: Proteínas ${calc.caloric_dist_protein?.toFixed(0)}% | Lipídeos ${calc.caloric_dist_lipid?.toFixed(0)}% | Glicose ${calc.caloric_dist_glucose?.toFixed(0)}%
-              </div>
-            ` : ''}
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 4px; text-align: center; border-top: 1px solid #ccc; padding-top: 6px; margin-bottom: 8px;">
+              <p><strong>Calorias Totais</strong><br>${calc.total_calories?.toFixed(0)} kcal</p>
+              ${calc.caloric_dist_protein && calc.total_calories ? `
+              <p><strong>Proteínas</strong><br>${(calc.caloric_dist_protein * calc.total_calories / 100).toFixed(0)} kcal (${calc.caloric_dist_protein.toFixed(0)}%)</p>
+              <p><strong>Lipídeos</strong><br>${((calc.caloric_dist_lipid || 0) * calc.total_calories / 100).toFixed(0)} kcal (${(calc.caloric_dist_lipid || 0).toFixed(0)}%)</p>
+              <p><strong>Glicose</strong><br>${((calc.caloric_dist_glucose || 0) * calc.total_calories / 100).toFixed(0)} kcal (${(calc.caloric_dist_glucose || 0).toFixed(0)}%)</p>
+              ` : ''}
+            </div>
             <div style="text-align: center; padding-top: 30px;">
               <span style="display: inline-block; border-top: 2px solid #000; padding: 4px 40px;">Assinatura e Carimbo do Médico</span>
             </div>
@@ -438,6 +445,27 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
               <span class="row-label">Concentração de Glicose Final:</span>
               <span class="row-value">${calc.glucose_concentration_final?.toFixed(1)}%</span>
             </div>
+            <div class="row">
+              <span class="row-label">TIG:</span>
+              <span class="row-value">${calc.tig?.toFixed(2) || 'N/A'} mg/kg/min</span>
+            </div>
+            <div class="row">
+              <span class="row-label">Recomendação de Acesso:</span>
+              <span class="row-value">${calc.access_recommendation || (calc.osmolarity > 900 ? 'CENTRAL' : 'PERIFÉRICO')}</span>
+            </div>
+            ${calc.caloric_dist_protein && calc.total_calories ? `
+            <div class="row">
+              <span class="row-label">Calorias de Proteínas:</span>
+              <span class="row-value">${(calc.caloric_dist_protein * calc.total_calories / 100).toFixed(0)} kcal (${calc.caloric_dist_protein.toFixed(0)}%)</span>
+            </div>
+            <div class="row">
+              <span class="row-label">Calorias de Glicose:</span>
+              <span class="row-value">${((calc.caloric_dist_glucose || 0) * calc.total_calories / 100).toFixed(0)} kcal (${(calc.caloric_dist_glucose || 0).toFixed(0)}%)</span>
+            </div>
+            <div class="row">
+              <span class="row-label">Calorias de Lipídeos:</span>
+              <span class="row-value">${((calc.caloric_dist_lipid || 0) * calc.total_calories / 100).toFixed(0)} kcal (${(calc.caloric_dist_lipid || 0).toFixed(0)}%)</span>
+            </div>` : ''}
           </div>
 
           ${calc.notes ? `
