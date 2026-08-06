@@ -51,6 +51,9 @@ interface Calculation {
   caloric_dist_protein: number | null
   caloric_dist_lipid: number | null
   caloric_dist_glucose: number | null
+  clinical_profile: string | null
+  ideal_weight: number | null
+  lipid_percent: number | null
   users?: {
     name: string
   }
@@ -180,6 +183,9 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
               <p><strong>Magnésio:</strong> ${calc.magnesium_dose} mEq/kg</p>
               <p><strong>Fósforo:</strong> ${calc.phosphorus_dose} mEq/kg</p>
               <p><strong>Cal/gN:</strong> ${calc.calorie_nitrogen_ratio}</p>
+              ${calc.lipid_percent != null ? `<p><strong>Lipídeos %:</strong> ${calc.lipid_percent}% CNP</p>` : ''}
+              ${calc.ideal_weight ? `<p><strong>Peso ideal:</strong> ${calc.ideal_weight} kg</p>` : ''}
+              ${calc.clinical_profile ? `<p style="grid-column: span 2;"><strong>Perfil:</strong> ${escapeHtml(calc.clinical_profile)}</p>` : ''}
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
               <div>
@@ -365,6 +371,21 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
               <span class="row-label">Glicose:</span>
               <span class="row-value">${calc.glucose_source_1}% e ${calc.glucose_source_2}%</span>
             </div>
+            ${calc.clinical_profile ? `
+            <div class="row">
+              <span class="row-label">Perfil clínico:</span>
+              <span class="row-value">${escapeHtml(calc.clinical_profile)}</span>
+            </div>` : ''}
+            ${calc.lipid_percent != null ? `
+            <div class="row">
+              <span class="row-label">Distribuição não proteica:</span>
+              <span class="row-value">Glicose ${100 - calc.lipid_percent}% · Lipídeos ${calc.lipid_percent}%</span>
+            </div>` : ''}
+            ${calc.ideal_weight ? `
+            <div class="row">
+              <span class="row-label">Peso ideal/ajustado:</span>
+              <span class="row-value">${calc.ideal_weight} kg</span>
+            </div>` : ''}
           </div>
 
           <div class="section">
@@ -569,6 +590,18 @@ export const CalculationHistory: React.FC<CalculationHistoryProps> = ({
                       <p className="text-lg font-bold text-purple-600">{calc.osmolarity?.toFixed(0)} mOsm/L</p>
                     </div>
                   </div>
+
+                  {/* Perfil clínico e distribuição não proteica (modelo novo) */}
+                  {(calc.clinical_profile || calc.lipid_percent != null || calc.ideal_weight) && (
+                    <div className="bg-primary-50 rounded-lg p-3 mb-4 text-center">
+                      <p className="text-xs text-primary-600 font-semibold uppercase">Perfil Clínico</p>
+                      <p className="text-sm font-bold text-slate-800">
+                        {calc.clinical_profile || 'Não registrado'}
+                        {calc.lipid_percent != null && ` · Lipídeos ${calc.lipid_percent}% / Glicose ${100 - calc.lipid_percent}% das cal. não proteicas`}
+                        {calc.ideal_weight ? ` · Peso ideal/ajustado: ${calc.ideal_weight} kg` : ''}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Indicadores de Eficácia */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-red-50 rounded-lg p-4 mb-4">

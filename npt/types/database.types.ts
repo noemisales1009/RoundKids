@@ -127,6 +127,9 @@ export interface Database {
           peripheral_route_warning: boolean | null
           notes: string | null
           status: string | null
+          clinical_profile: string | null
+          ideal_weight: number | null
+          lipid_percent: number | null
           created_at: string | null
           updated_at: string | null
         }
@@ -161,6 +164,9 @@ export interface Database {
           peripheral_route_warning?: boolean | null
           notes?: string | null
           status?: string | null
+          clinical_profile?: string | null
+          ideal_weight?: number | null
+          lipid_percent?: number | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -195,6 +201,9 @@ export interface Database {
           peripheral_route_warning?: boolean | null
           notes?: string | null
           status?: string | null
+          clinical_profile?: string | null
+          ideal_weight?: number | null
+          lipid_percent?: number | null
           created_at?: string | null
           updated_at?: string | null
         }

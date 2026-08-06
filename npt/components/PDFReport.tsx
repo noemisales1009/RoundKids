@@ -76,6 +76,8 @@ interface PDFReportProps {
     };
     finalAminoAcidConcentrationInBag: number;
     lipidDose: number;
+    lipidPercent: number;
+    idealWeight: number;
     lipidConcentration: number;
     lipidCalculations: {
       totalGrams: number;
@@ -139,6 +141,8 @@ export const PDFReport: React.FC<PDFReportProps> = ({ reportData, nptStages = 2 
     aminoAcidCalculations,
     finalAminoAcidConcentrationInBag,
     lipidDose,
+    lipidPercent,
+    idealWeight,
     lipidConcentration,
     lipidCalculations,
     calorieNitrogenRatio,
@@ -218,6 +222,7 @@ export const PDFReport: React.FC<PDFReportProps> = ({ reportData, nptStages = 2 
                     <p><span className="font-semibold">Data de Nascimento:</span> {formattedDob}</p>
                     <p><span className="font-semibold">Peso:</span> {weight} kg</p>
                     <p><span className="font-semibold">Etapas de NPT:</span> {nptStages === 1 ? '1 (24/24h)' : nptStages === 2 ? '2 (12/12h)' : '4 (6/6h)'}</p>
+                    {idealWeight > 0 && <p><span className="font-semibold">Peso ideal/ajustado:</span> {idealWeight} kg (usado no cálculo de proteína)</p>}
                 </div>
             </section>
             
@@ -243,6 +248,8 @@ export const PDFReport: React.FC<PDFReportProps> = ({ reportData, nptStages = 2 
                     <ReportRow label="Volume dos Componentes" value={totalComponentVolume.toFixed(0)} unit="mL" />
                     <ReportRow label="Volume a Completar (com Glicose)" value={volumeToComplete.toFixed(0)} unit="mL" />
                     <ReportRow label="Relação Cal-NP/gN Alvo" value={calorieNitrogenRatio} />
+                    <ReportRow label="Calorias Não Proteicas" value={(lipidCalculations.calories + glucoseCalculations.calories).toFixed(0)} unit="kcal" />
+                    <ReportRow label="Distribuição Não Proteica" value={`Glicose ${100 - lipidPercent}% · Lipídios ${lipidPercent}%`} />
                     <ReportRow label="Calorias Totais" value={totalCalories.toFixed(0)} unit="kcal" />
                     <ReportRow label="Osmolaridade Estimada" value={osmolarityCalculations.totalOsmolarity.toFixed(0)} unit="mOsm/L" />
                 </div>
@@ -255,7 +262,7 @@ export const PDFReport: React.FC<PDFReportProps> = ({ reportData, nptStages = 2 
                     <div>
                         <h3 className="text-base font-bold text-slate-800 mb-1">Aminoácidos</h3>
                         <div className="space-y-0 bg-slate-50 p-2 rounded-md border border-slate-200">
-                            <ReportRow label="Dose" value={`${aminoAcidDose} g/kg`} />
+                            <ReportRow label="Dose" value={`${aminoAcidDose} g/kg${idealWeight > 0 ? ' (peso ideal/ajustado)' : ''}`} />
                             <ReportRow label="Concentração" value={`${proteinConcentration} %`} />
                             <ReportRow label="Gramas Totais" value={aminoAcidCalculations.totalGrams.toFixed(1)} unit="g" />
                             <ReportRow label="Volume" value={aminoAcidCalculations.volume.toFixed(0)} unit="mL" />
@@ -268,7 +275,8 @@ export const PDFReport: React.FC<PDFReportProps> = ({ reportData, nptStages = 2 
                     <div>
                         <h3 className="text-base font-bold text-slate-800 mb-1">Lipídeos</h3>
                         <div className="space-y-0 bg-slate-50 p-2 rounded-md border border-slate-200">
-                            <ReportRow label="Dose" value={`${lipidDose} g/kg`} />
+                            <ReportRow label="Dose (derivada)" value={`${lipidDose} g/kg`} />
+                            <ReportRow label="% das Cal. Não Proteicas" value={`${lipidPercent} %`} />
                             <ReportRow label="Concentração" value={`${lipidConcentration} %`} />
                             <ReportRow label="Gramas Totais" value={lipidCalculations.totalGrams.toFixed(1)} unit="g" />
                             <ReportRow label="Volume" value={lipidCalculations.volume.toFixed(0)} unit="mL" />
