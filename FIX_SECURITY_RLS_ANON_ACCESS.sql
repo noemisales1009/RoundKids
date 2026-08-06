@@ -142,6 +142,68 @@ CREATE TRIGGER trg_prevent_privilege_escalation
 
 
 -- ============================================================
+-- ETAPA 3.1 — Correção da Etapa 3 (aplicada em 2026-08-03)
+-- A Etapa 3 bloqueou também a coluna "role", mas nesse app
+-- "role" é o campo Cargo do perfil (texto livre editado na tela
+-- de Ajustes), não uma permissão. Resultado: usuário comum não
+-- conseguia salvar o próprio perfil ("Apenas administradores
+-- podem alterar access_level ou role"). Esta etapa refaz a
+-- função do trigger vigiando SÓ access_level, que é a coluna
+-- que de fato define quem é administrador.
+-- ============================================================
+
+-- >>> APLICAR <<<
+CREATE OR REPLACE FUNCTION public.prevent_privilege_escalation()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NEW.access_level IS DISTINCT FROM OLD.access_level
+     AND NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Apenas administradores podem alterar access_level';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+-- >>> ROLLBACK DA ETAPA 3.1 (só se travar) — volta a versão da Etapa 3 <<<
+-- CREATE OR REPLACE FUNCTION public.prevent_privilege_escalation()
+-- RETURNS TRIGGER
+-- LANGUAGE plpgsql
+-- SECURITY DEFINER
+-- SET search_path = public
+-- AS $$
+-- BEGIN
+--   IF (NEW.access_level IS DISTINCT FROM OLD.access_level
+--       OR NEW.role IS DISTINCT FROM OLD.role)
+--      AND NOT public.is_admin() THEN
+--     RAISE EXCEPTION 'Apenas administradores podem alterar access_level ou role';
+--   END IF;
+--   RETURN NEW;
+-- END;
+-- $$;
+
+-- CHECKLIST DE TESTE:
+--   [ ] Usuária NÃO-admin (ex.: Raissa) abre Ajustes e salva o perfil
+--       (nome, setor, cargo) SEM erro
+--   [ ] Logada como não-admin, tentar mudar o próprio access_level direto
+--       no SQL Editor com a role authenticated deve continuar BLOQUEADO
+--       (o erro "Apenas administradores podem alterar access_level" é o
+--       comportamento correto nesse teste)
+--   [ ] Login e demais telas continuam normais
+
+-- OBS (pendências conhecidas, não bloqueiam esta etapa):
+--   - Existe access_level = 'super' no CHECK da tabela users, mas a
+--     is_admin() só reconhece 'adm'. Se houver usuário 'super' que
+--     deva administrar, incluir na is_admin(): access_level IN ('adm','super').
+--   - Se algum fluxo do n8n (service_role) atualizar access_level de
+--     usuários, o trigger também o bloqueia (auth.uid() é NULL). Nesse
+--     caso, liberar com: OR auth.role() = 'service_role'.
+
+
+-- ============================================================
 -- ETAPA 4 — Tabela patients (a mais crítica e a de maior risco
 -- de travar algo, porque hoje o RLS dela está DESLIGADO —
 -- ver FIX_UPDATE_FUNCTION_AND_RLS.sql). Faça por último, com
