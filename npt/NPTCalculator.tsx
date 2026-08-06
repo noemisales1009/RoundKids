@@ -42,7 +42,9 @@ const MIN_PHOSPHORUS_CALCIUM_RATIO = 4.4; // proporção mínima: Volume Ca / Vo
 
 // Perfis clínicos pediátricos: faixas recomendadas de proteína (g/kg/dia)
 // e de relação caloria não proteica por grama de nitrogênio (kcal/g N)
-type ClinicalProfileKey = 'estavel' | 'desnutrido' | 'catabolismo_leve' | 'catabolico_grave' | 'lactente_critico' | 'obeso_critico';
+type ClinicalProfileKey =
+    | 'estavel_rn_termo' | 'estavel_prematuro' | 'estavel_lactente' | 'estavel_crianca' | 'estavel_adolescente'
+    | 'desnutrido' | 'catabolismo_leve' | 'catabolico_grave' | 'lactente_critico' | 'obeso_critico';
 
 interface ClinicalProfile {
     label: string;
@@ -53,7 +55,11 @@ interface ClinicalProfile {
 }
 
 const CLINICAL_PROFILES: Record<ClinicalProfileKey, ClinicalProfile> = {
-    estavel: { label: 'Não catabólico / estável', protein: { min: 1, max: 2 }, ratio: { min: 125, max: 225 } },
+    estavel_rn_termo: { label: 'RN a termo estável', protein: { min: 1.5, max: 3 }, ratio: { min: 125, max: 225 } },
+    estavel_prematuro: { label: 'Prematuro / baixo peso estável', protein: { min: 3, max: 4 }, ratio: { min: 125, max: 225 }, proteinNote: 'Conforme idade gestacional, peso e tolerância.' },
+    estavel_lactente: { label: 'Lactente estável', protein: { min: 1.5, max: 2.5 }, ratio: { min: 125, max: 225 } },
+    estavel_crianca: { label: 'Criança 1–10 anos estável', protein: { min: 1, max: 2 }, ratio: { min: 125, max: 225 } },
+    estavel_adolescente: { label: 'Adolescente estável', protein: { min: 0.8, max: 1.5 }, ratio: { min: 125, max: 225 } },
     desnutrido: { label: 'Desnutrido, sem catabolismo intenso', protein: { min: 1.5, max: 2.5 }, ratio: { min: 100, max: 150 } },
     catabolismo_leve: { label: 'Catabolismo leve a moderado', protein: { min: 1.5, max: 2 }, ratio: { min: 100, max: 150 } },
     catabolico_grave: { label: 'Catabólico grave / crítico / sepse / pós-op complexo / ventilação prolongada', protein: { min: 1.5, max: 2.5 }, ratio: { min: 70, max: 100 } },
@@ -61,8 +67,16 @@ const CLINICAL_PROFILES: Record<ClinicalProfileKey, ClinicalProfile> = {
     obeso_critico: { label: 'Obeso crítico pediátrico', protein: { min: 1.5, max: 3 }, ratio: { min: 30, max: 50 }, proteinNote: 'Proteína alta, calculada sobre o peso ideal/ajustado.', usesIdealWeight: true },
 };
 
+// Agrupamento do seletor de perfil clínico
+const PROFILE_GROUPS: { label: string; keys: ClinicalProfileKey[] }[] = [
+    { label: 'Não catabólico / estável', keys: ['estavel_rn_termo', 'estavel_prematuro', 'estavel_lactente', 'estavel_crianca', 'estavel_adolescente'] },
+    { label: 'Catabólico / situações especiais', keys: ['desnutrido', 'catabolismo_leve', 'catabolico_grave', 'lactente_critico', 'obeso_critico'] },
+];
+
 // Distribuição das calorias não proteicas: lipídios 30–40% (a glicose completa com 60–70%)
+// Limites inclusivos: 30 e 40 (lipídios) e 60 e 70 (glicose) contam como dentro da faixa
 const LIPID_PERCENT_RANGE = { min: 30, max: 40 };
+const GLUCOSE_PERCENT_RANGE = { min: 60, max: 70 };
 
 // Faixa usual de proteína como % das calorias totais — indicador informativo, não bloqueia
 // (fora da faixa é esperado em relações baixas/altas conforme o perfil clínico)
@@ -711,7 +725,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
     const [weight, setWeight] = useState(initialPatient?.peso ? Number(initialPatient.peso) : 10); // kg
 
     // Estado para os parâmetros da prescrição
-    const [clinicalProfile, setClinicalProfile] = useState<ClinicalProfileKey>('estavel');
+    const [clinicalProfile, setClinicalProfile] = useState<ClinicalProfileKey>('estavel_crianca');
     const [idealWeight, setIdealWeight] = useState(0); // kg; 0 = usar o peso real
     const [aminoAcidDose, setAminoAcidDose] = useState(2.0); // g/kg
     const [lipidPercent, setLipidPercent] = useState(35); // % das calorias não proteicas
@@ -769,8 +783,12 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
       electrolyteConcentrations, precipitationWarnings,
     } = reportData;
 
-    // Indicador informativo: proteína dentro da faixa usual de 15–20% das calorias totais
-    const proteinPctInBand = caloricDistribution.protein >= PROTEIN_TOTAL_TARGET.min && caloricDistribution.protein <= PROTEIN_TOTAL_TARGET.max;
+    // Indicadores informativos com limites inclusivos (15 e 20 contam como dentro da faixa),
+    // avaliados sobre o valor arredondado que é exibido na tela
+    const proteinPctRounded = Math.round(caloricDistribution.protein);
+    const proteinPctInBand = proteinPctRounded >= PROTEIN_TOTAL_TARGET.min && proteinPctRounded <= PROTEIN_TOTAL_TARGET.max;
+    const lipidPctInBand = lipidPercent >= LIPID_PERCENT_RANGE.min && lipidPercent <= LIPID_PERCENT_RANGE.max;
+    const glucosePctInBand = (100 - lipidPercent) >= GLUCOSE_PERCENT_RANGE.min && (100 - lipidPercent) <= GLUCOSE_PERCENT_RANGE.max;
 
     const generatePdfFromElement = async (elementId: string, setPrintingState: (isPrinting: boolean) => void) => {
         const reportElement = document.getElementById(elementId);
@@ -911,7 +929,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
 
     const handleReset = () => {
         setPatientName(''); setDateOfBirth(''); setWeight(10);
-        setClinicalProfile('estavel'); setIdealWeight(0);
+        setClinicalProfile('estavel_crianca'); setIdealWeight(0);
         setAminoAcidDose(2.0); setLipidPercent(35); setCalorieNitrogenRatio(150);
         setHydrationTarget(1500); setProteinConcentration(10); setLipidConcentration(20);
         setSodiumDose(2.0); setPotassiumDose(2.0); setCalciumDose(1.0);
@@ -968,8 +986,12 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                         onChange={(e) => handleProfileChange(e.target.value as ClinicalProfileKey)}
                                         className="w-full bg-white text-slate-800 p-2 border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                     >
-                                        {(Object.entries(CLINICAL_PROFILES) as [ClinicalProfileKey, ClinicalProfile][]).map(([key, p]) => (
-                                            <option key={key} value={key}>{p.label}</option>
+                                        {PROFILE_GROUPS.map((group) => (
+                                            <optgroup key={group.label} label={group.label}>
+                                                {group.keys.map((key) => (
+                                                    <option key={key} value={key}>{CLINICAL_PROFILES[key].label}</option>
+                                                ))}
+                                            </optgroup>
                                         ))}
                                     </select>
                                     {activeProfile.proteinNote && (
@@ -1010,8 +1032,8 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                     <div className="flex justify-between gap-2"><span className="text-slate-600">Proteína ({aminoAcidDose} g/kg × {idealWeight > 0 ? idealWeight : weight} kg)</span><span className="font-semibold text-slate-800 text-right">{aminoAcidCalculations.totalGrams.toFixed(1)} g/dia</span></div>
                                     <div className="flex justify-between gap-2"><span className="text-slate-600">Nitrogênio (÷ 6,25)</span><span className="font-semibold text-slate-800 text-right">{aminoAcidCalculations.nitrogen.toFixed(2)} g N</span></div>
                                     <div className="flex justify-between gap-2"><span className="text-slate-600">Cal. não proteicas (× {calorieNitrogenRatio})</span><span className="font-semibold text-slate-800 text-right">{glucoseCalculations.targetNonProteinCalories.toFixed(0)} kcal</span></div>
-                                    <div className="flex justify-between gap-2 border-t border-slate-200 pt-1"><span className="text-slate-600">Lipídios ({lipidPercent}%)</span><span className="font-semibold text-slate-800 text-right">{lipidCalculations.calories.toFixed(0)} kcal · {lipidCalculations.totalGrams.toFixed(1)} g ({lipidCalculations.dosePerKg.toFixed(2)} g/kg)</span></div>
-                                    <div className="flex justify-between gap-2"><span className="text-slate-600">Glicose ({100 - lipidPercent}%)</span><span className="font-semibold text-slate-800 text-right">{glucoseCalculations.calories.toFixed(0)} kcal · {glucoseCalculations.totalGrams.toFixed(1)} g</span></div>
+                                    <div className="flex justify-between gap-2 border-t border-slate-200 pt-1"><span className="text-slate-600">Lipídios <span className={`font-bold px-1 rounded ${lipidPctInBand ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{lipidPercent}%</span></span><span className="font-semibold text-slate-800 text-right">{lipidCalculations.calories.toFixed(0)} kcal · {lipidCalculations.totalGrams.toFixed(1)} g ({lipidCalculations.dosePerKg.toFixed(2)} g/kg)</span></div>
+                                    <div className="flex justify-between gap-2"><span className="text-slate-600">Glicose <span className={`font-bold px-1 rounded ${glucosePctInBand ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{100 - lipidPercent}%</span></span><span className="font-semibold text-slate-800 text-right">{glucoseCalculations.calories.toFixed(0)} kcal · {glucoseCalculations.totalGrams.toFixed(1)} g</span></div>
                                 </div>
                             </div>
                         </div>
