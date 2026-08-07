@@ -1186,7 +1186,7 @@ const PatientHistoryScreen: React.FC = () => {
 
         // Exames de Imagem
         examesImagem.forEach((ex: any) => {
-            const linhas = [`[EXAME_IMAGEM] 🩻 ${ex.exame}`, `Categoria: ${ex.categoria}`, `Data: ${new Date(ex.data_exame).toLocaleDateString('pt-BR')}`];
+            const linhas = [`[EXAME_IMAGEM] 🩻 ${ex.exame}`, `Categoria: ${ex.categoria}`, `Data: ${formatDateToBRL(ex.data_exame)}`];
             if (ex.sistema) linhas.push(`Sistema: ${ex.sistema}`);
             if (ex.resultado) linhas.push(`Resultado: ${ex.resultado}`);
             if (ex.observacao) linhas.push(`Obs: ${ex.observacao}`);

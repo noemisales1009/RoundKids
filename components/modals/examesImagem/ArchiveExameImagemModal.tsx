@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { supabase } from '../../../supabaseClient';
 import { NotificationContext, UserContext } from '../../../contexts';
+import { formatDateToBRL } from '../../../constants';
 import { CloseIcon } from '../../icons';
 
 interface ArchiveExameImagemModalProps {
@@ -75,7 +76,7 @@ export const ArchiveExameImagemModal: React.FC<ArchiveExameImagemModalProps> = (
 
                 <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                     <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
-                        {exameNome} — {new Date(dataExame).toLocaleDateString('pt-BR')}
+                        {exameNome} — {formatDateToBRL(dataExame)}
                     </p>
                 </div>
 

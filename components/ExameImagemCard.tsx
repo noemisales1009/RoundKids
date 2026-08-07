@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
+import { formatDateToBRL } from '../constants';
 import { PencilIcon, CloseIcon, CameraIcon } from './icons';
 import { AddExameImagemModal, EditExameImagemModal, ArchiveExameImagemModal } from './modals/examesImagem';
 import type { ExameImagemRow } from './modals/examesImagem';
@@ -83,7 +84,7 @@ export const ExameImagemCard: React.FC<ExameImagemCardProps> = ({ patientId, add
                                         <p className="font-bold text-slate-800 dark:text-slate-200">{ex.exame}</p>
                                         <p className="text-xs text-violet-600 dark:text-violet-400 font-medium mt-0.5">{ex.categoria}</p>
                                         <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                                            {new Date(ex.data_exame).toLocaleDateString('pt-BR')}
+                                            {formatDateToBRL(ex.data_exame)}
                                         </p>
                                         {ex.sistema && (
                                             <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
