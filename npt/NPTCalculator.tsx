@@ -82,6 +82,66 @@ const GLUCOSE_PERCENT_RANGE = { min: 60, max: 70 };
 // (fora da faixa é esperado em relações baixas/altas conforme o perfil clínico)
 const PROTEIN_TOTAL_TARGET = { min: 15, max: 20 };
 
+// Fase metabólica do protocolo da UTI Pediátrica, que define a faixa de TIG aceitável
+type MetabolicPhaseKey = 'aguda' | 'estavel' | 'recuperacao';
+
+const METABOLIC_PHASES: Record<MetabolicPhaseKey, { label: string; short: string; description: string }> = {
+    aguda: {
+        label: 'Fase aguda',
+        short: 'aguda',
+        description: 'Ressuscitação e necessidade de suporte de órgãos: ventilação mecânica, vasopressores, sedação ou expansão volêmica.',
+    },
+    estavel: {
+        label: 'Fase estável',
+        short: 'estável',
+        description: 'Estabilidade clínica, ainda em suporte ou iniciando a retirada dos suportes.',
+    },
+    recuperacao: {
+        label: 'Recuperação / crescimento',
+        short: 'recuperação',
+        description: 'Melhora clínica, mobilização, reabilitação e retomada do crescimento.',
+    },
+};
+
+// Faixas de TIG (mg/kg/min) por peso e fase — protocolo de Nutrição Parenteral do Complexo
+// Hospitalar Materno Infantil do Maranhão, para lactentes, crianças e adolescentes.
+// maxWeight é o limite superior inclusivo de cada faixa de peso.
+const TIG_REFERENCE: {
+    label: string;
+    maxWeight: number;
+    ranges: Record<MetabolicPhaseKey, { min: number; max: number }>;
+}[] = [
+    { label: '28 dias–10 kg', maxWeight: 10, ranges: { aguda: { min: 2, max: 4 }, estavel: { min: 4, max: 6 }, recuperacao: { min: 6, max: 10 } } },
+    { label: '11–30 kg', maxWeight: 30, ranges: { aguda: { min: 1.5, max: 2.5 }, estavel: { min: 2, max: 4 }, recuperacao: { min: 3, max: 6 } } },
+    { label: '31–45 kg', maxWeight: 45, ranges: { aguda: { min: 1, max: 1.5 }, estavel: { min: 1.5, max: 3 }, recuperacao: { min: 3, max: 4 } } },
+    { label: 'Acima de 45 kg', maxWeight: Infinity, ranges: { aguda: { min: 0.5, max: 1 }, estavel: { min: 1, max: 2 }, recuperacao: { min: 2, max: 3 } } },
+];
+
+// A tabela começa em 28 dias de vida; abaixo disso vale o protocolo neonatal
+const NEONATAL_AGE_LIMIT_DAYS = 28;
+
+type TigStatus = 'dentro' | 'acima' | 'abaixo';
+
+const TIG_STATUS_STYLES: Record<TigStatus, string> = {
+    dentro: 'bg-green-100 text-green-700',
+    acima: 'bg-red-100 text-red-700',
+    abaixo: 'bg-amber-100 text-amber-700',
+};
+
+// Fase sugerida ao trocar de perfil clínico — pode ser alterada livremente depois
+const PROFILE_DEFAULT_PHASE: Record<ClinicalProfileKey, MetabolicPhaseKey> = {
+    estavel_rn_termo: 'estavel',
+    estavel_prematuro: 'estavel',
+    estavel_lactente: 'estavel',
+    estavel_crianca: 'estavel',
+    estavel_adolescente: 'estavel',
+    desnutrido: 'recuperacao',
+    catabolismo_leve: 'estavel',
+    catabolico_grave: 'aguda',
+    lactente_critico: 'aguda',
+    obeso_critico: 'aguda',
+};
+
 // Tipagem para os dados do relatório, para ser usada por ambos os componentes de PDF
 type ReportData = ReturnType<typeof useAppCalculations>['reportData'];
 
@@ -103,7 +163,7 @@ const PharmacyPrescription: React.FC<PharmacyPrescriptionProps> = ({ reportData,
         totalCalories, caloricDistribution,
         aminoAcidDose, lipidDose, sodiumDose, potassiumDose,
         calciumDose, magnesiumDose, phosphorusDose,
-        calorieNitrogenRatio, idealWeight, lipidPercent
+        calorieNitrogenRatio, idealWeight, lipidPercent, tigEvaluation
     } = reportData;
 
     const generatedDate = new Date().toLocaleDateString('pt-BR');
@@ -239,7 +299,13 @@ const PharmacyPrescription: React.FC<PharmacyPrescriptionProps> = ({ reportData,
                         </div>
                         <div className="text-right">
                             <p><strong>Conc. Glicose:</strong> {finalGlucoseConcentrationInBag.toFixed(1)}%</p>
-                            <p><strong>TIG:</strong> {glucoseCalculations.tig.toFixed(2)} mg/kg/min</p>
+                            <p>
+                                <strong>TIG:</strong> {glucoseCalculations.tig.toFixed(2)} mg/kg/min
+                                {tigEvaluation.hasData && tigEvaluation.status !== 'dentro' && <strong> (FORA DA FAIXA)</strong>}
+                            </p>
+                            <p>
+                                Faixa {tigEvaluation.range.min}–{tigEvaluation.range.max} mg/kg/min · {tigEvaluation.bandLabel} · {tigEvaluation.phaseLabel.toLowerCase()}
+                            </p>
                         </div>
                     </div>
                     
@@ -419,6 +485,7 @@ const useAppCalculations = (
     idealWeight: number,
     aminoAcidDose: number,
     lipidPercent: number,
+    metabolicPhase: MetabolicPhaseKey,
     calorieNitrogenRatio: number,
     hydrationTarget: number,
     proteinConcentration: number,
@@ -523,7 +590,84 @@ const useAppCalculations = (
         const tig = weight > 0 ? (totalGrams * 1000) / (weight * 1440) : 0;
         return { totalGrams, calories, tig, targetNonProteinCalories: nonProteinCalories };
     }, [nonProteinCalories, lipidPercent, weight]);
-    
+
+    // Idade em dias: a tabela de TIG vale a partir de 28 dias de vida.
+    // A data de hoje é fixada na montagem para a idade não mudar durante a edição.
+    const [today] = useState(() => new Date());
+    const ageInDays = useMemo(() => {
+        if (!dateOfBirth) return null;
+        const dob = new Date(dateOfBirth.replace(/-/g, '/'));
+        if (Number.isNaN(dob.getTime())) return null;
+        const days = Math.floor((today.getTime() - dob.getTime()) / 86400000);
+        return days >= 0 ? days : null;
+    }, [dateOfBirth, today]);
+
+    // TIG confrontada com a faixa do protocolo (faixa de peso × fase metabólica).
+    // Quando fica fora, calcula o ajuste necessário pelo percentual de lipídios ou
+    // pela relação cal/gN, que são o que muda a oferta de glicose.
+    const tigEvaluation = useMemo(() => {
+        const band = TIG_REFERENCE.find(b => weight <= b.maxWeight) ?? TIG_REFERENCE[TIG_REFERENCE.length - 1];
+        const range = band.ranges[metabolicPhase];
+        // Avaliada sobre o valor arredondado exibido na tela, com limites inclusivos
+        const tig = Math.round(glucoseCalculations.tig * 100) / 100;
+        const status: TigStatus = tig > range.max ? 'acima' : tig < range.min ? 'abaixo' : 'dentro';
+
+        // % de lipídios que levaria a TIG ao limite, mantendo proteína e relação cal/gN
+        const lipidPercentForTig = (targetTig: number) => {
+            if (nonProteinCalories <= 0 || weight <= 0) return null;
+            const glucoseGrams = (targetTig * weight * 1440) / 1000;
+            return 100 - ((glucoseGrams * 3.4) / nonProteinCalories) * 100;
+        };
+
+        // Relação cal/gN máxima/mínima com os lipídios no extremo permitido da faixa
+        const ratioForTig = (targetTig: number, atLipidPercent: number) => {
+            const nitrogen = aminoAcidCalculations.nitrogen;
+            if (nitrogen <= 0 || weight <= 0) return null;
+            const glucoseGrams = (targetTig * weight * 1440) / 1000;
+            const targetNonProteinCalories = (glucoseGrams * 3.4) / ((100 - atLipidPercent) / 100);
+            return targetNonProteinCalories / nitrogen;
+        };
+
+        let suggestedLipidPercent: number | null = null;
+        let suggestedRatio: number | null = null;
+
+        if (status === 'acima') {
+            const raw = lipidPercentForTig(range.max);
+            const pct = raw === null ? null : Math.ceil(raw);
+            if (pct !== null && pct <= LIPID_PERCENT_RANGE.max) {
+                suggestedLipidPercent = pct;
+            } else {
+                // Nem o teto de lipídios resolve: a relação cal/gN precisa cair
+                const ratio = ratioForTig(range.max, LIPID_PERCENT_RANGE.max);
+                if (ratio !== null && ratio > 0) suggestedRatio = Math.floor(ratio / 5) * 5;
+            }
+        } else if (status === 'abaixo') {
+            const raw = lipidPercentForTig(range.min);
+            const pct = raw === null ? null : Math.floor(raw);
+            if (pct !== null && pct >= LIPID_PERCENT_RANGE.min) {
+                suggestedLipidPercent = pct;
+            } else {
+                const ratio = ratioForTig(range.min, LIPID_PERCENT_RANGE.min);
+                if (ratio !== null && ratio > 0) suggestedRatio = Math.ceil(ratio / 5) * 5;
+            }
+        }
+
+        return {
+            tig,
+            status,
+            range,
+            // Sem peso ou sem calorias não proteicas não há TIG para cobrar do protocolo
+            hasData: weight > 0 && nonProteinCalories > 0,
+            bandLabel: band.label,
+            phase: metabolicPhase,
+            phaseLabel: METABOLIC_PHASES[metabolicPhase].label,
+            phaseShort: METABOLIC_PHASES[metabolicPhase].short,
+            suggestedLipidPercent,
+            suggestedRatio,
+            isNeonate: ageInDays !== null && ageInDays < NEONATAL_AGE_LIMIT_DAYS,
+        };
+    }, [weight, metabolicPhase, glucoseCalculations.tig, nonProteinCalories, aminoAcidCalculations.nitrogen, ageInDays]);
+
     const totalComponentVolume = useMemo(() => nonGlucoseVolume + (volumeToComplete > 0 ? volumeToComplete : 0), [nonGlucoseVolume, volumeToComplete]);
     
     const finalAminoAcidConcentrationInBag = useMemo(() => 
@@ -696,6 +840,7 @@ const useAppCalculations = (
             oligoelementosVolume, vitaminsVolume,
             electrolyteConcentrations,
             precipitationWarnings,
+            tigEvaluation,
         }
     };
 };
@@ -729,6 +874,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
     const [idealWeight, setIdealWeight] = useState(0); // kg; 0 = usar o peso real
     const [aminoAcidDose, setAminoAcidDose] = useState(2.0); // g/kg
     const [lipidPercent, setLipidPercent] = useState(35); // % das calorias não proteicas
+    const [metabolicPhase, setMetabolicPhase] = useState<MetabolicPhaseKey>('estavel'); // define a faixa de TIG
     const [calorieNitrogenRatio, setCalorieNitrogenRatio] = useState(150); // Relação Cal/gN
     const [hydrationTarget, setHydrationTarget] = useState(1500); // mL/m²
 
@@ -759,17 +905,19 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
     const activeProfile = CLINICAL_PROFILES[clinicalProfile];
 
     // Ao trocar de perfil, proteína e relação são mantidas dentro das novas faixas
+    // e a fase metabólica assume a sugestão do perfil (ainda editável pelo usuário)
     const handleProfileChange = (key: ClinicalProfileKey) => {
         setClinicalProfile(key);
         const p = CLINICAL_PROFILES[key];
         setAminoAcidDose(prev => Math.min(Math.max(prev, p.protein.min), p.protein.max));
         setCalorieNitrogenRatio(prev => Math.min(Math.max(prev, p.ratio.min), p.ratio.max));
+        setMetabolicPhase(PROFILE_DEFAULT_PHASE[key]);
     };
 
     const { reportData } = useAppCalculations(
         patientName,
         dateOfBirth,
-        weight, idealWeight, aminoAcidDose, lipidPercent, calorieNitrogenRatio, hydrationTarget,
+        weight, idealWeight, aminoAcidDose, lipidPercent, metabolicPhase, calorieNitrogenRatio, hydrationTarget,
         proteinConcentration, lipidConcentration, glucoseSources,
         sodiumDose, potassiumDose, calciumDose, magnesiumDose, phosphorusDose, phosphorusSource
     );
@@ -780,7 +928,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
       phosphorusCalculations, finalAminoAcidConcentrationInBag, finalGlucoseConcentrationInBag,
       glucoseMixtureTargetConcentration, glucoseMixtureCalculations, caloricDistribution,
       osmolarityCalculations, oligoelementosVolume, vitaminsVolume,
-      electrolyteConcentrations, precipitationWarnings,
+      electrolyteConcentrations, precipitationWarnings, tigEvaluation,
     } = reportData;
 
     // Indicadores informativos com limites inclusivos (15 e 20 contam como dentro da faixa),
@@ -789,6 +937,12 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
     const proteinPctInBand = proteinPctRounded >= PROTEIN_TOTAL_TARGET.min && proteinPctRounded <= PROTEIN_TOTAL_TARGET.max;
     const lipidPctInBand = lipidPercent >= LIPID_PERCENT_RANGE.min && lipidPercent <= LIPID_PERCENT_RANGE.max;
     const glucosePctInBand = (100 - lipidPercent) >= GLUCOSE_PERCENT_RANGE.min && (100 - lipidPercent) <= GLUCOSE_PERCENT_RANGE.max;
+
+    // Alerta da TIG: vermelho quando ultrapassa o teto da fase, âmbar quando fica abaixo do piso
+    const tigAboveRange = tigEvaluation.status === 'acima';
+    const tigAlertStyles = tigAboveRange
+        ? { box: 'bg-red-50 border-red-500 text-red-800', icon: 'text-red-500', title: 'Atenção: TIG acima da faixa do protocolo' }
+        : { box: 'bg-amber-50 border-amber-500 text-amber-800', icon: 'text-amber-500', title: 'Atenção: TIG abaixo da faixa do protocolo' };
 
     const generatePdfFromElement = async (elementId: string, setPrintingState: (isPrinting: boolean) => void) => {
         const reportElement = document.getElementById(elementId);
@@ -929,7 +1083,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
 
     const handleReset = () => {
         setPatientName(''); setDateOfBirth(''); setWeight(10);
-        setClinicalProfile('estavel_crianca'); setIdealWeight(0);
+        setClinicalProfile('estavel_crianca'); setIdealWeight(0); setMetabolicPhase('estavel');
         setAminoAcidDose(2.0); setLipidPercent(35); setCalorieNitrogenRatio(150);
         setHydrationTarget(1500); setProteinConcentration(10); setLipidConcentration(20);
         setSodiumDose(2.0); setPotassiumDose(2.0); setCalciumDose(1.0);
@@ -1000,6 +1154,28 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                 </div>
 
                                 <div>
+                                    <label className="block text-xs font-medium text-slate-600 mb-1">Fase metabólica (define a faixa de TIG)</label>
+                                    <select
+                                        value={metabolicPhase}
+                                        onChange={(e) => setMetabolicPhase(e.target.value as MetabolicPhaseKey)}
+                                        className="w-full bg-white text-slate-800 p-2 border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                    >
+                                        {(Object.keys(METABOLIC_PHASES) as MetabolicPhaseKey[]).map((key) => (
+                                            <option key={key} value={key}>{METABOLIC_PHASES[key].label}</option>
+                                        ))}
+                                    </select>
+                                    <p className="text-xs text-slate-500 mt-1">{METABOLIC_PHASES[metabolicPhase].description}</p>
+                                    <p className="text-xs text-slate-500 mt-1">
+                                        TIG de referência para <strong>{tigEvaluation.bandLabel}</strong>: {tigEvaluation.range.min}–{tigEvaluation.range.max} mg/kg/min.
+                                    </p>
+                                    {tigEvaluation.isNeonate && (
+                                        <p className="text-xs font-semibold text-amber-600 mt-1">
+                                            ⚠️ Paciente com menos de 28 dias — a tabela acima é de lactentes, crianças e adolescentes. Em RN siga o protocolo neonatal e, em sepse, infecção ou nova doença aguda, retorne às taxas iniciais do primeiro dia ajustando conforme a glicemia.
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div>
                                     <ClickToEditInput label="Peso ideal/ajustado (kg) — opcional" value={idealWeight} onSave={setIdealWeight} unit="kg" />
                                     <p className="text-xs text-slate-500 mt-1">Quando maior que 0, a proteína é calculada sobre este peso. Deixe 0 para usar o peso real.</p>
                                     {activeProfile.usesIdealWeight && idealWeight <= 0 && (
@@ -1034,6 +1210,13 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                     <div className="flex justify-between gap-2"><span className="text-slate-600">Cal. não proteicas (× {calorieNitrogenRatio})</span><span className="font-semibold text-slate-800 text-right">{glucoseCalculations.targetNonProteinCalories.toFixed(0)} kcal</span></div>
                                     <div className="flex justify-between gap-2 border-t border-slate-200 pt-1"><span className="text-slate-600">Lipídios <span className={`font-bold px-1 rounded ${lipidPctInBand ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{lipidPercent}%</span></span><span className="font-semibold text-slate-800 text-right">{lipidCalculations.calories.toFixed(0)} kcal · {lipidCalculations.totalGrams.toFixed(1)} g ({lipidCalculations.dosePerKg.toFixed(2)} g/kg)</span></div>
                                     <div className="flex justify-between gap-2"><span className="text-slate-600">Glicose <span className={`font-bold px-1 rounded ${glucosePctInBand ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{100 - lipidPercent}%</span></span><span className="font-semibold text-slate-800 text-right">{glucoseCalculations.calories.toFixed(0)} kcal · {glucoseCalculations.totalGrams.toFixed(1)} g</span></div>
+                                    <div className="flex justify-between gap-2 border-t border-slate-200 pt-1">
+                                        <span className="text-slate-600">TIG (÷ peso × 1440 min)</span>
+                                        <span className="font-semibold text-slate-800 text-right">
+                                            <span className={`font-bold px-1 rounded ${TIG_STATUS_STYLES[tigEvaluation.status]}`}>{tigEvaluation.tig.toFixed(2)}</span>
+                                            {' '}mg/kg/min · faixa {tigEvaluation.range.min}–{tigEvaluation.range.max}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1203,6 +1386,51 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                               <SummaryCard icon={<SparklesIcon className="w-7 h-7 text-purple-500" />} label="Osmolaridade Estimada" value={osmolarityCalculations.totalOsmolarity.toFixed(0)} unit="mOsm/L" />
                             </div>
                         </div>
+                        {/* Alerta: TIG fora da faixa da fase metabólica */}
+                        {tigEvaluation.hasData && tigEvaluation.status !== 'dentro' && (
+                            <div className={`border-l-4 p-4 rounded-md shadow-sm ${tigAlertStyles.box}`} role="alert">
+                                <div className="flex">
+                                    <div className="py-1"><WarningIcon className={`h-6 w-6 mr-4 ${tigAlertStyles.icon}`} /></div>
+                                    <div>
+                                        <p className="font-bold">{tigAlertStyles.title}</p>
+                                        <p className="text-sm mt-1">
+                                            TIG de <strong>{tigEvaluation.tig.toFixed(2)} mg/kg/min</strong>{' '}
+                                            {tigAboveRange ? 'ultrapassa o máximo' : 'está abaixo do mínimo'} de{' '}
+                                            <strong>{tigAboveRange ? tigEvaluation.range.max : tigEvaluation.range.min} mg/kg/min</strong>{' '}
+                                            para {tigEvaluation.bandLabel} em {tigEvaluation.phaseLabel.toLowerCase()}{' '}
+                                            (faixa {tigEvaluation.range.min}–{tigEvaluation.range.max} mg/kg/min).
+                                        </p>
+                                        <ul className="text-sm list-disc list-inside mt-2 space-y-1">
+                                            {tigEvaluation.suggestedLipidPercent !== null && (
+                                                <li>
+                                                    Ajuste os lipídios para <strong>{tigEvaluation.suggestedLipidPercent}%</strong> das calorias não proteicas
+                                                    (glicose passa a {100 - tigEvaluation.suggestedLipidPercent}%) — a TIG chega perto de{' '}
+                                                    {tigAboveRange ? tigEvaluation.range.max : tigEvaluation.range.min} mg/kg/min.
+                                                </li>
+                                            )}
+                                            {tigEvaluation.suggestedLipidPercent === null && tigEvaluation.suggestedRatio !== null && (
+                                                <li>
+                                                    Com os lipídios no {tigAboveRange ? `teto de ${LIPID_PERCENT_RANGE.max}%` : `piso de ${LIPID_PERCENT_RANGE.min}%`} a TIG continua fora da faixa:{' '}
+                                                    {tigAboveRange ? 'reduza' : 'aumente'} a relação cal/gN para {tigAboveRange ? '≤' : '≥'}{' '}
+                                                    <strong>{tigEvaluation.suggestedRatio} kcal/g N</strong> ou revise a dose de proteína (hoje {aminoAcidDose} g/kg).
+                                                    {(tigAboveRange
+                                                        ? tigEvaluation.suggestedRatio < activeProfile.ratio.min
+                                                        : tigEvaluation.suggestedRatio > activeProfile.ratio.max) && (
+                                                        <> Esse valor está fora da faixa de {activeProfile.ratio.min}–{activeProfile.ratio.max} kcal/g N do perfil selecionado — reveja o perfil clínico e a meta calórica.</>
+                                                    )}
+                                                </li>
+                                            )}
+                                            {tigEvaluation.suggestedLipidPercent === null && tigEvaluation.suggestedRatio === null && (
+                                                <li>Revise o percentual de lipídios, a relação cal/gN e a dose de proteína.</li>
+                                            )}
+                                            {tigEvaluation.isNeonate && (
+                                                <li>Paciente com menos de 28 dias: a faixa usada é a de lactentes — confirme com o protocolo neonatal.</li>
+                                            )}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         {/* Alertas */}
                         {precipitationWarnings.length > 0 && (
                             <div className="bg-amber-50 border-l-4 border-amber-500 text-amber-800 p-4 rounded-md shadow-sm" role="alert">
@@ -1240,7 +1468,8 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                               <NutrientDetailRow label="Gramas Totais" value={glucoseCalculations.totalGrams.toFixed(1)} unit="g" />
                               <NutrientDetailRow label="Calorias" value={glucoseCalculations.calories.toFixed(0)} unit="kcal" />
                                <NutrientDetailRow label="% Calórico Total" value={caloricDistribution.glucose.toFixed(0)} unit="%" />
-                              <NutrientDetailRow label="TIG" value={glucoseCalculations.tig.toFixed(2)} unit="mg/kg/min" />
+                              <NutrientDetailRow label="TIG" value={<span className={`px-1.5 py-0.5 rounded ${TIG_STATUS_STYLES[tigEvaluation.status]}`}>{tigEvaluation.tig.toFixed(2)}</span>} unit="mg/kg/min" />
+                              <NutrientDetailRow label={`Faixa ${tigEvaluation.bandLabel} · fase ${tigEvaluation.phaseShort}`} value={`${tigEvaluation.range.min}–${tigEvaluation.range.max}`} unit="mg/kg/min" />
                               <NutrientDetailRow label="Conc. p/ Mistura" value={glucoseMixtureTargetConcentration.toFixed(1)} unit="%" />
                               <NutrientDetailRow label="Conc. Final (Bolsa)" value={finalGlucoseConcentrationInBag.toFixed(1)} unit="%" />
                                {volumeToComplete > 0 ? (

@@ -48,6 +48,18 @@ export type OsmolarityCalculations = {
   };
 };
 
+// TIG confrontada com a faixa do protocolo (faixa de peso × fase metabólica)
+export type TigEvaluation = {
+    tig: number;
+    status: 'dentro' | 'acima' | 'abaixo';
+    range: { min: number; max: number };
+    hasData: boolean;
+    bandLabel: string;
+    phaseLabel: string;
+    phaseShort: string;
+    isNeonate: boolean;
+};
+
 export type CaloricDistribution = {
     protein: number;
     lipid: number;
@@ -114,6 +126,7 @@ interface PDFReportProps {
     oligoelementosVolume: number;
     vitaminsVolume: number;
     precipitationWarnings: string[];
+    tigEvaluation: TigEvaluation;
   };
   nptStages?: 1 | 2 | 3 | 4;
 }
@@ -165,6 +178,7 @@ export const PDFReport: React.FC<PDFReportProps> = ({ reportData, nptStages = 2 
     oligoelementosVolume,
     vitaminsVolume,
     precipitationWarnings,
+    tigEvaluation,
   } = reportData;
 
   const generatedDate = new Date().toLocaleDateString('pt-BR');
@@ -256,7 +270,8 @@ export const PDFReport: React.FC<PDFReportProps> = ({ reportData, nptStages = 2 
                     <ReportRow label="Calorias de Glicose" value={`${glucoseCalculations.calories.toFixed(0)} kcal (${caloricDistribution.glucose.toFixed(0)}%)`} />
                     <ReportRow label="Calorias de Lipídeos" value={`${lipidCalculations.calories.toFixed(0)} kcal (${caloricDistribution.lipid.toFixed(0)}%)`} />
                     <ReportRow label="Calorias Totais" value={totalCalories.toFixed(0)} unit="kcal" />
-                    <ReportRow label="TIG" value={glucoseCalculations.tig.toFixed(2)} unit="mg/kg/min" />
+                    <ReportRow label="TIG" value={`${glucoseCalculations.tig.toFixed(2)}${tigEvaluation.hasData && tigEvaluation.status !== 'dentro' ? ' (FORA DA FAIXA)' : ''}`} unit="mg/kg/min" />
+                    <ReportRow label={`Faixa de TIG · ${tigEvaluation.bandLabel} · ${tigEvaluation.phaseLabel.toLowerCase()}`} value={`${tigEvaluation.range.min}–${tigEvaluation.range.max}`} unit="mg/kg/min" />
                     <ReportRow label="Concentração Final de Glicose" value={finalGlucoseConcentrationInBag.toFixed(1)} unit="%" />
                     <ReportRow label="Osmolaridade Estimada" value={osmolarityCalculations.totalOsmolarity.toFixed(0)} unit="mOsm/L" />
                     <ReportRow label="Recomendação de Acesso" value={osmolarityCalculations.isPeripheralRouteWarning ? 'CENTRAL' : 'PERIFÉRICO'} />
@@ -325,7 +340,8 @@ export const PDFReport: React.FC<PDFReportProps> = ({ reportData, nptStages = 2 
                             <ReportRow label="Gramas Totais" value={glucoseCalculations.totalGrams.toFixed(1)} unit="g" />
                             <ReportRow label="Volume da Solução" value={volumeToComplete.toFixed(1)} unit="mL" />
                             <ReportRow label="Calorias" value={glucoseCalculations.calories.toFixed(0)} unit="kcal" />
-                            <ReportRow label="Taxa de Infusão de Glicose (TIG)" value={glucoseCalculations.tig.toFixed(2)} unit="mg/kg/min" />
+                            <ReportRow label="Taxa de Infusão de Glicose (TIG)" value={`${glucoseCalculations.tig.toFixed(2)}${tigEvaluation.hasData && tigEvaluation.status !== 'dentro' ? ' (FORA DA FAIXA)' : ''}`} unit="mg/kg/min" />
+                            <ReportRow label={`Faixa (${tigEvaluation.bandLabel} · fase ${tigEvaluation.phaseShort})`} value={`${tigEvaluation.range.min}–${tigEvaluation.range.max}`} unit="mg/kg/min" />
                             <ReportRow label="Concentração para Mistura" value={glucoseMixtureTargetConcentration.toFixed(1)} unit="%" />
                             <ReportRow label="Concentração Final na Bolsa" value={finalGlucoseConcentrationInBag.toFixed(1)} unit="%" />
                             {volumeToComplete > 0 && (
