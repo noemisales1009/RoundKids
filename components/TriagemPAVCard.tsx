@@ -177,6 +177,7 @@ export const TriagemPAVCard: React.FC<TriagemPAVCardProps> = ({ patientId, dob }
 
   const [triagens, setTriagens] = useState<TriagemPAV[]>([]);
   const [loading, setLoading] = useState(true);
+  const [aba, setAba] = useState<'triagem' | 'historico'>('triagem');
 
   useEffect(() => { setBand(bandAuto); }, [bandAuto]);
 
@@ -259,6 +260,27 @@ export const TriagemPAVCard: React.FC<TriagemPAVCardProps> = ({ patientId, dob }
         Pneumonia Associada à Ventilação — critérios epidemiológicos de vigilância (Nota Técnica ANVISA nº 03/2026).
         Não substituem o julgamento clínico para tratamento.
       </p>
+
+      {/* Sub-abas: Triagem / Histórico (mesmo padrão do NPT) */}
+      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-700">
+        {([
+          { id: 'triagem' as const, label: '🧪 Triagem' },
+          { id: 'historico' as const, label: '📋 Histórico de Triagens' },
+        ]).map(t => (
+          <button
+            key={t.id}
+            onClick={() => setAba(t.id)}
+            className={`px-4 py-2 font-semibold text-sm transition-colors ${aba === t.id
+              ? 'border-b-2 border-primary-600 text-primary-600 dark:text-primary-400'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {aba === 'triagem' && (
+      <div className="space-y-4">
 
       {/* Seletor de faixa etária */}
       <div>
@@ -432,10 +454,12 @@ export const TriagemPAVCard: React.FC<TriagemPAVCardProps> = ({ patientId, dob }
           <span>{saving ? 'Salvando...' : 'Salvar triagem'}</span>
         </button>
       </div>
+      </div>
+      )}
 
       {/* Histórico */}
-      <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
-        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Histórico de triagens</p>
+      {aba === 'historico' && (
+      <div>
         {loading ? (
           <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-3">Carregando...</p>
         ) : triagens.length === 0 ? (
@@ -481,6 +505,7 @@ export const TriagemPAVCard: React.FC<TriagemPAVCardProps> = ({ patientId, dob }
           </div>
         )}
       </div>
+      )}
     </div>
   );
 };

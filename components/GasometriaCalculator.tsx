@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import {
   AG_NORMAL,
+  PRIMARIO_LABEL,
   REFERENCIAS,
   calcularAG,
   calcularCompensacao,
@@ -17,6 +18,7 @@ import {
   type DeltaGap,
   type Disturbio,
   type ModoResp,
+  type Primario,
   type TagTone,
 } from '../lib/gasometria';
 
@@ -32,6 +34,36 @@ const TAG_COLORS: Record<TagTone, string> = {
   norm: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
   misto: 'bg-pink-100 text-pink-800 dark:bg-pink-900/40 dark:text-pink-300',
 };
+
+/** Cor do selo do histórico conforme o distúrbio primário gravado. */
+const PRIMARIO_BADGE: Record<string, string> = {
+  acidose_metabolica: TAG_COLORS.acid,
+  acidose_respiratoria: TAG_COLORS.acid,
+  acidose_mista: TAG_COLORS.acid,
+  alcalose_metabolica: TAG_COLORS.alc,
+  alcalose_respiratoria: TAG_COLORS.alc,
+  alcalose_mista: TAG_COLORS.alc,
+  misto_oposto: TAG_COLORS.misto,
+  normal: TAG_COLORS.norm,
+  indefinido: 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200',
+};
+
+interface GasoRegistro {
+  id: string;
+  criado_em: string;
+  ph: number;
+  paco2: number;
+  hco3: number;
+  disturbio_primario: string | null;
+  anion_gap: number | null;
+  conclusao: string | null;
+}
+
+const formatDataHora = (iso: string) =>
+  new Date(iso).toLocaleString('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    timeZone: 'America/Sao_Paulo',
+  });
 
 interface Props {
   patientId: string;
@@ -77,6 +109,24 @@ export const GasometriaCalculator: React.FC<Props> = ({ patientId }) => {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [copiado, setCopiado] = useState(false);
+
+  const [aba, setAba] = useState<'calc' | 'historico'>('calc');
+  const [historico, setHistorico] = useState<GasoRegistro[]>([]);
+  const [historicoLoading, setHistoricoLoading] = useState(true);
+  const [expandido, setExpandido] = useState<string | null>(null);
+
+  const carregarHistorico = async () => {
+    setHistoricoLoading(true);
+    const { data } = await supabase
+      .from('gasometrias')
+      .select('id, criado_em, ph, paco2, hco3, disturbio_primario, anion_gap, conclusao')
+      .eq('paciente_id', patientId)
+      .order('criado_em', { ascending: false })
+      .limit(20);
+    setHistorico((data as GasoRegistro[]) ?? []);
+    setHistoricoLoading(false);
+  };
+  useEffect(() => { carregarHistorico(); }, [patientId]);
 
   const v = useMemo(() => ({
     ph: num(valores.ph),
@@ -240,7 +290,7 @@ export const GasometriaCalculator: React.FC<Props> = ({ patientId }) => {
     const { error } = await supabase.from('gasometrias').insert(registro);
 
     if (error) setSaveError(`Não foi possível gravar: ${error.message}`);
-    else setSaved(true);
+    else { setSaved(true); carregarHistorico(); }
     setSaving(false);
   }
 
@@ -269,8 +319,25 @@ export const GasometriaCalculator: React.FC<Props> = ({ patientId }) => {
   const botao = 'w-full py-2.5 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
   const inputCls = 'w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:border-primary-500 dark:focus:border-primary-400';
 
+  const tabBtn = (ativa: boolean) =>
+    `px-4 py-2 font-semibold text-sm transition-colors ${ativa
+      ? 'border-b-2 border-primary-600 text-primary-600 dark:text-primary-400'
+      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`;
+
   return (
-    <div className="space-y-4 pb-6">
+    <div className="pb-6">
+      {/* Sub-abas: Calculadora / Histórico (mesmo padrão do NPT) */}
+      <div className="flex gap-2 mb-4 border-b border-slate-200 dark:border-slate-700">
+        <button onClick={() => setAba('calc')} className={tabBtn(aba === 'calc')}>
+          🧮 Calculadora
+        </button>
+        <button onClick={() => setAba('historico')} className={tabBtn(aba === 'historico')}>
+          📋 Histórico de Gasometrias
+        </button>
+      </div>
+
+      {aba === 'calc' && (
+      <div className="space-y-4">
 
       {/* Alerta de pH crítico */}
       {disturbio?.critico && (
@@ -675,6 +742,56 @@ export const GasometriaCalculator: React.FC<Props> = ({ patientId }) => {
           </div>
         )}
       </div>
+      </div>
+      )}
+
+      {aba === 'historico' && (
+        <div className={cardBase}>
+          <div className="p-4">
+            {historicoLoading ? (
+              <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-3">Carregando...</p>
+            ) : historico.length === 0 ? (
+              <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-3">Nenhuma gasometria registrada para este paciente.</p>
+            ) : (
+              <div className="space-y-2">
+                {historico.map(g => (
+                  <div key={g.id} className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden">
+                    <button
+                      onClick={() => setExpandido(expandido === g.id ? null : g.id)}
+                      className="w-full text-left px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs text-slate-500 dark:text-slate-400">{formatDataHora(g.criado_em)}</span>
+                        {g.disturbio_primario && (
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${PRIMARIO_BADGE[g.disturbio_primario] ?? PRIMARIO_BADGE.indefinido}`}>
+                            {PRIMARIO_LABEL[g.disturbio_primario as Primario] ?? g.disturbio_primario}
+                          </span>
+                        )}
+                        <span className="text-xs text-slate-400 dark:text-slate-500 ml-auto">{expandido === g.id ? '▲' : '▼'}</span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                        pH <strong>{fmt(g.ph, 2)}</strong> &nbsp;|&nbsp; PaCO₂ <strong>{fmt(g.paco2)}</strong> &nbsp;|&nbsp; HCO₃⁻ <strong>{fmt(g.hco3)}</strong>
+                        {g.anion_gap != null && <> &nbsp;|&nbsp; AG <strong>{fmt(g.anion_gap)}</strong></>}
+                      </p>
+                    </button>
+                    {expandido === g.id && g.conclusao && (
+                      <div className="px-3 pb-3 pt-1 border-t border-slate-100 dark:border-slate-800 space-y-1">
+                        {g.conclusao.split('\n').map((linha, i) => (
+                          <p key={i} className={`text-xs leading-relaxed ${linha.startsWith('ALERTA')
+                            ? 'text-red-700 dark:text-red-300 font-semibold'
+                            : 'text-slate-600 dark:text-slate-400'}`}>
+                            {linha}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

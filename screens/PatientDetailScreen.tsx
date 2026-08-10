@@ -49,13 +49,7 @@ const KDIGOScale = lazy(() => import('../components/KDIGOScale').then(m => ({ de
 const NPTCalculator = lazy(() => import('../npt/NPTWrapper'));
 const GasometriaCalculator = lazy(() => import('../components/GasometriaCalculator').then(m => ({ default: m.GasometriaCalculator })));
 const PARDSCalculator = lazy(() => import('../components/PARDSCalculator').then(m => ({ default: m.PARDSCalculator })));
-const GapCO2Calculator = lazy(() => import('../components/GapCO2Calculator').then(m => ({ default: m.GapCO2Calculator })));
-const EtCO2Calculator = lazy(() => import('../components/EtCO2Calculator').then(m => ({ default: m.EtCO2Calculator })));
-const EtCO2DirectCalculator = lazy(() => import('../components/EtCO2DirectCalculator').then(m => ({ default: m.EtCO2DirectCalculator })));
-const IndiceAPDCalculator = lazy(() => import('../components/IndiceAPDCalculator').then(m => ({ default: m.IndiceAPDCalculator })));
-const ScvO2Calculator = lazy(() => import('../components/ScvO2Calculator').then(m => ({ default: m.ScvO2Calculator })));
-const O2ERCalculator = lazy(() => import('../components/O2ERCalculator').then(m => ({ default: m.O2ERCalculator })));
-const PressaoPulsoCalculator = lazy(() => import('../components/PressaoPulsoCalculator').then(m => ({ default: m.PressaoPulsoCalculator })));
+const HemodinamicoTab = lazy(() => import('../components/HemodinamicoTab').then(m => ({ default: m.HemodinamicoTab })));
 const DiagnosticsSection = lazy(() => import('../components/DiagnosticsSection').then(m => ({ default: m.DiagnosticsSection })));
 const ControlesSaidasSection = lazy(() => import('../components/ControlesSaidasSection').then(m => ({ default: m.ControlesSaidasSection })));
 const AlertasSection = lazy(() => import('../components/AlertasSection').then(m => ({ default: m.AlertasSection })));
@@ -627,33 +621,9 @@ const PatientDetailScreen: React.FC = () => {
                 )}
 
                 {mainTab === 'hemodinamico' && patient && (
-                    <div className="p-4 space-y-6">
+                    <div className="p-4">
                         <Suspense fallback={<LoadingSpinner />}>
-                            <GapCO2Calculator patientId={patient.id.toString()} />
-                        </Suspense>
-                        <div className="border-t border-slate-200 dark:border-slate-700" />
-                        <Suspense fallback={<LoadingSpinner />}>
-                            <EtCO2Calculator patientId={patient.id.toString()} />
-                        </Suspense>
-                        <div className="border-t border-slate-200 dark:border-slate-700" />
-                        <Suspense fallback={<LoadingSpinner />}>
-                            <EtCO2DirectCalculator patientId={patient.id.toString()} />
-                        </Suspense>
-                        <div className="border-t border-slate-200 dark:border-slate-700" />
-                        <Suspense fallback={<LoadingSpinner />}>
-                            <IndiceAPDCalculator patientId={patient.id.toString()} />
-                        </Suspense>
-                        <div className="border-t border-slate-200 dark:border-slate-700" />
-                        <Suspense fallback={<LoadingSpinner />}>
-                            <ScvO2Calculator patientId={patient.id.toString()} />
-                        </Suspense>
-                        <div className="border-t border-slate-200 dark:border-slate-700" />
-                        <Suspense fallback={<LoadingSpinner />}>
-                            <O2ERCalculator patientId={patient.id.toString()} />
-                        </Suspense>
-                        <div className="border-t border-slate-200 dark:border-slate-700" />
-                        <Suspense fallback={<LoadingSpinner />}>
-                            <PressaoPulsoCalculator patientId={patient.id.toString()} />
+                            <HemodinamicoTab patientId={patient.id.toString()} />
                         </Suspense>
                     </div>
                 )}

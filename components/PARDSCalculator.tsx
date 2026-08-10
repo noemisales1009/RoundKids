@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { num } from '../lib/gasometria';
 import {
+  CLASSIFICACAO_LABEL,
   CRITERIOS_GERAIS,
   INDICE_LABEL,
   SITUACOES_ESPECIAIS,
@@ -10,6 +11,7 @@ import {
   normalizarFio2,
   type Classificacao,
   type CriterioKey,
+  type IndiceTipo,
   type Resultado,
   type Suporte,
 } from '../lib/pards';
@@ -17,6 +19,22 @@ import {
 interface Props {
   patientId: string;
 }
+
+interface PardsRegistro {
+  id: string;
+  criado_em: string;
+  suporte: Suporte;
+  classificacao: Classificacao;
+  indice_tipo: IndiceTipo | null;
+  indice_valor: number | null;
+  conclusao: string | null;
+}
+
+const formatDataHora = (iso: string) =>
+  new Date(iso).toLocaleString('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    timeZone: 'America/Sao_Paulo',
+  });
 
 const BADGE: Record<Classificacao, string> = {
   pards_grave: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
@@ -64,6 +82,24 @@ export const PARDSCalculator: React.FC<Props> = ({ patientId }) => {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [copiado, setCopiado] = useState(false);
+
+  const [aba, setAba] = useState<'calc' | 'historico'>('calc');
+  const [historico, setHistorico] = useState<PardsRegistro[]>([]);
+  const [historicoLoading, setHistoricoLoading] = useState(true);
+  const [expandido, setExpandido] = useState<string | null>(null);
+
+  const carregarHistorico = async () => {
+    setHistoricoLoading(true);
+    const { data } = await supabase
+      .from('pards_avaliacoes')
+      .select('id, criado_em, suporte, classificacao, indice_tipo, indice_valor, conclusao')
+      .eq('paciente_id', patientId)
+      .order('criado_em', { ascending: false })
+      .limit(20);
+    setHistorico((data as PardsRegistro[]) ?? []);
+    setHistoricoLoading(false);
+  };
+  useEffect(() => { carregarHistorico(); }, [patientId]);
 
   const criteriosOk = CRITERIOS_GERAIS.every(c => criterios[c.key]);
   const faltam = CRITERIOS_GERAIS.filter(c => !criterios[c.key]).length;
@@ -139,7 +175,7 @@ export const PARDSCalculator: React.FC<Props> = ({ patientId }) => {
       conclusao: conclusao.join('\n'),
     });
     if (error) setSaveError(`Não foi possível gravar: ${error.message}`);
-    else setSaved(true);
+    else { setSaved(true); carregarHistorico(); }
     setSaving(false);
   }
 
@@ -168,8 +204,25 @@ export const PARDSCalculator: React.FC<Props> = ({ patientId }) => {
   const spo2N = num(spo2);
   const precisaOxigenacao = suporte !== null && suporte !== 'o2';
 
+  const tabBtn = (ativa: boolean) =>
+    `px-4 py-2 font-semibold text-sm transition-colors ${ativa
+      ? 'border-b-2 border-primary-600 text-primary-600 dark:text-primary-400'
+      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`;
+
   return (
-    <div className="space-y-4 pb-6">
+    <div className="pb-6">
+      {/* Sub-abas: Calculadora / Histórico (mesmo padrão do NPT) */}
+      <div className="flex gap-2 mb-4 border-b border-slate-200 dark:border-slate-700">
+        <button onClick={() => setAba('calc')} className={tabBtn(aba === 'calc')}>
+          🧮 Calculadora
+        </button>
+        <button onClick={() => setAba('historico')} className={tabBtn(aba === 'historico')}>
+          📋 Histórico de Avaliações
+        </button>
+      </div>
+
+      {aba === 'calc' && (
+      <div className="space-y-4">
 
       {/* Etapa 1 — Critérios gerais */}
       <div className={cardBase}>
@@ -387,6 +440,50 @@ export const PARDSCalculator: React.FC<Props> = ({ patientId }) => {
           </div>
         )}
       </div>
+      </div>
+      )}
+
+      {aba === 'historico' && (
+        <div className={cardBase}>
+          <div className="p-4">
+            {historicoLoading ? (
+              <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-3">Carregando...</p>
+            ) : historico.length === 0 ? (
+              <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-3">Nenhuma avaliação registrada para este paciente.</p>
+            ) : (
+              <div className="space-y-2">
+                {historico.map(r => (
+                  <div key={r.id} className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden">
+                    <button
+                      onClick={() => setExpandido(expandido === r.id ? null : r.id)}
+                      className="w-full text-left px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs text-slate-500 dark:text-slate-400">{formatDataHora(r.criado_em)}</span>
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${BADGE[r.classificacao] ?? BADGE.nao_classificavel}`}>
+                          {CLASSIFICACAO_LABEL[r.classificacao] ?? r.classificacao}
+                        </span>
+                        <span className="text-xs text-slate-400 dark:text-slate-500 ml-auto">{expandido === r.id ? '▲' : '▼'}</span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                        {SUPORTES.find(s => s.id === r.suporte)?.label ?? r.suporte}
+                        {r.indice_tipo && r.indice_valor != null && <> &nbsp;|&nbsp; {r.indice_tipo} <strong>{r.indice_valor}</strong></>}
+                      </p>
+                    </button>
+                    {expandido === r.id && r.conclusao && (
+                      <div className="px-3 pb-3 pt-1 border-t border-slate-100 dark:border-slate-800 space-y-1">
+                        {r.conclusao.split('\n').map((linha, i) => (
+                          <p key={i} className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{linha}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
