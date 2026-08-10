@@ -48,6 +48,7 @@ const PhoenixSepsisCalculator = lazy(() => import('../components/PhoenixSepsisCa
 const KDIGOScale = lazy(() => import('../components/KDIGOScale').then(m => ({ default: m.KDIGOScale })));
 const NPTCalculator = lazy(() => import('../npt/NPTWrapper'));
 const GasometriaCalculator = lazy(() => import('../components/GasometriaCalculator').then(m => ({ default: m.GasometriaCalculator })));
+const PARDSCalculator = lazy(() => import('../components/PARDSCalculator').then(m => ({ default: m.PARDSCalculator })));
 const GapCO2Calculator = lazy(() => import('../components/GapCO2Calculator').then(m => ({ default: m.GapCO2Calculator })));
 const EtCO2Calculator = lazy(() => import('../components/EtCO2Calculator').then(m => ({ default: m.EtCO2Calculator })));
 const EtCO2DirectCalculator = lazy(() => import('../components/EtCO2DirectCalculator').then(m => ({ default: m.EtCO2DirectCalculator })));
@@ -112,7 +113,7 @@ const PatientDetailScreen: React.FC = () => {
 
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
-    const [mainTab, setMainTab] = useState<'npt' | 'scales' | 'gasometria' | 'hemodinamico' | 'pav' | 'ipcs' | null>(null);
+    const [mainTab, setMainTab] = useState<'npt' | 'scales' | 'gasometria' | 'hemodinamico' | 'pav' | 'ipcs' | 'pards' | null>(null);
     const [notifRefresh, setNotifRefresh] = useState(0);
     const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'scales' | 'pareceres' | 'examesImagem' | 'paPercentis' | 'paineisVirais' | null>(null);
     const [showPAForm, setShowPAForm] = useState(false);
@@ -563,7 +564,7 @@ const PatientDetailScreen: React.FC = () => {
             {/* NPT + Escalas */}
             <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm">
                 <div className={mainTab ? 'border-b border-slate-200 dark:border-slate-800' : ''}>
-                    {/* 5 botões em 2 linhas (3 + 2) — layout consistente no celular, tablet e desktop */}
+                    {/* 7 botões em 3 linhas (3 + 3 + 1) — layout consistente no celular, tablet e desktop */}
                     <nav className="grid grid-cols-3">
                         {([
                             { id: 'npt' as const, label: 'Calc. NPT', Icon: BeakerIcon },
@@ -572,6 +573,7 @@ const PatientDetailScreen: React.FC = () => {
                             { id: 'hemodinamico' as const, label: 'Hemodinâmico', Icon: HeartPulseIcon },
                             { id: 'pav' as const, label: 'Triagem PAV', Icon: LungsAltIcon },
                             { id: 'ipcs' as const, label: 'Triagem IPCS', Icon: VirusIcon },
+                            { id: 'pards' as const, label: 'PARDS', Icon: LungsIcon },
                         ]).map((t, i, arr) => {
                             const cols = 3;
                             const lastRowStart = arr.length - (arr.length % cols === 0 ? cols : arr.length % cols);
@@ -612,6 +614,14 @@ const PatientDetailScreen: React.FC = () => {
                     <div className="p-4 space-y-6">
                         <Suspense fallback={<LoadingSpinner />}>
                             <GasometriaCalculator patientId={patient.id.toString()} />
+                        </Suspense>
+                    </div>
+                )}
+
+                {mainTab === 'pards' && patient && (
+                    <div className="p-4 space-y-6">
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <PARDSCalculator patientId={patient.id.toString()} />
                         </Suspense>
                     </div>
                 )}
