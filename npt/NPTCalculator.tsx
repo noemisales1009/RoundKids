@@ -9,6 +9,7 @@ import { PDFReport } from './components/PDFReport';
 import type { AlternativeCalculations, OsmolarityCalculations } from './components/PDFReport';
 import { saveNPTCalculation } from './services/database';
 import { UserContext } from '../contexts';
+import { avaliarOferta, calcularMetaEnergetica, type MetaEnergetica, type OfertaAvaliacao, type Sexo } from './energyTargets';
 
 declare global {
   interface Window {
@@ -163,7 +164,7 @@ const PharmacyPrescription: React.FC<PharmacyPrescriptionProps> = ({ reportData,
         totalCalories, caloricDistribution,
         aminoAcidDose, lipidDose, sodiumDose, potassiumDose,
         calciumDose, magnesiumDose, phosphorusDose,
-        calorieNitrogenRatio, idealWeight, lipidPercent, tigEvaluation
+        calorieNitrogenRatio, idealWeight, lipidPercent, tigEvaluation, energyEvaluation
     } = reportData;
 
     const generatedDate = new Date().toLocaleDateString('pt-BR');
@@ -309,6 +310,20 @@ const PharmacyPrescription: React.FC<PharmacyPrescriptionProps> = ({ reportData,
                         </div>
                     </div>
                     
+                    {energyEvaluation.meta.meta && (
+                        <div className="mb-2 pt-1.5 border-t border-slate-300 text-center">
+                            <p>
+                                <strong>META ENERGÉTICA:</strong> {energyEvaluation.meta.meta.min.toFixed(0)}–{energyEvaluation.meta.meta.max.toFixed(0)} kcal/kg/d
+                                ({(energyEvaluation.meta.meta.min * weight).toFixed(0)}–{(energyEvaluation.meta.meta.max * weight).toFixed(0)} kcal/dia)
+                                {energyEvaluation.meta.gerKcalDia !== null && <> · GER Schofield {energyEvaluation.meta.gerKcalDia.toFixed(0)} kcal/dia</>}
+                                {energyEvaluation.meta.capadaPeloGER && <> · teto = GER (fase aguda)</>}
+                                {energyEvaluation.oferta.hasData && (
+                                    <strong> — Oferta: {energyEvaluation.oferta.kcalKgDia.toFixed(1)} kcal/kg/d ({energyEvaluation.oferta.status === 'dentro' ? 'DENTRO DA META' : energyEvaluation.oferta.status === 'abaixo' ? 'ABAIXO DA META' : 'ACIMA DA META'})</strong>
+                                )}
+                            </p>
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-4 gap-x-2 pt-1.5 mb-1 border-t border-slate-300 text-center">
                         <p><strong>Calorias Totais</strong><br/>{totalCalories.toFixed(0)} kcal</p>
                         <p><strong>Proteínas</strong><br/>{aminoAcidCalculations.calories.toFixed(0)} kcal ({caloricDistribution.protein.toFixed(0)}%)</p>
@@ -496,7 +511,9 @@ const useAppCalculations = (
     calciumDose: number,
     magnesiumDose: number,
     phosphorusDose: number,
-    phosphorusSource: 'sodium' | 'potassium'
+    phosphorusSource: 'sodium' | 'potassium',
+    sexo: Sexo | null,
+    isPreterm: boolean
 ) => {
     const bodySurfaceArea = useMemo(() => {
       if (weight <= 0) return 0;
@@ -698,6 +715,15 @@ const useAppCalculations = (
     }, [glucoseMixtureTargetConcentration, volumeToComplete, glucoseSources]);
     
     const totalCalories = useMemo(() => aminoAcidCalculations.calories + lipidCalculations.calories + glucoseCalculations.calories, [aminoAcidCalculations, lipidCalculations, glucoseCalculations]);
+
+    // Meta energética: GER por Schofield × faixa da idade × fase clínica.
+    // Na fase aguda a meta é capada pelo GER (não sobrealimentar); nas demais
+    // fases o GER é referência. Prematuro usa a tabela própria, sem Schofield.
+    const energyEvaluation = useMemo<{ meta: MetaEnergetica; oferta: OfertaAvaliacao }>(() => {
+        const meta = calcularMetaEnergetica({ sexo, ageDays: ageInDays, weight, fase: metabolicPhase, isPreterm });
+        const oferta = avaliarOferta(totalCalories, weight, meta.meta);
+        return { meta, oferta };
+    }, [sexo, ageInDays, weight, metabolicPhase, isPreterm, totalCalories]);
     
     // Distribuição das calorias totais (informativa; a distribuição das não proteicas é fixada pelo percentual escolhido)
     const caloricDistribution = useMemo(() => {
@@ -841,6 +867,7 @@ const useAppCalculations = (
             electrolyteConcentrations,
             precipitationWarnings,
             tigEvaluation,
+            energyEvaluation,
         }
     };
 };
@@ -851,10 +878,15 @@ interface AppProps {
         name: string;
         dob: string;
         peso?: number | null;
+        sexo?: string | null;
     } | null;
     onChangePatient?: () => void;
     onCalculationSaved?: () => void;
 }
+
+// patients.sexo guarda 'Masculino'/'Feminino'; o Schofield usa M/F
+const sexoFromPatient = (s?: string | null): Sexo | null =>
+    s === 'Masculino' ? 'M' : s === 'Feminino' ? 'F' : null;
 
 const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculationSaved }) => {
     const userCtx = useContext(UserContext);
@@ -868,6 +900,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
     const [patientName, setPatientName] = useState(initialPatient?.name || 'John Doe');
     const [dateOfBirth, setDateOfBirth] = useState(initialPatient?.dob || '2023-01-01');
     const [weight, setWeight] = useState(initialPatient?.peso ? Number(initialPatient.peso) : 10); // kg
+    const [sexo, setSexo] = useState<Sexo | null>(sexoFromPatient(initialPatient?.sexo)); // Schofield
 
     // Estado para os parâmetros da prescrição
     const [clinicalProfile, setClinicalProfile] = useState<ClinicalProfileKey>('estavel_crianca');
@@ -899,6 +932,8 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
             if (initialPatient.peso) {
                 setWeight(Number(initialPatient.peso));
             }
+            const s = sexoFromPatient(initialPatient.sexo);
+            if (s) setSexo(s);
         }
     }, [initialPatient]);
     
@@ -919,7 +954,8 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
         dateOfBirth,
         weight, idealWeight, aminoAcidDose, lipidPercent, metabolicPhase, calorieNitrogenRatio, hydrationTarget,
         proteinConcentration, lipidConcentration, glucoseSources,
-        sodiumDose, potassiumDose, calciumDose, magnesiumDose, phosphorusDose, phosphorusSource
+        sodiumDose, potassiumDose, calciumDose, magnesiumDose, phosphorusDose, phosphorusSource,
+        sexo, clinicalProfile === 'estavel_prematuro'
     );
 
     const {
@@ -928,8 +964,29 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
       phosphorusCalculations, finalAminoAcidConcentrationInBag, finalGlucoseConcentrationInBag,
       glucoseMixtureTargetConcentration, glucoseMixtureCalculations, caloricDistribution,
       osmolarityCalculations, oligoelementosVolume, vitaminsVolume,
-      electrolyteConcentrations, precipitationWarnings, tigEvaluation,
+      electrolyteConcentrations, precipitationWarnings, tigEvaluation, energyEvaluation,
     } = reportData;
+
+    const metaEnergetica = energyEvaluation.meta;
+    const ofertaEnergetica = energyEvaluation.oferta;
+    const OFERTA_STYLES: Record<'dentro' | 'abaixo' | 'acima', string> = {
+        dentro: 'bg-green-100 text-green-700',
+        abaixo: 'bg-amber-100 text-amber-700',
+        acima: 'bg-red-100 text-red-700',
+    };
+
+    // Relação cal/gN que leva a oferta ao limite da meta, mantendo a proteína atual
+    // (as calorias totais = proteína + nitrogênio × relação; só a relação é mexida)
+    const ratioParaMeta = useMemo<number | null>(() => {
+        if (!metaEnergetica.meta || !ofertaEnergetica.hasData || ofertaEnergetica.status === 'dentro') return null;
+        const nitrogen = aminoAcidCalculations.nitrogen;
+        if (nitrogen <= 0 || weight <= 0) return null;
+        const alvoKcalDia = (ofertaEnergetica.status === 'acima' ? metaEnergetica.meta.max : metaEnergetica.meta.min) * weight;
+        const cnp = alvoKcalDia - aminoAcidCalculations.calories;
+        if (cnp <= 0) return null;
+        const ratio = cnp / nitrogen;
+        return ofertaEnergetica.status === 'acima' ? Math.floor(ratio / 5) * 5 : Math.ceil(ratio / 5) * 5;
+    }, [metaEnergetica, ofertaEnergetica, aminoAcidCalculations, weight]);
 
     // Indicadores informativos com limites inclusivos (15 e 20 contam como dentro da faixa),
     // avaliados sobre o valor arredondado que é exibido na tela
@@ -1125,6 +1182,22 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                     <div>
                                       <ClickToEditInput label="Peso (kg)" value={weight} onSave={setWeight} unit="kg" />
                                     </div>
+                                    <div className="col-span-2">
+                                        <label className="block text-xs font-medium text-slate-600 mb-1">Sexo (equação de Schofield)</label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {([{ v: 'M' as const, l: 'Masculino' }, { v: 'F' as const, l: 'Feminino' }]).map(op => (
+                                                <button
+                                                    key={op.v}
+                                                    onClick={() => setSexo(op.v)}
+                                                    className={`py-2 rounded-md text-sm font-semibold transition-colors ${sexo === op.v
+                                                        ? 'bg-primary-600 text-white'
+                                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 ring-1 ring-slate-300'}`}
+                                                >
+                                                    {op.l}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1172,6 +1245,47 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                         <p className="text-xs font-semibold text-amber-600 mt-1">
                                             ⚠️ Paciente com menos de 28 dias — a tabela acima é de lactentes, crianças e adolescentes. Em RN siga o protocolo neonatal e, em sepse, infecção ou nova doença aguda, retorne às taxas iniciais do primeiro dia ajustando conforme a glicemia.
                                         </p>
+                                    )}
+                                </div>
+
+                                {/* Meta energética: GER (Schofield) × faixa da idade × fase */}
+                                <div className="bg-slate-50 rounded-lg p-3 ring-1 ring-slate-200 space-y-1 text-xs">
+                                    <p className="font-bold text-slate-600 uppercase tracking-wide mb-1">Meta Energética</p>
+                                    {metaEnergetica.gerKcalDia !== null && metaEnergetica.gerKcalKgDia !== null && (
+                                        <div className="flex justify-between gap-2">
+                                            <span className="text-slate-600">GER — Schofield ({metaEnergetica.gerBandLabel}, {sexo === 'M' ? 'masc.' : 'fem.'})</span>
+                                            <span className="font-semibold text-slate-800 text-right">{metaEnergetica.gerKcalDia.toFixed(0)} kcal/dia · {metaEnergetica.gerKcalKgDia.toFixed(0)} kcal/kg/d</span>
+                                        </div>
+                                    )}
+                                    {metaEnergetica.faixa && (
+                                        <div className="flex justify-between gap-2">
+                                            <span className="text-slate-600">Faixa da fase ({metaEnergetica.faixaLabel} · {METABOLIC_PHASES[metabolicPhase].short})</span>
+                                            <span className="font-semibold text-slate-800 text-right">{metaEnergetica.faixa.min}–{metaEnergetica.faixa.max} kcal/kg/d</span>
+                                        </div>
+                                    )}
+                                    {metaEnergetica.meta && (
+                                        <div className="flex justify-between gap-2 border-t border-slate-200 pt-1">
+                                            <span className="text-slate-600 font-semibold">Meta recomendada{metaEnergetica.capadaPeloGER ? ' (teto = GER)' : ''}</span>
+                                            <span className="font-bold text-slate-800 text-right">
+                                                {metaEnergetica.meta.min.toFixed(0)}–{metaEnergetica.meta.max.toFixed(0)} kcal/kg/d
+                                                {weight > 0 && <> · {(metaEnergetica.meta.min * weight).toFixed(0)}–{(metaEnergetica.meta.max * weight).toFixed(0)} kcal/dia</>}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {metaEnergetica.meta && ofertaEnergetica.hasData && (
+                                        <div className="flex justify-between gap-2">
+                                            <span className="text-slate-600">Oferta atual da prescrição</span>
+                                            <span className="font-semibold text-slate-800 text-right">
+                                                <span className={`font-bold px-1 rounded ${OFERTA_STYLES[ofertaEnergetica.status]}`}>{ofertaEnergetica.kcalKgDia.toFixed(1)}</span>
+                                                {' '}kcal/kg/d · {ofertaEnergetica.status === 'dentro' ? 'dentro da meta' : ofertaEnergetica.status === 'abaixo' ? 'abaixo da meta' : 'acima da meta'}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {metaEnergetica.avisos.map((a, i) => (
+                                        <p key={i} className="text-amber-700 font-medium pt-0.5">⚠️ {a}</p>
+                                    ))}
+                                    {!metaEnergetica.hasData && metaEnergetica.avisos.length === 0 && (
+                                        <p className="text-slate-500">Preencha peso, data de nascimento e sexo para calcular a meta.</p>
                                     )}
                                 </div>
 
@@ -1234,8 +1348,19 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                             <div className="mt-4 bg-slate-50 rounded-lg p-3 ring-1 ring-slate-200">
                                 <div className="flex justify-between items-center text-xs">
                                     <p className="font-bold text-slate-600 uppercase tracking-wide">Calorias Totais</p>
-                                    <span className="font-semibold text-slate-700">{totalCalories.toFixed(0)} kcal</span>
+                                    <span className="font-semibold text-slate-700">
+                                        {totalCalories.toFixed(0)} kcal
+                                        {ofertaEnergetica.hasData && <> ({ofertaEnergetica.kcalKgDia.toFixed(1)} kcal/kg/d)</>}
+                                    </span>
                                 </div>
+                                {metaEnergetica.meta && ofertaEnergetica.hasData && (
+                                    <p className="text-xs mt-1">
+                                        <span className={`font-bold px-1.5 py-0.5 rounded ${OFERTA_STYLES[ofertaEnergetica.status]}`}>
+                                            {ofertaEnergetica.status === 'dentro' ? '✓ Dentro da meta energética' : ofertaEnergetica.status === 'abaixo' ? 'Abaixo da meta energética' : 'Acima da meta energética'}
+                                        </span>
+                                        <span className="text-slate-500"> · meta {metaEnergetica.meta.min.toFixed(0)}–{metaEnergetica.meta.max.toFixed(0)} kcal/kg/d{metaEnergetica.capadaPeloGER ? ' (teto = GER de Schofield)' : ''}</span>
+                                    </p>
+                                )}
                                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                                     Proteínas{' '}
                                     <span className={`font-bold px-1.5 py-0.5 rounded ${proteinPctInBand ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
@@ -1384,6 +1509,14 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                               <SummaryCard icon={<CubeIcon className="w-7 h-7 text-slate-500" />} label="Volume Total (Componentes)" value={totalComponentVolume.toFixed(0)} unit="mL" />
                               <SummaryCard icon={<FireIcon className="w-7 h-7 text-orange-500" />} label="Kcal Totais" value={totalCalories.toFixed(0)} unit="kcal" />
                               <SummaryCard icon={<SparklesIcon className="w-7 h-7 text-purple-500" />} label="Osmolaridade Estimada" value={osmolarityCalculations.totalOsmolarity.toFixed(0)} unit="mOsm/L" />
+                              {metaEnergetica.meta && ofertaEnergetica.hasData && (
+                                <SummaryCard
+                                  icon={<FireIcon className={`w-7 h-7 ${ofertaEnergetica.status === 'dentro' ? 'text-green-500' : ofertaEnergetica.status === 'abaixo' ? 'text-amber-500' : 'text-red-500'}`} />}
+                                  label={`Meta Energética (${metaEnergetica.meta.min.toFixed(0)}–${metaEnergetica.meta.max.toFixed(0)} kcal/kg/d)`}
+                                  value={ofertaEnergetica.kcalKgDia.toFixed(1)}
+                                  unit={`kcal/kg/d · ${ofertaEnergetica.status === 'dentro' ? 'dentro' : ofertaEnergetica.status === 'abaixo' ? 'abaixo' : 'acima'}`}
+                                />
+                              )}
                             </div>
                         </div>
                         {/* Alerta: TIG fora da faixa da fase metabólica */}
@@ -1425,6 +1558,41 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                             )}
                                             {tigEvaluation.isNeonate && (
                                                 <li>Paciente com menos de 28 dias: a faixa usada é a de lactentes — confirme com o protocolo neonatal.</li>
+                                            )}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {/* Alerta: oferta calórica fora da meta energética */}
+                        {metaEnergetica.meta && ofertaEnergetica.hasData && ofertaEnergetica.status !== 'dentro' && (
+                            <div className={`border-l-4 p-4 rounded-md shadow-sm ${ofertaEnergetica.status === 'acima' ? 'bg-red-50 border-red-500 text-red-800' : 'bg-amber-50 border-amber-500 text-amber-800'}`} role="alert">
+                                <div className="flex">
+                                    <div className="py-1"><WarningIcon className={`h-6 w-6 mr-4 ${ofertaEnergetica.status === 'acima' ? 'text-red-500' : 'text-amber-500'}`} /></div>
+                                    <div>
+                                        <p className="font-bold">
+                                            {ofertaEnergetica.status === 'acima' ? 'Atenção: oferta calórica acima da meta energética' : 'Atenção: oferta calórica abaixo da meta energética'}
+                                        </p>
+                                        <p className="text-sm mt-1">
+                                            A prescrição entrega <strong>{ofertaEnergetica.kcalKgDia.toFixed(1)} kcal/kg/d</strong>{' '}
+                                            e a meta recomendada é <strong>{metaEnergetica.meta.min.toFixed(0)}–{metaEnergetica.meta.max.toFixed(0)} kcal/kg/d</strong>{' '}
+                                            ({metaEnergetica.faixaLabel} · {METABOLIC_PHASES[metabolicPhase].short}
+                                            {metaEnergetica.capadaPeloGER && metaEnergetica.gerKcalKgDia !== null && <>, teto no GER de Schofield de {metaEnergetica.gerKcalKgDia.toFixed(0)} kcal/kg/d</>}).
+                                        </p>
+                                        <ul className="text-sm list-disc list-inside mt-2 space-y-1">
+                                            {ratioParaMeta !== null && (
+                                                <li>
+                                                    {ofertaEnergetica.status === 'acima' ? 'Reduza' : 'Aumente'} a relação cal/gN para{' '}
+                                                    {ofertaEnergetica.status === 'acima' ? '≤' : '≥'} <strong>{ratioParaMeta} kcal/g N</strong> (hoje {calorieNitrogenRatio}) — a oferta chega ao limite da meta mantendo a proteína em {aminoAcidDose} g/kg.
+                                                    {(ofertaEnergetica.status === 'acima'
+                                                        ? ratioParaMeta < activeProfile.ratio.min
+                                                        : ratioParaMeta > activeProfile.ratio.max) && (
+                                                        <> Esse valor está fora da faixa de {activeProfile.ratio.min}–{activeProfile.ratio.max} kcal/g N do perfil — reveja o perfil clínico ou a dose de proteína.</>
+                                                    )}
+                                                </li>
+                                            )}
+                                            {ofertaEnergetica.status === 'acima' && metabolicPhase === 'aguda' && (
+                                                <li>Fase aguda: evitar sobrealimentação — cobrir o metabolismo basal sem ultrapassar o GER.</li>
                                             )}
                                         </ul>
                                     </div>

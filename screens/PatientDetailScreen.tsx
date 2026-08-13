@@ -598,6 +598,7 @@ const PatientDetailScreen: React.FC = () => {
                                     name: patient.name,
                                     dob: patient.dob,
                                     peso: patient.peso ?? null,
+                                    sexo: patient.sexo ?? null,
                                 }}
                             />
                         </Suspense>
