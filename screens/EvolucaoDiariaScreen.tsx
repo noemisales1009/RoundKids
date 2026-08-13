@@ -160,6 +160,7 @@ const AVALIACAO_SECTIONS = [
   { id: 'imunologica',    label: '14.11 Avaliação Imunológica' },
   { id: 'neurologica_av', label: '14.12 Avaliação Neurológica' },
   { id: 'psiquiatrica',   label: '14.13 Avaliação Psiquiátrica' },
+  { id: 'cirurgica',      label: 'Avaliação Cirúrgica' },
   { id: 'gerenciamento',  label: '14.14/14.15 Gerenciamento de Riscos' },
   { id: 'eventos',        label: '14.16 Eventos x Notificações' },
   { id: 'outras_av',      label: '14.17 Outras' },
@@ -198,7 +199,8 @@ const SECTION_SISTEMAS: Record<string, string[]> = {
   imunologica:      ['Avaliação imunológica', 'Avaliação reumatológica'],
   neurologica_av:   ['Avaliação neurológica', 'Sedação /Analgesia'],
   psiquiatrica:     ['Avaliação psiquiátrica', 'Avaliação psicológica'],
-  gerenciamento:    ['Gestão de riscos assistenciais', 'Precauções e controle de infecção', 'Avaliação cirúrgica'],
+  cirurgica:        ['Avaliação cirúrgica'],
+  gerenciamento:    ['Gestão de riscos assistenciais', 'Precauções e controle de infecção'],
   eventos:          ['Notificação de eventos adversos'],
   outras_av:        ['Outros', 'Avaliação dermatológica', 'Avaliação odontológica', 'Serviço Social'],
 };
