@@ -8,6 +8,7 @@ interface NPTWrapperProps {
     name: string;
     dob: string;
     peso?: number | null;
+    sexo?: string | null;
   };
 }
 
