@@ -103,6 +103,14 @@ export const LoginScreen: React.FC = () => {
                         .eq('id', userId)
                         .maybeSingle();
 
+                    // Usuário bloqueado pelo administrador (users.ativo = false)
+                    if (existingUser && existingUser.ativo === false) {
+                        await supabase.auth.signOut();
+                        setErrorMessage('Usuário bloqueado. Contate o administrador.');
+                        setLoading(false);
+                        return;
+                    }
+
                     if (!existingUser) {
                         if (!isAllowedDomain(userEmail)) {
                             await supabase.auth.signOut();
@@ -113,13 +121,22 @@ export const LoginScreen: React.FC = () => {
 
                         const userName = session.user.user_metadata?.name || userEmail.split('@')[0];
 
-                        await supabase.from('users').insert({
+                        // access_level precisa respeitar o CHECK users_access_level_check
+                        // (só adm/geral/super); 'restrito' era recusado e o cadastro falhava
+                        const { error: insertError } = await supabase.from('users').insert({
                             id: userId,
                             email: userEmail,
                             name: userName,
                             role: 'pendente',
-                            access_level: 'restrito'
+                            access_level: 'geral'
                         });
+                        if (insertError) {
+                            console.error('Erro ao cadastrar usuário:', insertError);
+                            await supabase.auth.signOut();
+                            setErrorMessage('Não foi possível concluir seu cadastro. Contate o administrador.');
+                            setLoading(false);
+                            return;
+                        }
                     }
                 }
 

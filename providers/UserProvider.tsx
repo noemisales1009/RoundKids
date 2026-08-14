@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { UserContext } from '../contexts';
 import { User } from '../types';
 import { INITIAL_USER } from '../constants';
-import { supabase, consumeManualSignOut } from '../supabaseClient';
+import { supabase, consumeManualSignOut, markManualSignOut } from '../supabaseClient';
 import { sanitizeText } from '../lib/sanitize';
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -74,6 +74,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
                 if (data) {
+                    // Bloqueado pelo administrador (users.ativo = false): derruba a
+                    // sessão salva. markManualSignOut evita a tela de "sessão expirada";
+                    // ao tentar logar de novo, o LoginScreen mostra "Usuário bloqueado".
+                    if (data.ativo === false) {
+                        markManualSignOut();
+                        await supabase.auth.signOut();
+                        setUser(INITIAL_USER);
+                        return;
+                    }
 
                     const dbUser = mapDbUserToAppUser(data);
                     setUser(dbUser);
