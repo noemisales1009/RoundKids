@@ -37,6 +37,7 @@ import { DashboardAnalyticsScreen } from './screens/DashboardAnalyticsScreen';
 // Lazy-loaded screens
 const AlertsHistoryScreen = lazy(() => import('./AlertsHistoryScreen').then(m => ({ default: m.AlertsHistoryScreen })));
 const ArchivedPatientsScreen = lazy(() => import('./ArchivedPatientsScreen').then(m => ({ default: m.ArchivedPatientsScreen })));
+const AdminUsersScreen = lazy(() => import('./screens/AdminUsersScreen').then(m => ({ default: m.AdminUsersScreen })));
 
 // --- LOADING COMPONENT ---
 const LoadingSpinner: React.FC = () => (
@@ -222,6 +223,7 @@ const App: React.FC = () => {
                                             <Route path="status/:status" element={<ErrorBoundary><TaskStatusScreen /></ErrorBoundary>} />
                                             <Route path="history" element={<ErrorBoundary><Suspense fallback={<LoadingSpinner />}><AlertsHistoryScreen useHeader={useHeader} /></Suspense></ErrorBoundary>} />
                                             <Route path="archived" element={<ErrorBoundary><AdminRoute><Suspense fallback={<LoadingSpinner />}><ArchivedPatientsScreen /></Suspense></AdminRoute></ErrorBoundary>} />
+                                            <Route path="admin/usuarios" element={<ErrorBoundary><AdminRoute><Suspense fallback={<LoadingSpinner />}><AdminUsersScreen /></Suspense></AdminRoute></ErrorBoundary>} />
                                             <Route path="evolucao-diaria" element={<ErrorBoundary><EvolucaoDiariaScreen /></ErrorBoundary>} />
                                             <Route path="settings" element={<ErrorBoundary><SettingsScreen /></ErrorBoundary>} />
                                         </Route>
