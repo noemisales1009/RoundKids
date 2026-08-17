@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { DropletIcon } from './icons';
 
+// BH cumulativo desativado temporariamente a pedido da equipe (2026-08-17).
+// Para reexibir o cartão, mude para true. Há a mesma chave na EvolucaoDiariaScreen.
+const MOSTRAR_BH_CUMULATIVO = false;
+
 interface LatestCalculationsCardProps {
   patientId: string | number;
   refreshTrigger?: number;
@@ -211,7 +215,7 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
             </div>
 
             {/* BH Cumulativo - Balanço acumulado */}
-            {balancoCumulativo && balancoCumulativo.registros_24h > 0 ? (
+            {MOSTRAR_BH_CUMULATIVO && balancoCumulativo && balancoCumulativo.registros_24h > 0 ? (
               <div className={`p-4 rounded-lg border ${
                 Math.abs(balancoCumulativo.bh_cumulativo_pct) > 200
                   ? balancoCumulativo.bh_cumulativo_pct > 0

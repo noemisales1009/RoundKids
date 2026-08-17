@@ -185,6 +185,11 @@ const STATUS_CONFIG = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+// BH cumulativo desativado temporariamente a pedido da equipe (2026-08-17):
+// some da seção 9 da tela e do documento gerado. Para reexibir, mude para true.
+// Há a mesma chave no LatestCalculationsCard (cartão da tela do paciente).
+const MOSTRAR_BH_CUMULATIVO = false;
+
 const SECTION_SISTEMAS: Record<string, string[]> = {
   respiratoria:     ['Avaliação respiratória', 'Sist. respiratório'],
   cardiovascular:   ['Avaliação cardiovascular'],
@@ -1039,7 +1044,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       add(`${pct.toFixed(2)}% — ${bhBalance.volume > 0 ? 'Ganho' : 'Perda'} | Volume: ${bhBalance.volume > 0 ? '+' : ''}${bhBalance.volume} mL`);
     }
 
-    if (bhCumul && bhCumul.registros_ultimas_24h > 0) {
+    if (MOSTRAR_BH_CUMULATIVO && bhCumul && bhCumul.registros_ultimas_24h > 0) {
       title('9. BH CUMULATIVO');
       add(`Total: ${bhCumul.bh_cumulativo_total > 0 ? '+' : ''}${bhCumul.bh_cumulativo_total.toFixed(2)}% | BH Anterior: ${bhCumul.bh_historico_antigo.toFixed(2)}% | Últimas 24h: ${bhCumul.bh_ultimas_24h.toFixed(2)}%`);
     }
@@ -1800,7 +1805,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         })()}
       </Section>
 
-      {/* 9. BH Cumulativo */}
+      {/* 9. BH Cumulativo — desativado temporariamente (MOSTRAR_BH_CUMULATIVO) */}
+      {MOSTRAR_BH_CUMULATIVO && (
       <Section title="9. BH Cumulativo" id="bhCumulativo" open={openSections.has('bhCumulativo')} onToggle={() => toggle('bhCumulativo')}>
         {bhLoading ? (
           <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" /></div>
@@ -1830,6 +1836,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           );
         })()}
       </Section>
+      )}
 
       {/* 10. Diurese */}
       <Section title="10. Diurese" id="diurese" open={openSections.has('diurese')} onToggle={() => toggle('diurese')}>
