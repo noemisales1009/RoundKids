@@ -56,39 +56,49 @@ const FAIXAS_PREMATURO: Record<FaseEnergetica, FaixaEnergia & { label: string }>
   recuperacao: { min: 90, max: 120, label: 'recuperação / crescimento' },
 };
 
+
 /* ────────────────────────────────────────────────────────────
-   Meta recomendada
+   Banda da meta energética por fase (fluxo top-down do protocolo)
+
+   Regras validadas com a equipe em 2026-08-19:
+   - AGUDA: faixa da idade CORTADA no GER (meta igual ou abaixo do GER)
+   - ESTÁVEL: alvo = GER exato (a faixa da tabela vira só referência)
+   - RECUPERAÇÃO: faixa da idade, PODE ultrapassar o GER (anabolismo)
+   - PREMATURO: tabela própria, sem Schofield
    ──────────────────────────────────────────────────────────── */
 
-export interface MetaEnergetica {
+export type MetaModo = 'faixa_capada_ger' | 'ger_fixo' | 'faixa_livre' | 'prematuro' | 'indisponivel';
+
+export interface MetaBanda {
   hasData: boolean;
-  /** GER de Schofield em kcal/dia (null p/ prematuro ou sem sexo/idade) */
+  modo: MetaModo;
+  /** Banda selecionável do alvo (kcal/kg/d); em ger_fixo min = max = GER */
+  band: FaixaEnergia | null;
   gerKcalDia: number | null;
   gerKcalKgDia: number | null;
   gerBandLabel: string | null;
-  /** Faixa bruta da tabela idade × fase (kcal/kg/d) */
+  /** Faixa bruta da tabela idade × fase, para referência visual */
   faixa: FaixaEnergia | null;
   faixaLabel: string;
-  /** Meta final recomendada (kcal/kg/d), já com a regra do teto na fase aguda */
-  meta: FaixaEnergia | null;
   capadaPeloGER: boolean;
   isPreterm: boolean;
   avisos: string[];
 }
 
-export function calcularMetaEnergetica(params: {
+export function metaBanda(params: {
   sexo: Sexo | null;
   ageDays: number | null;
   weight: number;
   fase: FaseEnergetica;
   isPreterm: boolean;
-}): MetaEnergetica {
+}): MetaBanda {
   const { sexo, ageDays, weight, fase, isPreterm } = params;
   const avisos: string[] = [];
 
-  const vazio: MetaEnergetica = {
-    hasData: false, gerKcalDia: null, gerKcalKgDia: null, gerBandLabel: null,
-    faixa: null, faixaLabel: '', meta: null, capadaPeloGER: false, isPreterm, avisos,
+  const vazio: MetaBanda = {
+    hasData: false, modo: 'indisponivel', band: null,
+    gerKcalDia: null, gerKcalKgDia: null, gerBandLabel: null,
+    faixa: null, faixaLabel: '', capadaPeloGER: false, isPreterm, avisos,
   };
 
   if (weight <= 0) {
@@ -96,14 +106,14 @@ export function calcularMetaEnergetica(params: {
     return vazio;
   }
 
-  // Prematuro: tabela própria; Schofield não se aplica.
   if (isPreterm) {
     const f = FAIXAS_PREMATURO[fase];
     avisos.push('Prematuro: meta pela tabela de energia parenteral do prematuro — a equação de Schofield não se aplica.');
     return {
-      hasData: true, gerKcalDia: null, gerKcalKgDia: null, gerBandLabel: null,
+      hasData: true, modo: 'prematuro', band: { min: f.min, max: f.max },
+      gerKcalDia: null, gerKcalKgDia: null, gerBandLabel: null,
       faixa: { min: f.min, max: f.max }, faixaLabel: `prematuro · fase ${f.label}`,
-      meta: { min: f.min, max: f.max }, capadaPeloGER: false, isPreterm: true, avisos,
+      capadaPeloGER: false, isPreterm: true, avisos,
     };
   }
 
@@ -117,48 +127,54 @@ export function calcularMetaEnergetica(params: {
   const faixa = banda.ranges[fase];
 
   const ger = schofieldGER(sexo, ageYears, weight);
-  if (!ger) avisos.push('Informe o sexo para calcular o GER de Schofield.');
   const gerKcalKgDia = ger ? ger.kcalDia / weight : null;
 
-  // Regra do teto: só na fase aguda a meta é limitada pelo GER.
-  let meta: FaixaEnergia = { ...faixa };
-  let capadaPeloGER = false;
-  if (fase === 'aguda' && gerKcalKgDia !== null && gerKcalKgDia < faixa.max) {
-    capadaPeloGER = true;
-    meta = { min: Math.min(faixa.min, gerKcalKgDia), max: gerKcalKgDia };
-    avisos.push(`Fase aguda: não ultrapassar o GER de Schofield (${gerKcalKgDia.toFixed(0)} kcal/kg/d) — teto aplicado à meta.`);
-  }
-
-  return {
+  const base: Omit<MetaBanda, 'modo' | 'band' | 'capadaPeloGER'> = {
     hasData: true,
     gerKcalDia: ger?.kcalDia ?? null,
     gerKcalKgDia,
     gerBandLabel: ger?.bandLabel ?? null,
     faixa, faixaLabel: banda.label,
-    meta, capadaPeloGER, isPreterm: false, avisos,
+    isPreterm: false, avisos,
   };
+
+  if (fase === 'estavel') {
+    // Alvo = GER exato; sem sexo não há GER — cai na faixa da tabela com aviso forte
+    if (gerKcalKgDia !== null) {
+      return { ...base, modo: 'ger_fixo', band: { min: gerKcalKgDia, max: gerKcalKgDia }, capadaPeloGER: false };
+    }
+    avisos.push('Fase estável: o alvo é o GER de Schofield — informe o sexo. Usando a faixa da tabela provisoriamente.');
+    return { ...base, modo: 'faixa_livre', band: { ...faixa }, capadaPeloGER: false };
+  }
+
+  if (fase === 'aguda') {
+    if (gerKcalKgDia !== null && gerKcalKgDia < faixa.max) {
+      avisos.push(`Fase aguda: meta igual ou abaixo do GER de Schofield (${gerKcalKgDia.toFixed(0)} kcal/kg/d) — teto aplicado.`);
+      return {
+        ...base, modo: 'faixa_capada_ger',
+        band: { min: Math.min(faixa.min, gerKcalKgDia), max: gerKcalKgDia },
+        capadaPeloGER: true,
+      };
+    }
+    if (gerKcalKgDia === null) avisos.push('Informe o sexo para aplicar o teto do GER na fase aguda.');
+    return { ...base, modo: 'faixa_capada_ger', band: { ...faixa }, capadaPeloGER: false };
+  }
+
+  // Recuperação: faixa da idade, pode ultrapassar o GER (anabolismo/crescimento)
+  return { ...base, modo: 'faixa_livre', band: { ...faixa }, capadaPeloGER: false };
 }
 
 /* ────────────────────────────────────────────────────────────
-   Avaliação da oferta calculada contra a meta
+   Relação CNP/gN derivada (indicador de qualidade, não alavanca)
+
+   ratio = CNP/N, com CNP = M − 4g e N = g/6,25  →  ratio = 6,25·M/g − 25
+   Invertendo: g = 6,25·M/(ratio + 25) — usada para sugerir a dose de
+   proteína que leva a relação para dentro da faixa do perfil clínico.
    ──────────────────────────────────────────────────────────── */
 
-export type OfertaStatus = 'dentro' | 'abaixo' | 'acima';
-
-export interface OfertaAvaliacao {
-  hasData: boolean;
-  kcalKgDia: number;
-  status: OfertaStatus;
-}
-
-/** Compara as calorias totais entregues (kcal/dia, incluindo proteína) com a meta. */
-export function avaliarOferta(totalCalories: number, weight: number, meta: FaixaEnergia | null): OfertaAvaliacao {
-  if (weight <= 0 || totalCalories <= 0 || !meta) {
-    return { hasData: false, kcalKgDia: 0, status: 'dentro' };
-  }
-  const kcalKgDia = totalCalories / weight;
-  // Limites inclusivos, avaliados sobre o valor arredondado exibido na tela
-  const v = Math.round(kcalKgDia * 10) / 10;
-  const status: OfertaStatus = v > Math.round(meta.max * 10) / 10 ? 'acima' : v < Math.round(meta.min * 10) / 10 ? 'abaixo' : 'dentro';
-  return { hasData: true, kcalKgDia, status };
+/** Gramas de aminoácido que produzem a relação alvo, dada a meta total (kcal/dia). */
+export function gramasParaRelacao(metaKcalDia: number, relacaoAlvo: number): number | null {
+  if (metaKcalDia <= 0 || relacaoAlvo <= -25) return null;
+  const g = (6.25 * metaKcalDia) / (relacaoAlvo + 25);
+  return g > 0 ? g : null;
 }
