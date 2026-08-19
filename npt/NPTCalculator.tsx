@@ -9,7 +9,7 @@ import { PDFReport } from './components/PDFReport';
 import type { AlternativeCalculations, OsmolarityCalculations } from './components/PDFReport';
 import { saveNPTCalculation } from './services/database';
 import { UserContext } from '../contexts';
-import { avaliarOferta, calcularMetaEnergetica, type MetaEnergetica, type OfertaAvaliacao, type Sexo } from './energyTargets';
+import { gramasParaRelacao, metaBanda, type MetaBanda, type Sexo } from './energyTargets';
 
 declare global {
   interface Window {
@@ -164,7 +164,7 @@ const PharmacyPrescription: React.FC<PharmacyPrescriptionProps> = ({ reportData,
         totalCalories, caloricDistribution,
         aminoAcidDose, lipidDose, sodiumDose, potassiumDose,
         calciumDose, magnesiumDose, phosphorusDose,
-        calorieNitrogenRatio, idealWeight, lipidPercent, tigEvaluation, energyEvaluation
+        calorieNitrogenRatio, idealWeight, lipidPercent, tigEvaluation, energyPlan
     } = reportData;
 
     const generatedDate = new Date().toLocaleDateString('pt-BR');
@@ -287,7 +287,7 @@ const PharmacyPrescription: React.FC<PharmacyPrescriptionProps> = ({ reportData,
                         <p><strong>Cálcio:</strong> {calciumDose} mEq/kg</p>
                         <p><strong>Magnésio:</strong> {magnesiumDose} mEq/kg</p>
                         <p><strong>Fósforo:</strong> {phosphorusDose} mEq/kg</p>
-                        <p><strong>Cal/gN:</strong> {calorieNitrogenRatio}</p>
+                        <p><strong>Relação CNP/gN:</strong> {Math.round(calorieNitrogenRatio)} (faixa {energyPlan.ratioEvaluation.range.min}–{energyPlan.ratioEvaluation.range.max})</p>
                         <p><strong>Meta hídrica:</strong> {hydrationTarget} mL/m² ({hydrationByBSA.toFixed(0)} mL)</p>
                     </div>
 
@@ -310,15 +310,16 @@ const PharmacyPrescription: React.FC<PharmacyPrescriptionProps> = ({ reportData,
                         </div>
                     </div>
                     
-                    {energyEvaluation.meta.meta && (
+                    {energyPlan.metaEfetivaKgDia !== null && (
                         <div className="mb-2 pt-1.5 border-t border-slate-300 text-center">
                             <p>
-                                <strong>META ENERGÉTICA:</strong> {energyEvaluation.meta.meta.min.toFixed(0)}–{energyEvaluation.meta.meta.max.toFixed(0)} kcal/kg/d
-                                ({(energyEvaluation.meta.meta.min * weight).toFixed(0)}–{(energyEvaluation.meta.meta.max * weight).toFixed(0)} kcal/dia)
-                                {energyEvaluation.meta.gerKcalDia !== null && <> · GER Schofield {energyEvaluation.meta.gerKcalDia.toFixed(0)} kcal/dia</>}
-                                {energyEvaluation.meta.capadaPeloGER && <> · teto = GER (fase aguda)</>}
-                                {energyEvaluation.oferta.hasData && (
-                                    <strong> — Oferta: {energyEvaluation.oferta.kcalKgDia.toFixed(1)} kcal/kg/d ({energyEvaluation.oferta.status === 'dentro' ? 'DENTRO DA META' : energyEvaluation.oferta.status === 'abaixo' ? 'ABAIXO DA META' : 'ACIMA DA META'})</strong>
+                                <strong>META ENERGÉTICA:</strong> {energyPlan.metaEfetivaKgDia.toFixed(0)} kcal/kg/d ({energyPlan.totalCaloriesTarget.toFixed(0)} kcal/dia)
+                                {energyPlan.metaInfo.gerKcalDia !== null && <> · GER Schofield {energyPlan.metaInfo.gerKcalDia.toFixed(0)} kcal/dia</>}
+                                {energyPlan.metaInfo.modo === 'ger_fixo' && <> · fase estável = GER</>}
+                                {energyPlan.metaInfo.capadaPeloGER && <> · teto = GER (fase aguda)</>}
+                                {energyPlan.metaInfo.modo === 'prematuro' && <> · tabela do prematuro</>}
+                                {energyPlan.ratioEvaluation.hasData && (
+                                    <strong> — Relação CNP/gN: {energyPlan.ratioEvaluation.ratio} ({energyPlan.ratioEvaluation.status === 'dentro' ? 'DENTRO DA FAIXA' : energyPlan.ratioEvaluation.status === 'abaixo' ? 'ABAIXO DA FAIXA' : 'ACIMA DA FAIXA'} {energyPlan.ratioEvaluation.range.min}–{energyPlan.ratioEvaluation.range.max})</strong>
                                 )}
                             </p>
                         </div>
@@ -501,7 +502,8 @@ const useAppCalculations = (
     aminoAcidDose: number,
     lipidPercent: number,
     metabolicPhase: MetabolicPhaseKey,
-    calorieNitrogenRatio: number,
+    metaAlvoKgDia: number | null,          // alvo escolhido (kcal/kg/d); null = automático (meio da banda)
+    ratioRange: { min: number; max: number }, // faixa de referência CNP/gN do perfil clínico
     hydrationTarget: number,
     proteinConcentration: number,
     lipidConcentration: number,
@@ -533,11 +535,71 @@ const useAppCalculations = (
         return { totalGrams, volume, calories, nitrogen };
     }, [proteinReferenceWeight, aminoAcidDose, proteinConcentration]);
 
-    // Calorias não proteicas = g de N × relação kcal/g N, distribuídas entre glicose e lipídios
-    const nonProteinCalories = useMemo(
-        () => aminoAcidCalculations.nitrogen * calorieNitrogenRatio,
-        [aminoAcidCalculations.nitrogen, calorieNitrogenRatio]
+    // Idade em dias: usada pela meta energética e pela tabela de TIG.
+    // A data de hoje é fixada na montagem para a idade não mudar durante a edição.
+    const [today] = useState(() => new Date());
+    const ageInDays = useMemo(() => {
+        if (!dateOfBirth) return null;
+        const dob = new Date(dateOfBirth.replace(/-/g, '/'));
+        if (Number.isNaN(dob.getTime())) return null;
+        const days = Math.floor((today.getTime() - dob.getTime()) / 86400000);
+        return days >= 0 ? days : null;
+    }, [dateOfBirth, today]);
+
+    // ── Fluxo top-down do protocolo (2026-08-19) ────────────────────────────
+    // 1. GER (Schofield) → banda da meta por fase (aguda ≤ GER, estável = GER,
+    //    recuperação livre, prematuro tabela própria)
+    const metaInfo = useMemo<MetaBanda>(
+        () => metaBanda({ sexo, ageDays: ageInDays, weight, fase: metabolicPhase, isPreterm }),
+        [sexo, ageInDays, weight, metabolicPhase, isPreterm]
     );
+
+    // 2. Alvo efetivo: escolha do usuário presa à banda; sem escolha, meio da banda
+    const metaEfetivaKgDia = useMemo(() => {
+        const b = metaInfo.band;
+        if (!b) return null;
+        const desejado = metaAlvoKgDia ?? (b.min + b.max) / 2;
+        return Math.min(Math.max(desejado, b.min), b.max);
+    }, [metaInfo.band, metaAlvoKgDia]);
+
+    const totalCaloriesTarget = useMemo(
+        () => (metaEfetivaKgDia !== null && weight > 0 ? metaEfetivaKgDia * weight : 0),
+        [metaEfetivaKgDia, weight]
+    );
+
+    // 3. Calorias não proteicas = o que RESTA da meta após a proteína
+    const nonProteinCalories = useMemo(
+        () => Math.max(0, totalCaloriesTarget - aminoAcidCalculations.calories),
+        [totalCaloriesTarget, aminoAcidCalculations.calories]
+    );
+
+    // 6. Relação CNP/gN vira indicador calculado, conferido contra a faixa do perfil
+    const calorieNitrogenRatio = useMemo(
+        () => (aminoAcidCalculations.nitrogen > 0 ? nonProteinCalories / aminoAcidCalculations.nitrogen : 0),
+        [nonProteinCalories, aminoAcidCalculations.nitrogen]
+    );
+
+    const ratioEvaluation = useMemo(() => {
+        const ratio = Math.round(calorieNitrogenRatio);
+        const hasData = totalCaloriesTarget > 0 && aminoAcidCalculations.nitrogen > 0;
+        const status: 'dentro' | 'acima' | 'abaixo' = !hasData ? 'dentro'
+            : ratio > ratioRange.max ? 'acima' : ratio < ratioRange.min ? 'abaixo' : 'dentro';
+
+        // Dose de proteína que traria a relação para o limite da faixa, mantendo a meta
+        let suggestedDose: number | null = null;
+        if (hasData && status !== 'dentro' && proteinReferenceWeight > 0) {
+            const alvoRelacao = status === 'acima' ? ratioRange.max : ratioRange.min;
+            const g = gramasParaRelacao(totalCaloriesTarget, alvoRelacao);
+            if (g !== null) {
+                const dose = Math.round((g / proteinReferenceWeight) * 10) / 10;
+                if (dose > 0) suggestedDose = dose;
+            }
+        }
+        return { ratio, hasData, status, range: ratioRange, suggestedDose };
+    }, [calorieNitrogenRatio, totalCaloriesTarget, aminoAcidCalculations.nitrogen, ratioRange, proteinReferenceWeight]);
+
+    // Proteína sozinha já estoura a meta (dose alta × meta baixa): CNP zeraria
+    const proteinExceedsTarget = totalCaloriesTarget > 0 && aminoAcidCalculations.calories >= totalCaloriesTarget;
 
     const lipidCalculations = useMemo(() => {
         const calories = nonProteinCalories * (lipidPercent / 100);
@@ -608,20 +670,9 @@ const useAppCalculations = (
         return { totalGrams, calories, tig, targetNonProteinCalories: nonProteinCalories };
     }, [nonProteinCalories, lipidPercent, weight]);
 
-    // Idade em dias: a tabela de TIG vale a partir de 28 dias de vida.
-    // A data de hoje é fixada na montagem para a idade não mudar durante a edição.
-    const [today] = useState(() => new Date());
-    const ageInDays = useMemo(() => {
-        if (!dateOfBirth) return null;
-        const dob = new Date(dateOfBirth.replace(/-/g, '/'));
-        if (Number.isNaN(dob.getTime())) return null;
-        const days = Math.floor((today.getTime() - dob.getTime()) / 86400000);
-        return days >= 0 ? days : null;
-    }, [dateOfBirth, today]);
-
-    // TIG confrontada com a faixa do protocolo (faixa de peso × fase metabólica).
-    // Quando fica fora, calcula o ajuste necessário pelo percentual de lipídios ou
-    // pela relação cal/gN, que são o que muda a oferta de glicose.
+    // 5. TIG confrontada com a faixa do protocolo (faixa de peso × fase metabólica).
+    // Quando fica fora, o ajuste é pelo percentual de lipídios (redistribui as CNP);
+    // se nem o extremo de lipídios resolver, sugere mover a META dentro da banda.
     const tigEvaluation = useMemo(() => {
         const band = TIG_REFERENCE.find(b => weight <= b.maxWeight) ?? TIG_REFERENCE[TIG_REFERENCE.length - 1];
         const range = band.ranges[metabolicPhase];
@@ -629,43 +680,51 @@ const useAppCalculations = (
         const tig = Math.round(glucoseCalculations.tig * 100) / 100;
         const status: TigStatus = tig > range.max ? 'acima' : tig < range.min ? 'abaixo' : 'dentro';
 
-        // % de lipídios que levaria a TIG ao limite, mantendo proteína e relação cal/gN
+        // % de lipídios que levaria a TIG ao limite, mantendo a meta e a proteína
         const lipidPercentForTig = (targetTig: number) => {
             if (nonProteinCalories <= 0 || weight <= 0) return null;
             const glucoseGrams = (targetTig * weight * 1440) / 1000;
             return 100 - ((glucoseGrams * 3.4) / nonProteinCalories) * 100;
         };
 
-        // Relação cal/gN máxima/mínima com os lipídios no extremo permitido da faixa
-        const ratioForTig = (targetTig: number, atLipidPercent: number) => {
-            const nitrogen = aminoAcidCalculations.nitrogen;
-            if (nitrogen <= 0 || weight <= 0) return null;
+        // Meta (kcal/kg/d) que leva a TIG ao limite com os lipídios no extremo da faixa
+        const metaForTig = (targetTig: number, atLipidPercent: number) => {
+            if (weight <= 0) return null;
             const glucoseGrams = (targetTig * weight * 1440) / 1000;
-            const targetNonProteinCalories = (glucoseGrams * 3.4) / ((100 - atLipidPercent) / 100);
-            return targetNonProteinCalories / nitrogen;
+            const cnp = (glucoseGrams * 3.4) / ((100 - atLipidPercent) / 100);
+            return (cnp + aminoAcidCalculations.calories) / weight;
         };
 
         let suggestedLipidPercent: number | null = null;
-        let suggestedRatio: number | null = null;
+        let suggestedMeta: number | null = null;   // kcal/kg/d, já preso à banda da meta
+        let metaLimitada = false;                  // banda não alcança a TIG (ex.: estável = GER fixo)
 
+        const bandMeta = metaInfo.band;
         if (status === 'acima') {
             const raw = lipidPercentForTig(range.max);
             const pct = raw === null ? null : Math.ceil(raw);
             if (pct !== null && pct <= LIPID_PERCENT_RANGE.max) {
                 suggestedLipidPercent = pct;
-            } else {
-                // Nem o teto de lipídios resolve: a relação cal/gN precisa cair
-                const ratio = ratioForTig(range.max, LIPID_PERCENT_RANGE.max);
-                if (ratio !== null && ratio > 0) suggestedRatio = Math.floor(ratio / 5) * 5;
+            } else if (bandMeta) {
+                const m = metaForTig(range.max, LIPID_PERCENT_RANGE.max);
+                if (m !== null) {
+                    const clamped = Math.max(m, bandMeta.min);
+                    if (clamped < (metaEfetivaKgDia ?? Infinity) && clamped >= bandMeta.min) suggestedMeta = Math.floor(clamped);
+                    metaLimitada = m < bandMeta.min;
+                }
             }
         } else if (status === 'abaixo') {
             const raw = lipidPercentForTig(range.min);
             const pct = raw === null ? null : Math.floor(raw);
             if (pct !== null && pct >= LIPID_PERCENT_RANGE.min) {
                 suggestedLipidPercent = pct;
-            } else {
-                const ratio = ratioForTig(range.min, LIPID_PERCENT_RANGE.min);
-                if (ratio !== null && ratio > 0) suggestedRatio = Math.ceil(ratio / 5) * 5;
+            } else if (bandMeta) {
+                const m = metaForTig(range.min, LIPID_PERCENT_RANGE.min);
+                if (m !== null) {
+                    const clamped = Math.min(m, bandMeta.max);
+                    if (clamped > (metaEfetivaKgDia ?? 0) && clamped <= bandMeta.max) suggestedMeta = Math.ceil(clamped);
+                    metaLimitada = m > bandMeta.max;
+                }
             }
         }
 
@@ -680,10 +739,11 @@ const useAppCalculations = (
             phaseLabel: METABOLIC_PHASES[metabolicPhase].label,
             phaseShort: METABOLIC_PHASES[metabolicPhase].short,
             suggestedLipidPercent,
-            suggestedRatio,
+            suggestedMeta,
+            metaLimitada,
             isNeonate: ageInDays !== null && ageInDays < NEONATAL_AGE_LIMIT_DAYS,
         };
-    }, [weight, metabolicPhase, glucoseCalculations.tig, nonProteinCalories, aminoAcidCalculations.nitrogen, ageInDays]);
+    }, [weight, metabolicPhase, glucoseCalculations.tig, nonProteinCalories, aminoAcidCalculations.calories, ageInDays, metaInfo.band, metaEfetivaKgDia]);
 
     const totalComponentVolume = useMemo(() => nonGlucoseVolume + (volumeToComplete > 0 ? volumeToComplete : 0), [nonGlucoseVolume, volumeToComplete]);
     
@@ -716,14 +776,14 @@ const useAppCalculations = (
     
     const totalCalories = useMemo(() => aminoAcidCalculations.calories + lipidCalculations.calories + glucoseCalculations.calories, [aminoAcidCalculations, lipidCalculations, glucoseCalculations]);
 
-    // Meta energética: GER por Schofield × faixa da idade × fase clínica.
-    // Na fase aguda a meta é capada pelo GER (não sobrealimentar); nas demais
-    // fases o GER é referência. Prematuro usa a tabela própria, sem Schofield.
-    const energyEvaluation = useMemo<{ meta: MetaEnergetica; oferta: OfertaAvaliacao }>(() => {
-        const meta = calcularMetaEnergetica({ sexo, ageDays: ageInDays, weight, fase: metabolicPhase, isPreterm });
-        const oferta = avaliarOferta(totalCalories, weight, meta.meta);
-        return { meta, oferta };
-    }, [sexo, ageInDays, weight, metabolicPhase, isPreterm, totalCalories]);
+    // Consolidado do fluxo top-down para a UI, o PDF e a gravação
+    const energyPlan = useMemo(() => ({
+        metaInfo,
+        metaEfetivaKgDia,
+        totalCaloriesTarget,
+        ratioEvaluation,
+        proteinExceedsTarget,
+    }), [metaInfo, metaEfetivaKgDia, totalCaloriesTarget, ratioEvaluation, proteinExceedsTarget]);
     
     // Distribuição das calorias totais (informativa; a distribuição das não proteicas é fixada pelo percentual escolhido)
     const caloricDistribution = useMemo(() => {
@@ -867,7 +927,7 @@ const useAppCalculations = (
             electrolyteConcentrations,
             precipitationWarnings,
             tigEvaluation,
-            energyEvaluation,
+            energyPlan,
         }
     };
 };
@@ -908,7 +968,8 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
     const [aminoAcidDose, setAminoAcidDose] = useState(2.0); // g/kg
     const [lipidPercent, setLipidPercent] = useState(35); // % das calorias não proteicas
     const [metabolicPhase, setMetabolicPhase] = useState<MetabolicPhaseKey>('estavel'); // define a faixa de TIG
-    const [calorieNitrogenRatio, setCalorieNitrogenRatio] = useState(150); // Relação Cal/gN
+    // Alvo da meta energética (kcal/kg/d); null = automático (meio da banda da fase)
+    const [metaAlvo, setMetaAlvo] = useState<number | null>(null);
     const [hydrationTarget, setHydrationTarget] = useState(1500); // mL/m²
 
     const [proteinConcentration, setProteinConcentration] = useState(10); // %
@@ -939,20 +1000,20 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
     
     const activeProfile = CLINICAL_PROFILES[clinicalProfile];
 
-    // Ao trocar de perfil, proteína e relação são mantidas dentro das novas faixas
-    // e a fase metabólica assume a sugestão do perfil (ainda editável pelo usuário)
+    // Ao trocar de perfil, a proteína é mantida dentro da nova faixa, a fase
+    // metabólica assume a sugestão do perfil e a meta volta ao automático
     const handleProfileChange = (key: ClinicalProfileKey) => {
         setClinicalProfile(key);
         const p = CLINICAL_PROFILES[key];
         setAminoAcidDose(prev => Math.min(Math.max(prev, p.protein.min), p.protein.max));
-        setCalorieNitrogenRatio(prev => Math.min(Math.max(prev, p.ratio.min), p.ratio.max));
         setMetabolicPhase(PROFILE_DEFAULT_PHASE[key]);
+        setMetaAlvo(null);
     };
 
     const { reportData } = useAppCalculations(
         patientName,
         dateOfBirth,
-        weight, idealWeight, aminoAcidDose, lipidPercent, metabolicPhase, calorieNitrogenRatio, hydrationTarget,
+        weight, idealWeight, aminoAcidDose, lipidPercent, metabolicPhase, metaAlvo, activeProfile.ratio, hydrationTarget,
         proteinConcentration, lipidConcentration, glucoseSources,
         sodiumDose, potassiumDose, calciumDose, magnesiumDose, phosphorusDose, phosphorusSource,
         sexo, clinicalProfile === 'estavel_prematuro'
@@ -964,29 +1025,16 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
       phosphorusCalculations, finalAminoAcidConcentrationInBag, finalGlucoseConcentrationInBag,
       glucoseMixtureTargetConcentration, glucoseMixtureCalculations, caloricDistribution,
       osmolarityCalculations, oligoelementosVolume, vitaminsVolume,
-      electrolyteConcentrations, precipitationWarnings, tigEvaluation, energyEvaluation,
+      electrolyteConcentrations, precipitationWarnings, tigEvaluation, energyPlan,
+      calorieNitrogenRatio,
     } = reportData;
 
-    const metaEnergetica = energyEvaluation.meta;
-    const ofertaEnergetica = energyEvaluation.oferta;
-    const OFERTA_STYLES: Record<'dentro' | 'abaixo' | 'acima', string> = {
+    const { metaInfo, metaEfetivaKgDia, ratioEvaluation, proteinExceedsTarget } = energyPlan;
+    const RATIO_STYLES: Record<'dentro' | 'abaixo' | 'acima', string> = {
         dentro: 'bg-green-100 text-green-700',
         abaixo: 'bg-amber-100 text-amber-700',
         acima: 'bg-red-100 text-red-700',
     };
-
-    // Relação cal/gN que leva a oferta ao limite da meta, mantendo a proteína atual
-    // (as calorias totais = proteína + nitrogênio × relação; só a relação é mexida)
-    const ratioParaMeta = useMemo<number | null>(() => {
-        if (!metaEnergetica.meta || !ofertaEnergetica.hasData || ofertaEnergetica.status === 'dentro') return null;
-        const nitrogen = aminoAcidCalculations.nitrogen;
-        if (nitrogen <= 0 || weight <= 0) return null;
-        const alvoKcalDia = (ofertaEnergetica.status === 'acima' ? metaEnergetica.meta.max : metaEnergetica.meta.min) * weight;
-        const cnp = alvoKcalDia - aminoAcidCalculations.calories;
-        if (cnp <= 0) return null;
-        const ratio = cnp / nitrogen;
-        return ofertaEnergetica.status === 'acima' ? Math.floor(ratio / 5) * 5 : Math.ceil(ratio / 5) * 5;
-    }, [metaEnergetica, ofertaEnergetica, aminoAcidCalculations, weight]);
 
     // Indicadores informativos com limites inclusivos (15 e 20 contam como dentro da faixa),
     // avaliados sobre o valor arredondado que é exibido na tela
@@ -1066,7 +1114,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                 date_of_birth: dateOfBirth,
                 amino_acid_dose: aminoAcidDose,
                 lipid_dose: reportData.lipidDose,
-                calorie_nitrogen_ratio: calorieNitrogenRatio,
+                calorie_nitrogen_ratio: Math.round(calorieNitrogenRatio),
                 clinical_profile: CLINICAL_PROFILES[clinicalProfile].label,
                 ideal_weight: idealWeight > 0 ? idealWeight : null,
                 lipid_percent: lipidPercent,
@@ -1141,7 +1189,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
     const handleReset = () => {
         setPatientName(''); setDateOfBirth(''); setWeight(10);
         setClinicalProfile('estavel_crianca'); setIdealWeight(0); setMetabolicPhase('estavel');
-        setAminoAcidDose(2.0); setLipidPercent(35); setCalorieNitrogenRatio(150);
+        setAminoAcidDose(2.0); setLipidPercent(35); setMetaAlvo(null);
         setHydrationTarget(1500); setProteinConcentration(10); setLipidConcentration(20);
         setSodiumDose(2.0); setPotassiumDose(2.0); setCalciumDose(1.0);
         setMagnesiumDose(0.5); setPhosphorusDose(0.5); setPhosphorusSource('sodium');
@@ -1230,7 +1278,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                     <label className="block text-xs font-medium text-slate-600 mb-1">Fase metabólica (define a faixa de TIG)</label>
                                     <select
                                         value={metabolicPhase}
-                                        onChange={(e) => setMetabolicPhase(e.target.value as MetabolicPhaseKey)}
+                                        onChange={(e) => { setMetabolicPhase(e.target.value as MetabolicPhaseKey); setMetaAlvo(null); }}
                                         className="w-full bg-white text-slate-800 p-2 border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                     >
                                         {(Object.keys(METABOLIC_PHASES) as MetabolicPhaseKey[]).map((key) => (
@@ -1248,44 +1296,51 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                     )}
                                 </div>
 
-                                {/* Meta energética: GER (Schofield) × faixa da idade × fase */}
+                                {/* Passo 1-2 do protocolo: GER (Schofield) → meta da fase */}
                                 <div className="bg-slate-50 rounded-lg p-3 ring-1 ring-slate-200 space-y-1 text-xs">
-                                    <p className="font-bold text-slate-600 uppercase tracking-wide mb-1">Meta Energética</p>
-                                    {metaEnergetica.gerKcalDia !== null && metaEnergetica.gerKcalKgDia !== null && (
+                                    <p className="font-bold text-slate-600 uppercase tracking-wide mb-1">1º — Meta Energética (GER × fase)</p>
+                                    {metaInfo.gerKcalDia !== null && metaInfo.gerKcalKgDia !== null && (
                                         <div className="flex justify-between gap-2">
-                                            <span className="text-slate-600">GER — Schofield ({metaEnergetica.gerBandLabel}, {sexo === 'M' ? 'masc.' : 'fem.'})</span>
-                                            <span className="font-semibold text-slate-800 text-right">{metaEnergetica.gerKcalDia.toFixed(0)} kcal/dia · {metaEnergetica.gerKcalKgDia.toFixed(0)} kcal/kg/d</span>
+                                            <span className="text-slate-600">GER — Schofield ({metaInfo.gerBandLabel}, {sexo === 'M' ? 'masc.' : 'fem.'})</span>
+                                            <span className="font-semibold text-slate-800 text-right">{metaInfo.gerKcalDia.toFixed(0)} kcal/dia · {metaInfo.gerKcalKgDia.toFixed(0)} kcal/kg/d</span>
                                         </div>
                                     )}
-                                    {metaEnergetica.faixa && (
+                                    {metaInfo.faixa && metaInfo.modo !== 'prematuro' && (
                                         <div className="flex justify-between gap-2">
-                                            <span className="text-slate-600">Faixa da fase ({metaEnergetica.faixaLabel} · {METABOLIC_PHASES[metabolicPhase].short})</span>
-                                            <span className="font-semibold text-slate-800 text-right">{metaEnergetica.faixa.min}–{metaEnergetica.faixa.max} kcal/kg/d</span>
+                                            <span className="text-slate-600">Faixa da tabela ({metaInfo.faixaLabel} · {METABOLIC_PHASES[metabolicPhase].short})</span>
+                                            <span className="font-semibold text-slate-800 text-right">{metaInfo.faixa.min}–{metaInfo.faixa.max} kcal/kg/d</span>
                                         </div>
                                     )}
-                                    {metaEnergetica.meta && (
-                                        <div className="flex justify-between gap-2 border-t border-slate-200 pt-1">
-                                            <span className="text-slate-600 font-semibold">Meta recomendada{metaEnergetica.capadaPeloGER ? ' (teto = GER)' : ''}</span>
-                                            <span className="font-bold text-slate-800 text-right">
-                                                {metaEnergetica.meta.min.toFixed(0)}–{metaEnergetica.meta.max.toFixed(0)} kcal/kg/d
-                                                {weight > 0 && <> · {(metaEnergetica.meta.min * weight).toFixed(0)}–{(metaEnergetica.meta.max * weight).toFixed(0)} kcal/dia</>}
-                                            </span>
-                                        </div>
-                                    )}
-                                    {metaEnergetica.meta && ofertaEnergetica.hasData && (
-                                        <div className="flex justify-between gap-2">
-                                            <span className="text-slate-600">Oferta atual da prescrição</span>
-                                            <span className="font-semibold text-slate-800 text-right">
-                                                <span className={`font-bold px-1 rounded ${OFERTA_STYLES[ofertaEnergetica.status]}`}>{ofertaEnergetica.kcalKgDia.toFixed(1)}</span>
-                                                {' '}kcal/kg/d · {ofertaEnergetica.status === 'dentro' ? 'dentro da meta' : ofertaEnergetica.status === 'abaixo' ? 'abaixo da meta' : 'acima da meta'}
-                                            </span>
-                                        </div>
-                                    )}
-                                    {metaEnergetica.avisos.map((a, i) => (
+                                    {metaInfo.avisos.map((a, i) => (
                                         <p key={i} className="text-amber-700 font-medium pt-0.5">⚠️ {a}</p>
                                     ))}
-                                    {!metaEnergetica.hasData && metaEnergetica.avisos.length === 0 && (
+                                    {!metaInfo.hasData && metaInfo.avisos.length === 0 && (
                                         <p className="text-slate-500">Preencha peso, data de nascimento e sexo para calcular a meta.</p>
+                                    )}
+
+                                    {metaInfo.band && metaEfetivaKgDia !== null && (
+                                        metaInfo.modo === 'ger_fixo' ? (
+                                            <div className="flex justify-between gap-2 border-t border-slate-200 pt-1">
+                                                <span className="text-slate-600 font-semibold">Meta da fase estável (= GER)</span>
+                                                <span className="font-bold text-slate-800 text-right">
+                                                    {metaEfetivaKgDia.toFixed(0)} kcal/kg/d · {(metaEfetivaKgDia * weight).toFixed(0)} kcal/dia
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <div className="border-t border-slate-200 pt-2">
+                                                <RangeSliderInput
+                                                    label={`Meta alvo (banda ${metaInfo.band.min.toFixed(0)}–${metaInfo.band.max.toFixed(0)} kcal/kg/d${metaInfo.capadaPeloGER ? ' · teto = GER' : ''})`}
+                                                    value={Math.round(metaEfetivaKgDia)}
+                                                    min={Math.ceil(metaInfo.band.min)} max={Math.floor(metaInfo.band.max)}
+                                                    step={1} unit="kcal/kg/d" onChange={setMetaAlvo}
+                                                />
+                                                <p className="text-slate-500 mt-1">
+                                                    Meta total: <strong>{(metaEfetivaKgDia * weight).toFixed(0)} kcal/dia</strong>
+                                                    {metaInfo.modo === 'faixa_livre' && metaInfo.gerKcalKgDia !== null && metaEfetivaKgDia > metaInfo.gerKcalKgDia &&
+                                                        <> · acima do GER (esperado na recuperação: anabolismo/crescimento)</>}
+                                                </p>
+                                            </div>
+                                        )
                                     )}
                                 </div>
 
@@ -1298,31 +1353,26 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                 </div>
 
                                 <RangeSliderInput
-                                    label={`Proteína (faixa ${activeProfile.protein.min}–${activeProfile.protein.max} g/kg/dia)`}
+                                    label={`2º — Proteína (faixa ${activeProfile.protein.min}–${activeProfile.protein.max} g/kg/dia)`}
                                     value={aminoAcidDose} min={activeProfile.protein.min} max={activeProfile.protein.max}
                                     step={0.1} unit="g/kg/dia" onChange={setAminoAcidDose}
                                 />
-                                <RangeSliderInput
-                                    label={`Relação cal. não proteica (faixa ${activeProfile.ratio.min}–${activeProfile.ratio.max} kcal/g N)`}
-                                    value={calorieNitrogenRatio} min={activeProfile.ratio.min} max={activeProfile.ratio.max}
-                                    step={5} unit="kcal/g N" onChange={setCalorieNitrogenRatio}
-                                />
                                 <div>
                                     <RangeSliderInput
-                                        label="Lipídios (% das cal. não proteicas)"
+                                        label="3º — Lipídios (% das cal. não proteicas restantes)"
                                         value={lipidPercent} min={LIPID_PERCENT_RANGE.min} max={LIPID_PERCENT_RANGE.max}
                                         step={1} unit="%" onChange={setLipidPercent}
                                     />
                                     <p className="text-xs text-slate-500 mt-1">Glicose completa com <strong>{100 - lipidPercent}%</strong> (faixa 60–70%).</p>
                                 </div>
 
-                                {/* Cadeia do cálculo em tempo real */}
+                                {/* Cadeia do cálculo em tempo real — fluxo top-down do protocolo */}
                                 <div className="bg-slate-50 rounded-lg p-3 ring-1 ring-slate-200 space-y-1 text-xs">
                                     <p className="font-bold text-slate-600 uppercase tracking-wide mb-1">Cadeia do Cálculo</p>
-                                    <div className="flex justify-between gap-2"><span className="text-slate-600">Proteína ({aminoAcidDose} g/kg × {idealWeight > 0 ? idealWeight : weight} kg)</span><span className="font-semibold text-slate-800 text-right">{aminoAcidCalculations.totalGrams.toFixed(1)} g/dia</span></div>
-                                    <div className="flex justify-between gap-2"><span className="text-slate-600">Nitrogênio (÷ 6,25)</span><span className="font-semibold text-slate-800 text-right">{aminoAcidCalculations.nitrogen.toFixed(2)} g N</span></div>
-                                    <div className="flex justify-between gap-2"><span className="text-slate-600">Cal. não proteicas (× {calorieNitrogenRatio})</span><span className="font-semibold text-slate-800 text-right">{glucoseCalculations.targetNonProteinCalories.toFixed(0)} kcal</span></div>
-                                    <div className="flex justify-between gap-2 border-t border-slate-200 pt-1"><span className="text-slate-600">Lipídios <span className={`font-bold px-1 rounded ${lipidPctInBand ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{lipidPercent}%</span></span><span className="font-semibold text-slate-800 text-right">{lipidCalculations.calories.toFixed(0)} kcal · {lipidCalculations.totalGrams.toFixed(1)} g ({lipidCalculations.dosePerKg.toFixed(2)} g/kg)</span></div>
+                                    <div className="flex justify-between gap-2"><span className="text-slate-600">Meta energética ({metaEfetivaKgDia !== null ? metaEfetivaKgDia.toFixed(0) : '—'} kcal/kg × {weight} kg)</span><span className="font-semibold text-slate-800 text-right">{energyPlan.totalCaloriesTarget.toFixed(0)} kcal/dia</span></div>
+                                    <div className="flex justify-between gap-2"><span className="text-slate-600">Proteína ({aminoAcidDose} g/kg × {idealWeight > 0 ? idealWeight : weight} kg × 4)</span><span className="font-semibold text-slate-800 text-right">− {aminoAcidCalculations.calories.toFixed(0)} kcal · {aminoAcidCalculations.totalGrams.toFixed(1)} g · {aminoAcidCalculations.nitrogen.toFixed(2)} g N</span></div>
+                                    <div className="flex justify-between gap-2 border-t border-slate-200 pt-1"><span className="text-slate-600 font-semibold">Cal. não proteicas restantes</span><span className="font-bold text-slate-800 text-right">{glucoseCalculations.targetNonProteinCalories.toFixed(0)} kcal</span></div>
+                                    <div className="flex justify-between gap-2"><span className="text-slate-600">Lipídios <span className={`font-bold px-1 rounded ${lipidPctInBand ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{lipidPercent}%</span></span><span className="font-semibold text-slate-800 text-right">{lipidCalculations.calories.toFixed(0)} kcal · {lipidCalculations.totalGrams.toFixed(1)} g ({lipidCalculations.dosePerKg.toFixed(2)} g/kg)</span></div>
                                     <div className="flex justify-between gap-2"><span className="text-slate-600">Glicose <span className={`font-bold px-1 rounded ${glucosePctInBand ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{100 - lipidPercent}%</span></span><span className="font-semibold text-slate-800 text-right">{glucoseCalculations.calories.toFixed(0)} kcal · {glucoseCalculations.totalGrams.toFixed(1)} g</span></div>
                                     <div className="flex justify-between gap-2 border-t border-slate-200 pt-1">
                                         <span className="text-slate-600">TIG (÷ peso × 1440 min)</span>
@@ -1331,6 +1381,16 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                             {' '}mg/kg/min · faixa {tigEvaluation.range.min}–{tigEvaluation.range.max}
                                         </span>
                                     </div>
+                                    <div className="flex justify-between gap-2 border-t border-slate-200 pt-1">
+                                        <span className="text-slate-600 font-semibold">Relação CNP/gN resultante</span>
+                                        <span className="font-semibold text-slate-800 text-right">
+                                            <span className={`font-bold px-1 rounded ${RATIO_STYLES[ratioEvaluation.status]}`}>{ratioEvaluation.ratio}</span>
+                                            {' '}kcal/g N · faixa do perfil {ratioEvaluation.range.min}–{ratioEvaluation.range.max}
+                                        </span>
+                                    </div>
+                                    {proteinExceedsTarget && (
+                                        <p className="text-red-700 font-semibold pt-0.5">⚠️ A proteína sozinha já atinge/excede a meta energética — não sobra caloria não proteica. Reduza a dose de proteína ou aumente a meta.</p>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -1350,15 +1410,17 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                     <p className="font-bold text-slate-600 uppercase tracking-wide">Calorias Totais</p>
                                     <span className="font-semibold text-slate-700">
                                         {totalCalories.toFixed(0)} kcal
-                                        {ofertaEnergetica.hasData && <> ({ofertaEnergetica.kcalKgDia.toFixed(1)} kcal/kg/d)</>}
+                                        {weight > 0 && totalCalories > 0 && <> ({(totalCalories / weight).toFixed(1)} kcal/kg/d)</>}
                                     </span>
                                 </div>
-                                {metaEnergetica.meta && ofertaEnergetica.hasData && (
+                                {metaEfetivaKgDia !== null && totalCalories > 0 && (
                                     <p className="text-xs mt-1">
-                                        <span className={`font-bold px-1.5 py-0.5 rounded ${OFERTA_STYLES[ofertaEnergetica.status]}`}>
-                                            {ofertaEnergetica.status === 'dentro' ? '✓ Dentro da meta energética' : ofertaEnergetica.status === 'abaixo' ? 'Abaixo da meta energética' : 'Acima da meta energética'}
+                                        <span className="font-bold px-1.5 py-0.5 rounded bg-green-100 text-green-700">
+                                            ✓ Meta da fase: {metaEfetivaKgDia.toFixed(0)} kcal/kg/d
                                         </span>
-                                        <span className="text-slate-500"> · meta {metaEnergetica.meta.min.toFixed(0)}–{metaEnergetica.meta.max.toFixed(0)} kcal/kg/d{metaEnergetica.capadaPeloGER ? ' (teto = GER de Schofield)' : ''}</span>
+                                        <span className="text-slate-500">
+                                            {' '}· {metaInfo.modo === 'ger_fixo' ? 'estável = GER de Schofield' : metaInfo.capadaPeloGER ? 'aguda com teto no GER' : metaInfo.modo === 'prematuro' ? 'tabela do prematuro' : 'faixa da fase'}
+                                        </span>
                                     </p>
                                 )}
                                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
@@ -1370,7 +1432,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                 </p>
                                 {totalCalories > 0 && !proteinPctInBand && (
                                     <p className="text-xs text-amber-700 mt-1.5 pt-1.5 border-t border-slate-200">
-                                        ℹ️ Proteína {caloricDistribution.protein > PROTEIN_TOTAL_TARGET.max ? 'acima' : 'abaixo'} da faixa usual de {PROTEIN_TOTAL_TARGET.min}–{PROTEIN_TOTAL_TARGET.max}% das calorias totais — consequência esperada da relação {calorieNitrogenRatio} kcal/g N; não inviabiliza o cálculo.
+                                        ℹ️ Proteína {caloricDistribution.protein > PROTEIN_TOTAL_TARGET.max ? 'acima' : 'abaixo'} da faixa usual de {PROTEIN_TOTAL_TARGET.min}–{PROTEIN_TOTAL_TARGET.max}% das calorias totais — reflexo da dose de proteína sobre a meta escolhida; confira a relação CNP/gN.
                                     </p>
                                 )}
                             </div>
@@ -1509,12 +1571,20 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                               <SummaryCard icon={<CubeIcon className="w-7 h-7 text-slate-500" />} label="Volume Total (Componentes)" value={totalComponentVolume.toFixed(0)} unit="mL" />
                               <SummaryCard icon={<FireIcon className="w-7 h-7 text-orange-500" />} label="Kcal Totais" value={totalCalories.toFixed(0)} unit="kcal" />
                               <SummaryCard icon={<SparklesIcon className="w-7 h-7 text-purple-500" />} label="Osmolaridade Estimada" value={osmolarityCalculations.totalOsmolarity.toFixed(0)} unit="mOsm/L" />
-                              {metaEnergetica.meta && ofertaEnergetica.hasData && (
+                              {metaEfetivaKgDia !== null && (
                                 <SummaryCard
-                                  icon={<FireIcon className={`w-7 h-7 ${ofertaEnergetica.status === 'dentro' ? 'text-green-500' : ofertaEnergetica.status === 'abaixo' ? 'text-amber-500' : 'text-red-500'}`} />}
-                                  label={`Meta Energética (${metaEnergetica.meta.min.toFixed(0)}–${metaEnergetica.meta.max.toFixed(0)} kcal/kg/d)`}
-                                  value={ofertaEnergetica.kcalKgDia.toFixed(1)}
-                                  unit={`kcal/kg/d · ${ofertaEnergetica.status === 'dentro' ? 'dentro' : ofertaEnergetica.status === 'abaixo' ? 'abaixo' : 'acima'}`}
+                                  icon={<FireIcon className="w-7 h-7 text-green-500" />}
+                                  label={`Meta Energética (${metaInfo.modo === 'ger_fixo' ? '= GER' : metaInfo.capadaPeloGER ? 'teto = GER' : metaInfo.faixaLabel})`}
+                                  value={metaEfetivaKgDia.toFixed(0)}
+                                  unit="kcal/kg/d"
+                                />
+                              )}
+                              {ratioEvaluation.hasData && (
+                                <SummaryCard
+                                  icon={<CalculatorIcon className={`w-7 h-7 ${ratioEvaluation.status === 'dentro' ? 'text-green-500' : ratioEvaluation.status === 'abaixo' ? 'text-amber-500' : 'text-red-500'}`} />}
+                                  label={`Relação CNP/gN (faixa ${ratioEvaluation.range.min}–${ratioEvaluation.range.max})`}
+                                  value={String(ratioEvaluation.ratio)}
+                                  unit={`kcal/g N · ${ratioEvaluation.status}`}
                                 />
                               )}
                             </div>
@@ -1541,20 +1611,19 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                                     {tigAboveRange ? tigEvaluation.range.max : tigEvaluation.range.min} mg/kg/min.
                                                 </li>
                                             )}
-                                            {tigEvaluation.suggestedLipidPercent === null && tigEvaluation.suggestedRatio !== null && (
+                                            {tigEvaluation.suggestedLipidPercent === null && tigEvaluation.suggestedMeta !== null && (
                                                 <li>
                                                     Com os lipídios no {tigAboveRange ? `teto de ${LIPID_PERCENT_RANGE.max}%` : `piso de ${LIPID_PERCENT_RANGE.min}%`} a TIG continua fora da faixa:{' '}
-                                                    {tigAboveRange ? 'reduza' : 'aumente'} a relação cal/gN para {tigAboveRange ? '≤' : '≥'}{' '}
-                                                    <strong>{tigEvaluation.suggestedRatio} kcal/g N</strong> ou revise a dose de proteína (hoje {aminoAcidDose} g/kg).
-                                                    {(tigAboveRange
-                                                        ? tigEvaluation.suggestedRatio < activeProfile.ratio.min
-                                                        : tigEvaluation.suggestedRatio > activeProfile.ratio.max) && (
-                                                        <> Esse valor está fora da faixa de {activeProfile.ratio.min}–{activeProfile.ratio.max} kcal/g N do perfil selecionado — reveja o perfil clínico e a meta calórica.</>
-                                                    )}
+                                                    {tigAboveRange ? 'reduza' : 'aumente'} a meta energética para {tigAboveRange ? '≤' : '≥'}{' '}
+                                                    <strong>{tigEvaluation.suggestedMeta} kcal/kg/d</strong> (hoje {metaEfetivaKgDia !== null ? metaEfetivaKgDia.toFixed(0) : '—'}) ou revise a dose de proteína (hoje {aminoAcidDose} g/kg).
                                                 </li>
                                             )}
-                                            {tigEvaluation.suggestedLipidPercent === null && tigEvaluation.suggestedRatio === null && (
-                                                <li>Revise o percentual de lipídios, a relação cal/gN e a dose de proteína.</li>
+                                            {tigEvaluation.suggestedLipidPercent === null && tigEvaluation.suggestedMeta === null && (
+                                                <li>
+                                                    {tigEvaluation.metaLimitada
+                                                        ? `Nem o extremo de lipídios nem a banda da meta desta fase alcançam a faixa de TIG${metaInfo.modo === 'ger_fixo' ? ' (na fase estável a meta é fixa no GER)' : ''} — revise a dose de proteína ou reavalie a fase metabólica.`
+                                                        : 'Revise o percentual de lipídios, a meta energética e a dose de proteína.'}
+                                                </li>
                                             )}
                                             {tigEvaluation.isNeonate && (
                                                 <li>Paciente com menos de 28 dias: a faixa usada é a de lactentes — confirme com o protocolo neonatal.</li>
@@ -1564,37 +1633,52 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                                 </div>
                             </div>
                         )}
-                        {/* Alerta: oferta calórica fora da meta energética */}
-                        {metaEnergetica.meta && ofertaEnergetica.hasData && ofertaEnergetica.status !== 'dentro' && (
-                            <div className={`border-l-4 p-4 rounded-md shadow-sm ${ofertaEnergetica.status === 'acima' ? 'bg-red-50 border-red-500 text-red-800' : 'bg-amber-50 border-amber-500 text-amber-800'}`} role="alert">
+                        {/* Alerta: relação CNP/gN resultante fora da faixa do perfil */}
+                        {ratioEvaluation.hasData && ratioEvaluation.status !== 'dentro' && !proteinExceedsTarget && (
+                            <div className={`border-l-4 p-4 rounded-md shadow-sm ${ratioEvaluation.status === 'acima' ? 'bg-red-50 border-red-500 text-red-800' : 'bg-amber-50 border-amber-500 text-amber-800'}`} role="alert">
                                 <div className="flex">
-                                    <div className="py-1"><WarningIcon className={`h-6 w-6 mr-4 ${ofertaEnergetica.status === 'acima' ? 'text-red-500' : 'text-amber-500'}`} /></div>
+                                    <div className="py-1"><WarningIcon className={`h-6 w-6 mr-4 ${ratioEvaluation.status === 'acima' ? 'text-red-500' : 'text-amber-500'}`} /></div>
                                     <div>
                                         <p className="font-bold">
-                                            {ofertaEnergetica.status === 'acima' ? 'Atenção: oferta calórica acima da meta energética' : 'Atenção: oferta calórica abaixo da meta energética'}
+                                            Atenção: relação CNP/gN {ratioEvaluation.status === 'acima' ? 'acima' : 'abaixo'} da faixa do perfil clínico
                                         </p>
                                         <p className="text-sm mt-1">
-                                            A prescrição entrega <strong>{ofertaEnergetica.kcalKgDia.toFixed(1)} kcal/kg/d</strong>{' '}
-                                            e a meta recomendada é <strong>{metaEnergetica.meta.min.toFixed(0)}–{metaEnergetica.meta.max.toFixed(0)} kcal/kg/d</strong>{' '}
-                                            ({metaEnergetica.faixaLabel} · {METABOLIC_PHASES[metabolicPhase].short}
-                                            {metaEnergetica.capadaPeloGER && metaEnergetica.gerKcalKgDia !== null && <>, teto no GER de Schofield de {metaEnergetica.gerKcalKgDia.toFixed(0)} kcal/kg/d</>}).
+                                            Com a meta de <strong>{metaEfetivaKgDia !== null ? metaEfetivaKgDia.toFixed(0) : '—'} kcal/kg/d</strong> e proteína de <strong>{aminoAcidDose} g/kg</strong>,
+                                            a relação resultante é <strong>{ratioEvaluation.ratio} kcal/g N</strong> — a faixa recomendada para{' '}
+                                            {activeProfile.label.toLowerCase()} é <strong>{ratioEvaluation.range.min}–{ratioEvaluation.range.max} kcal/g N</strong>.
                                         </p>
                                         <ul className="text-sm list-disc list-inside mt-2 space-y-1">
-                                            {ratioParaMeta !== null && (
+                                            {ratioEvaluation.suggestedDose !== null && (
                                                 <li>
-                                                    {ofertaEnergetica.status === 'acima' ? 'Reduza' : 'Aumente'} a relação cal/gN para{' '}
-                                                    {ofertaEnergetica.status === 'acima' ? '≤' : '≥'} <strong>{ratioParaMeta} kcal/g N</strong> (hoje {calorieNitrogenRatio}) — a oferta chega ao limite da meta mantendo a proteína em {aminoAcidDose} g/kg.
-                                                    {(ofertaEnergetica.status === 'acima'
-                                                        ? ratioParaMeta < activeProfile.ratio.min
-                                                        : ratioParaMeta > activeProfile.ratio.max) && (
-                                                        <> Esse valor está fora da faixa de {activeProfile.ratio.min}–{activeProfile.ratio.max} kcal/g N do perfil — reveja o perfil clínico ou a dose de proteína.</>
+                                                    {ratioEvaluation.status === 'acima' ? 'Aumente' : 'Reduza'} a proteína para{' '}
+                                                    <strong>≈ {ratioEvaluation.suggestedDose} g/kg</strong> — a relação chega ao limite de{' '}
+                                                    {ratioEvaluation.status === 'acima' ? ratioEvaluation.range.max : ratioEvaluation.range.min} kcal/g N mantendo a meta.
+                                                    {(ratioEvaluation.status === 'acima'
+                                                        ? ratioEvaluation.suggestedDose > activeProfile.protein.max
+                                                        : ratioEvaluation.suggestedDose < activeProfile.protein.min) && (
+                                                        <> Essa dose sai da faixa de {activeProfile.protein.min}–{activeProfile.protein.max} g/kg do perfil — ajuste também a meta{metaInfo.modo === 'ger_fixo' ? ' (fixa no GER nesta fase)' : ' dentro da banda'} ou reveja o perfil clínico.</>
                                                     )}
                                                 </li>
                                             )}
-                                            {ofertaEnergetica.status === 'acima' && metabolicPhase === 'aguda' && (
-                                                <li>Fase aguda: evitar sobrealimentação — cobrir o metabolismo basal sem ultrapassar o GER.</li>
+                                            {metaInfo.modo !== 'ger_fixo' && metaInfo.band && metaInfo.band.max > metaInfo.band.min && (
+                                                <li>Alternativa: mova a meta dentro da banda ({metaInfo.band.min.toFixed(0)}–{metaInfo.band.max.toFixed(0)} kcal/kg/d) — relação {ratioEvaluation.status === 'acima' ? 'cai com meta menor' : 'sobe com meta maior'}.</li>
                                             )}
                                         </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {/* Alerta: proteína consome toda a meta */}
+                        {proteinExceedsTarget && (
+                            <div className="border-l-4 p-4 rounded-md shadow-sm bg-red-50 border-red-500 text-red-800" role="alert">
+                                <div className="flex">
+                                    <div className="py-1"><WarningIcon className="h-6 w-6 mr-4 text-red-500" /></div>
+                                    <div>
+                                        <p className="font-bold">Atenção: a proteína sozinha atinge ou excede a meta energética</p>
+                                        <p className="text-sm mt-1">
+                                            {aminoAcidCalculations.calories.toFixed(0)} kcal de proteína ≥ meta de {energyPlan.totalCaloriesTarget.toFixed(0)} kcal/dia — não sobra caloria não proteica para glicose e lipídios.
+                                            Reduza a dose de proteína{metaInfo.modo !== 'ger_fixo' ? ' ou aumente a meta dentro da banda' : ''}.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
