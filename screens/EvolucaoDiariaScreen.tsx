@@ -1,5 +1,6 @@
 
 import React, { useState, useContext, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { PatientsContext, PreviewContext, NotificationContext } from '../contexts';
 import { useHeader } from '../hooks/useHeader';
 import { CheckCircleIcon, AlertIcon, WarningIcon } from '../components/icons';
@@ -30,10 +31,9 @@ interface BHBalanceRecord {
 }
 
 interface BHCumulativoRecord {
-  bh_historico_antigo: number;
-  bh_ultimas_24h: number;
-  bh_cumulativo_total: number;
-  registros_ultimas_24h: number;
+  bh_cumulativo_pct: number;
+  bh_24h_pct: number;
+  registros_24h: number;
 }
 
 interface DiureseRecord {
@@ -380,8 +380,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   useHeader('Evolução Diária');
   const { patients } = useContext(PatientsContext)!;
   const { showNotification } = useContext(NotificationContext)!;
+  const [searchParams] = useSearchParams();
 
-  const [patientId, setPatientId] = useState('');
+  const [patientId, setPatientId] = useState(searchParams.get('patientId') || '');
   const [search, setSearch] = useState('');
   const [date, setDate] = useState(todayStr());
 
@@ -549,7 +550,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       try {
         const [balRes, cumRes] = await Promise.all([
           supabase.from('balanco_hidrico').select('created_at, peso, volume, data_registro').eq('patient_id', patientId).order('data_registro', { ascending: false }).limit(1),
-          supabase.from('balanco_hidrico_cumulativo').select('bh_historico_antigo, bh_ultimas_24h, bh_cumulativo_total, registros_ultimas_24h').eq('patient_id', patientId).single(),
+          supabase.from('balanco_hidrico_cumulativo').select('bh_cumulativo_pct, bh_24h_pct, registros_24h').eq('patient_id', patientId).single(),
         ]);
         setBhBalance(balRes.data?.[0] ? {
           created_at: balRes.data[0].data_registro || balRes.data[0].created_at,
@@ -1044,9 +1045,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       add(`${pct.toFixed(2)}% — ${bhBalance.volume > 0 ? 'Ganho' : 'Perda'} | Volume: ${bhBalance.volume > 0 ? '+' : ''}${bhBalance.volume} mL`);
     }
 
-    if (MOSTRAR_BH_CUMULATIVO && bhCumul && bhCumul.registros_ultimas_24h > 0) {
+    if (MOSTRAR_BH_CUMULATIVO && bhCumul && bhCumul.registros_24h > 0) {
       title('9. BH CUMULATIVO');
-      add(`Total: ${bhCumul.bh_cumulativo_total > 0 ? '+' : ''}${bhCumul.bh_cumulativo_total.toFixed(2)}% | BH Anterior: ${bhCumul.bh_historico_antigo.toFixed(2)}% | Últimas 24h: ${bhCumul.bh_ultimas_24h.toFixed(2)}%`);
+      const historicoAntigo = bhCumul.bh_cumulativo_pct - bhCumul.bh_24h_pct;
+      add(`Total: ${bhCumul.bh_cumulativo_pct > 0 ? '+' : ''}${bhCumul.bh_cumulativo_pct.toFixed(2)}% | BH Anterior: ${historicoAntigo.toFixed(2)}% | Últimas 24h: ${bhCumul.bh_24h_pct.toFixed(2)}%`);
     }
 
 
@@ -1810,10 +1812,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       <Section title="9. BH Cumulativo" id="bhCumulativo" open={openSections.has('bhCumulativo')} onToggle={() => toggle('bhCumulativo')}>
         {bhLoading ? (
           <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" /></div>
-        ) : !bhCumul || bhCumul.registros_ultimas_24h === 0 ? (
+        ) : !bhCumul || bhCumul.registros_24h === 0 ? (
           <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum dado cumulativo disponível.</p>
         ) : (() => {
-          const val = bhCumul.bh_cumulativo_total;
+          const val = bhCumul.bh_cumulativo_pct;
+          const historicoAntigo = bhCumul.bh_cumulativo_pct - bhCumul.bh_24h_pct;
           const alert = Math.abs(val) > 200;
           const colorCls = alert
             ? val > 0 ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'
@@ -1830,7 +1833,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               <p className={`text-2xl font-bold mb-1 ${colorCls}`}>{val > 0 ? '+' : ''}{val.toFixed(2)}%</p>
               <p className={`text-xs font-medium mb-2 ${colorCls}`}>{label}</p>
               <p className="text-xs text-slate-600 dark:text-slate-400">
-                Anterior: {bhCumul.bh_historico_antigo > 0 ? '+' : ''}{bhCumul.bh_historico_antigo.toFixed(2)}% | 24h: {bhCumul.bh_ultimas_24h > 0 ? '+' : ''}{bhCumul.bh_ultimas_24h.toFixed(2)}%
+                Anterior: {historicoAntigo > 0 ? '+' : ''}{historicoAntigo.toFixed(2)}% | 24h: {bhCumul.bh_24h_pct > 0 ? '+' : ''}{bhCumul.bh_24h_pct.toFixed(2)}%
               </p>
             </div>
           );

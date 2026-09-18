@@ -8,7 +8,7 @@ export { EditPatientInfoModal } from './patient';
 export { AddAporteModal } from './aportes';
 
 // Alert modals
-export { CreateAlertModal, AlertModal, JustificationModal } from './alerts';
+export { CreateAlertModal, AlertModal, JustificationModal, RevisaoAlertasModal } from './alerts';
 
 // Culture modals
 export { AddCultureModal, EditCultureModal, ArchiveCultureModal } from './cultures';

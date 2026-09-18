@@ -210,6 +210,10 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 sc: p.sc,
                 sexo: p.sexo || undefined,
                 prontuario: p.prontuario || undefined,
+                estatura: p.estatura || undefined,
+                pc: p.pc || undefined,
+                pa: p.pa || undefined,
+                pesoSeco: p.peso_seco || undefined,
                 status: p.status || 'estavel',
                 localTransferencia: p.local_transferencia || undefined,
                 comorbidade: p.comorbidade || undefined,
@@ -251,7 +255,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             categoriesRes,
             answersRes
         ] = await Promise.all([
-            supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc, local_transferencia, comorbidade, sexo, prontuario').is('archived_at', null),
+            supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc, local_transferencia, comorbidade, sexo, prontuario, estatura, pc, pa, peso_seco').is('archived_at', null),
             supabase.from('perguntas').select('*').order('ordem', { ascending: true }),
             supabase.from('pergunta_opcoes').select('*').order('ordem', { ascending: true }),
             supabase.from('categorias').select('*').order('ordem', { ascending: true }),
@@ -278,6 +282,10 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             sc: p.sc || undefined,
             sexo: p.sexo || undefined,
             prontuario: p.prontuario || undefined,
+            estatura: p.estatura || undefined,
+            pc: p.pc || undefined,
+            pa: p.pa || undefined,
+            pesoSeco: p.peso_seco || undefined,
             devices: [],
             exams: [],
             medications: [],
@@ -296,7 +304,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const activePatientIds = basicPatients.map(p => p.id);
         setTimeout(() => {
             Promise.all([
-                supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc, local_transferencia, comorbidade, sexo, prontuario').is('archived_at', null),
+                supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc, local_transferencia, comorbidade, sexo, prontuario, estatura, pc, pa, peso_seco').is('archived_at', null),
                 supabase.from('dispositivos_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
                 supabase.from('exames_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
                 supabase.from('medicacoes_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
@@ -964,7 +972,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (!error) refreshPatientPrecautions(patientId);
     };
 
-    const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number; sc?: number; sexo?: string; prontuario?: string; bedNumber?: number }) => {
+    const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number; sc?: number; sexo?: string; prontuario?: string; bedNumber?: number; estatura?: number; pc?: number; pa?: number; pesoSeco?: number }) => {
         try {
             const updateData: any = {};
             if (data.motherName !== undefined) updateData.mother_name = data.motherName;
@@ -979,6 +987,22 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             if (data.sc !== undefined) {
                 const scNumero = typeof data.sc === 'string' ? parseFloat(data.sc) : data.sc;
                 updateData.sc = scNumero || null;
+            }
+            if (data.estatura !== undefined) {
+                const estaturaNumero = typeof data.estatura === 'string' ? parseFloat(data.estatura) : data.estatura;
+                updateData.estatura = estaturaNumero || null;
+            }
+            if (data.pc !== undefined) {
+                const pcNumero = typeof data.pc === 'string' ? parseFloat(data.pc) : data.pc;
+                updateData.pc = pcNumero || null;
+            }
+            if (data.pa !== undefined) {
+                const paNumero = typeof data.pa === 'string' ? parseFloat(data.pa) : data.pa;
+                updateData.pa = paNumero || null;
+            }
+            if (data.pesoSeco !== undefined) {
+                const pesoSecoNumero = typeof data.pesoSeco === 'string' ? parseFloat(data.pesoSeco) : data.pesoSeco;
+                updateData.peso_seco = pesoSecoNumero || null;
             }
 
 
@@ -1008,6 +1032,10 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                         sexo: data.sexo ?? p.sexo,
                         prontuario: data.prontuario ?? p.prontuario,
                         bedNumber: data.bedNumber ?? p.bedNumber,
+                        estatura: data.estatura ?? p.estatura,
+                        pc: data.pc ?? p.pc,
+                        pa: data.pa ?? p.pa,
+                        pesoSeco: data.pesoSeco ?? p.pesoSeco,
                     };
                 }
                 return p;

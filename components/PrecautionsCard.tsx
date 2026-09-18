@@ -296,7 +296,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
       {/* =================== MODAL ADICIONAR =================== */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full p-6">
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                 Adicionar Precaução
@@ -347,7 +347,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                       <button
                         type="button"
                         onMouseDown={handleUsarManual}
-                        className="w-full text-left px-3 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors italic"
+                        className="w-full text-left px-3 py-3 text-sm font-medium text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
                       >
                         Outros / Não listado
                       </button>
@@ -467,7 +467,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
       {/* =================== MODAL EDITAR =================== */}
       {isEditModalOpen && selectedPrecaution && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full p-6">
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Editar Precaução</h3>
               <button onClick={() => setEditModalOpen(false)} className="text-slate-400 hover:text-slate-600">
@@ -539,7 +539,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
       {/* =================== MODAL ARQUIVAR =================== */}
       {isArchiveModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full p-6">
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Arquivar Precaução</h3>
               <button onClick={() => setArchiveModalOpen(null)} className="text-slate-400 hover:text-slate-600">
@@ -579,7 +579,7 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
       {/* =================== MODAL FINALIZAR =================== */}
       {isEndDateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full p-6">
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Finalizar Precaução</h3>
               <button onClick={() => setEndDateModalOpen(null)} className="text-slate-400 hover:text-slate-600">

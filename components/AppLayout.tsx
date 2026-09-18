@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useContext, useEffect } from 'react';
+import React, { useState, useMemo, useContext, useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { BottomNav } from './BottomNav';
@@ -12,10 +12,21 @@ export const AppLayout: React.FC = () => {
     const location = useLocation();
     const contextValue = useMemo(() => ({ setTitle }), []);
     const { notification, hideNotification } = useContext(NotificationContext)!;
+    const mainRef = useRef<HTMLElement>(null);
 
     useEffect(() => {
         setSidebarOpen(false);
     }, [location]);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+        mainRef.current?.scrollTo(0, 0);
+        const raf = requestAnimationFrame(() => {
+            window.scrollTo(0, 0);
+            mainRef.current?.scrollTo(0, 0);
+        });
+        return () => cancelAnimationFrame(raf);
+    }, [location.pathname]);
 
     return (
         <HeaderContext.Provider value={contextValue}>
@@ -33,7 +44,7 @@ export const AppLayout: React.FC = () => {
 
                 <div className="flex flex-col flex-1 min-w-0">
                     <Header title={title} onMenuClick={() => setSidebarOpen(true)} />
-                    <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 p-4 md:p-6 lg:p-8 pb-32 md:pb-32 lg:pb-8">
+                    <main ref={mainRef} className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 p-4 md:p-6 lg:p-8 pb-32 md:pb-32 lg:pb-8">
                         <div className="max-w-4xl mx-auto">
                             <Outlet />
                         </div>

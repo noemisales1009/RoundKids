@@ -15,6 +15,7 @@ import {
     UserContext,
 } from '../contexts';
 import { useHeader } from '../hooks/useHeader';
+import { alertasService, Alerta, precisaRevisao, isAlertaAtivo } from '../services/alertasService';
 
 // --- LOADING COMPONENT ---
 const LoadingSpinner: React.FC = () => (
@@ -53,7 +54,6 @@ const HemodinamicoTab = lazy(() => import('../components/HemodinamicoTab').then(
 const DiagnosticsSection = lazy(() => import('../components/DiagnosticsSection').then(m => ({ default: m.DiagnosticsSection })));
 const ControlesSaidasSection = lazy(() => import('../components/ControlesSaidasSection').then(m => ({ default: m.ControlesSaidasSection })));
 const AlertasSection = lazy(() => import('../components/AlertasSection').then(m => ({ default: m.AlertasSection })));
-const CompletedAlertsSection = lazy(() => import('../components/CompletedAlertsSection').then(m => ({ default: m.CompletedAlertsSection })));
 const DiuresisCalc = lazy(() => import('../components/DiuresisCalc'));
 const DiuresisHistory = lazy(() => import('../components/DiuresisHistory'));
 const FluidBalanceCalc = lazy(() => import('../components/FluidBalanceCalc'));
@@ -79,6 +79,7 @@ const PaineisViraisCard = lazy(() => import('../components/PaineisViraisCard').t
 // Lazy load modals
 const EditPatientInfoModal = lazy(() => import('../components/modals').then(m => ({ default: m.EditPatientInfoModal })));
 const CreateAlertModal = lazy(() => import('../components/modals').then(m => ({ default: m.CreateAlertModal })));
+const RevisaoAlertasModal = lazy(() => import('../components/modals').then(m => ({ default: m.RevisaoAlertasModal })));
 const AddCultureModal = lazy(() => import('../components/modals').then(m => ({ default: m.AddCultureModal })));
 const EditCultureModal = lazy(() => import('../components/modals').then(m => ({ default: m.EditCultureModal })));
 const AddDietModal = lazy(() => import('../components/modals').then(m => ({ default: m.AddDietModal })));
@@ -150,6 +151,8 @@ const PatientDetailScreen: React.FC = () => {
     const [isEndDateModalOpen, setEndDateModalOpen] = useState<number | string | null>(null);
     const [isEditInfoModalOpen, setEditInfoModalOpen] = useState(false);
     const [isCreateAlertModalOpen, setCreateAlertModalOpen] = useState(false);
+    const [showRevisaoAlertas, setShowRevisaoAlertas] = useState(false);
+    const [pendentesRevisao, setPendentesRevisao] = useState<Alerta[]>([]);
     const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'vni-cnaf' | 'fss' | 'abstinencia' | 'sos-pd' | 'consciousness' | 'respiratory' | 'phoenix-sepsis' | 'avaliacao-respiratoria' | 'kdigo'>('list');
     const [calculationsRefresh, setCalculationsRefresh] = useState(0);
     const scalesSectionRef = useRef<HTMLDivElement>(null);
@@ -216,6 +219,27 @@ const PatientDetailScreen: React.FC = () => {
 
     const navigate = useNavigate();
     const { showNotification } = useContext(NotificationContext)!
+
+    // Antes de criar um alerta novo, obriga a revisão do que já está em aberto (de qualquer turno)
+    const handleCriarAlerta = async () => {
+        try {
+            const data = await alertasService.getAlertas(patient.id.toString());
+            const abertos = await alertasService.enriquecerJustificativas(data.filter(isAlertaAtivo));
+            const aRevisar = abertos
+                .filter(precisaRevisao)
+                .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+            if (aRevisar.length > 0) {
+                setPendentesRevisao(aRevisar);
+                setShowRevisaoAlertas(true);
+            } else {
+                setCreateAlertModalOpen(true);
+            }
+        } catch (err) {
+            console.error('Erro ao verificar alertas pendentes:', err);
+            setCreateAlertModalOpen(true);
+        }
+    };
 
     const [showArchiveModal, setShowArchiveModal] = useState(false);
     const [archiving, setArchiving] = useState(false);
@@ -464,6 +488,30 @@ const PatientDetailScreen: React.FC = () => {
                             <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">SC</p>
                             <p className={`text-sm font-semibold break-words ${patient.sc ? 'text-slate-700 dark:text-slate-200' : 'text-orange-500 italic'}`}>
                                 {patient.sc ? `${patient.sc} m²` : 'Não informado'}
+                            </p>
+                        </div>
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
+                            <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Peso seco</p>
+                            <p className={`text-sm font-semibold break-words ${patient.pesoSeco ? 'text-slate-700 dark:text-slate-200' : 'text-orange-500 italic'}`}>
+                                {patient.pesoSeco ? `${patient.pesoSeco} kg` : 'Não informado'}
+                            </p>
+                        </div>
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
+                            <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Estatura</p>
+                            <p className={`text-sm font-semibold break-words ${patient.estatura ? 'text-slate-700 dark:text-slate-200' : 'text-orange-500 italic'}`}>
+                                {patient.estatura ? `${patient.estatura} cm` : 'Não informado'}
+                            </p>
+                        </div>
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
+                            <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">PC</p>
+                            <p className={`text-sm font-semibold break-words ${patient.pc ? 'text-slate-700 dark:text-slate-200' : 'text-orange-500 italic'}`}>
+                                {patient.pc ? `${patient.pc} cm` : 'Não informado'}
+                            </p>
+                        </div>
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
+                            <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">PA</p>
+                            <p className={`text-sm font-semibold break-words ${patient.pa ? 'text-slate-700 dark:text-slate-200' : 'text-orange-500 italic'}`}>
+                                {patient.pa ? `${patient.pa} cm` : 'Não informado'}
                             </p>
                         </div>
                         <div className="sm:col-span-2 bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
@@ -745,10 +793,6 @@ const PatientDetailScreen: React.FC = () => {
                 <AlertasSection patientId={patient.id.toString()} />
             </Suspense>
 
-            <Suspense fallback={<LoadingSpinner />}>
-                <CompletedAlertsSection patientId={patient.id.toString()} />
-            </Suspense>
-
             {user?.access_level === 'adm' ? (
                 <Link to={`/patient/${patient.id}/round/categories`} className="w-full block text-center bg-primary-500 hover:bg-primary-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg">
                     <div className="flex items-center justify-center gap-2">
@@ -766,7 +810,7 @@ const PatientDetailScreen: React.FC = () => {
             )}
 
             <button
-                onClick={() => setCreateAlertModalOpen(true)}
+                onClick={handleCriarAlerta}
                 className="w-full mt-3 text-center bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg flex items-center justify-center gap-2"
             >
                 <WarningIcon className="w-6 h-6" />
@@ -793,6 +837,19 @@ const PatientDetailScreen: React.FC = () => {
             </Suspense>
 
             <DestinoComponent patientId={patient.id.toString()} />
+
+            <div className="w-full bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 mb-4">
+                <button
+                    onClick={() => navigate(`/evolucao-diaria?patientId=${patient.id}`)}
+                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
+                >
+                    <div className="flex items-center gap-2">
+                        <ClipboardIcon className="w-5 h-5 text-slate-400" />
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Criar Evolução Diária</h3>
+                    </div>
+                    <ChevronRightIcon className="w-5 h-5 text-slate-400" />
+                </button>
+            </div>
 
             <button
                 onClick={() => setShowArchiveModal(true)}
@@ -1386,8 +1443,21 @@ const PatientDetailScreen: React.FC = () => {
             {editingDietRemovalDate && <EditDietRemovalDateModal diet={editingDietRemovalDate} patientId={patient.id} onClose={() => setEditingDietRemovalDate(null)} />}
             {isRemovalModalOpen && <AddRemovalDateModal deviceId={isRemovalModalOpen} patientId={patient.id} onClose={() => setRemovalModalOpen(null)} />}
             {isEndDateModalOpen && <AddEndDateModal medicationId={isEndDateModalOpen} patientId={patient.id} onClose={() => setEndDateModalOpen(null)} />}
-            {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} currentMotherName={patient.motherName} currentWeight={patient.peso} currentSC={patient.sc} currentSexo={patient.sexo} currentProntuario={patient.prontuario} currentBedNumber={patient.bedNumber} onClose={() => setEditInfoModalOpen(false)} />}
+            {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} currentMotherName={patient.motherName} currentWeight={patient.peso} currentSC={patient.sc} currentSexo={patient.sexo} currentProntuario={patient.prontuario} currentBedNumber={patient.bedNumber} currentEstatura={patient.estatura} currentPC={patient.pc} currentPA={patient.pa} currentPesoSeco={patient.pesoSeco} onClose={() => setEditInfoModalOpen(false)} />}
             {isCreateAlertModalOpen && <CreateAlertModal patientId={patient.id} onClose={() => setCreateAlertModalOpen(false)} />}
+            {showRevisaoAlertas && (
+                <RevisaoAlertasModal
+                    pendentes={pendentesRevisao}
+                    onClose={() => setShowRevisaoAlertas(false)}
+                    onLiberado={() => { setShowRevisaoAlertas(false); setCreateAlertModalOpen(true); }}
+                    onAlertaTratado={() => {
+                        alertasService.getAlertas(patient.id.toString()).then(async (data) => {
+                            const abertos = await alertasService.enriquecerJustificativas(data.filter(isAlertaAtivo));
+                            setPendentesRevisao(abertos.filter(precisaRevisao));
+                        });
+                    }}
+                />
+            )}
 
             {/* Modal Arquivar Paciente */}
             {showArchiveModal && (

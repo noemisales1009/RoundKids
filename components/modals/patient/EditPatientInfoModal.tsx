@@ -10,6 +10,10 @@ interface EditPatientInfoModalProps {
     currentSexo?: string;
     currentProntuario?: string;
     currentBedNumber?: number;
+    currentEstatura?: number;
+    currentPC?: number;
+    currentPA?: number;
+    currentPesoSeco?: number;
     onClose: () => void;
 }
 
@@ -21,6 +25,10 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
     currentSexo,
     currentProntuario,
     currentBedNumber,
+    currentEstatura,
+    currentPC,
+    currentPA,
+    currentPesoSeco,
     onClose
 }) => {
     const { updatePatientDetails, patients } = useContext(PatientsContext)!;
@@ -30,6 +38,10 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
     const [sexo, setSexo] = useState<string>(currentSexo || '');
     const [prontuario, setProntuario] = useState(currentProntuario || '');
     const [bedNumber, setBedNumber] = useState(currentBedNumber?.toString() || '');
+    const [estatura, setEstatura] = useState(currentEstatura?.toString() || '');
+    const [pc, setPc] = useState(currentPC?.toString() || '');
+    const [pa, setPa] = useState(currentPA?.toString() || '');
+    const [pesoSeco, setPesoSeco] = useState(currentPesoSeco?.toString() || '');
 
     // Fórmula de SC: (P × 4 + 7) / (P + 90)
     const calculateSC = (pesoKg: number) => {
@@ -68,6 +80,10 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
             sexo: sexo || undefined,
             prontuario: prontuario || undefined,
             bedNumber: newBedNumber,
+            estatura: estatura ? parseFloat(estatura) : undefined,
+            pc: pc ? parseFloat(pc) : undefined,
+            pa: pa ? parseFloat(pa) : undefined,
+            pesoSeco: pesoSeco ? parseFloat(pesoSeco) : undefined,
         });
         onClose();
     };
@@ -157,6 +173,48 @@ export const EditPatientInfoModal: React.FC<EditPatientInfoModalProps> = ({
                             readOnly
                             className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 cursor-not-allowed"
                         />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Peso seco (kg)</label>
+                        <input
+                            type="number"
+                            step="0.1"
+                            value={pesoSeco}
+                            onChange={e => setPesoSeco(e.target.value)}
+                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Estatura (cm)</label>
+                        <input
+                            type="number"
+                            step="0.1"
+                            value={estatura}
+                            onChange={e => setEstatura(e.target.value)}
+                            className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                        />
+                    </div>
+                    <div className="flex gap-2">
+                        <div className="flex-1">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">PC (cm)</label>
+                            <input
+                                type="number"
+                                step="0.1"
+                                value={pc}
+                                onChange={e => setPc(e.target.value)}
+                                className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">PA (cm)</label>
+                            <input
+                                type="number"
+                                step="0.1"
+                                value={pa}
+                                onChange={e => setPa(e.target.value)}
+                                className="mt-1 block w-full border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                            />
+                        </div>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2">
                         <button type="button" onClick={onClose} className="w-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold py-2 px-4 rounded-lg">Cancelar</button>
