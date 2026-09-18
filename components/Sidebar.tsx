@@ -4,6 +4,7 @@ import { DashboardIcon, BedIcon, FileTextIcon, ClipboardIcon, SettingsIcon, LogO
 import { LoadingIndicator } from './LoadingIndicator';
 import { UserContext } from '../contexts';
 import { supabase, markManualSignOut } from '../supabaseClient';
+import { AppLogo } from './AppLogo';
 
 export const Sidebar: React.FC = () => {
     const navigate = useNavigate();
@@ -51,7 +52,7 @@ export const Sidebar: React.FC = () => {
     return (
         <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full">
             <div className="px-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-start h-32">
-                <img src="/logo.png" alt="Round Kids" className="h-[120px] w-auto object-contain" />
+                <AppLogo className="w-full" />
             </div>
             <nav className="flex-1 px-4 py-4 space-y-2">
                 {navItems.map(item => (
