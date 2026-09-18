@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { NotificationContext, UserContext } from '../contexts';
-import { alertasService, Alerta, isAlertaAtivo } from '../services/alertasService';
+import { alertasService, Alerta, isAlertaAtivo, isConcluidoVisivel } from '../services/alertasService';
 import { AlertasDisplay } from './alerts/AlertasDisplay';
 
 const ChevronDownIcon = ({ className }: { className?: string }) => (
@@ -145,6 +145,7 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
     };
 
     const alertasAtivos = alertas.filter(isAlertaAtivo).length;
+    const alertasVisiveis = alertas.filter(a => isAlertaAtivo(a) || isConcluidoVisivel(a)).length;
 
     return (
         <div className="mt-6 bg-white dark:bg-slate-900 rounded-xl shadow-sm overflow-hidden">
@@ -156,9 +157,9 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                 <div className="flex items-center gap-3">
                     <span className="text-xl">🚨</span>
                     <h3 className="font-bold text-slate-800 dark:text-slate-200">Alertas do Paciente</h3>
-                    {!loading && alertasAtivos > 0 && (
-                        <span className="bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
-                            {alertasAtivos}
+                    {!loading && alertasVisiveis > 0 && (
+                        <span className={`text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center ${alertasAtivos > 0 ? 'bg-red-500' : 'bg-emerald-500'}`}>
+                            {alertasVisiveis}
                         </span>
                     )}
                 </div>
