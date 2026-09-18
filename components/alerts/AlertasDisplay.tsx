@@ -45,7 +45,8 @@ export const AlertasDisplay: React.FC<AlertasDisplayProps> = ({ alertas, onJusti
                     <AlertasTurno
                         key={shift}
                         shift={shift}
-                        count={alertasPorTurno[shift].filter(isAlertaAtivo).length}
+                        count={alertasPorTurno[shift].length}
+                        pending={alertasPorTurno[shift].some(isAlertaAtivo)}
                         active={tab === shift}
                         onClick={() => setTab(shift)}
                     />

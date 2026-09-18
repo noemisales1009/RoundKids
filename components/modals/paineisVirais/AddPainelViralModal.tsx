@@ -131,7 +131,7 @@ export const AddPainelViralModal: React.FC<{
     const [dataColeta, setDataColeta] = useState(getTodayDateString());
     const [resultado, setResultado] = useState('Em andamento');
 
-    const [sorologiaTexto, setSorologiaTexto] = useState('');
+    const [outroTexto, setOutroTexto] = useState('');
     const [sistema, setSistema] = useState('');
     const [sistemaOutros, setSistemaOutros] = useState('');
     const [observacao, setObservacao] = useState('');
@@ -171,15 +171,15 @@ export const AddPainelViralModal: React.FC<{
                 : [...prev, { categoria: cat, painel: p }]
         );
 
-    const addSorologia = () => {
-        const texto = sorologiaTexto.trim();
-        if (!texto) return;
-        if (paineisSelecionados.some(x => x.categoria === 'Sorologia' && x.painel === texto)) {
-            setSorologiaTexto('');
+    const addOutroPainel = (cat: string) => {
+        const texto = outroTexto.trim();
+        if (!texto || !cat) return;
+        if (paineisSelecionados.some(x => x.categoria === cat && x.painel === texto)) {
+            setOutroTexto('');
             return;
         }
-        setPaineisSelecionados(prev => [...prev, { categoria: 'Sorologia', painel: texto }]);
-        setSorologiaTexto('');
+        setPaineisSelecionados(prev => [...prev, { categoria: cat, painel: texto }]);
+        setOutroTexto('');
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -270,15 +270,15 @@ export const AddPainelViralModal: React.FC<{
                             <div className="mt-1 flex gap-2">
                                 <input
                                     type="text"
-                                    value={sorologiaTexto}
-                                    onChange={(e) => setSorologiaTexto(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSorologia(); } }}
+                                    value={outroTexto}
+                                    onChange={(e) => setOutroTexto(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addOutroPainel('Sorologia'); } }}
                                     placeholder="Ex: Sorologia para Toxoplasmose IgM/IgG"
                                     className="flex-1 border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
                                 />
                                 <button
                                     type="button"
-                                    onClick={addSorologia}
+                                    onClick={() => addOutroPainel('Sorologia')}
                                     className="px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md transition text-sm font-semibold"
                                 >
                                     Adicionar
@@ -313,6 +313,23 @@ export const AddPainelViralModal: React.FC<{
                                         </div>
                                     );
                                 })}
+                            </div>
+                            <div className="mt-2 flex gap-2">
+                                <input
+                                    type="text"
+                                    value={outroTexto}
+                                    onChange={(e) => setOutroTexto(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addOutroPainel(categoria); } }}
+                                    placeholder="Outro painel/exame não listado..."
+                                    className="flex-1 border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200 text-sm"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => addOutroPainel(categoria)}
+                                    className="px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md transition text-sm font-semibold"
+                                >
+                                    Adicionar
+                                </button>
                             </div>
                         </div>
                     )}

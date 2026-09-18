@@ -33,7 +33,8 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
         try {
             setLoading(true);
             const data = await alertasService.getAlertas(patientId);
-            setAlertas(data);
+            const enriquecidos = await alertasService.enriquecerJustificativas(data);
+            setAlertas(enriquecidos);
         } catch (err) {
             console.error('Erro ao buscar alertas:', err);
             setAlertas([]);

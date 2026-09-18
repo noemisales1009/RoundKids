@@ -10,11 +10,12 @@ const SHIFT_INFO: Record<ShiftType, { label: string; icon: string }> = {
 interface AlertasTurnoProps {
     shift: ShiftType;
     count: number;
+    pending: boolean;
     active: boolean;
     onClick: () => void;
 }
 
-export const AlertasTurno: React.FC<AlertasTurnoProps> = ({ shift, count, active, onClick }) => {
+export const AlertasTurno: React.FC<AlertasTurnoProps> = ({ shift, count, pending, active, onClick }) => {
     const info = SHIFT_INFO[shift];
     return (
         <button
@@ -29,7 +30,9 @@ export const AlertasTurno: React.FC<AlertasTurnoProps> = ({ shift, count, active
             <span>{info.label}</span>
             {count > 0 && (
                 <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold ${
-                    active ? 'bg-white text-primary-700' : 'bg-red-500 text-white'
+                    active
+                        ? 'bg-white text-primary-700'
+                        : pending ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'
                 }`}>
                     {count}
                 </span>

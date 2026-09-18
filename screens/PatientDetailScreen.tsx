@@ -221,7 +221,10 @@ const PatientDetailScreen: React.FC = () => {
     const { showNotification } = useContext(NotificationContext)!
 
     // Antes de criar um alerta novo, obriga a revisão do que já está em aberto (de qualquer turno)
+    const [verificandoAlertas, setVerificandoAlertas] = useState(false);
     const handleCriarAlerta = async () => {
+        if (verificandoAlertas) return;
+        setVerificandoAlertas(true);
         try {
             const data = await alertasService.getAlertas(patient.id.toString());
             const abertos = await alertasService.enriquecerJustificativas(data.filter(isAlertaAtivo));
@@ -238,6 +241,8 @@ const PatientDetailScreen: React.FC = () => {
         } catch (err) {
             console.error('Erro ao verificar alertas pendentes:', err);
             setCreateAlertModalOpen(true);
+        } finally {
+            setVerificandoAlertas(false);
         }
     };
 
@@ -811,10 +816,20 @@ const PatientDetailScreen: React.FC = () => {
 
             <button
                 onClick={handleCriarAlerta}
-                className="w-full mt-3 text-center bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-4 rounded-lg transition text-lg flex items-center justify-center gap-2"
+                disabled={verificandoAlertas}
+                className="w-full mt-3 text-center bg-red-500 hover:bg-red-600 disabled:opacity-60 disabled:cursor-wait text-white font-bold py-4 px-4 rounded-lg transition text-lg flex items-center justify-center gap-2"
             >
-                <WarningIcon className="w-6 h-6" />
-                Criar Novo Alerta
+                {verificandoAlertas ? (
+                    <>
+                        <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                        Verificando alertas...
+                    </>
+                ) : (
+                    <>
+                        <WarningIcon className="w-6 h-6" />
+                        Criar Novo Alerta
+                    </>
+                )}
             </button>
 
             <Suspense fallback={<div />}>
