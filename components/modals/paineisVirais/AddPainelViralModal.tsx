@@ -131,6 +131,7 @@ export const AddPainelViralModal: React.FC<{
     const [dataColeta, setDataColeta] = useState(getTodayDateString());
     const [resultado, setResultado] = useState('Em andamento');
 
+    const [sorologiaTexto, setSorologiaTexto] = useState('');
     const [sistema, setSistema] = useState('');
     const [sistemaOutros, setSistemaOutros] = useState('');
     const [observacao, setObservacao] = useState('');
@@ -169,6 +170,17 @@ export const AddPainelViralModal: React.FC<{
                 ? prev.filter(x => !(x.categoria === cat && x.painel === p))
                 : [...prev, { categoria: cat, painel: p }]
         );
+
+    const addSorologia = () => {
+        const texto = sorologiaTexto.trim();
+        if (!texto) return;
+        if (paineisSelecionados.some(x => x.categoria === 'Sorologia' && x.painel === texto)) {
+            setSorologiaTexto('');
+            return;
+        }
+        setPaineisSelecionados(prev => [...prev, { categoria: 'Sorologia', painel: texto }]);
+        setSorologiaTexto('');
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -245,10 +257,37 @@ export const AddPainelViralModal: React.FC<{
                             {Object.keys(PAINEIS_POR_CATEGORIA).map(cat => (
                                 <option key={cat} value={cat}>{cat}</option>
                             ))}
+                            <option value="Sorologia">Sorologia</option>
                         </select>
                     </div>
 
-                    {categoria && (
+                    {categoria === 'Sorologia' && (
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Sorologia <span className="text-red-500">*</span>{' '}
+                                <span className="text-slate-400 font-normal">(digite e adicione uma ou mais)</span>
+                            </label>
+                            <div className="mt-1 flex gap-2">
+                                <input
+                                    type="text"
+                                    value={sorologiaTexto}
+                                    onChange={(e) => setSorologiaTexto(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSorologia(); } }}
+                                    placeholder="Ex: Sorologia para Toxoplasmose IgM/IgG"
+                                    className="flex-1 border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={addSorologia}
+                                    className="px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md transition text-sm font-semibold"
+                                >
+                                    Adicionar
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {categoria && categoria !== 'Sorologia' && (
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                                 Painéis / Exames <span className="text-red-500">*</span>{' '}
