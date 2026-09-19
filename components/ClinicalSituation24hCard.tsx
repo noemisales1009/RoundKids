@@ -52,7 +52,7 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
       .limit(30);
 
     if (fetchError) {
-      setError('Não foi possível carregar a evolução clínica.');
+      setError('Não foi possível carregar a avaliação clínica.');
       setNotas([]);
       setLoading(false);
       return;
@@ -147,7 +147,7 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
   return (
     <div className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Evolução clínica</h3>
+        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Avaliação clínica</h3>
         <div className="flex items-center gap-2">
           {activeNote && !confirmArchive && !editing && (
             <>
@@ -250,22 +250,22 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
         onChange={(e) => setText(e.target.value)}
         disabled={loading || saving || (!!activeNote && !editing)}
         readOnly={!!activeNote && !editing}
-        placeholder={`Digite aqui a evolução clínica da ${TURNOS.find(t => t.id === turno)!.label.toLowerCase()}...`}
+        placeholder={`Digite aqui a avaliação clínica da ${TURNOS.find(t => t.id === turno)!.label.toLowerCase()}...`}
         rows={4}
         className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-800 dark:text-slate-200 disabled:opacity-70"
       />
 
       {loading && (
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Carregando evolução clínica...</p>
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Carregando avaliação clínica...</p>
       )}
       {error && (
         <p className="mt-2 text-sm text-red-600 dark:text-red-400 font-medium">{error}</p>
       )}
       {saved && (
-        <p className="mt-2 text-sm text-green-600 dark:text-green-400 font-medium">Evolução clínica salva com sucesso.</p>
+        <p className="mt-2 text-sm text-green-600 dark:text-green-400 font-medium">Avaliação clínica salva com sucesso.</p>
       )}
       {archived && (
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 font-medium">Evolução arquivada. O campo está pronto para uma nova entrada.</p>
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 font-medium">Avaliação arquivada. O campo está pronto para uma nova entrada.</p>
       )}
     </div>
   );

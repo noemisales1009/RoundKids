@@ -647,7 +647,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     const fetchSituacao = async () => {
       setSituacaoLoading(true);
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('clinical_situations_24h')
           .select('id, situacao_texto, created_at, visible_until, turno')
           .eq('patient_id', patientId)
@@ -655,6 +655,12 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           .is('archived_at', null)
           .order('created_at', { ascending: false })
           .limit(10);
+        if (error) {
+          console.error('[EvolucaoDiaria] Erro ao carregar avaliação clínica:', error);
+          showNotification({ message: `Erro ao carregar a avaliação clínica: ${error.message}`, type: 'error' });
+          setSituacaoRec(null);
+          return;
+        }
         // Cada turno mostra só a sua evolução clínica. Registros antigos (sem turno) contam como Manhã.
         const lista = (data ?? []) as SituacaoClinicaRecord[];
         setSituacaoRec(lista.find(r => (r.turno ?? 'manha') === turno) ?? null);
@@ -1988,7 +1994,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         {situacaoLoading ? (
           <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" /></div>
         ) : !situacaoRec ? (
-          <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhuma situação clínica registrada nas últimas 24h.</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhuma avaliação clínica registrada neste turno nas últimas 24h.</p>
         ) : (
           <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
             <div className="flex items-center justify-between mb-3">
