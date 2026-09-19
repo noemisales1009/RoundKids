@@ -655,10 +655,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           .is('archived_at', null)
           .order('created_at', { ascending: false })
           .limit(10);
-        // Prefere a avaliação do turno escolhido; sem ela, vale a mais recente ainda dentro das 24h.
-        // Registros antigos (sem turno) contam como Manhã.
+        // Cada turno mostra só a sua evolução clínica. Registros antigos (sem turno) contam como Manhã.
         const lista = (data ?? []) as SituacaoClinicaRecord[];
-        setSituacaoRec(lista.find(r => (r.turno ?? 'manha') === turno) ?? lista[0] ?? null);
+        setSituacaoRec(lista.find(r => (r.turno ?? 'manha') === turno) ?? null);
       } catch (e) {
         console.error('Erro ao carregar situação clínica:', e);
       } finally {
