@@ -76,9 +76,14 @@ export const isConcluidoVisivel = (a: Alerta, agora: Date = new Date()): boolean
     return agora < fim;
 };
 
-// Precisa de revisão: está aberto e não foi justificado no turno atual.
+// Alerta em aberto que já passou do prazo (com ou sem justificativa).
+export const isAlertaAtrasado = (a: Alerta): boolean =>
+    semAcento(a.live_status).includes('fora_do_prazo');
+
+// Precisa de revisão: está aberto, já passou do prazo e não foi justificado no turno atual.
+// Alerta ainda dentro do prazo não trava a criação de um novo.
 export const precisaRevisao = (a: Alerta): boolean => {
-    if (!isAlertaAtivo(a)) return false;
+    if (!isAlertaAtivo(a) || !isAlertaAtrasado(a)) return false;
     const texto = a.justificativa || a.justification;
     const quando = a.justificativa_at || a.justification_at;
     if (!texto || !quando) return true;
