@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient';
 import { NotificationContext, UserContext } from '../contexts';
 import { alertasService, Alerta, isAlertaAtivo, isConcluidoVisivel } from '../services/alertasService';
 import { AlertasDisplay } from './alerts/AlertasDisplay';
+import { JustificativaMotivoFields } from './alerts/JustificativaMotivoFields';
 
 const ChevronDownIcon = ({ className }: { className?: string }) => (
     <svg className={className} fill="currentColor" viewBox="0 0 20 20">
@@ -24,6 +25,7 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
     const [showArchiveModal, setShowArchiveModal] = useState(false);
     const [selectedAlert, setSelectedAlert] = useState<Alerta | null>(null);
     const [justificationText, setJustificationText] = useState('');
+    const [justificationMotivo, setJustificationMotivo] = useState('');
     const [archiveReason, setArchiveReason] = useState('');
     const [savingId, setSavingId] = useState<string | null>(null);
     const { showNotification } = useContext(NotificationContext)!;
@@ -91,6 +93,17 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
         }
     };
 
+    const handleToggleContinuo = async (alerta: Alerta) => {
+        const novo = !alerta.continuo;
+        const ok = await alertasService.setContinuo(alerta.id, alerta.source, novo);
+        if (ok) {
+            setAlertas(prev => prev.map(a => a.id === alerta.id && a.source === alerta.source ? { ...a, continuo: novo } : a));
+            showNotification({ message: novo ? 'Alerta marcado como contínuo.' : 'Alerta desmarcado como contínuo.', type: 'success' });
+        } else {
+            showNotification({ message: 'Erro ao atualizar alerta contínuo', type: 'error' });
+        }
+    };
+
     const handleOpenArchiveModal = (alerta: Alerta) => {
         setSelectedAlert(alerta);
         setArchiveReason('');
@@ -121,7 +134,10 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
 
     const handleOpenJustificationModal = (alerta: Alerta) => {
         setSelectedAlert(alerta);
-        setJustificationText(alerta.justificativa || alerta.justification || '');
+        const texto = alerta.justificativa || alerta.justification || '';
+        setJustificationMotivo(alerta.justificativa_motivo || '');
+        // Sem descrição digitada, o texto salvo é o próprio motivo: não repete no campo de descrição
+        setJustificationText(texto && texto !== alerta.justificativa_motivo ? texto : '');
         setShowJustificationModal(true);
     };
 
@@ -132,12 +148,18 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
             return;
         }
 
-        const ok = await alertasService.updateJustificativa(selectedAlert.id, justificationText, selectedAlert.source, user.id);
+        if (!justificationMotivo) {
+            showNotification({ message: 'Selecione o motivo da justificativa', type: 'error' });
+            return;
+        }
+
+        const ok = await alertasService.updateJustificativa(selectedAlert.id, justificationText, selectedAlert.source, user.id, justificationMotivo);
         if (ok) {
             showNotification({ message: 'Justificativa salva com sucesso!', type: 'success' });
             setShowJustificationModal(false);
             setSelectedAlert(null);
             setJustificationText('');
+            setJustificationMotivo('');
             fetchAlertas();
         } else {
             showNotification({ message: 'Erro ao salvar justificativa', type: 'error' });
@@ -184,6 +206,7 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                             onConcluir={handleConcluir}
                             onArquivar={handleOpenArchiveModal}
                             onToggleEvolucao={handleToggleEvolucao}
+                            onToggleContinuo={handleToggleContinuo}
                             savingId={savingId}
                         />
                     )}
@@ -195,7 +218,7 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-lg w-full p-6">
                         <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-4">
-                            {(selectedAlert.justificativa || selectedAlert.justification) ? 'Editar Justificativa' : 'Adicionar Justificativa'}
+                            {(selectedAlert.justificativa || selectedAlert.justification || selectedAlert.justificativa_motivo) ? 'Editar Justificativa' : 'Adicionar Justificativa'}
                         </h3>
 
                         <div className="mb-4 p-3 bg-slate-100 dark:bg-slate-700 rounded">
@@ -204,15 +227,12 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                         </div>
 
                         <div className="mb-4">
-                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                Justificativa:
-                            </label>
-                            <textarea
-                                value={justificationText}
-                                onChange={(e) => setJustificationText(e.target.value)}
-                                className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200"
-                                rows={4}
-                                placeholder="Digite a justificativa para este alerta..."
+                            <JustificativaMotivoFields
+                                motivo={justificationMotivo}
+                                descricao={justificationText}
+                                onMotivo={setJustificationMotivo}
+                                onDescricao={setJustificationText}
+                                autoFocus
                             />
                         </div>
 
@@ -228,6 +248,7 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                                     setShowJustificationModal(false);
                                     setSelectedAlert(null);
                                     setJustificationText('');
+                                    setJustificationMotivo('');
                                 }}
                                 className="flex-1 px-4 py-2 bg-slate-300 hover:bg-slate-400 dark:bg-slate-600 dark:hover:bg-slate-500 text-slate-800 dark:text-slate-200 font-semibold rounded-lg transition"
                             >

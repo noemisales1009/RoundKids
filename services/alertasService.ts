@@ -25,6 +25,8 @@ export interface Alerta {
     responsavel?: string | null;
     responsible?: string | null;
     mostrar_evolucao?: boolean;
+    justificativa_motivo?: string | null;
+    continuo?: boolean;
 }
 
 const semAcento = (v?: string | null) =>
@@ -84,7 +86,8 @@ export const isAlertaAtrasado = (a: Alerta): boolean =>
 // Alerta ainda dentro do prazo não trava a criação de um novo.
 export const precisaRevisao = (a: Alerta): boolean => {
     if (!isAlertaAtivo(a) || !isAlertaAtrasado(a)) return false;
-    const texto = a.justificativa || a.justification;
+    if (a.continuo) return false; // alerta contínuo nunca trava a criação de outro
+    const texto = a.justificativa || a.justification || a.justificativa_motivo;
     const quando = a.justificativa_at || a.justification_at;
     if (!texto || !quando) return true;
     return new Date(quando) < getInicioTurnoAtual();
@@ -158,10 +161,10 @@ export const alertasService = {
         try {
             const [ap, t] = await Promise.all([
                 idsAP.length
-                    ? supabase.from('alertas_paciente').select('id, justificativa, justificativa_at').in('id', idsAP)
+                    ? supabase.from('alertas_paciente').select('id, justificativa, justificativa_at, justificativa_motivo, continuo').in('id', idsAP)
                     : Promise.resolve({ data: [], error: null }),
                 idsT.length
-                    ? supabase.from('tasks').select('id, justification, justification_at').in('id', idsT)
+                    ? supabase.from('tasks').select('id, justification, justification_at, justificativa_motivo, continuo').in('id', idsT)
                     : Promise.resolve({ data: [], error: null }),
             ]);
             if (ap.error) console.error('alertasService.enriquecerJustificativas - alertas_paciente:', ap.error);
@@ -173,10 +176,10 @@ export const alertasService = {
             return alertas.map(a => {
                 if (a.source === 'tasks') {
                     const r = porIdT.get(String(a.id));
-                    return r ? { ...a, justification: r.justification ?? a.justification, justification_at: r.justification_at ?? a.justification_at } : a;
+                    return r ? { ...a, justification: r.justification ?? a.justification, justification_at: r.justification_at ?? a.justification_at, justificativa_motivo: r.justificativa_motivo ?? null, continuo: r.continuo === true } : a;
                 }
                 const r = porIdAP.get(String(a.id));
-                return r ? { ...a, justificativa: r.justificativa ?? a.justificativa, justificativa_at: r.justificativa_at ?? a.justificativa_at } : a;
+                return r ? { ...a, justificativa: r.justificativa ?? a.justificativa, justificativa_at: r.justificativa_at ?? a.justificativa_at, justificativa_motivo: r.justificativa_motivo ?? null, continuo: r.continuo === true } : a;
             });
         } catch (error) {
             console.error('alertasService.enriquecerJustificativas:', error);
@@ -209,11 +212,14 @@ export const alertasService = {
         return true;
     },
 
-    async updateJustificativa(id: string, texto: string, source: AlertaSource, userId: string): Promise<boolean> {
+    // motivo (padronizado) é obrigatório; a descrição é opcional. Sem descrição, o texto salvo é o próprio motivo,
+    // assim as views do banco continuam entendendo o alerta como justificado.
+    async updateJustificativa(id: string, descricao: string, source: AlertaSource, userId: string, motivo: string): Promise<boolean> {
         const table = source === 'tasks' ? 'tasks' : 'alertas_paciente';
+        const texto = descricao.trim() || motivo;
         const payload = source === 'tasks'
-            ? { justification: texto, justification_by: userId, justification_at: new Date().toISOString() }
-            : { justificativa: texto, justificativa_by: userId, justificativa_at: new Date().toISOString() };
+            ? { justification: texto, justification_by: userId, justification_at: new Date().toISOString(), justificativa_motivo: motivo }
+            : { justificativa: texto, justificativa_by: userId, justificativa_at: new Date().toISOString(), justificativa_motivo: motivo };
         const { error } = await supabase.from(table).update(payload).eq('id', id);
         if (error) {
             console.error('alertasService.updateJustificativa:', error);
@@ -230,6 +236,16 @@ export const alertasService = {
             .eq('id', id);
         if (error) {
             console.error('alertasService.arquivarAlerta:', error);
+            return false;
+        }
+        return true;
+    },
+
+    async setContinuo(id: string, source: AlertaSource, value: boolean): Promise<boolean> {
+        const table = source === 'tasks' ? 'tasks' : 'alertas_paciente';
+        const { error } = await supabase.from(table).update({ continuo: value }).eq('id', id);
+        if (error) {
+            console.error('alertasService.setContinuo:', error);
             return false;
         }
         return true;

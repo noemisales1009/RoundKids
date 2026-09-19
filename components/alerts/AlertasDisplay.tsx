@@ -11,7 +11,10 @@ const agruparPorTurno = (lista: Alerta[]): Record<ShiftType, Alerta[]> => {
     const grupos: Record<ShiftType, Alerta[]> = { morning: [], afternoon: [], night: [] };
     const ativos = lista.filter(isAlertaAtivo);
     const concluidos = lista.filter(a => isConcluidoVisivel(a));
-    for (const a of [...ativos, ...concluidos]) {
+    // Alertas contínuos ficam fixados no topo de todas as abas, para continuarem sempre à vista
+    const continuos = ativos.filter(a => a.continuo);
+    (Object.keys(grupos) as ShiftType[]).forEach(t => grupos[t].push(...continuos));
+    for (const a of [...ativos.filter(x => !x.continuo), ...concluidos]) {
         grupos[getShiftDoAlerta(a)].push(a);
     }
     return grupos;
@@ -30,10 +33,11 @@ interface AlertasDisplayProps {
     onConcluir: (a: Alerta) => void;
     onArquivar: (a: Alerta) => void;
     onToggleEvolucao?: (a: Alerta, value: boolean) => void;
+    onToggleContinuo?: (a: Alerta) => void;
     savingId?: string | null;
 }
 
-export const AlertasDisplay: React.FC<AlertasDisplayProps> = ({ alertas, onJustificar, onConcluir, onArquivar, onToggleEvolucao, savingId }) => {
+export const AlertasDisplay: React.FC<AlertasDisplayProps> = ({ alertas, onJustificar, onConcluir, onArquivar, onToggleEvolucao, onToggleContinuo, savingId }) => {
     const [tab, setTab] = useState<ShiftType>(turnoAtual());
     const alertasPorTurno = agruparPorTurno(alertas);
     const total = alertasPorTurno.morning.length + alertasPorTurno.afternoon.length + alertasPorTurno.night.length;
@@ -67,6 +71,7 @@ export const AlertasDisplay: React.FC<AlertasDisplayProps> = ({ alertas, onJusti
                             onConcluir={onConcluir}
                             onArquivar={onArquivar}
                             onToggleEvolucao={onToggleEvolucao}
+                            onToggleContinuo={onToggleContinuo}
                             saving={savingId === alerta.id}
                         />
                     ))}

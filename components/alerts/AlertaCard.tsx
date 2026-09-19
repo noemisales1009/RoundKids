@@ -1,5 +1,6 @@
 import React from 'react';
 import { Alerta, isAlertaAtivo } from '../../services/alertasService';
+import { textoJustificativa } from '../../lib/motivosAlerta';
 
 interface AlertaCardProps {
     alerta: Alerta;
@@ -7,6 +8,7 @@ interface AlertaCardProps {
     onConcluir: (a: Alerta) => void;
     onArquivar: (a: Alerta) => void;
     onToggleEvolucao?: (a: Alerta, value: boolean) => void;
+    onToggleContinuo?: (a: Alerta) => void;
     saving?: boolean;
 }
 
@@ -31,9 +33,9 @@ const formatDate = (dateString: string) => {
     return date.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 };
 
-export const AlertaCard: React.FC<AlertaCardProps> = ({ alerta, onJustificar, onConcluir, onArquivar, onToggleEvolucao, saving }) => {
+export const AlertaCard: React.FC<AlertaCardProps> = ({ alerta, onJustificar, onConcluir, onArquivar, onToggleEvolucao, onToggleContinuo, saving }) => {
     const concluido = !isAlertaAtivo(alerta);
-    const justificativa = alerta.justificativa || alerta.justification;
+    const justificativa = textoJustificativa(alerta.justificativa_motivo, alerta.justificativa || alerta.justification);
     const responsavel = alerta.responsavel || alerta.responsible;
 
     return (
@@ -56,6 +58,11 @@ export const AlertaCard: React.FC<AlertaCardProps> = ({ alerta, onJustificar, on
                         {concluido && (
                             <span className="text-xs bg-emerald-600 text-white px-2 py-0.5 rounded-full font-semibold">
                                 ✓ Concluído
+                            </span>
+                        )}
+                        {!concluido && alerta.continuo && (
+                            <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full font-semibold">
+                                📌 Contínua
                             </span>
                         )}
                     </div>
@@ -118,6 +125,16 @@ export const AlertaCard: React.FC<AlertaCardProps> = ({ alerta, onJustificar, on
                         >
                             {saving ? 'Salvando...' : 'Concluir'}
                         </button>
+                        {onToggleContinuo && (
+                            <button
+                                onClick={() => onToggleContinuo(alerta)}
+                                disabled={saving}
+                                title="Alerta contínuo continua na lista e não bloqueia a criação de novos alertas"
+                                className={`flex items-center gap-1 px-3 py-1.5 disabled:opacity-50 text-white text-xs font-semibold rounded transition ${alerta.continuo ? 'bg-purple-800 hover:bg-purple-900' : 'bg-purple-600 hover:bg-purple-700'}`}
+                            >
+                                {alerta.continuo ? 'Desmarcar contínua' : '📌 Marcar contínua'}
+                            </button>
+                        )}
                         <button
                             onClick={() => onArquivar(alerta)}
                             disabled={saving}

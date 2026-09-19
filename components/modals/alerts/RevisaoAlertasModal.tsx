@@ -2,6 +2,8 @@ import React, { useContext, useState } from 'react';
 import { alertasService, Alerta, getShiftDoAlerta } from '../../../services/alertasService';
 import { ShiftType } from '../../../services/shiftFilterService';
 import { NotificationContext, UserContext } from '../../../contexts';
+import { JustificativaMotivoFields } from '../../alerts/JustificativaMotivoFields';
+import { textoJustificativa } from '../../../lib/motivosAlerta';
 
 const SHIFT_INFO: Record<ShiftType, { label: string; icon: string; badge: string }> = {
     morning: { label: 'Manhã', icon: '🌅', badge: 'bg-orange-500' },
@@ -31,6 +33,7 @@ export const RevisaoAlertasModal: React.FC<RevisaoAlertasModalProps> = ({
     const [justificados, setJustificados] = useState<Record<string, string>>({});
     const [acaoAberta, setAcaoAberta] = useState<{ id: string; modo: Modo } | null>(null);
     const [texto, setTexto] = useState('');
+    const [motivo, setMotivo] = useState('');
     const [salvandoId, setSalvandoId] = useState<string | null>(null);
 
     // Concluído/arquivado some da lista; justificado continua visível, mas já conta como tratado
@@ -41,6 +44,7 @@ export const RevisaoAlertasModal: React.FC<RevisaoAlertasModalProps> = ({
     const fecharAcao = () => {
         setAcaoAberta(null);
         setTexto('');
+        setMotivo('');
     };
 
     const exigeUsuario = () => {
@@ -67,17 +71,17 @@ export const RevisaoAlertasModal: React.FC<RevisaoAlertasModalProps> = ({
     };
 
     const handleSalvarJustificativa = async (alerta: Alerta) => {
-        const justificativa = texto.trim();
-        if (!justificativa) {
-            showNotification({ message: 'Escreva a justificativa antes de salvar', type: 'error' });
+        if (!motivo) {
+            showNotification({ message: 'Selecione o motivo da justificativa', type: 'error' });
             return;
         }
         if (!exigeUsuario()) return;
+        const descricao = texto.trim();
         setSalvandoId(alerta.id);
-        const ok = await alertasService.updateJustificativa(alerta.id, justificativa, alerta.source, user!.id!);
+        const ok = await alertasService.updateJustificativa(alerta.id, descricao, alerta.source, user!.id!, motivo);
         setSalvandoId(null);
         if (ok) {
-            setJustificados(prev => ({ ...prev, [alerta.id]: justificativa }));
+            setJustificados(prev => ({ ...prev, [alerta.id]: textoJustificativa(motivo, descricao) }));
             fecharAcao();
             onAlertaTratado();
             showNotification({ message: 'Justificativa registrada!', type: 'success' });
@@ -106,10 +110,25 @@ export const RevisaoAlertasModal: React.FC<RevisaoAlertasModalProps> = ({
         }
     };
 
+    const handleMarcarContinua = async (alerta: Alerta) => {
+        setSalvandoId(alerta.id);
+        const ok = await alertasService.setContinuo(alerta.id, alerta.source, true);
+        setSalvandoId(null);
+        if (ok) {
+            setRemovidos(prev => [...prev, alerta.id]);
+            fecharAcao();
+            onAlertaTratado();
+            showNotification({ message: 'Alerta marcado como contínuo. Ele continua na lista e não trava novos alertas.', type: 'success' });
+        } else {
+            showNotification({ message: 'Erro ao marcar alerta como contínuo', type: 'error' });
+        }
+    };
+
     const abrirJustificativa = (alerta: Alerta) => {
-        const atual = justificados[alerta.id] || alerta.justificativa || alerta.justification || '';
+        const atual = alerta.justificativa || alerta.justification || '';
         setAcaoAberta({ id: alerta.id, modo: 'justificar' });
-        setTexto(atual);
+        setMotivo(alerta.justificativa_motivo || '');
+        setTexto(atual && atual !== alerta.justificativa_motivo ? atual : '');
     };
 
     const abrirArquivamento = (alerta: Alerta) => {
@@ -173,7 +192,7 @@ export const RevisaoAlertasModal: React.FC<RevisaoAlertasModalProps> = ({
                             const modo = acaoAberta?.id === alerta.id ? acaoAberta.modo : null;
                             const salvando = salvandoId === alerta.id;
                             const justificativaNova = justificados[alerta.id];
-                            const justificativaAnterior = alerta.justificativa || alerta.justification;
+                            const justificativaAnterior = textoJustificativa(alerta.justificativa_motivo, alerta.justificativa || alerta.justification);
 
                             return (
                                 <div
@@ -244,16 +263,25 @@ export const RevisaoAlertasModal: React.FC<RevisaoAlertasModalProps> = ({
 
                                     {modo ? (
                                         <div className="mt-2 space-y-2">
-                                            <textarea
-                                                value={texto}
-                                                onChange={e => setTexto(e.target.value)}
-                                                placeholder={modo === 'arquivar'
-                                                    ? 'Motivo do arquivamento (ex: conduta suspensa, alerta duplicado)'
-                                                    : 'Por que este alerta ainda está em aberto?'}
-                                                autoFocus
-                                                rows={3}
-                                                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            />
+                                            {modo === 'justificar' ? (
+                                                <JustificativaMotivoFields
+                                                    motivo={motivo}
+                                                    descricao={texto}
+                                                    onMotivo={setMotivo}
+                                                    onDescricao={setTexto}
+                                                    disabled={salvando}
+                                                    autoFocus
+                                                />
+                                            ) : (
+                                                <textarea
+                                                    value={texto}
+                                                    onChange={e => setTexto(e.target.value)}
+                                                    placeholder="Motivo do arquivamento (ex: conduta suspensa, alerta duplicado)"
+                                                    autoFocus
+                                                    rows={3}
+                                                    className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            )}
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={fecharAcao}
@@ -292,6 +320,14 @@ export const RevisaoAlertasModal: React.FC<RevisaoAlertasModalProps> = ({
                                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 text-slate-700 dark:text-slate-200 text-sm font-medium transition"
                                             >
                                                 {justificativaNova ? '✏️ Editar justificativa' : '📝 Justificar'}
+                                            </button>
+                                            <button
+                                                onClick={() => handleMarcarContinua(alerta)}
+                                                disabled={salvando}
+                                                title="Continua na lista e não trava a criação de novos alertas"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-semibold transition"
+                                            >
+                                                📌 Marcar contínua
                                             </button>
                                             <button
                                                 onClick={() => abrirArquivamento(alerta)}
