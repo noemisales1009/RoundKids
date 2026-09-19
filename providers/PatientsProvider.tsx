@@ -55,6 +55,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 observation: e.observacao,
                 sistema: e.sistema || undefined,
                 mostrar_evolucao: e.mostrar_evolucao ?? null,
+                mostrar_evolucao_em: e.mostrar_evolucao_em ?? null,
             });
             return acc;
         }, {});
@@ -524,7 +525,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             data_exame: exam.date,
             observacao: sanitizeTextOrNull(exam.observation),
             criado_por_id: userId || null,
-            // NULL = segue a regra automática das 48h; true = fixado manualmente na evolução
+            // NULL = segue a regra automática das 24h; true = fixado manualmente na evolução
             // (sobrescreve o DEFAULT true da coluna no banco; false nunca é enviado no cadastro)
             mostrar_evolucao: exam.mostrar_evolucao === true ? true : null,
             ...(exam.sistema ? { sistema: exam.sistema } : {}),
@@ -665,7 +666,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const toggleMostrarEvolucaoExame = async (examId: number | string, value: boolean) => {
         const { error } = await supabase.from('exames_pacientes')
-            .update({ mostrar_evolucao: value })
+            .update({ mostrar_evolucao: value, mostrar_evolucao_em: value ? new Date().toISOString() : null })
             .eq('id', examId);
         if (!error) fetchPatients();
     };
@@ -699,7 +700,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 observacao: sanitizeTextOrNull(examData.observation),
                 sistema: examData.sistema || null,
                 // undefined = chamador não quis mexer na coluna (preserva NULL/true/false do banco)
-                ...(examData.mostrar_evolucao !== undefined ? { mostrar_evolucao: examData.mostrar_evolucao } : {}),
+                ...(examData.mostrar_evolucao !== undefined ? { mostrar_evolucao: examData.mostrar_evolucao, mostrar_evolucao_em: examData.mostrar_evolucao_em ?? null } : {}),
             })
             .eq('id', examData.id);
         if (!error) fetchPatients();

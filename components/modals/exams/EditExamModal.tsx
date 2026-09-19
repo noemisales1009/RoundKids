@@ -3,6 +3,7 @@ import { PatientsContext, NotificationContext } from '../../../contexts';
 import { Exam } from '../../../types';
 import { CloseIcon, ChevronDownIcon } from '../../icons';
 import { ALERT_SYSTEMS } from '../../../constants';
+import { isExameNaEvolucao } from '../../../lib/exameEvolucao';
 
 export const EditExamModal: React.FC<{ exam: Exam; patientId: number | string; onClose: () => void; }> = ({ exam, patientId, onClose }) => {
     const { updateExamInPatient } = useContext(PatientsContext)!;
@@ -16,9 +17,8 @@ export const EditExamModal: React.FC<{ exam: Exam; patientId: number | string; o
     const [sistemaOutros, setSistemaOutros] = useState(
         exam.sistema && !ALERT_SYSTEMS.includes(exam.sistema) ? exam.sistema : ''
     );
-    // mesma regra da lista (isExamNaEvolucao): true = fixado, NULL = só dentro das 48h
-    const _cutoff48h = new Date(Date.now() - 3 * 60 * 60 * 1000 - 48 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const exibidoInicial = exam.mostrar_evolucao === true || (exam.mostrar_evolucao !== false && exam.date >= _cutoff48h);
+    // mesma regra da lista: fixo = sempre; marcado manualmente = 24h; NULL = data do exame nas últimas 24h
+    const exibidoInicial = isExameNaEvolucao(exam);
     const [exibir, setExibir] = useState(exibidoInicial);
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -31,6 +31,8 @@ export const EditExamModal: React.FC<{ exam: Exam; patientId: number | string; o
             sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined,
             // só sobrescreve se o usuário mexeu no checkbox; senão preserva o valor do banco (NULL continua NULL)
             mostrar_evolucao: exibir !== exibidoInicial ? exibir : exam.mostrar_evolucao,
+            // marcar aqui = fixar permanentemente (sem data de marcação); desmarcar = excluir
+            mostrar_evolucao_em: exibir !== exibidoInicial ? null : exam.mostrar_evolucao_em ?? null,
         });
         showNotification({ message: 'Exame atualizado com sucesso!', type: 'success' });
         onClose();

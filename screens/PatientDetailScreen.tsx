@@ -15,6 +15,7 @@ import {
     UserContext,
 } from '../contexts';
 import { useHeader } from '../hooks/useHeader';
+import { isExameNaEvolucao } from '../lib/exameEvolucao';
 import { alertasService, Alerta, precisaRevisao, isAlertaAtivo } from '../services/alertasService';
 
 // --- LOADING COMPONENT ---
@@ -274,7 +275,7 @@ const PatientDetailScreen: React.FC = () => {
         try {
             const { error } = await supabase
                 .from('exames_pacientes')
-                .update({ mostrar_evolucao: include })
+                .update({ mostrar_evolucao: include, mostrar_evolucao_em: include ? new Date().toISOString() : null })
                 .in('id', ids);
             if (error) {
                 showNotification({ message: `Erro: ${error.message}`, type: 'error' });
@@ -289,12 +290,9 @@ const PatientDetailScreen: React.FC = () => {
         }
     };
 
-    // Um exame entra na Evolução Diária se estiver dentro das últimas 48h (padrão)
-    // OU se foi incluído manualmente (mostrar_evolucao === true), mesmo fora desse período.
-    // Mantém a mesma regra usada em EvolucaoDiariaScreen para o checkbox refletir o estado real.
-    const _examCutoff48h = new Date(Date.now() - 3 * 60 * 60 * 1000 - 48 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const isExamNaEvolucao = (e: Exam) =>
-        e.mostrar_evolucao === true || (e.mostrar_evolucao !== false && e.date >= _examCutoff48h);
+    // Regra única (lib/exameEvolucao): automático = data do exame nas últimas 24h; marcado manualmente vale 24h;
+    // fixado permanentemente (cadastro/edição) fica sempre. Mesma regra da EvolucaoDiariaScreen.
+    const isExamNaEvolucao = (e: Exam) => isExameNaEvolucao(e);
 
     useEffect(() => {
         // Scroll para o topo quando entra na página

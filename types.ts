@@ -22,6 +22,7 @@ export interface Exam {
   isArchived?: boolean;
   sistema?: string;
   mostrar_evolucao?: boolean | null;
+  mostrar_evolucao_em?: string | null; // quando foi marcado manualmente (NULL + true = fixo)
 }
 
 export interface Medication {

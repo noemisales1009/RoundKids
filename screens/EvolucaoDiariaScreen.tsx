@@ -8,6 +8,7 @@ import { formatDateToBRL, ALERT_SYSTEMS, getSistemaForScale } from '../constants
 import { formatDecimalBR } from '../lib/format';
 import { Patient } from '../types';
 import { supabase } from '../supabaseClient';
+import { isExameNaEvolucao } from '../lib/exameEvolucao';
 import { ControlesSaidasSection } from '../components/ControlesSaidasSection';
 
 interface DiagItem {
@@ -1054,7 +1055,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
     const _today = new Date(); _today.setHours(0, 0, 0, 0);
     const _SP_OFFSET = 3 * 60 * 60 * 1000;
-    const _cutoff48h = new Date(Date.now() - _SP_OFFSET - 48 * 60 * 60 * 1000).toISOString().split('T')[0];
     const _cutoff24h = new Date(Date.now() - _SP_OFFSET - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     const _allDietasWord = [...(p.diets ?? [])].filter(d => !d.isArchived && d.mostrar_evolucao !== false && (d.vet_at != null || d.pt_at != null)).sort((a, b) => b.data_inicio.localeCompare(a.data_inicio));
@@ -1127,7 +1127,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const _dietaMatch = _allMatchDiets.find(d => d.data_inicio.split(' ')[0] >= _cutoff24h) ?? _allMatchDiets[0];
       const diets = _dietaMatch ? [_dietaMatch] : [];
       const exs   = (p.exams ?? []).filter(e => !e.isArchived && matchSistema(e.sistema) && !we.has(`exam_${e.id}`)
-        && (e.mostrar_evolucao === true || (e.mostrar_evolucao !== false && e.date >= _cutoff48h)));
+        && isExameNaEvolucao(e));
       const scs   = latestScalesForSistemas(scaleScoresList, sistemas, we);
       const imgs  = examesImagemList.filter(ei => ei.mostrar_evolucao !== false && matchSistema(ei.sistema) && !we.has(`img_${ei.id}`));
       const pars  = pareceresList.filter(par => {
@@ -2021,14 +2021,13 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               const secCirurgias = (selectedPatient?.surgicalProcedures ?? [])
                 .filter(c => !c.isArchived && c.mostrar_evolucao !== false && c.sistema && allNames.includes(c.sistema));
               const _SP_OFFSET_UI = 3 * 60 * 60 * 1000;
-              const _uiCutoff48h = new Date(Date.now() - _SP_OFFSET_UI - 48 * 60 * 60 * 1000).toISOString().split('T')[0];
               const _uiCutoff24h = new Date(Date.now() - _SP_OFFSET_UI - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
               const _allSecDietas = [...(selectedPatient?.diets ?? [])].filter(d => !d.isArchived && d.mostrar_evolucao !== false && d.sistema && allNames.includes(d.sistema)).sort((a, b) => b.data_inicio.localeCompare(a.data_inicio));
               const _secDietaMatch = _allSecDietas.find(d => d.data_inicio.split(' ')[0] >= _uiCutoff24h) ?? _allSecDietas[0];
               const secDietas = _secDietaMatch ? [_secDietaMatch] : [];
               const secExames = (selectedPatient?.exams ?? [])
                 .filter(e => !e.isArchived && e.sistema && allNames.includes(e.sistema)
-                  && (e.mostrar_evolucao === true || (e.mostrar_evolucao !== false && e.date >= _uiCutoff48h)));
+                  && isExameNaEvolucao(e));
               const secEscalas = latestScalesForSistemas(scaleScoresList, allNames, wordExcluded);
               const secExamesImagem = examesImagemList
                 .filter(ei => ei.mostrar_evolucao !== false && ei.sistema && allNames.includes(ei.sistema));
