@@ -402,10 +402,17 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   const [diagItems, setDiagItems] = useState<DiagItem[]>([]);
   const [diagLoading, setDiagLoading] = useState(false);
 
-  const [bhBalance, setBhBalance] = useState<BHBalanceRecord | null>(null);
+  const [bhAll, setBhAll] = useState<BHBalanceRecord[]>([]);
   const [bhCumul, setBhCumul] = useState<BHCumulativoRecord | null>(null);
   const [bhLoading, setBhLoading] = useState(false);
-  const [diureseRec, setDiureseRec] = useState<DiureseRecord | null>(null);
+  const [diureseAll, setDiureseAll] = useState<DiureseRecord[]>([]);
+  // Manhã mostra o registro mais recente; Tarde/Noite só o que foi registrado naquele turno e dia
+  const doTurno = <T extends { created_at: string }>(lista: T[]): T | null =>
+    (evolucaoCurta
+      ? lista.find(r => { const o = turnoEDiaDe(r.created_at); return o.turno === turno && o.dia === date; })
+      : lista[0]) ?? null;
+  const diureseRec = doTurno(diureseAll);
+  const bhBalance = doTurno(bhAll);
   const [diureseLoading, setDiureseLoading] = useState(false);
   const [aportesList, setAportesList] = useState<AporteRecord[]>([]);
   const [aportesLoading, setAportesLoading] = useState(false);
@@ -557,19 +564,19 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   }, [patientId]);
 
   useEffect(() => {
-    if (!patientId) { setBhBalance(null); setBhCumul(null); return; }
+    if (!patientId) { setBhAll([]); setBhCumul(null); return; }
     const fetchBH = async () => {
       setBhLoading(true);
       try {
         const [balRes, cumRes] = await Promise.all([
-          supabase.from('balanco_hidrico').select('created_at, peso, volume, data_registro').eq('patient_id', patientId).order('data_registro', { ascending: false }).limit(1),
+          supabase.from('balanco_hidrico').select('created_at, peso, volume, data_registro').eq('patient_id', patientId).order('data_registro', { ascending: false }).limit(40),
           supabase.from('balanco_hidrico_cumulativo').select('bh_cumulativo_pct, bh_24h_pct, registros_24h').eq('patient_id', patientId).single(),
         ]);
-        setBhBalance(balRes.data?.[0] ? {
-          created_at: balRes.data[0].data_registro || balRes.data[0].created_at,
-          peso: parseFloat(balRes.data[0].peso),
-          volume: parseFloat(balRes.data[0].volume),
-        } : null);
+        setBhAll((balRes.data ?? []).map((r: any) => ({
+          created_at: r.data_registro || r.created_at,
+          peso: parseFloat(r.peso),
+          volume: parseFloat(r.volume),
+        })));
         setBhCumul(cumRes.data ?? null);
       } catch (e) {
         console.error('Erro ao carregar BH:', e);
@@ -581,7 +588,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   }, [patientId]);
 
   useEffect(() => {
-    if (!patientId) { setDiureseRec(null); return; }
+    if (!patientId) { setDiureseAll([]); return; }
     const fetchDiurese = async () => {
       setDiureseLoading(true);
       try {
@@ -590,18 +597,14 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           .select('id, data_registro, peso, volume, horas')
           .eq('patient_id', patientId)
           .order('data_registro', { ascending: false })
-          .limit(1);
-        if (data?.[0]) {
-          setDiureseRec({
-            id: data[0].id,
-            created_at: data[0].data_registro,
-            peso: parseFloat(data[0].peso),
-            volume: parseFloat(data[0].volume),
-            horas: parseInt(data[0].horas),
-          });
-        } else {
-          setDiureseRec(null);
-        }
+          .limit(40);
+        setDiureseAll((data ?? []).map((r: any) => ({
+          id: r.id,
+          created_at: r.data_registro,
+          peso: parseFloat(r.peso),
+          volume: parseFloat(r.volume),
+          horas: parseInt(r.horas),
+        })));
       } catch (e) {
         console.error('Erro ao carregar diurese:', e);
       } finally {
@@ -1027,7 +1030,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     }
     } // fim das seções completas (2 a 6)
 
-    if (controlesSaidasRec || diureseRec) {
+    const diureseRel = diureseRec;
+
+    if (controlesSaidasRec || diureseRel) {
       const cs = controlesSaidasRec;
       const vitaisLines: string[] = [];
       if (cs) {
@@ -1055,7 +1060,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         if (cs.hemodialise)        saidasLines.push(`  Hemodiálise: ${cs.hemodialise} ml`);
         if (cs.dialise_peritoneal) saidasLines.push(`  Diálise Peritoneal: ${cs.dialise_peritoneal} ml`);
       }
-      if (diureseRec) saidasLines.push(`  Diurese: ${((diureseRec.volume / diureseRec.horas) / diureseRec.peso).toFixed(2)} mL/kg/h | Volume: ${diureseRec.volume} mL`);
+      if (diureseRel) saidasLines.push(`  Diurese: ${((diureseRel.volume / diureseRel.horas) / diureseRel.peso).toFixed(2)} mL/kg/h | Volume: ${diureseRel.volume} mL`);
       if (vitaisLines.length > 0 || saidasLines.length > 0) {
         title('7. CONTROLES E SAÍDAS');
         if (vitaisLines.length > 0) { add('Controles:'); vitaisLines.forEach(l => add(l)); }
@@ -1063,19 +1068,17 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       }
     }
 
-    if (!evolucaoCurta) {
     if (bhBalance) {
-      title('8. BH DIÁRIO');
+      title(evolucaoCurta ? 'BALANÇO HÍDRICO' : '8. BH DIÁRIO');
       const pct = bhBalance.volume / (bhBalance.peso * 10);
       add(`${pct.toFixed(2)}% — ${bhBalance.volume > 0 ? 'Ganho' : 'Perda'} | Volume: ${bhBalance.volume > 0 ? '+' : ''}${bhBalance.volume} mL`);
     }
 
-    if (MOSTRAR_BH_CUMULATIVO && bhCumul && bhCumul.registros_24h > 0) {
+    if (!evolucaoCurta && MOSTRAR_BH_CUMULATIVO && bhCumul && bhCumul.registros_24h > 0) {
       title('9. BH CUMULATIVO');
       const historicoAntigo = bhCumul.bh_cumulativo_pct - bhCumul.bh_24h_pct;
       add(`Total: ${bhCumul.bh_cumulativo_pct > 0 ? '+' : ''}${bhCumul.bh_cumulativo_pct.toFixed(2)}% | BH Anterior: ${historicoAntigo.toFixed(2)}% | Últimas 24h: ${bhCumul.bh_24h_pct.toFixed(2)}%`);
     }
-    } // fim das seções completas (8 e 9)
 
     const _today = new Date(); _today.setHours(0, 0, 0, 0);
     const _SP_OFFSET = 3 * 60 * 60 * 1000;
@@ -1118,9 +1121,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     }
 
     if (evolucaoCurta) {
-      // Tarde/Noite: no lugar da AP completa, só as recomendações (alertas em aberto do turno)
+      // Tarde/Noite: no lugar da AP completa, só as recomendações (alertas em aberto criados neste turno)
       const recomendacoes = alertasList.filter(a => {
         if (a.mostrar_evolucao === false || we.has(`alt_${a.id}`)) return false;
+        const orig = turnoEDiaDe(a.created_at);
+        if (orig.turno !== turno || orig.dia !== date) return false;
         const st = (a.status || '').toLowerCase();
         return !st.includes('concluí') && !st.includes('concluido') && !st.includes('resolvido') && !st.includes('arquivado');
       });
@@ -1839,13 +1844,12 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       {/* 7. Controles e Saídas */}
       <ControlesSaidasSection patientId={patientId} turno={turno} />
 
-      {!evolucaoCurta && (<>
-      {/* 8. BH Diário */}
-      <Section title="8. BH Diário" id="bhDiario" open={openSections.has('bhDiario')} onToggle={() => toggle('bhDiario')}>
+      {/* 8. BH Diário (aparece em todos os turnos) */}
+      <Section title={evolucaoCurta ? "Balanço Hídrico" : "8. BH Diário"} id="bhDiario" open={openSections.has('bhDiario')} onToggle={() => toggle('bhDiario')}>
         {bhLoading ? (
           <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" /></div>
         ) : !bhBalance ? (
-          <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum balanço hídrico registrado.</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500 italic">{evolucaoCurta ? 'Nenhum balanço hídrico registrado neste turno.' : 'Nenhum balanço hídrico registrado.'}</p>
         ) : (() => {
           const pct = bhBalance.volume / (bhBalance.peso * 10);
           const isGain = bhBalance.volume > 0;
@@ -1867,6 +1871,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         })()}
       </Section>
 
+      {!evolucaoCurta && (<>
       {/* 9. BH Cumulativo — desativado temporariamente (MOSTRAR_BH_CUMULATIVO) */}
       {MOSTRAR_BH_CUMULATIVO && (
       <Section title="9. BH Cumulativo" id="bhCumulativo" open={openSections.has('bhCumulativo')} onToggle={() => toggle('bhCumulativo')}>
@@ -1901,12 +1906,14 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       </Section>
       )}
 
+      </>)}
+
       {/* 10. Diurese */}
-      <Section title="10. Diurese" id="diurese" open={openSections.has('diurese')} onToggle={() => toggle('diurese')}>
+      <Section title={evolucaoCurta ? "Diurese" : "10. Diurese"} id="diurese" open={openSections.has('diurese')} onToggle={() => toggle('diurese')}>
         {diureseLoading ? (
           <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" /></div>
         ) : !diureseRec ? (
-          <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum registro de diurese.</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500 italic">{evolucaoCurta ? 'Nenhum registro de diurese neste turno.' : 'Nenhum registro de diurese.'}</p>
         ) : (
           <div className="p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
             <p className="text-xs font-medium text-primary-700 dark:text-primary-400 mb-1">DIURESE</p>
@@ -1924,6 +1931,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         )}
       </Section>
 
+      {!evolucaoCurta && (<>
       {/* 11. Aportes */}
       <Section title="11. Aportes" id="aportes" open={openSections.has('aportes')} onToggle={() => toggle('aportes')}>
         {aportesLoading ? (
