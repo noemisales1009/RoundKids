@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { ThemeContext, NotificationContext } from '../contexts';
 import { supabase } from '../supabaseClient';
 import { ChevronRightIcon } from './icons';
-import { Turno, turnoAtualSP } from '../lib/turno';
+import { Turno, turnoAtualSP, turnoEDiaDe } from '../lib/turno';
 
 const TURNOS: { id: Turno; label: string; icon: string }[] = [
   { id: 'manha', label: 'Manhã', icon: '🌅' },
@@ -15,6 +15,8 @@ interface Props {
   readOnly?: boolean;
   // Quando informado, o turno vem de fora (Evolução Diária) e as abas não aparecem
   turno?: Turno;
+  // Quando informado, a data vem de fora (Evolução Diária) e o seletor de data some
+  data?: string;
 }
 
 interface Data {
@@ -78,7 +80,8 @@ const dxtRange = (meds: DxtMedicao[]): { min: string; max: string } | null => {
   return { min: String(Math.min(...vals)), max: String(Math.max(...vals)) };
 };
 
-const todayStr = () => new Date().toISOString().slice(0, 10);
+// Dia da evolução (Brasília): a noite antes das 7h ainda pertence ao dia anterior
+const todayStr = () => turnoEDiaDe(new Date().toISOString()).dia;
 
 const formatDateBR = (iso: string) => {
   const [y, m, d] = iso.split('-');
@@ -128,14 +131,15 @@ const CollapsibleHeader = ({
   </button>
 );
 
-export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = false, turno: turnoProp }) => {
+export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = false, turno: turnoProp, data: dataProp }) => {
   const themeContext = useContext(ThemeContext);
   const isDark = themeContext?.theme === 'dark';
   const { showNotification } = useContext(NotificationContext)!;
 
   const [turnoSel, setTurnoSel] = useState<Turno>(turnoAtualSP);
   const turno = turnoProp ?? turnoSel;
-  const [selectedDate, setSelectedDate] = useState(todayStr());
+  const [dataSel, setSelectedDate] = useState(todayStr());
+  const selectedDate = dataProp ?? dataSel;
   const [data, setData] = useState<Data>(EMPTY);
   const [dxtMeds, setDxtMeds] = useState<DxtMedicaoRow[]>([]);
   const dxtSeq = useRef(0);
@@ -467,7 +471,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
         </div>
 
         <div className="flex items-center gap-2">
-          <input
+          {dataProp === undefined && <input
             type="date"
             value={selectedDate}
             disabled={saving}
@@ -477,8 +481,8 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
                 ? 'bg-slate-800 border-slate-600 text-slate-200'
                 : 'bg-white border-slate-300 text-slate-700'
             }`}
-          />
-          {savedDates.length > 0 && (
+          />}
+          {dataProp === undefined && savedDates.length > 0 && (
             <button
               onClick={() => setShowDatePicker(v => !v)}
               title="Ver datas com registros"

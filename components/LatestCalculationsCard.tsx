@@ -50,9 +50,10 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
   const [diuresisList, setDiuresisList] = useState<DiuresisRecord[]>([]);
   const [balanceList, setBalanceList] = useState<BalanceRecord[]>([]);
   const [turno, setTurno] = useState<Turno>(turnoAtualSP);
-  // Registro mais recente feito dentro do turno selecionado (o turno vem da hora do registro)
+  const diaAtual = turnoEDiaDe(new Date().toISOString()).dia;
+  // Registro mais recente feito dentro do turno selecionado, no dia de hoje; turno sem registro fica em branco
   const doTurno = <T extends { created_at: string }>(lista: T[]): T | null =>
-    lista.find(r => turnoEDiaDe(r.created_at).turno === turno) ?? null;
+    lista.find(r => { const o = turnoEDiaDe(r.created_at); return o.turno === turno && o.dia === diaAtual; }) ?? null;
   const latestDiuresis = doTurno(diuresisList);
   const latestBalance = doTurno(balanceList);
   const [balancoCumulativo, setBalancoCumulativo] = useState<BalancoCumulativoRecord | null>(null);

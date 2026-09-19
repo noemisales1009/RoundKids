@@ -406,11 +406,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   const [bhCumul, setBhCumul] = useState<BHCumulativoRecord | null>(null);
   const [bhLoading, setBhLoading] = useState(false);
   const [diureseAll, setDiureseAll] = useState<DiureseRecord[]>([]);
-  // Manhã mostra o registro mais recente; Tarde/Noite só o que foi registrado naquele turno e dia
+  // Cada turno mostra só o que foi registrado naquele turno e dia; turno sem registro fica em branco
   const doTurno = <T extends { created_at: string }>(lista: T[]): T | null =>
-    (evolucaoCurta
-      ? lista.find(r => { const o = turnoEDiaDe(r.created_at); return o.turno === turno && o.dia === date; })
-      : lista[0]) ?? null;
+    lista.find(r => { const o = turnoEDiaDe(r.created_at); return o.turno === turno && o.dia === date; }) ?? null;
   const diureseRec = doTurno(diureseAll);
   const bhBalance = doTurno(bhAll);
   const [diureseLoading, setDiureseLoading] = useState(false);
@@ -1842,7 +1840,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       </>)}
 
       {/* 7. Controles e Saídas */}
-      <ControlesSaidasSection patientId={patientId} turno={turno} />
+      <ControlesSaidasSection patientId={patientId} turno={turno} data={date} />
 
       {/* 8. BH Diário (aparece em todos os turnos) */}
       <Section title={evolucaoCurta ? "Balanço Hídrico" : "8. BH Diário"} id="bhDiario" open={openSections.has('bhDiario')} onToggle={() => toggle('bhDiario')}>
