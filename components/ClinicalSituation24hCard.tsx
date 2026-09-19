@@ -52,7 +52,8 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
       .limit(30);
 
     if (fetchError) {
-      setError('Não foi possível carregar a avaliação clínica.');
+      console.error('[Avaliação clínica] carregar:', fetchError);
+      setError(`Não foi possível carregar a avaliação clínica: ${fetchError.message}`);
       setNotas([]);
       setLoading(false);
       return;
@@ -90,7 +91,8 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
         .eq('id', activeNote.id);
 
       if (updateError) {
-        setError('Não foi possível atualizar a situação clínica.');
+        console.error('[Avaliação clínica] atualizar:', updateError);
+        setError(`Não foi possível atualizar a avaliação clínica: ${updateError.message}`);
         setSaving(false);
         return;
       }
@@ -100,7 +102,8 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
         .insert({ patient_id: patientId, situacao_texto: finalText, created_by: userId, updated_by: userId, turno });
 
       if (insertError) {
-        setError('Não foi possível salvar a situação clínica.');
+        console.error('[Avaliação clínica] salvar:', insertError);
+        setError(`Não foi possível salvar a avaliação clínica: ${insertError.message}`);
         setSaving(false);
         return;
       }

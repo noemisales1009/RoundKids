@@ -1120,14 +1120,13 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       // Tarde/Noite: no lugar da AP completa, só as recomendações (alertas em aberto do turno)
       const recomendacoes = alertasList.filter(a => {
         if (a.mostrar_evolucao === false || we.has(`alt_${a.id}`)) return false;
-        const orig = turnoEDiaDe(a.created_at);
-        if (orig.turno !== turno || orig.dia !== date) return false;
         const st = (a.status || '').toLowerCase();
         return !st.includes('concluí') && !st.includes('concluido') && !st.includes('resolvido') && !st.includes('arquivado');
       });
-      if (recomendacoes.length > 0) {
+      if (recomendacoes.length > 0 || condutasCriticas.trim()) {
         title('RECOMENDAÇÕES');
         recomendacoes.forEach(a => add(`  ${a.alerta_descricao}`));
+        if (condutasCriticas.trim()) add(condutasCriticas);
       }
       blank();
       add(`Gerado em: ${new Date().toLocaleString('pt-BR')} | RoundKids`);
@@ -2062,13 +2061,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           ) : (() => {
             const recomendacoes = alertasList.filter(a => {
               if (a.mostrar_evolucao === false || wordExcluded.has(`alt_${a.id}`)) return false;
-              const orig = turnoEDiaDe(a.created_at);
-              if (orig.turno !== turno || orig.dia !== date) return false;
               const st = (a.status || '').toLowerCase();
               return !st.includes('concluí') && !st.includes('concluido') && !st.includes('resolvido') && !st.includes('arquivado');
             });
             return recomendacoes.length === 0 ? (
-              <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhuma recomendação em aberto neste turno.</p>
+              <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum alerta em aberto no Round.</p>
             ) : (
               <ul className="space-y-2">
                 {recomendacoes.map(a => (
@@ -2080,6 +2077,29 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               </ul>
             );
           })()}
+          <div className="mt-4 space-y-3">
+            <Field label={`Recomendações — ${turnoLabel} (digite aqui)`} value={condutasCriticas} onChange={setCondutasCriticas} rows={4} placeholder="Digite as recomendações deste turno..." />
+            {condutasCriticas.trim() && (
+              <div className="flex flex-col sm:flex-row gap-2">
+                <button
+                  onClick={handleSalvarCondutas}
+                  disabled={savingCondutas || archivingCondutas}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 border-primary-400 text-primary-600 hover:bg-primary-50 dark:border-primary-600 dark:text-primary-400 dark:hover:bg-primary-900/20"
+                >
+                  <span className="material-symbols-rounded text-[18px]">save</span>
+                  {savingCondutas ? 'Salvando...' : 'Salvar'}
+                </button>
+                <button
+                  onClick={handleArquivarCondutas}
+                  disabled={savingCondutas || archivingCondutas}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700/60 dark:text-amber-400 dark:hover:bg-amber-900/20"
+                >
+                  <span className="material-symbols-rounded text-[18px]">archive</span>
+                  {archivingCondutas ? 'Arquivando...' : 'Arquivar e Limpar'}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
