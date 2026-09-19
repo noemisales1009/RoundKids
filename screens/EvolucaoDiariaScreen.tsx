@@ -9,6 +9,7 @@ import { formatDecimalBR } from '../lib/format';
 import { Patient } from '../types';
 import { supabase } from '../supabaseClient';
 import { isExameNaEvolucao } from '../lib/exameEvolucao';
+import { Turno, turnoAtualSP, turnoEDiaDe } from '../lib/turno';
 import { ControlesSaidasSection } from '../components/ControlesSaidasSection';
 
 interface DiagItem {
@@ -61,7 +62,15 @@ interface SituacaoClinicaRecord {
   situacao_texto: string;
   created_at: string;
   visible_until: string;
+  turno?: string | null;
 }
+
+const TURNOS: { id: Turno; label: string; icon: string }[] = [
+  { id: 'manha', label: 'Manhã', icon: '🌅' },
+  { id: 'tarde', label: 'Tarde', icon: '☀️' },
+  { id: 'noite', label: 'Noite', icon: '🌙' },
+];
+
 
 interface AlertaRecord {
   id: string;
@@ -386,6 +395,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   const [patientId, setPatientId] = useState(searchParams.get('patientId') || '');
   const [search, setSearch] = useState('');
   const [date, setDate] = useState(todayStr());
+  const [turno, setTurno] = useState<Turno>(turnoAtualSP);
+  const evolucaoCurta = turno !== 'manha'; // Tarde/Noite: só Controles, Exame Físico, Avaliação Clínica e Recomendações
+  const turnoLabel = TURNOS.find(t => t.id === turno)!.label;
 
   const [diagItems, setDiagItems] = useState<DiagItem[]>([]);
   const [diagLoading, setDiagLoading] = useState(false);
@@ -637,13 +649,16 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       try {
         const { data } = await supabase
           .from('clinical_situations_24h')
-          .select('id, situacao_texto, created_at, visible_until')
+          .select('id, situacao_texto, created_at, visible_until, turno')
           .eq('patient_id', patientId)
           .gt('visible_until', new Date().toISOString())
+          .is('archived_at', null)
           .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        setSituacaoRec(data ?? null);
+          .limit(10);
+        // Prefere a avaliação do turno escolhido; sem ela, vale a mais recente ainda dentro das 24h.
+        // Registros antigos (sem turno) contam como Manhã.
+        const lista = (data ?? []) as SituacaoClinicaRecord[];
+        setSituacaoRec(lista.find(r => (r.turno ?? 'manha') === turno) ?? lista[0] ?? null);
       } catch (e) {
         console.error('Erro ao carregar situação clínica:', e);
       } finally {
@@ -651,7 +666,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       }
     };
     fetchSituacao();
-  }, [patientId]);
+  }, [patientId, turno]);
 
   useEffect(() => {
     if (!patientId) { setExamesImagemList([]); setPareceresList([]); setPaineisViraisList([]); return; }
@@ -793,6 +808,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       .select('id,arquivado,created_at,exame_fisico_monitorizacao,exame_fisico_ectoscopia,exame_fisico_pele_faneros,exame_fisico_respiratorio,exame_fisico_cardiovascular,exame_fisico_digestivo,exame_fisico_urinario,exame_fisico_neurologico,condutas_criticas')
       .eq('patient_id', patientId)
       .eq('data_evolucao', date)
+      .eq('turno', turno)
       .order('created_at', { ascending: false });
     if (error) {
       console.error('[EvolucaoDiaria] Erro ao carregar registros:', error);
@@ -815,7 +831,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     setDraftCondutasId(draftCondutas?.id ?? null);
   };
 
-  useEffect(() => { loadRegistros(); }, [patientId, date]);
+  useEffect(() => { loadRegistros(); }, [patientId, date, turno]);
 
   const handleSelectPatient = (p: Patient) => {
     setPatientId(String(p.id));
@@ -860,7 +876,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     }
     // created_by é omitido de propósito: o banco preenche com auth.uid()
     const { data, error } = await supabase.from('evolucao_diaria_registros')
-      .insert({ patient_id: patientId, data_evolucao: date, ...columns, arquivado })
+      .insert({ patient_id: patientId, data_evolucao: date, turno, ...columns, arquivado })
       .select('id')
       .single();
     if (error) {
@@ -933,7 +949,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     const blank = () => lines.push('');
     const title = (t: string) => { blank(); add(t); };
 
-    add('EVOLUÇÃO DIÁRIA');
+    add(evolucaoCurta ? `EVOLUÇÃO DIÁRIA — ${turnoLabel.toUpperCase()}` : 'EVOLUÇÃO DIÁRIA');
     add(`Data: ${new Date(date + 'T12:00:00').toLocaleDateString('pt-BR')}`);
     blank();
 
@@ -942,6 +958,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     add(`Peso: ${p.peso ? `${p.peso} kg` : '—'}   SC: ${p.sc ? `${p.sc} m²` : '—'}`);
     add(`Internação: ${p.admissionDate ? `${formatDateToBRL(p.admissionDate)} · ${calcDays(p.admissionDate)} dia(s)` : '—'}`);
 
+    const we = wordExcluded;
+    if (!evolucaoCurta) {
     if (p.status) {
       const cfg = STATUS_CONFIG[p.status as keyof typeof STATUS_CONFIG];
       if (cfg) {
@@ -961,7 +979,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       precAtivas.forEach(pr => add(PREC_BADGE[pr.tipo_precaucao]?.label ?? pr.tipo_precaucao));
     }
 
-    const we = wordExcluded;
     const principais = diagItems.filter(d => d.tipo === 'principal');
     if (principais.length > 0) {
       title('5. DIAGNÓSTICOS PRINCIPAIS');
@@ -1002,7 +1019,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         });
       });
     }
-
+    } // fim das seções completas (2 a 6)
 
     if (controlesSaidasRec || diureseRec) {
       const cs = controlesSaidasRec;
@@ -1040,6 +1057,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       }
     }
 
+    if (!evolucaoCurta) {
     if (bhBalance) {
       title('8. BH DIÁRIO');
       const pct = bhBalance.volume / (bhBalance.peso * 10);
@@ -1051,7 +1069,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const historicoAntigo = bhCumul.bh_cumulativo_pct - bhCumul.bh_24h_pct;
       add(`Total: ${bhCumul.bh_cumulativo_pct > 0 ? '+' : ''}${bhCumul.bh_cumulativo_pct.toFixed(2)}% | BH Anterior: ${historicoAntigo.toFixed(2)}% | Últimas 24h: ${bhCumul.bh_24h_pct.toFixed(2)}%`);
     }
-
+    } // fim das seções completas (8 e 9)
 
     const _today = new Date(); _today.setHours(0, 0, 0, 0);
     const _SP_OFFSET = 3 * 60 * 60 * 1000;
@@ -1060,7 +1078,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     const _allDietasWord = [...(p.diets ?? [])].filter(d => !d.isArchived && d.mostrar_evolucao !== false && (d.vet_at != null || d.pt_at != null)).sort((a, b) => b.data_inicio.localeCompare(a.data_inicio));
     const _dietaWord = _allDietasWord.find(d => d.data_inicio.split(' ')[0] >= _cutoff24h) ?? _allDietasWord[0];
     const dietasWord = _dietaWord ? [_dietaWord] : [];
-    if (dietasWord.length > 0) {
+    if (!evolucaoCurta && dietasWord.length > 0) {
       title('10. DIETAS');
       dietasWord.forEach(d => {
         const parts: string[] = [d.type];
@@ -1072,25 +1090,43 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     }
 
     const activeDevicesWord = (p.devices ?? []).filter(d => !d.isArchived && d.mostrar_evolucao !== false).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
-    if (activeDevicesWord.length > 0) {
+    if (!evolucaoCurta && activeDevicesWord.length > 0) {
       title('11. DISPOSITIVOS');
       add('@@DEVICES_TABLE@@');
       blank();
     }
 
     if (situacaoRec) {
-      title('12. SITUAÇÃO CLÍNICA');
+      title(evolucaoCurta ? 'AVALIAÇÃO CLÍNICA' : '12. SITUAÇÃO CLÍNICA');
       add(situacaoRec.situacao_texto);
     }
 
     // Apenas o exame atual (digitado nos campos) — avaliações arquivadas de
     // outros médicos não entram: cada um gera a evolução com o próprio exame
     if (Object.values(exameFisico).some(v => v.trim())) {
-      title('13. EXAME FÍSICO');
+      title(evolucaoCurta ? 'EXAME FÍSICO' : '13. EXAME FÍSICO');
       EXAME_SECTIONS.forEach(s => {
         const val = exameFisico[s.key as keyof ExameFisicoState];
         if (val?.trim()) add(`${s.label.replace(/^[\d./ ]+/, '')}: ${val}`);
       });
+    }
+
+    if (evolucaoCurta) {
+      // Tarde/Noite: no lugar da AP completa, só as recomendações (alertas em aberto do turno)
+      const recomendacoes = alertasList.filter(a => {
+        if (a.mostrar_evolucao === false || we.has(`alt_${a.id}`)) return false;
+        const orig = turnoEDiaDe(a.created_at);
+        if (orig.turno !== turno || orig.dia !== date) return false;
+        const st = (a.status || '').toLowerCase();
+        return !st.includes('concluí') && !st.includes('concluido') && !st.includes('resolvido') && !st.includes('arquivado');
+      });
+      if (recomendacoes.length > 0) {
+        title('RECOMENDAÇÕES');
+        recomendacoes.forEach(a => add(`  ${a.alerta_descricao}`));
+      }
+      blank();
+      add(`Gerado em: ${new Date().toLocaleString('pt-BR')} | RoundKids`);
+      return lines.join('\n').replace(/^([ \t]*)\*+[ \t]+/gm, '$1');
     }
 
     const calcDias = (dateStr: string): string => {
@@ -1539,6 +1575,21 @@ export const EvolucaoDiariaScreen: React.FC = () => {
             className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
+        <div className="flex gap-1.5 w-full sm:w-auto">
+          {TURNOS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTurno(t.id)}
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition ${
+                turno === t.id
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+            >
+              <span>{t.icon}</span>{t.label}
+            </button>
+          ))}
+        </div>
         <div className="flex gap-2">
           <button
             onClick={() => {
@@ -1579,6 +1630,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         </div>
       </div>
 
+      {!evolucaoCurta && (<>
       {/* 2. Status */}
       {selectedPatient.status && (() => {
         const cfg = STATUS_CONFIG[selectedPatient.status as keyof typeof STATUS_CONFIG];
@@ -1777,9 +1829,12 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         })()}
       </Section>
 
+      </>)}
+
       {/* 7. Controles e Saídas */}
       <ControlesSaidasSection patientId={patientId} readOnly />
 
+      {!evolucaoCurta && (<>
       {/* 8. BH Diário */}
       <Section title="8. BH Diário" id="bhDiario" open={openSections.has('bhDiario')} onToggle={() => toggle('bhDiario')}>
         {bhLoading ? (
@@ -1927,8 +1982,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         })()}
       </Section>
 
+      </>)}
+
       {/* 13. S — Situação Clínica */}
-      <Section title="13. S — Situação Clínica" id="situacao" open={openSections.has('situacao')} onToggle={() => toggle('situacao')}>
+      <Section title={evolucaoCurta ? "Avaliação Clínica" : "13. S — Situação Clínica"} id="situacao" open={openSections.has('situacao')} onToggle={() => toggle('situacao')}>
         {situacaoLoading ? (
           <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" /></div>
         ) : !situacaoRec ? (
@@ -1951,7 +2008,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       </Section>
 
       {/* 13. O — Exame Físico */}
-      <Section title="13. O — Exame Físico" id="exameFisico" open={openSections.has('exameFisico')} onToggle={() => toggle('exameFisico')}>
+      <Section title={evolucaoCurta ? "Exame Físico" : "13. O — Exame Físico"} id="exameFisico" open={openSections.has('exameFisico')} onToggle={() => toggle('exameFisico')}>
         <div className="space-y-3">
           {/* Campos para a avaliação atual */}
           {EXAME_SECTIONS.map(({ key, label }) => (
@@ -1992,6 +2049,36 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         </div>
       </Section>
 
+      {evolucaoCurta && (
+        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4">
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Recomendações</p>
+          {alertasLoading ? (
+            <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" /></div>
+          ) : (() => {
+            const recomendacoes = alertasList.filter(a => {
+              if (a.mostrar_evolucao === false || wordExcluded.has(`alt_${a.id}`)) return false;
+              const orig = turnoEDiaDe(a.created_at);
+              if (orig.turno !== turno || orig.dia !== date) return false;
+              const st = (a.status || '').toLowerCase();
+              return !st.includes('concluí') && !st.includes('concluido') && !st.includes('resolvido') && !st.includes('arquivado');
+            });
+            return recomendacoes.length === 0 ? (
+              <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhuma recomendação em aberto neste turno.</p>
+            ) : (
+              <ul className="space-y-2">
+                {recomendacoes.map(a => (
+                  <li key={a.id} className="text-sm text-slate-700 dark:text-slate-200 p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                    {a.alerta_descricao}
+                    {a.responsavel && <span className="block text-xs text-slate-400 mt-0.5">Responsável: {a.responsavel}</span>}
+                  </li>
+                ))}
+              </ul>
+            );
+          })()}
+        </div>
+      )}
+
+      {!evolucaoCurta && (<>
       {/* 14. AP — Avaliação x Propedêutica */}
       <Section title="14. AP — Avaliação x Propedêutica (Alertas)" id="avaliacoes" open={openSections.has('avaliacoes')} onToggle={() => toggle('avaliacoes')}>
         {alertasLoading ? (
@@ -2364,6 +2451,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         )}
       </Section>
 
+      </>)}
+
+      {!evolucaoCurta && (<>
       {/* 15. Condutas Críticas */}
       <Section title="15. Condutas Críticas — Próximas 24h" id="condutasCriticas" open={openSections.has('condutasCriticas')} onToggle={() => toggle('condutasCriticas')}>
         <div className="space-y-3">
@@ -2396,6 +2486,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           )}
         </div>
       </Section>
+      </>)}
 
     </div>
   );

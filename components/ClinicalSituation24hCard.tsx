@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { sanitizeText } from '../lib/sanitize';
+import { turnoAtualSP } from '../lib/turno';
 
 interface ClinicalSituation24hCardProps {
   patientId: number | string;
@@ -13,6 +14,7 @@ type ClinicalSituationRow = {
   created_by: string;
   visible_until: string;
   created_at: string;
+  turno?: string | null;
 };
 
 export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> = ({ patientId, userId }) => {
@@ -33,7 +35,7 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
     const nowIso = new Date().toISOString();
     const { data, error: fetchError } = await supabase
       .from('clinical_situations_24h')
-      .select('id, situacao_texto, created_by, visible_until, created_at')
+      .select('id, situacao_texto, created_by, visible_until, created_at, turno')
       .eq('patient_id', patientId)
       .gt('visible_until', nowIso)
       .is('archived_at', null)
@@ -67,7 +69,10 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
     setSaving(true);
     setError(null);
 
-    if (activeNote) {
+    // Cada turno tem a sua avaliação: se a ativa é de outro turno, salva uma nova (com o texto editado)
+    // em vez de sobrescrever a do turno anterior. Registros antigos, sem turno, contam como Manhã.
+    const turnoAgora = turnoAtualSP();
+    if (activeNote && (activeNote.turno ?? 'manha') === turnoAgora) {
       const { error: updateError } = await supabase
         .from('clinical_situations_24h')
         .update({ situacao_texto: finalText, updated_by: userId })
@@ -81,7 +86,7 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
     } else {
       const { error: insertError } = await supabase
         .from('clinical_situations_24h')
-        .insert({ patient_id: patientId, situacao_texto: finalText, created_by: userId, updated_by: userId });
+        .insert({ patient_id: patientId, situacao_texto: finalText, created_by: userId, updated_by: userId, turno: turnoAgora });
 
       if (insertError) {
         setError('Não foi possível salvar a situação clínica.');
