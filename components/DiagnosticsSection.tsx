@@ -72,7 +72,7 @@ const CATEGORY_ORDER = [
   'Cardiovascular', 'Choque / Distributivo', 'Gastrointestinal / Hepático',
   'Hematológico / Oncológico', 'Infeccioso / Séptico', 'Metabólico / Endócrino',
   'Neurológico', 'Nutricional / Outros', 'Psiquiátrico / Social', 'Renal',
-  'Respiratório', 'Trauma / Cirúrgico', 'Outros',
+  'Respiratório', 'Reumatológico', 'Trauma / Cirúrgico', 'Outros',
 ];
 
 const SISTEMAS = ALERT_SYSTEMS;
