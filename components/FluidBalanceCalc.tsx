@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { TurnoSelector } from './TurnoSelector';
+import { Turno, turnoAtualSP } from '../lib/turno';
 import { DropletIcon, SaveIcon, ChevronRightIcon } from './icons';
 import { supabase } from '../supabaseClient';
 import { NotificationContext, PatientsContext, UserContext } from '../contexts';
@@ -18,6 +20,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId, onCalcul
   const [result, setResult] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [turno, setTurno] = useState<Turno>(turnoAtualSP);
 
   // Buscar peso do paciente do context (mais rápido e confiável)
   useEffect(() => {
@@ -54,9 +57,11 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId, onCalcul
         volume: signed,
         data_registro: new Date().toISOString(),
         created_by: user?.id,
+        turno,
       };
 
-      await supabase.from('balanco_hidrico').insert(balanceRecord);
+      const { error } = await supabase.from('balanco_hidrico').insert(balanceRecord);
+      if (error) throw error;
 
       showNotification({ message: 'Balanço hídrico salvo com sucesso!', type: 'success' });
       
@@ -148,6 +153,8 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId, onCalcul
               {result > 0 ? '+' : ''}{result.toFixed(2)}%
             </p>
           </div>
+
+          <TurnoSelector value={turno} onChange={setTurno} />
 
           <button
             onClick={handleSave}

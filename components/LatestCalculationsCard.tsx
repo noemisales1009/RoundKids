@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { DropletIcon } from './icons';
-import { Turno, turnoAtualSP, turnoEDiaDe } from '../lib/turno';
+import { Turno, turnoAtualSP, turnoEDiaDe, turnoDoRegistro } from '../lib/turno';
 
 const TURNOS: { id: Turno; label: string; icon: string }[] = [
   { id: 'manha', label: 'Manhã', icon: '🌅' },
@@ -21,6 +21,7 @@ interface LatestCalculationsCardProps {
 interface DiuresisRecord {
   id: string;
   created_at: string;
+  turno?: string | null;
   peso: number;
   volume: number;
   horas: number;
@@ -29,6 +30,7 @@ interface DiuresisRecord {
 interface BalanceRecord {
   id: string;
   created_at: string;
+  turno?: string | null;
   peso: number;
   volume: number;
 }
@@ -52,8 +54,8 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
   const [turno, setTurno] = useState<Turno>(turnoAtualSP);
   const diaAtual = turnoEDiaDe(new Date().toISOString()).dia;
   // Registro mais recente feito dentro do turno selecionado, no dia de hoje; turno sem registro fica em branco
-  const doTurno = <T extends { created_at: string }>(lista: T[]): T | null =>
-    lista.find(r => { const o = turnoEDiaDe(r.created_at); return o.turno === turno && o.dia === diaAtual; }) ?? null;
+  const doTurno = <T extends { created_at: string; turno?: string | null }>(lista: T[]): T | null =>
+    lista.find(r => turnoDoRegistro(r) === turno && turnoEDiaDe(r.created_at).dia === diaAtual) ?? null;
   const latestDiuresis = doTurno(diuresisList);
   const latestBalance = doTurno(balanceList);
   const [balancoCumulativo, setBalancoCumulativo] = useState<BalancoCumulativoRecord | null>(null);
@@ -91,6 +93,7 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
         peso: parseFloat(data.peso),
         volume: parseFloat(data.volume),
         horas: parseInt(data.horas),
+        turno: data.turno ?? null,
       })));
 
       setBalanceList((balanceResult.data ?? []).map((data: any) => ({
@@ -98,6 +101,7 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
         created_at: data.data_registro || data.created_at || new Date().toISOString(),
         peso: parseFloat(data.peso),
         volume: parseFloat(data.volume),
+        turno: data.turno ?? null,
       })));
 
       if (balancoCumulativoResult.data) {

@@ -16,3 +16,7 @@ export const turnoEDiaDe = (iso: string): { turno: Turno; dia: string } => {
     const ref = new Date(sp.getTime() - (h < 7 ? 24 * 60 * 60 * 1000 : 0));
     return { turno, dia: ref.toISOString().split('T')[0] };
 };
+
+// Turno de um registro (Diurese/BH): o escolhido no cadastro; registros antigos usam a hora em que foram salvos.
+export const turnoDoRegistro = (r: { created_at: string; turno?: string | null }): Turno =>
+    r.turno === 'manha' || r.turno === 'tarde' || r.turno === 'noite' ? r.turno : turnoEDiaDe(r.created_at).turno;

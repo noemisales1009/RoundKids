@@ -9,7 +9,7 @@ import { formatDecimalBR } from '../lib/format';
 import { Patient } from '../types';
 import { supabase } from '../supabaseClient';
 import { isExameNaEvolucao } from '../lib/exameEvolucao';
-import { Turno, turnoAtualSP, turnoEDiaDe } from '../lib/turno';
+import { Turno, turnoAtualSP, turnoEDiaDe, turnoDoRegistro } from '../lib/turno';
 import { ControlesSaidasSection } from '../components/ControlesSaidasSection';
 
 interface DiagItem {
@@ -28,6 +28,7 @@ interface DiagItem {
 
 interface BHBalanceRecord {
   created_at: string;
+  turno?: string | null;
   peso: number;
   volume: number;
 }
@@ -41,6 +42,7 @@ interface BHCumulativoRecord {
 interface DiureseRecord {
   id: string;
   created_at: string;
+  turno?: string | null;
   peso: number;
   volume: number;
   horas: number;
@@ -407,8 +409,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   const [bhLoading, setBhLoading] = useState(false);
   const [diureseAll, setDiureseAll] = useState<DiureseRecord[]>([]);
   // Cada turno mostra só o que foi registrado naquele turno e dia; turno sem registro fica em branco
-  const doTurno = <T extends { created_at: string }>(lista: T[]): T | null =>
-    lista.find(r => { const o = turnoEDiaDe(r.created_at); return o.turno === turno && o.dia === date; }) ?? null;
+  const doTurno = <T extends { created_at: string; turno?: string | null }>(lista: T[]): T | null =>
+    lista.find(r => turnoDoRegistro(r) === turno && turnoEDiaDe(r.created_at).dia === date) ?? null;
   const diureseRec = doTurno(diureseAll);
   const bhBalance = doTurno(bhAll);
   const [diureseLoading, setDiureseLoading] = useState(false);
@@ -567,13 +569,14 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       setBhLoading(true);
       try {
         const [balRes, cumRes] = await Promise.all([
-          supabase.from('balanco_hidrico').select('created_at, peso, volume, data_registro').eq('patient_id', patientId).order('data_registro', { ascending: false }).limit(40),
+          supabase.from('balanco_hidrico').select('created_at, peso, volume, data_registro, turno').eq('patient_id', patientId).order('data_registro', { ascending: false }).limit(40),
           supabase.from('balanco_hidrico_cumulativo').select('bh_cumulativo_pct, bh_24h_pct, registros_24h').eq('patient_id', patientId).single(),
         ]);
         setBhAll((balRes.data ?? []).map((r: any) => ({
           created_at: r.data_registro || r.created_at,
           peso: parseFloat(r.peso),
           volume: parseFloat(r.volume),
+          turno: r.turno ?? null,
         })));
         setBhCumul(cumRes.data ?? null);
       } catch (e) {
@@ -592,7 +595,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       try {
         const { data } = await supabase
           .from('diurese')
-          .select('id, data_registro, peso, volume, horas')
+          .select('id, data_registro, peso, volume, horas, turno')
           .eq('patient_id', patientId)
           .order('data_registro', { ascending: false })
           .limit(40);
@@ -602,6 +605,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           peso: parseFloat(r.peso),
           volume: parseFloat(r.volume),
           horas: parseInt(r.horas),
+          turno: r.turno ?? null,
         })));
       } catch (e) {
         console.error('Erro ao carregar diurese:', e);
