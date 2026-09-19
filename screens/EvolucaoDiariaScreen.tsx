@@ -10,6 +10,9 @@ import { Patient } from '../types';
 import { supabase } from '../supabaseClient';
 import { isExameNaEvolucao } from '../lib/exameEvolucao';
 import { Turno, turnoAtualSP, turnoEDiaDe, turnoDoRegistro } from '../lib/turno';
+import { alertasService, Alerta, isAlertaAtivo, getShiftDoAlerta } from '../services/alertasService';
+
+const SHIFT_PARA_TURNO = { morning: 'manha', afternoon: 'tarde', night: 'noite' } as const;
 import { ControlesSaidasSection } from '../components/ControlesSaidasSection';
 
 interface DiagItem {
@@ -425,6 +428,12 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     urinario: '', neurologico: '',
   });
   const [alertasList, setAlertasList] = useState<AlertaRecord[]>([]);
+  // Recomendações: os mesmos alertas do Round (alertas clínicos + tasks), não só alertas_paciente
+  const [recAlertas, setRecAlertas] = useState<Alerta[]>([]);
+  const [recLoading, setRecLoading] = useState(false);
+  const alertasDoTurno = (lista: Alerta[], excluidos: Set<string>) => lista.filter(a =>
+    a.mostrar_evolucao !== false && !excluidos.has(`alt_${a.id}`) &&
+    SHIFT_PARA_TURNO[getShiftDoAlerta(a)] === turno && turnoEDiaDe(a.created_at).dia === date);
   const [alertasLoading, setAlertasLoading] = useState(false);
   const [examesImagemList, setExamesImagemList] = useState<PropedeuticaExameImagem[]>([]);
   const [pareceresList, setPareceresList] = useState<PropedeuticaParecer[]>([]);
@@ -724,6 +733,17 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       }
     };
     fetchScaleScores();
+  }, [patientId]);
+
+  useEffect(() => {
+    if (!patientId) { setRecAlertas([]); return; }
+    let cancelado = false;
+    setRecLoading(true);
+    alertasService.getAlertas(patientId)
+      .then(lista => { if (!cancelado) setRecAlertas(lista); })
+      .catch(e => console.error('Erro ao carregar recomendações:', e))
+      .finally(() => { if (!cancelado) setRecLoading(false); });
+    return () => { cancelado = true; };
   }, [patientId]);
 
   useEffect(() => {
@@ -1124,16 +1144,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
 
     if (evolucaoCurta) {
       // Tarde/Noite: no lugar da AP completa, só as recomendações (alertas em aberto criados neste turno)
-      const recomendacoes = alertasList.filter(a => {
-        if (a.mostrar_evolucao === false || we.has(`alt_${a.id}`)) return false;
-        const orig = turnoEDiaDe(a.created_at);
-        if (orig.turno !== turno || orig.dia !== date) return false;
-        const st = (a.status || '').toLowerCase();
-        return !st.includes('concluí') && !st.includes('concluido') && !st.includes('resolvido') && !st.includes('arquivado');
-      });
+      const recomendacoes = alertasDoTurno(recAlertas, we);
       if (recomendacoes.length > 0 || condutasCriticas.trim()) {
         title('RECOMENDAÇÕES');
-        recomendacoes.forEach(a => add(`  ${a.alerta_descricao}`));
+        recomendacoes.forEach(a => add(`  ${a.alertaclinico}${isAlertaAtivo(a) ? '' : ' (concluído)'}`));
         if (condutasCriticas.trim()) add(condutasCriticas);
       }
       blank();
@@ -2067,21 +2081,17 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       {evolucaoCurta && (
         <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4">
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Recomendações</p>
-          {alertasLoading ? (
+          {recLoading ? (
             <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" /></div>
           ) : (() => {
-            const recomendacoes = alertasList.filter(a => {
-              if (a.mostrar_evolucao === false || wordExcluded.has(`alt_${a.id}`)) return false;
-              const st = (a.status || '').toLowerCase();
-              return !st.includes('concluí') && !st.includes('concluido') && !st.includes('resolvido') && !st.includes('arquivado');
-            });
+            const recomendacoes = alertasDoTurno(recAlertas, wordExcluded);
             return recomendacoes.length === 0 ? (
-              <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum alerta em aberto no Round.</p>
+              <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum alerta criado neste turno.</p>
             ) : (
               <ul className="space-y-2">
                 {recomendacoes.map(a => (
-                  <li key={a.id} className="text-sm text-slate-700 dark:text-slate-200 p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                    {a.alerta_descricao}
+                  <li key={`${a.source}-${a.id}`} className="text-sm text-slate-700 dark:text-slate-200 p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                    {a.alertaclinico}{!isAlertaAtivo(a) && <span className="ml-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">✓ concluído</span>}
                     {a.responsavel && <span className="block text-xs text-slate-400 mt-0.5">Responsável: {a.responsavel}</span>}
                   </li>
                 ))}
