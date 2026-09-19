@@ -758,6 +758,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       .select('*')
       .eq('patient_id', patientId)
       .eq('data', date)
+      .eq('turno', turno)
       .is('archived_at', null)
       .maybeSingle()
       .then(({ data: row }) => {
@@ -781,7 +782,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           dialise_peritoneal:  row.dialise_peritoneal  ?? '',
         });
       });
-  }, [patientId, date]);
+  }, [patientId, date, turno]);
 
   const EMPTY_EXAME: ExameFisicoState = {
     monitorizacao: '', ectoscopia: '', peleFaneros: '',
@@ -1836,7 +1837,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       </>)}
 
       {/* 7. Controles e Saídas */}
-      <ControlesSaidasSection patientId={patientId} readOnly />
+      <ControlesSaidasSection patientId={patientId} turno={turno} />
 
       {!evolucaoCurta && (<>
       {/* 8. BH Diário */}

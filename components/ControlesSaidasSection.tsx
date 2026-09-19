@@ -2,10 +2,19 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { ThemeContext, NotificationContext } from '../contexts';
 import { supabase } from '../supabaseClient';
 import { ChevronRightIcon } from './icons';
+import { Turno, turnoAtualSP } from '../lib/turno';
+
+const TURNOS: { id: Turno; label: string; icon: string }[] = [
+  { id: 'manha', label: 'Manhã', icon: '🌅' },
+  { id: 'tarde', label: 'Tarde', icon: '☀️' },
+  { id: 'noite', label: 'Noite', icon: '🌙' },
+];
 
 interface Props {
   patientId: string;
   readOnly?: boolean;
+  // Quando informado, o turno vem de fora (Evolução Diária) e as abas não aparecem
+  turno?: Turno;
 }
 
 interface Data {
@@ -119,11 +128,13 @@ const CollapsibleHeader = ({
   </button>
 );
 
-export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = false }) => {
+export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = false, turno: turnoProp }) => {
   const themeContext = useContext(ThemeContext);
   const isDark = themeContext?.theme === 'dark';
   const { showNotification } = useContext(NotificationContext)!;
 
+  const [turnoSel, setTurnoSel] = useState<Turno>(turnoAtualSP);
+  const turno = turnoProp ?? turnoSel;
   const [selectedDate, setSelectedDate] = useState(todayStr());
   const [data, setData] = useState<Data>(EMPTY);
   const [dxtMeds, setDxtMeds] = useState<DxtMedicaoRow[]>([]);
@@ -158,6 +169,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
       .from('patient_controles_saidas')
       .select('data')
       .eq('patient_id', patientId)
+      .eq('turno', turno)
       .is('archived_at', null)
       .order('data', { ascending: false });
     setSavedDates((rows || []).map((r: any) => r.data));
@@ -171,6 +183,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
       .select('*')
       .eq('patient_id', patientId)
       .eq('data', date)
+      .eq('turno', turno)
       .maybeSingle();
 
     if (row) {
@@ -229,9 +242,13 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
   useEffect(() => {
     loadSavedDates();
     loadForDate(selectedDate);
-  }, [patientId]);
+  }, [patientId, turno]);
 
   const selectedDateRef = useRef(selectedDate);
+  const turnoRef = useRef(turno);
+  useEffect(() => {
+    turnoRef.current = turno;
+  }, [turno]);
   useEffect(() => {
     selectedDateRef.current = selectedDate;
     loadForDate(selectedDate);
@@ -288,6 +305,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
   const handleSave = async () => {
     setSaving(true);
     const dateAtSave = selectedDate;
+    const turnoAtSave = turno;
     const userName = await getCurrentUserName();
     const now = new Date().toISOString();
 
@@ -320,6 +338,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
         .insert({
           patient_id: patientId,
           data: dateAtSave,
+          turno,
           ...payload,
           created_by: userName,
           updated_by: userName,
@@ -346,7 +365,7 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
     }
 
     // Usuário trocou de dia enquanto salvava: não aplicar o estado do dia antigo por cima do novo
-    if (selectedDateRef.current !== dateAtSave) {
+    if (selectedDateRef.current !== dateAtSave || turnoRef.current !== turnoAtSave) {
       setSaving(false);
       await loadSavedDates();
       return;
@@ -476,6 +495,27 @@ export const ControlesSaidasSection: React.FC<Props> = ({ patientId, readOnly = 
           )}
         </div>
       </div>
+
+      {/* Abas de turno (na Evolução Diária o turno vem de fora) */}
+      {turnoProp === undefined && (
+        <div className="flex gap-1.5">
+          {TURNOS.map(t => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTurnoSel(t.id)}
+              disabled={saving}
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition ${
+                turno === t.id
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+            >
+              <span>{t.icon}</span>{t.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Botões de datas salvas — visível só quando aberto */}
       {showDatePicker && savedDates.length > 0 && (
