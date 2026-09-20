@@ -287,7 +287,8 @@ const ESPECIALISTA_TO_SISTEMAS: Record<string, string[]> = {
   'Reumatologista':       ['Avaliação imunológica'],
 };
 
-const todayStr = () => new Date().toISOString().split('T')[0];
+// Dia da evolução em Brasília: o dia vira às 7h (a noite antes das 7h ainda é do dia anterior)
+const todayStr = () => turnoEDiaDe(new Date().toISOString()).dia;
 
 const formatAge = (dob: string) => {
   const birth = new Date(dob);

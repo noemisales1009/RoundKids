@@ -1,5 +1,6 @@
 import { supabase } from '../supabaseClient';
 import { ShiftType, shiftFilterService } from './shiftFilterService';
+import { Turno, turnoEDiaDe } from '../lib/turno';
 
 export type AlertaSource = 'tasks' | 'alertas';
 
@@ -40,13 +41,15 @@ export const isAlertaAtivo = (a: Alerta): boolean => {
         !ls.includes('resolvido') && !ls.includes('concluido') && !ls.includes('arquivado');
 };
 
-// Turno em que o alerta foi criado (o banco já calcula isso em shift_criacao; se não vier, deduz pela hora).
+// Turno em que o alerta foi criado, calculado pela hora de criação no horário de Brasília
+// (7h-13h manhã, 13h-19h tarde, 19h-7h noite). Não depende do shift_criacao do banco.
+const TURNO_PARA_SHIFT: Record<Turno, ShiftType> = { manha: 'morning', tarde: 'afternoon', noite: 'night' };
 export const getShiftDoAlerta = (a: Alerta): ShiftType => {
+    if (a.created_at) return TURNO_PARA_SHIFT[turnoEDiaDe(a.created_at).turno];
     if (a.shift_criacao === 'morning' || a.shift_criacao === 'afternoon' || a.shift_criacao === 'night') {
         return a.shift_criacao;
     }
-    const ref = a.created_at ? new Date(a.created_at) : new Date();
-    return shiftFilterService.getShiftFromHour(ref.getHours());
+    return shiftFilterService.getShiftFromHour(new Date().getHours());
 };
 
 // Horário em que o turno atual começou. Na madrugada, a noite começou às 19h de ontem.
