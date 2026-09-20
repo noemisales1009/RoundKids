@@ -1148,14 +1148,13 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     if (evolucaoCurta) {
       // Tarde/Noite: no lugar da AP completa, só as recomendações (alertas em aberto criados neste turno)
       const recomendacoes = alertasDoTurno(recAlertas, we);
-      if (recomendacoes.length > 0 || condutasCriticas.trim()) {
+      if (recomendacoes.length > 0) {
         title('RECOMENDAÇÕES');
         recomendacoes.forEach(a => {
           add(`  ${a.alertaclinico}${isAlertaAtivo(a) ? '' : ' (concluído)'}`);
           const just = textoJustificativa(a.justificativa_motivo, a.justificativa || a.justification);
           if (just) add(`    Justificativa: ${just}`);
         });
-        if (condutasCriticas.trim()) add(condutasCriticas);
       }
       blank();
       add(`Gerado em: ${new Date().toLocaleString('pt-BR')} | RoundKids`);
@@ -2113,29 +2112,6 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               </ul>
             );
           })()}
-          <div className="mt-4 space-y-3">
-            <Field label={`Recomendações — ${turnoLabel} (digite aqui)`} value={condutasCriticas} onChange={setCondutasCriticas} rows={4} placeholder="Digite as recomendações deste turno..." />
-            {condutasCriticas.trim() && (
-              <div className="flex flex-col sm:flex-row gap-2">
-                <button
-                  onClick={handleSalvarCondutas}
-                  disabled={savingCondutas || archivingCondutas}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 border-primary-400 text-primary-600 hover:bg-primary-50 dark:border-primary-600 dark:text-primary-400 dark:hover:bg-primary-900/20"
-                >
-                  <span className="material-symbols-rounded text-[18px]">save</span>
-                  {savingCondutas ? 'Salvando...' : 'Salvar'}
-                </button>
-                <button
-                  onClick={handleArquivarCondutas}
-                  disabled={savingCondutas || archivingCondutas}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm border transition-colors disabled:opacity-60 border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700/60 dark:text-amber-400 dark:hover:bg-amber-900/20"
-                >
-                  <span className="material-symbols-rounded text-[18px]">archive</span>
-                  {archivingCondutas ? 'Arquivando...' : 'Arquivar e Limpar'}
-                </button>
-              </div>
-            )}
-          </div>
         </div>
       )}
 
