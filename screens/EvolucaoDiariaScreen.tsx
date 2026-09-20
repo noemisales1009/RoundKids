@@ -11,6 +11,7 @@ import { supabase } from '../supabaseClient';
 import { isExameNaEvolucao } from '../lib/exameEvolucao';
 import { Turno, turnoAtualSP, turnoEDiaDe, turnoDoRegistro } from '../lib/turno';
 import { alertasService, Alerta, isAlertaAtivo, getShiftDoAlerta } from '../services/alertasService';
+import { textoJustificativa } from '../lib/motivosAlerta';
 
 const SHIFT_PARA_TURNO = { morning: 'manha', afternoon: 'tarde', night: 'noite' } as const;
 import { ControlesSaidasSection } from '../components/ControlesSaidasSection';
@@ -431,9 +432,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   // Recomendações: os mesmos alertas do Round (alertas clínicos + tasks), não só alertas_paciente
   const [recAlertas, setRecAlertas] = useState<Alerta[]>([]);
   const [recLoading, setRecLoading] = useState(false);
-  const alertasDoTurno = (lista: Alerta[], excluidos: Set<string>) => lista.filter(a =>
+  const alertasDoTurno = (lista: Alerta[], excluidos: Set<string>, t: Turno = turno) => lista.filter(a =>
     a.mostrar_evolucao !== false && !excluidos.has(`alt_${a.id}`) &&
-    SHIFT_PARA_TURNO[getShiftDoAlerta(a)] === turno && turnoEDiaDe(a.created_at).dia === date);
+    SHIFT_PARA_TURNO[getShiftDoAlerta(a)] === t && turnoEDiaDe(a.created_at).dia === date);
   const [alertasLoading, setAlertasLoading] = useState(false);
   const [examesImagemList, setExamesImagemList] = useState<PropedeuticaExameImagem[]>([]);
   const [pareceresList, setPareceresList] = useState<PropedeuticaParecer[]>([]);
@@ -740,6 +741,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     let cancelado = false;
     setRecLoading(true);
     alertasService.getAlertas(patientId)
+      .then(lista => alertasService.enriquecerJustificativas(lista))
       .then(lista => { if (!cancelado) setRecAlertas(lista); })
       .catch(e => console.error('Erro ao carregar recomendações:', e))
       .finally(() => { if (!cancelado) setRecLoading(false); });
@@ -1147,7 +1149,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       const recomendacoes = alertasDoTurno(recAlertas, we);
       if (recomendacoes.length > 0 || condutasCriticas.trim()) {
         title('RECOMENDAÇÕES');
-        recomendacoes.forEach(a => add(`  ${a.alertaclinico}${isAlertaAtivo(a) ? '' : ' (concluído)'}`));
+        recomendacoes.forEach(a => {
+          add(`  ${a.alertaclinico}${isAlertaAtivo(a) ? '' : ' (concluído)'}`);
+          const just = textoJustificativa(a.justificativa_motivo, a.justificativa || a.justification);
+          if (just) add(`    Justificativa: ${just}`);
+        });
         if (condutasCriticas.trim()) add(condutasCriticas);
       }
       blank();
@@ -1613,6 +1619,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               }`}
             >
               <span>{t.icon}</span>{t.label}
+              {(() => {
+                const n = alertasDoTurno(recAlertas, wordExcluded, t.id).length;
+                return n > 0 ? <span className={`min-w-[1.25rem] px-1.5 rounded-full text-xs font-bold ${turno === t.id ? 'bg-white/25 text-white' : 'bg-primary-600 text-white'}`}>{n}</span> : null;
+              })()}
             </button>
           ))}
         </div>
@@ -2092,6 +2102,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                 {recomendacoes.map(a => (
                   <li key={`${a.source}-${a.id}`} className="text-sm text-slate-700 dark:text-slate-200 p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                     {a.alertaclinico}{!isAlertaAtivo(a) && <span className="ml-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">✓ concluído</span>}
+                    {(() => {
+                      const just = textoJustificativa(a.justificativa_motivo, a.justificativa || a.justification);
+                      return just ? <span className="block text-xs text-slate-500 dark:text-slate-400 mt-0.5">Justificativa: {just}</span> : null;
+                    })()}
                     {a.responsavel && <span className="block text-xs text-slate-400 mt-0.5">Responsável: {a.responsavel}</span>}
                   </li>
                 ))}

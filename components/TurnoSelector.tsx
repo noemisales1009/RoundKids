@@ -11,11 +11,24 @@ interface TurnoSelectorProps {
   value: Turno;
   onChange: (t: Turno) => void;
   label?: string;
+  // Dia do registro (permite lançar depois um cálculo de um dia/turno que ficou para trás)
+  data?: string;
+  onDataChange?: (d: string) => void;
 }
 
-export const TurnoSelector: React.FC<TurnoSelectorProps> = ({ value, onChange, label = 'Turno deste registro' }) => (
+export const TurnoSelector: React.FC<TurnoSelectorProps> = ({ value, onChange, label = 'Turno deste registro', data, onDataChange }) => (
   <div>
-    <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">{label}</p>
+    <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
+      <p className="text-xs font-medium text-slate-600 dark:text-slate-400">{label}</p>
+      {data !== undefined && onDataChange && (
+        <input
+          type="date"
+          value={data}
+          onChange={e => e.target.value && onDataChange(e.target.value)}
+          className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1 text-xs"
+        />
+      )}
+    </div>
     <div className="flex gap-1.5">
       {TURNOS.map(t => (
         <button

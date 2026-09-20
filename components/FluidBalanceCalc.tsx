@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { TurnoSelector } from './TurnoSelector';
-import { Turno, turnoAtualSP } from '../lib/turno';
+import { Turno, turnoAtualSP, turnoEDiaDe, instanteDoRegistro } from '../lib/turno';
 import { DropletIcon, SaveIcon, ChevronRightIcon } from './icons';
 import { supabase } from '../supabaseClient';
 import { NotificationContext, PatientsContext, UserContext } from '../contexts';
@@ -21,6 +21,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId, onCalcul
   const [loading, setLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [turno, setTurno] = useState<Turno>(turnoAtualSP);
+  const [dia, setDia] = useState(() => turnoEDiaDe(new Date().toISOString()).dia);
 
   // Buscar peso do paciente do context (mais rápido e confiável)
   useEffect(() => {
@@ -55,7 +56,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId, onCalcul
         patient_id: patientId,
         peso: w,
         volume: signed,
-        data_registro: new Date().toISOString(),
+        data_registro: instanteDoRegistro(dia, turno),
         created_by: user?.id,
         turno,
       };
@@ -154,7 +155,7 @@ const FluidBalanceCalc: React.FC<FluidBalanceCalcProps> = ({ patientId, onCalcul
             </p>
           </div>
 
-          <TurnoSelector value={turno} onChange={setTurno} />
+          <TurnoSelector value={turno} onChange={setTurno} data={dia} onDataChange={setDia} />
 
           <button
             onClick={handleSave}

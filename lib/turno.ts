@@ -20,3 +20,12 @@ export const turnoEDiaDe = (iso: string): { turno: Turno; dia: string } => {
 // Turno de um registro (Diurese/BH): o escolhido no cadastro; registros antigos usam a hora em que foram salvos.
 export const turnoDoRegistro = (r: { created_at: string; turno?: string | null }): Turno =>
     r.turno === 'manha' || r.turno === 'tarde' || r.turno === 'noite' ? r.turno : turnoEDiaDe(r.created_at).turno;
+
+// Momento (ISO) para gravar um registro de um dia/turno escolhido no cadastro.
+// Se o dia é o de hoje, vale a hora real; se é um dia passado (evolução esquecida), usa um horário dentro do turno.
+export const instanteDoRegistro = (dia: string, turno: Turno): string => {
+    if (dia === turnoEDiaDe(new Date().toISOString()).dia) return new Date().toISOString();
+    const hora = { manha: 10, tarde: 16, noite: 22 }[turno];
+    const [a, m, d] = dia.split('-').map(Number);
+    return new Date(Date.UTC(a, m - 1, d, hora + 3, 0, 0)).toISOString();
+};
