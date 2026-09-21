@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { BackArrowIcon, MenuIcon, LogOutIcon, ExternalLinkIcon } from './icons';
 import { UserContext, HeaderContext, ThemeContext } from '../contexts';
 import { supabase, markManualSignOut } from '../supabaseClient';
+import { AppLogo } from './AppLogo';
 
 export const useHeader = (title: string) => {
     const context = useContext(HeaderContext);
@@ -83,8 +84,8 @@ export const Header: React.FC<{ title: string; onMenuClick: () => void }> = ({ t
     };
 
     return (
-        <header className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-3 sm:px-4 sticky top-0 z-10 flex items-center justify-between shrink-0 h-14 sm:h-20 lg:h-24">
-            <div className="flex items-center gap-3">
+        <header className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-3 sm:px-4 sticky top-0 z-10 flex items-center justify-between gap-2 shrink-0 h-16 sm:h-20 lg:h-24">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <button
                     onClick={showBackButton ? () => (typeof backPath === 'string' ? navigate(backPath) : navigate(-1)) : onMenuClick}
                     className="p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-200 transition lg:hidden"
@@ -98,15 +99,12 @@ export const Header: React.FC<{ title: string; onMenuClick: () => void }> = ({ t
                         </button>
                     )}
                 </div>
-                {/* Logo "Round Kids" */}
-                <div className="flex items-center">
-                    <img src="/logo.png" alt="Round Kids" className="h-9 sm:h-14 lg:h-18 w-auto object-contain" />
-                </div>
-                <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 truncate sm:hidden">{title}</h1>
+                <AppLogo className="w-24 max-[360px]:w-20 sm:w-36 lg:w-44" />
+                <h1 className="min-w-0 text-sm font-bold text-slate-900 dark:text-slate-100 truncate sm:hidden">{title}</h1>
             </div>
 
             {/* Right side: Theme toggle, Avatar and Logout */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 sm:gap-3 shrink-0">
                 <button
                     onClick={() => themeCtx?.toggleTheme()}
                     className="p-2 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition"

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useContext } from 'react';
 import { DropletIcon, SaveIcon, ChevronRightIcon } from './icons';
 import { supabase } from '../supabaseClient';
 import { NotificationContext, PatientsContext } from '../contexts';
+import { TurnoSelector } from './TurnoSelector';
+import { Turno, turnoAtualSP, turnoEDiaDe, instanteDoRegistro } from '../lib/turno';
 
 interface DiuresisCalcProps {
   patientId: string | number;
@@ -17,6 +19,8 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId, onCalculationSav
   const [result, setResult] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false); // Começa fechado
+  const [turno, setTurno] = useState<Turno>(turnoAtualSP);
+  const [dia, setDia] = useState(() => turnoEDiaDe(new Date().toISOString()).dia);
 
   // Buscar peso do paciente do context (mais rápido e confiável)
   useEffect(() => {
@@ -52,10 +56,12 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId, onCalculationSav
         peso: w,
         volume: v,
         horas: h,
-        data_registro: new Date().toISOString(),
+        data_registro: instanteDoRegistro(dia, turno),
+        turno,
       };
 
-      await supabase.from('diurese').insert(diuresisRecord);
+      const { error } = await supabase.from('diurese').insert(diuresisRecord);
+      if (error) throw error;
 
       showNotification({ message: 'Diurese salva com sucesso!', type: 'success' });
       
@@ -130,6 +136,8 @@ const DiuresisCalc: React.FC<DiuresisCalcProps> = ({ patientId, onCalculationSav
             <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Débito Urinário</p>
             <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">{result.toFixed(2)} mL/kg/h</p>
           </div>
+
+          <TurnoSelector value={turno} onChange={setTurno} data={dia} onDataChange={setDia} />
 
           <button
             onClick={handleSave}

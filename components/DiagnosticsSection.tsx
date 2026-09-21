@@ -72,7 +72,7 @@ const CATEGORY_ORDER = [
   'Cardiovascular', 'Choque / Distributivo', 'Gastrointestinal / Hepático',
   'Hematológico / Oncológico', 'Infeccioso / Séptico', 'Metabólico / Endócrino',
   'Neurológico', 'Nutricional / Outros', 'Psiquiátrico / Social', 'Renal',
-  'Respiratório', 'Trauma / Cirúrgico', 'Outros',
+  'Respiratório', 'Reumatológico', 'Trauma / Cirúrgico', 'Outros',
 ];
 
 const SISTEMAS = ALERT_SYSTEMS;
@@ -129,6 +129,10 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   // Resolve modal
   const [resolveModalTempId, setResolveModalTempId] = useState<string | null>(null);
   const [resolveMeds, setResolveMeds] = useState<MedItem[]>([]);
+
+  // Diagnósticos resolvidos ficam recolhidos por padrão, pra não poluir a lista de ativos
+  const [showResolvedPrincipais, setShowResolvedPrincipais] = useState(false);
+  const [showResolvedSecundarios, setShowResolvedSecundarios] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -616,6 +620,10 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
   };
   const principalDiags = workingDiags.filter(d => d.tipo === 'principal').sort(sortByDate);
   const secundarioDiags = workingDiags.filter(d => d.tipo === 'secundario').sort(sortByDate);
+  const principalAtivos = principalDiags.filter(d => d.status !== 'resolvido');
+  const principalResolvidos = principalDiags.filter(d => d.status === 'resolvido');
+  const secundarioAtivos = secundarioDiags.filter(d => d.status !== 'resolvido');
+  const secundarioResolvidos = secundarioDiags.filter(d => d.status === 'resolvido');
 
   const renderCard = (diag: WorkingDiag) => {
     const isEditing = editingTempId === diag.tempId;
@@ -1104,7 +1112,24 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                   {principalDiags.length}
                 </span>
               </div>
-              <div className="space-y-2">{principalDiags.map(renderCard)}</div>
+              <div className="space-y-2">{principalAtivos.map(renderCard)}</div>
+              {principalResolvidos.length > 0 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setShowResolvedPrincipais(v => !v)}
+                    className={`flex items-center gap-1.5 px-1 py-1 text-xs font-semibold transition ${isDark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-700'}`}
+                  >
+                    <span className="material-symbols-rounded text-[16px]">
+                      {showResolvedPrincipais ? 'expand_less' : 'expand_more'}
+                    </span>
+                    {showResolvedPrincipais ? 'Ocultar resolvidos' : `Ver resolvidos (${principalResolvidos.length})`}
+                  </button>
+                  {showResolvedPrincipais && (
+                    <div className="space-y-2">{principalResolvidos.map(renderCard)}</div>
+                  )}
+                </>
+              )}
             </div>
           )}
 
@@ -1119,7 +1144,24 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                   {secundarioDiags.length}
                 </span>
               </div>
-              <div className="space-y-2">{secundarioDiags.map(renderCard)}</div>
+              <div className="space-y-2">{secundarioAtivos.map(renderCard)}</div>
+              {secundarioResolvidos.length > 0 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setShowResolvedSecundarios(v => !v)}
+                    className={`flex items-center gap-1.5 px-1 py-1 text-xs font-semibold transition ${isDark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-700'}`}
+                  >
+                    <span className="material-symbols-rounded text-[16px]">
+                      {showResolvedSecundarios ? 'expand_less' : 'expand_more'}
+                    </span>
+                    {showResolvedSecundarios ? 'Ocultar resolvidos' : `Ver resolvidos (${secundarioResolvidos.length})`}
+                  </button>
+                  {showResolvedSecundarios && (
+                    <div className="space-y-2">{secundarioResolvidos.map(renderCard)}</div>
+                  )}
+                </>
+              )}
             </div>
           )}
         </div>

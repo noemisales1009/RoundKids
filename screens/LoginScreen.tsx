@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ClipboardIcon } from '../components/icons';
+import { AppLogo } from '../components/AppLogo';
 import { UserContext } from '../contexts';
 import { supabase } from '../supabaseClient';
 
@@ -149,10 +149,10 @@ export const LoginScreen: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center h-screen bg-slate-50 dark:bg-slate-950">
-            <div className="p-6 sm:p-8 bg-white dark:bg-slate-900 rounded-xl shadow-lg max-w-sm w-full m-4">
+        <div className="flex flex-col items-center justify-center min-h-screen px-4 py-8 bg-slate-50 dark:bg-slate-950">
+            <div className="p-6 sm:p-8 bg-white dark:bg-slate-900 rounded-xl shadow-lg max-w-sm w-full">
                 <div className="text-center mb-8">
-                    <img src="/logo.png" alt="Round Kids" className="w-48 h-48 sm:w-64 sm:h-64 object-contain mx-auto -mb-8 sm:-mb-12" />
+                    <AppLogo className="w-full mx-auto mb-6" />
                     <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-200">Bem-vindo de volta!</h1>
                     <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Faça login para continuar.</p>
                 </div>

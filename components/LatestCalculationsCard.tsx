@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { DropletIcon } from './icons';
+import { Turno, turnoAtualSP, turnoEDiaDe, turnoDoRegistro } from '../lib/turno';
+
+const TURNOS: { id: Turno; label: string; icon: string }[] = [
+  { id: 'manha', label: 'Manhã', icon: '🌅' },
+  { id: 'tarde', label: 'Tarde', icon: '☀️' },
+  { id: 'noite', label: 'Noite', icon: '🌙' },
+];
+
+// BH cumulativo desativado temporariamente a pedido da equipe (2026-08-17).
+// Para reexibir o cartão, mude para true. Há a mesma chave na EvolucaoDiariaScreen.
+const MOSTRAR_BH_CUMULATIVO = false;
 
 interface LatestCalculationsCardProps {
   patientId: string | number;
@@ -10,6 +21,7 @@ interface LatestCalculationsCardProps {
 interface DiuresisRecord {
   id: string;
   created_at: string;
+  turno?: string | null;
   peso: number;
   volume: number;
   horas: number;
@@ -18,6 +30,7 @@ interface DiuresisRecord {
 interface BalanceRecord {
   id: string;
   created_at: string;
+  turno?: string | null;
   peso: number;
   volume: number;
 }
@@ -36,8 +49,15 @@ interface BalancoCumulativoRecord {
 }
 
 const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patientId, refreshTrigger }) => {
-  const [latestDiuresis, setLatestDiuresis] = useState<DiuresisRecord | null>(null);
-  const [latestBalance, setLatestBalance] = useState<BalanceRecord | null>(null);
+  const [diuresisList, setDiuresisList] = useState<DiuresisRecord[]>([]);
+  const [balanceList, setBalanceList] = useState<BalanceRecord[]>([]);
+  const [turno, setTurno] = useState<Turno>(turnoAtualSP);
+  const diaAtual = turnoEDiaDe(new Date().toISOString()).dia;
+  // Registro mais recente feito dentro do turno selecionado, no dia de hoje; turno sem registro fica em branco
+  const doTurno = <T extends { created_at: string; turno?: string | null }>(lista: T[]): T | null =>
+    lista.find(r => turnoDoRegistro(r) === turno && turnoEDiaDe(r.created_at).dia === diaAtual) ?? null;
+  const latestDiuresis = doTurno(diuresisList);
+  const latestBalance = doTurno(balanceList);
   const [balancoCumulativo, setBalancoCumulativo] = useState<BalancoCumulativoRecord | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -52,13 +72,13 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
           .select('*')
           .eq('patient_id', patientIdStr)
           .order('data_registro', { ascending: false })
-          .limit(1),
+          .limit(40),
         supabase
           .from('balanco_hidrico')
           .select('*')
           .eq('patient_id', patientIdStr)
           .order('data_registro', { ascending: false })
-          .limit(1),
+          .limit(40),
         supabase
           .from('balanco_hidrico_cumulativo')
           .select('*')
@@ -67,26 +87,22 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
       ]);
 
 
-      if (diuresisResult.data && diuresisResult.data.length > 0) {
-        const data = diuresisResult.data[0];
-        setLatestDiuresis({
-          id: data.id,
-          created_at: data.data_registro || new Date().toISOString(),
-          peso: parseFloat(data.peso),
-          volume: parseFloat(data.volume),
-          horas: parseInt(data.horas)
-        });
-      }
+      setDiuresisList((diuresisResult.data ?? []).map((data: any) => ({
+        id: data.id,
+        created_at: data.data_registro || data.created_at || new Date().toISOString(),
+        peso: parseFloat(data.peso),
+        volume: parseFloat(data.volume),
+        horas: parseInt(data.horas),
+        turno: data.turno ?? null,
+      })));
 
-      if (balanceResult.data && balanceResult.data.length > 0) {
-        const data = balanceResult.data[0];
-        setLatestBalance({
-          id: data.id,
-          created_at: data.data_registro || data.created_at || new Date().toISOString(),
-          peso: parseFloat(data.peso),
-          volume: parseFloat(data.volume)
-        });
-      }
+      setBalanceList((balanceResult.data ?? []).map((data: any) => ({
+        id: data.id,
+        created_at: data.data_registro || data.created_at || new Date().toISOString(),
+        peso: parseFloat(data.peso),
+        volume: parseFloat(data.volume),
+        turno: data.turno ?? null,
+      })));
 
       if (balancoCumulativoResult.data) {
         setBalancoCumulativo(balancoCumulativoResult.data);
@@ -130,11 +146,28 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
           <div className="text-center py-4 text-slate-600 dark:text-slate-400">
             Carregando cálculos...
           </div>
-        ) : !latestDiuresis && !latestBalance ? (
+        ) : diuresisList.length === 0 && balanceList.length === 0 ? (
           <div className="text-center py-4 text-slate-600 dark:text-slate-400">
             Nenhum cálculo registrado ainda
           </div>
         ) : (
+          <>
+          <div className="flex gap-1.5 mb-4">
+            {TURNOS.map(t => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTurno(t.id)}
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition ${
+                  turno === t.id
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                <span>{t.icon}</span>{t.label}
+              </button>
+            ))}
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Diurese - sempre mostra, mesmo sem dados */}
             <div className="p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
@@ -211,7 +244,7 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
             </div>
 
             {/* BH Cumulativo - Balanço acumulado */}
-            {balancoCumulativo && balancoCumulativo.registros_24h > 0 ? (
+            {MOSTRAR_BH_CUMULATIVO && balancoCumulativo && balancoCumulativo.registros_24h > 0 ? (
               <div className={`p-4 rounded-lg border ${
                 Math.abs(balancoCumulativo.bh_cumulativo_pct) > 200
                   ? balancoCumulativo.bh_cumulativo_pct > 0
@@ -270,6 +303,7 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
               </div>
             ) : null}
           </div>
+          </>
         )}
       </div>
     </div>

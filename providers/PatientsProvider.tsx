@@ -55,6 +55,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 observation: e.observacao,
                 sistema: e.sistema || undefined,
                 mostrar_evolucao: e.mostrar_evolucao ?? null,
+                mostrar_evolucao_em: e.mostrar_evolucao_em ?? null,
             });
             return acc;
         }, {});
@@ -210,6 +211,10 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 sc: p.sc,
                 sexo: p.sexo || undefined,
                 prontuario: p.prontuario || undefined,
+                estatura: p.estatura || undefined,
+                pc: p.pc || undefined,
+                pa: p.pa || undefined,
+                pesoSeco: p.peso_seco || undefined,
                 status: p.status || 'estavel',
                 localTransferencia: p.local_transferencia || undefined,
                 comorbidade: p.comorbidade || undefined,
@@ -251,7 +256,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             categoriesRes,
             answersRes
         ] = await Promise.all([
-            supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc, local_transferencia, comorbidade, sexo, prontuario').is('archived_at', null),
+            supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc, local_transferencia, comorbidade, sexo, prontuario, estatura, pc, pa, peso_seco').is('archived_at', null),
             supabase.from('perguntas').select('*').order('ordem', { ascending: true }),
             supabase.from('pergunta_opcoes').select('*').order('ordem', { ascending: true }),
             supabase.from('categorias').select('*').order('ordem', { ascending: true }),
@@ -278,6 +283,10 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             sc: p.sc || undefined,
             sexo: p.sexo || undefined,
             prontuario: p.prontuario || undefined,
+            estatura: p.estatura || undefined,
+            pc: p.pc || undefined,
+            pa: p.pa || undefined,
+            pesoSeco: p.peso_seco || undefined,
             devices: [],
             exams: [],
             medications: [],
@@ -296,7 +305,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const activePatientIds = basicPatients.map(p => p.id);
         setTimeout(() => {
             Promise.all([
-                supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc, local_transferencia, comorbidade, sexo, prontuario').is('archived_at', null),
+                supabase.from('patients').select('id, name, bed_number, dob, status, mother_name, diagnosis, peso, dt_internacao, sc, local_transferencia, comorbidade, sexo, prontuario, estatura, pc, pa, peso_seco').is('archived_at', null),
                 supabase.from('dispositivos_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
                 supabase.from('exames_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
                 supabase.from('medicacoes_pacientes').select('*').in('paciente_id', activePatientIds).or('is_archived.is.null,is_archived.eq.false'),
@@ -516,7 +525,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             data_exame: exam.date,
             observacao: sanitizeTextOrNull(exam.observation),
             criado_por_id: userId || null,
-            // NULL = segue a regra automática das 48h; true = fixado manualmente na evolução
+            // NULL = segue a regra automática das 24h; true = fixado manualmente na evolução
             // (sobrescreve o DEFAULT true da coluna no banco; false nunca é enviado no cadastro)
             mostrar_evolucao: exam.mostrar_evolucao === true ? true : null,
             ...(exam.sistema ? { sistema: exam.sistema } : {}),
@@ -645,42 +654,57 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const { error } = await supabase.from('medicacoes_pacientes')
             .update({ mostrar_evolucao: value })
             .eq('id', medicationId);
-        if (!error) fetchPatients();
+        if (!error) patchItemLocal('medications', medicationId, { mostrar_evolucao: value });
     };
 
     const toggleMostrarEvolucaoDispositivo = async (deviceId: number | string, value: boolean) => {
         const { error } = await supabase.from('dispositivos_pacientes')
             .update({ mostrar_evolucao: value })
             .eq('id', deviceId);
-        if (!error) fetchPatients();
+        if (!error) patchItemLocal('devices', deviceId, { mostrar_evolucao: value });
     };
 
+    // Atualiza um item (dispositivo, medicação, cirurgia, cultura) só em memória, sem refetch.
+    const patchItemLocal = (key: 'devices' | 'medications' | 'surgicalProcedures' | 'cultures' | 'diets', id: number | string, patch: Record<string, unknown>) =>
+        setPatients(prev => prev.map(p => ({
+            ...p,
+            [key]: (p[key] as any[]).map(it => it.id === id ? { ...it, ...patch } : it),
+        })));
+
+    // Atualiza o exame só em memória (sem refetch), para a lista/modal não esvaziar nem voltar ao topo.
+    const patchExamLocal = (examId: number | string, patch: Partial<Exam>) =>
+        setPatients(prev => prev.map(p => ({
+            ...p,
+            exams: p.exams.map(e => e.id === examId ? { ...e, ...patch } : e),
+        })));
+
     const toggleMostrarEvolucaoExame = async (examId: number | string, value: boolean) => {
+        const em = value ? new Date().toISOString() : null;
         const { error } = await supabase.from('exames_pacientes')
-            .update({ mostrar_evolucao: value })
+            .update({ mostrar_evolucao: value, mostrar_evolucao_em: em })
             .eq('id', examId);
-        if (!error) fetchPatients();
+        if (!error) patchExamLocal(examId, { mostrar_evolucao: value, mostrar_evolucao_em: em });
     };
 
     const toggleMostrarEvolucaoCirurgia = async (surgId: number | string, value: boolean) => {
         const { error } = await supabase.from('procedimentos_pacientes')
             .update({ mostrar_evolucao: value })
             .eq('id', surgId);
-        if (!error) fetchPatients();
+        if (!error) patchItemLocal('surgicalProcedures', surgId, { mostrar_evolucao: value });
     };
 
     const toggleMostrarEvolucaoCultura = async (cultureId: number | string, value: boolean) => {
         const { error } = await supabase.from('culturas_pacientes')
             .update({ mostrar_evolucao: value })
             .eq('id', cultureId);
-        if (!error) fetchPatients();
+        if (!error) patchItemLocal('cultures', cultureId, { mostrar_evolucao: value });
     };
 
     const toggleMostrarEvolucaoDieta = async (dietId: number | string, value: boolean) => {
         const { error } = await supabase.from('dietas_pacientes')
             .update({ mostrar_evolucao: value })
             .eq('id', dietId);
-        if (!error) fetchPatients();
+        if (!error) patchItemLocal('diets', dietId, { mostrar_evolucao: value });
     };
 
     const updateExamInPatient = async (patientId: number | string, examData: Exam) => {
@@ -691,10 +715,16 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 observacao: sanitizeTextOrNull(examData.observation),
                 sistema: examData.sistema || null,
                 // undefined = chamador não quis mexer na coluna (preserva NULL/true/false do banco)
-                ...(examData.mostrar_evolucao !== undefined ? { mostrar_evolucao: examData.mostrar_evolucao } : {}),
+                ...(examData.mostrar_evolucao !== undefined ? { mostrar_evolucao: examData.mostrar_evolucao, mostrar_evolucao_em: examData.mostrar_evolucao_em ?? null } : {}),
             })
             .eq('id', examData.id);
-        if (!error) fetchPatients();
+        if (!error) patchExamLocal(examData.id, {
+            name: sanitizeText(examData.name),
+            date: examData.date,
+            observation: examData.observation,
+            sistema: examData.sistema || undefined,
+            ...(examData.mostrar_evolucao !== undefined ? { mostrar_evolucao: examData.mostrar_evolucao, mostrar_evolucao_em: examData.mostrar_evolucao_em ?? null } : {}),
+        });
     };
 
     const deleteExamFromPatient = async (patientId: number | string, examId: number | string) => {
@@ -715,7 +745,14 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 sistema: deviceData.sistema || null,
             })
             .eq('id', deviceData.id);
-        if (!error) fetchPatients();
+        if (!error) patchItemLocal('devices', deviceData.id, {
+            name: sanitizeText(deviceData.name),
+            location: sanitizeText(deviceData.location),
+            startDate: deviceData.startDate,
+            removalDate: deviceData.removalDate || undefined,
+            observacao: deviceData.observacao,
+            sistema: deviceData.sistema || undefined,
+        });
     };
 
     const updateMedicationInPatient = async (patientId: number | string, medicationData: Medication) => {
@@ -738,7 +775,18 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 comorbidade_relacionada: medicationData.comorbidadeRelacionada || null,
             })
             .eq('id', medicationData.id);
-        if (!error) fetchPatients();
+        if (!error) patchItemLocal('medications', medicationData.id, {
+            name: sanitizeText(medicationData.name),
+            dosage: medicationData.dosage,
+            startDate: medicationData.startDate,
+            endDate: medicationData.endDate || undefined,
+            observacao: medicationData.observacao,
+            sistema: medicationData.sistema || undefined,
+            diagnosticoId: medicationData.diagnosticoId || undefined,
+            diagnosticoLabel: medicationData.diagnosticoLabel || undefined,
+            diagnosticoDataInicio: medicationData.diagnosticoDataInicio || undefined,
+            comorbidadeRelacionada: medicationData.comorbidadeRelacionada || undefined,
+        });
     };
 
     const updateSurgicalProcedureInPatient = async (patientId: number | string, procedureData: SurgicalProcedure) => {
@@ -751,7 +799,13 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 sistema: procedureData.sistema || null,
             })
             .eq('id', procedureData.id);
-        if (!error) fetchPatients();
+        if (!error) patchItemLocal('surgicalProcedures', procedureData.id, {
+            name: sanitizeText(procedureData.name),
+            date: procedureData.date,
+            surgeon: sanitizeText(procedureData.surgeon),
+            notes: procedureData.notes,
+            sistema: procedureData.sistema || undefined,
+        });
     };
 
     const deleteSurgicalProcedureFromPatient = async (patientId: number | string, procedureId: number | string) => {
@@ -817,7 +871,16 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 diagnostico_data_inicio: cultureData.diagnosticoDataInicio || null,
             })
             .eq('id', cultureData.id);
-        if (!error) fetchPatients();
+        if (!error) patchItemLocal('cultures', cultureData.id, {
+            site: sanitizeText(cultureData.site),
+            microorganism: sanitizeText(cultureData.microorganism),
+            collectionDate: cultureData.collectionDate,
+            observation: cultureData.observation,
+            sistema: cultureData.sistema || undefined,
+            diagnosticoId: cultureData.diagnosticoId || undefined,
+            diagnosticoLabel: cultureData.diagnosticoLabel || undefined,
+            diagnosticoDataInicio: cultureData.diagnosticoDataInicio || undefined,
+        });
     };
 
     const addDietToPatient = async (patientId: number | string, diet: Omit<Diet, 'id'>, userId?: string) => {
@@ -964,7 +1027,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (!error) refreshPatientPrecautions(patientId);
     };
 
-    const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number; sc?: number; sexo?: string; prontuario?: string; bedNumber?: number }) => {
+    const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number; sc?: number; sexo?: string; prontuario?: string; bedNumber?: number; estatura?: number; pc?: number; pa?: number; pesoSeco?: number }) => {
         try {
             const updateData: any = {};
             if (data.motherName !== undefined) updateData.mother_name = data.motherName;
@@ -979,6 +1042,22 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             if (data.sc !== undefined) {
                 const scNumero = typeof data.sc === 'string' ? parseFloat(data.sc) : data.sc;
                 updateData.sc = scNumero || null;
+            }
+            if (data.estatura !== undefined) {
+                const estaturaNumero = typeof data.estatura === 'string' ? parseFloat(data.estatura) : data.estatura;
+                updateData.estatura = estaturaNumero || null;
+            }
+            if (data.pc !== undefined) {
+                const pcNumero = typeof data.pc === 'string' ? parseFloat(data.pc) : data.pc;
+                updateData.pc = pcNumero || null;
+            }
+            if (data.pa !== undefined) {
+                const paNumero = typeof data.pa === 'string' ? parseFloat(data.pa) : data.pa;
+                updateData.pa = paNumero || null;
+            }
+            if (data.pesoSeco !== undefined) {
+                const pesoSecoNumero = typeof data.pesoSeco === 'string' ? parseFloat(data.pesoSeco) : data.pesoSeco;
+                updateData.peso_seco = pesoSecoNumero || null;
             }
 
 
@@ -1008,6 +1087,10 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                         sexo: data.sexo ?? p.sexo,
                         prontuario: data.prontuario ?? p.prontuario,
                         bedNumber: data.bedNumber ?? p.bedNumber,
+                        estatura: data.estatura ?? p.estatura,
+                        pc: data.pc ?? p.pc,
+                        pa: data.pa ?? p.pa,
+                        pesoSeco: data.pesoSeco ?? p.pesoSeco,
                     };
                 }
                 return p;

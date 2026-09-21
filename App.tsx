@@ -9,6 +9,12 @@ import { NetworkProvider } from './contexts/NetworkContext';
 import { useHeader } from './hooks/useHeader';
 import { PreviewContext, UserContext } from './contexts';
 
+// Evita que o navegador tente restaurar a posição de rolagem sozinho ao trocar de rota
+// (o HashRouter muda a URL por fragmento, e o navegador trata isso como navegação de âncora).
+if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+    window.history.scrollRestoration = 'manual';
+}
+
 // Providers
 import {
     NotificationProvider,
