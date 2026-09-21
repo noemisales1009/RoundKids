@@ -267,6 +267,7 @@ const ESPECIALISTA_TO_SISTEMAS: Record<string, string[]> = {
   'Alergologia Ped':      ['Avaliação imunológica'],
   'CIPE':                 ['Gestão de riscos assistenciais'],
   'Dermatologia Ped':     ['Avaliação dermatológica'],
+  'Endocrinologia':       ['Avaliação endocrinológica'],
   'Endoscopia':           ['Avaliação gastrointestinal'],
   'Farmácia Clínica':     ['Gestão de riscos assistenciais'],
   'Genética':             ['Avaliação genética'],
