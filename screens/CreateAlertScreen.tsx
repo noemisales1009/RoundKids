@@ -22,20 +22,34 @@ export const CreateAlertScreen: React.FC = () => {
 
     useHeader(category ? `Alerta: ${category.name}` : 'Criar Alerta');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const [saving, setSaving] = useState(false);
+
+    // Só avisa sucesso e volta depois que o banco confirmar a gravação.
+    // Se falhar, mantém o formulário com os dados para tentar de novo.
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!patientId || !description || !responsible || !deadline) return;
+        if (saving || !patientId || !description || !responsible || !deadline) return;
 
-        addPatientAlert({
-            patientId: patientId,
-            description,
-            responsible,
-            timeLabel: deadline,
-        });
+        setSaving(true);
+        let ok = false;
+        try {
+            ok = await addPatientAlert({
+                patientId: patientId,
+                description,
+                responsible,
+                timeLabel: deadline,
+            });
+        } catch (err) {
+            console.error('Erro ao criar alerta:', err);
+        }
 
-        showNotification({ message: 'Alerta criado com sucesso!', type: 'success' });
-
-        navigate(-1);
+        if (ok) {
+            showNotification({ message: 'Alerta criado com sucesso!', type: 'success' });
+            navigate(-1);
+        } else {
+            setSaving(false);
+            showNotification({ message: 'Não foi possível salvar o alerta. Verifique a conexão e tente novamente.', type: 'error' });
+        }
     };
 
     if (!patient) {
@@ -85,10 +99,11 @@ export const CreateAlertScreen: React.FC = () => {
                     </div>
                     <button
                         type="submit"
-                        className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-3 px-4 rounded-lg transition text-lg flex items-center justify-center gap-2"
+                        disabled={saving}
+                        className="w-full bg-primary-500 hover:bg-primary-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition text-lg flex items-center justify-center gap-2"
                     >
                         <PencilIcon className="w-5 h-5" />
-                        Criar alerta
+                        {saving ? 'Salvando...' : 'Criar alerta'}
                     </button>
                 </form>
             </div>
