@@ -168,7 +168,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (!error) fetchTasks();
     };
 
-    const addPatientAlert = async (data: { patientId: string | number; description: string; responsible: string; timeLabel: string; sistemas?: string[] }) => {
+    const addPatientAlert = async (data: { patientId: string | number; description: string; responsible: string; timeLabel: string; sistemas?: string[]; turno?: string }) => {
         const user = await supabase.auth.getUser();
         const userId = user.data?.user?.id;
 
@@ -181,6 +181,9 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             created_at: new Date().toISOString(),
             created_by: userId,
             ...(data.sistemas && data.sistemas.length > 0 ? { sistemas: data.sistemas } : {}),
+            // created_at continua sendo a hora real do registro. O turno só é enviado no
+            // registro tardio (turno diferente do atual), e é ele que define a aba/seção.
+            ...(data.turno ? { turno: data.turno } : {}),
         }]);
 
         if (error) {

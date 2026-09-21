@@ -5,6 +5,8 @@ import { PatientsContext, TasksContext, NotificationContext } from '../contexts'
 import { useHeader } from '../hooks';
 import { RESPONSIBLES, ALERT_DEADLINES } from '../constants';
 import { CloseIcon, PencilIcon } from '../components/icons';
+import { Turno, turnoAtualSP } from '../lib/turno';
+import { TurnoReferenciaField } from '../components/alerts/TurnoReferenciaField';
 
 export const CreateAlertScreen: React.FC = () => {
     const { patientId, categoryId } = useParams<{ patientId: string, categoryId?: string }>();
@@ -23,6 +25,8 @@ export const CreateAlertScreen: React.FC = () => {
     useHeader(category ? `Alerta: ${category.name}` : 'Criar Alerta');
 
     const [saving, setSaving] = useState(false);
+    // Turno de referência: começa no turno atual; muda só no registro tardio
+    const [turnoRef, setTurnoRef] = useState<Turno>(() => turnoAtualSP());
 
     // Só avisa sucesso e volta depois que o banco confirmar a gravação.
     // Se falhar, mantém o formulário com os dados para tentar de novo.
@@ -38,6 +42,8 @@ export const CreateAlertScreen: React.FC = () => {
                 description,
                 responsible,
                 timeLabel: deadline,
+                // Só envia o turno no registro tardio; no registro normal vale a hora de criação
+                turno: turnoRef !== turnoAtualSP() ? turnoRef : undefined,
             });
         } catch (err) {
             console.error('Erro ao criar alerta:', err);
@@ -97,6 +103,8 @@ export const CreateAlertScreen: React.FC = () => {
                             {ALERT_DEADLINES.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
                     </div>
+                    <TurnoReferenciaField value={turnoRef} onChange={setTurnoRef} disabled={saving} />
+
                     <button
                         type="submit"
                         disabled={saving}

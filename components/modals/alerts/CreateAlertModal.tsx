@@ -2,6 +2,8 @@ import React, { useState, useContext } from 'react';
 import { TasksContext, NotificationContext } from '../../../contexts';
 import { AlertIcon, CloseIcon, SaveIcon, ChevronDownIcon } from '../../icons';
 import { RESPONSIBLES, ALERT_DEADLINES, ALERT_SYSTEMS } from '../../../constants';
+import { Turno, turnoAtualSP } from '../../../lib/turno';
+import { TurnoReferenciaField } from '../../alerts/TurnoReferenciaField';
 
 export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: () => void; }> = ({ patientId, onClose }) => {
     const { addPatientAlert } = useContext(TasksContext)!;
@@ -12,6 +14,8 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
     const [sistema, setSistema] = useState('');
     const [sistemaOutros, setSistemaOutros] = useState('');
     const [saving, setSaving] = useState(false);
+    // Turno de referência: começa no turno atual; muda só no registro tardio
+    const [turnoRef, setTurnoRef] = useState<Turno>(() => turnoAtualSP());
 
     // Só avisa sucesso e fecha depois que o banco confirmar a gravação.
     // Se falhar, mantém o formulário aberto com os dados para tentar de novo.
@@ -28,6 +32,8 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
                 responsible,
                 timeLabel: deadline,
                 sistemas: sistema ? [(sistema === 'Outros' ? sistemaOutros.trim() : sistema)] : [],
+                // Só envia o turno no registro tardio; no registro normal vale a hora de criação
+                turno: turnoRef !== turnoAtualSP() ? turnoRef : undefined,
             });
         } catch (err) {
             console.error('Erro ao criar alerta:', err);
@@ -109,6 +115,8 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
                                 <ChevronDownIcon className="absolute right-3 top-3 text-slate-400 pointer-events-none w-4 h-4" />
                             </div>
                         </div>
+
+                        <TurnoReferenciaField value={turnoRef} onChange={setTurnoRef} disabled={saving} ringClass="focus:ring-red-500" />
 
                         <button
                             type="submit"
