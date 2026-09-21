@@ -535,6 +535,7 @@ export const ALERT_SYSTEMS: string[] = [
     'Avaliação infecciosa',
     'Avaliação renal',
     'Distúrbios hidroeletrolíticos/metabólicos e DAB',
+    'Avaliação endocrinológica',
     'Avaliação gastrointestinal',
     'Avaliação cirúrgica',
     'Avaliação hematológica/ oncológica',

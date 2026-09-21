@@ -212,7 +212,7 @@ const SECTION_SISTEMAS: Record<string, string[]> = {
   infecciosa:       ['Avaliação infecciosa', 'Infecções Relacionadas à Assistência à Saúde (IRAS)', 'Outras infecções'],
   renal:            ['Avaliação renal'],
   dhe_metabolica:   ['Distúrbios hidroeletrolíticos/metabólicos e DAB', 'Distúrbios hidroeletrolíticos e metabólicos'],
-  endocrinologia:   [],
+  endocrinologia:   ['Avaliação endocrinológica'],
   gastrointestinal: ['Avaliação gastrointestinal'],
   nutricional:      ['Avaliação nutricional e metabólica'],
   hematologica:     ['Avaliação hematológica/ oncológica'],
