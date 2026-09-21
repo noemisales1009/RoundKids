@@ -1,6 +1,7 @@
 import React from 'react';
 import { Alerta, isAlertaAtivo } from '../../services/alertasService';
 import { textoJustificativa } from '../../lib/motivosAlerta';
+import { LABEL_TURNO, Turno, turnoEDiaDe } from '../../lib/turno';
 
 interface AlertaCardProps {
     alerta: Alerta;
@@ -37,6 +38,10 @@ export const AlertaCard: React.FC<AlertaCardProps> = ({ alerta, onJustificar, on
     const concluido = !isAlertaAtivo(alerta);
     const justificativa = textoJustificativa(alerta.justificativa_motivo, alerta.justificativa || alerta.justification);
     const responsavel = alerta.responsavel || alerta.responsible;
+    // Registro tardio: o turno escolhido no cadastro difere do turno da hora real de criação.
+    // A hora de criação exibida continua sendo a real; esta linha só explica a que turno o alerta se refere.
+    const turnoRef: Turno | null = alerta.turno === 'manha' || alerta.turno === 'tarde' || alerta.turno === 'noite' ? alerta.turno : null;
+    const tardio = !!turnoRef && !!alerta.created_at && turnoRef !== turnoEDiaDe(alerta.created_at).turno;
 
     return (
         <div
@@ -70,6 +75,9 @@ export const AlertaCard: React.FC<AlertaCardProps> = ({ alerta, onJustificar, on
                     <div className="text-xs opacity-75 space-y-1">
                         {responsavel && <p>👤 Responsável: {responsavel}</p>}
                         <p>📅 Criado: {formatDate(alerta.created_at)}{alerta.created_by_name ? ` · ${alerta.created_by_name}` : ''}</p>
+                        {tardio && turnoRef && (
+                            <p className="font-semibold">🕗 Registro tardio · referente ao turno da {LABEL_TURNO[turnoRef]}</p>
+                        )}
                     </div>
 
                     {alerta.source === 'alertas' && alerta.sistemas && alerta.sistemas.length > 0 && (

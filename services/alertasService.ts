@@ -28,6 +28,9 @@ export interface Alerta {
     mostrar_evolucao?: boolean;
     justificativa_motivo?: string | null;
     continuo?: boolean;
+    // Turno de referência escolhido no cadastro (registro tardio).
+    // Vazio = comportamento padrão: o turno vem da hora de criação.
+    turno?: string | null;
 }
 
 // Minúsculas e sem acento, para comparar status sem depender de como foi gravado ("Concluído", "concluido"...).
@@ -46,6 +49,8 @@ export const isAlertaAtivo = (a: Alerta): boolean => {
 // (7h-13h manhã, 13h-19h tarde, 19h-7h noite). Não depende do shift_criacao do banco.
 const TURNO_PARA_SHIFT: Record<Turno, ShiftType> = { manha: 'morning', tarde: 'afternoon', noite: 'night' };
 export const getShiftDoAlerta = (a: Alerta): ShiftType => {
+    // Turno escolhido no cadastro (registro tardio) vence a hora de criação
+    if (a.turno === 'manha' || a.turno === 'tarde' || a.turno === 'noite') return TURNO_PARA_SHIFT[a.turno];
     if (a.created_at) return TURNO_PARA_SHIFT[turnoEDiaDe(a.created_at).turno];
     if (a.shift_criacao === 'morning' || a.shift_criacao === 'afternoon' || a.shift_criacao === 'night') {
         return a.shift_criacao;
@@ -165,7 +170,7 @@ export const alertasService = {
         try {
             const [ap, t] = await Promise.all([
                 idsAP.length
-                    ? supabase.from('alertas_paciente').select('id, justificativa, justificativa_at, justificativa_motivo, continuo').in('id', idsAP)
+                    ? supabase.from('alertas_paciente').select('id, justificativa, justificativa_at, justificativa_motivo, continuo, turno').in('id', idsAP)
                     : Promise.resolve({ data: [], error: null }),
                 idsT.length
                     ? supabase.from('tasks').select('id, justification, justification_at, justificativa_motivo, continuo').in('id', idsT)
@@ -183,7 +188,7 @@ export const alertasService = {
                     return r ? { ...a, justification: r.justification ?? a.justification, justification_at: r.justification_at ?? a.justification_at, justificativa_motivo: r.justificativa_motivo ?? null, continuo: r.continuo === true } : a;
                 }
                 const r = porIdAP.get(String(a.id));
-                return r ? { ...a, justificativa: r.justificativa ?? a.justificativa, justificativa_at: r.justificativa_at ?? a.justificativa_at, justificativa_motivo: r.justificativa_motivo ?? null, continuo: r.continuo === true } : a;
+                return r ? { ...a, justificativa: r.justificativa ?? a.justificativa, justificativa_at: r.justificativa_at ?? a.justificativa_at, justificativa_motivo: r.justificativa_motivo ?? null, continuo: r.continuo === true, turno: r.turno ?? null } : a;
             });
         } catch (error) {
             console.error('alertasService.enriquecerJustificativas:', error);
