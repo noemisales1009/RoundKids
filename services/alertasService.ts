@@ -30,7 +30,8 @@ export interface Alerta {
     continuo?: boolean;
 }
 
-const semAcento = (v?: string | null) =>
+// Minúsculas e sem acento, para comparar status sem depender de como foi gravado ("Concluído", "concluido"...).
+export const semAcento = (v?: string | null) =>
     (v || '').toLowerCase().normalize('NFD').replace(/\p{M}/gu, '');
 
 // Alerta em aberto: não concluído, resolvido nem arquivado.

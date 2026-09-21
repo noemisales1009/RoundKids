@@ -6,6 +6,7 @@ import { supabase } from '../supabaseClient';
 import { WarningIcon, ClockIcon, AlertIcon, CheckCircleIcon } from '../components/icons';
 import { TaskStatus } from '../types';
 import { JustificationModal } from '../components/modals';
+import { isAlertaAtivo, semAcento } from '../services/alertasService';
 
 const TaskStatusScreen: React.FC = () => {
     const { status } = useParams<{ status: TaskStatus }>();
@@ -65,26 +66,33 @@ const TaskStatusScreen: React.FC = () => {
                 })
             ];
 
-            // Filtrar para remover status resolvido/arquivado/concluído
+            // Arquivados e ocultos não entram em nenhuma aba
             allAlerts = allAlerts.filter(alert => {
-                const status = alert.status?.toLowerCase() || '';
-                return !status.includes('resolvido') && !status.includes('arquivado') && !status.includes('concluído');
+                const s = semAcento(alert.status);
+                return !alert.archived_at && !s.includes('arquivado') && s !== 'oculto' &&
+                    !semAcento(alert.live_status).includes('arquivado');
             });
 
-            // Filtrar por live_status baseado no status da rota
+            // Concluído usa a mesma regra da tela do paciente (sem depender de acento nem de qual tela concluiu:
+            // o banco pode trazer 'concluido', 'concluído', 'Concluído' ou 'resolvido').
+            const isConcluido = (alert: any) => !isAlertaAtivo(alert);
+
+            // Filtrar pela aba da rota
             let filtered = allAlerts;
             if (status === 'alerta') {
-                // Mostrar apenas alertas ativos (status original = 'alerta' ou 'aberto')
-                filtered = allAlerts.filter(alert =>
-                    (alert.status === 'alerta' || alert.status === 'aberto' || alert.status === 'Pendente') &&
-                    alert.live_status !== 'concluido'
-                );
+                // Mostrar apenas alertas ativos (status original = 'alerta', 'aberto' ou 'Pendente')
+                filtered = allAlerts.filter(alert => {
+                    const s = semAcento(alert.status);
+                    return (s === 'alerta' || s === 'aberto' || s === 'pendente') && !isConcluido(alert);
+                });
             } else if (status === 'no_prazo') {
-                filtered = allAlerts.filter(alert => alert.live_status === 'no_prazo');
+                filtered = allAlerts.filter(alert => semAcento(alert.live_status) === 'no_prazo' && !isConcluido(alert));
             } else if (status === 'fora_do_prazo') {
-                filtered = allAlerts.filter(alert => alert.live_status === 'fora_do_prazo');
+                filtered = allAlerts.filter(alert => semAcento(alert.live_status) === 'fora_do_prazo' && !isConcluido(alert));
             } else if (status === 'concluido') {
-                filtered = allAlerts.filter(alert => alert.live_status === 'concluido');
+                // Mais recentes primeiro
+                const quando = (a: any) => new Date(a.concluded_at || a.updated_at || a.created_at).getTime() || 0;
+                filtered = allAlerts.filter(isConcluido).sort((a, b) => quando(b) - quando(a));
             }
 
             setAlerts(filtered);

@@ -11,21 +11,35 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
     const [deadline, setDeadline] = useState('');
     const [sistema, setSistema] = useState('');
     const [sistemaOutros, setSistemaOutros] = useState('');
+    const [saving, setSaving] = useState(false);
 
-    const handleSubmit = (e: { preventDefault: () => void }) => {
+    // Só avisa sucesso e fecha depois que o banco confirmar a gravação.
+    // Se falhar, mantém o formulário aberto com os dados para tentar de novo.
+    const handleSubmit = async (e: { preventDefault: () => void }) => {
         e.preventDefault();
-        if (!description || !responsible || !deadline) return;
+        if (saving || !description || !responsible || !deadline) return;
 
-        addPatientAlert({
-            patientId,
-            description,
-            responsible,
-            timeLabel: deadline,
-            sistemas: sistema ? [(sistema === 'Outros' ? sistemaOutros.trim() : sistema)] : [],
-        });
+        setSaving(true);
+        let ok = false;
+        try {
+            ok = await addPatientAlert({
+                patientId,
+                description,
+                responsible,
+                timeLabel: deadline,
+                sistemas: sistema ? [(sistema === 'Outros' ? sistemaOutros.trim() : sistema)] : [],
+            });
+        } catch (err) {
+            console.error('Erro ao criar alerta:', err);
+        }
 
-        showNotification({ message: 'Alerta criado com sucesso!', type: 'success' });
-        onClose();
+        if (ok) {
+            showNotification({ message: 'Alerta criado com sucesso!', type: 'success' });
+            onClose();
+        } else {
+            setSaving(false);
+            showNotification({ message: 'Não foi possível salvar o alerta. Verifique a conexão e tente novamente.', type: 'error' });
+        }
     };
 
     return (
@@ -98,10 +112,11 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
 
                         <button
                             type="submit"
-                            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 sm:py-3 px-4 rounded-lg transition text-base sm:text-lg flex items-center justify-center gap-2 mt-2"
+                            disabled={saving}
+                            className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-2 sm:py-3 px-4 rounded-lg transition text-base sm:text-lg flex items-center justify-center gap-2 mt-2"
                         >
                             <SaveIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                            Salvar Alerta
+                            {saving ? 'Salvando...' : 'Salvar Alerta'}
                         </button>
                     </form>
                 </div>
