@@ -75,7 +75,7 @@ export const AddExamModal: React.FC<{ patientId: number | string; onClose: () =>
                             <input type="checkbox" checked={fixarEvolucao} onChange={e => setFixarEvolucao(e.target.checked)} className="w-3.5 h-3.5 accent-primary-500" />
                             <span className="text-sm text-slate-700 dark:text-slate-300">Deixar este exame fixo permanentemente na Evolução Diária</span>
                         </label>
-                        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Marcado: o exame fica sempre visível na evolução. Desmarcado: aparece apenas nas primeiras 24h.</p>
+                        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Marcado: o exame fica sempre visível na evolução. Desmarcado: aparece apenas nas primeiras 48h.</p>
                     </div>
                     <button type="submit" className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded-lg">Cadastrar</button>
                 </form>
