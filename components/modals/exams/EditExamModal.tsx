@@ -17,7 +17,7 @@ export const EditExamModal: React.FC<{ exam: Exam; patientId: number | string; o
     const [sistemaOutros, setSistemaOutros] = useState(
         exam.sistema && !ALERT_SYSTEMS.includes(exam.sistema) ? exam.sistema : ''
     );
-    // mesma regra da lista: fixo = sempre; marcado manualmente = 24h; NULL = data do exame nas últimas 48h
+    // mesma regra da lista: fixo = sempre; marcado manualmente = 48h; NULL = data do exame nas últimas 48h
     const exibidoInicial = isExameNaEvolucao(exam);
     const [exibir, setExibir] = useState(exibidoInicial);
 
