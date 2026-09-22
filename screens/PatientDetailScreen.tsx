@@ -5,7 +5,7 @@ import { supabase } from '../supabaseClient';
 import { Device, Exam, Medication, SurgicalProcedure, Culture, Diet } from '../types';
 import { formatDateToBRL, ALERT_SYSTEMS, SCALE_VIEW_SISTEMA } from '../constants';
 import { formatDecimalBR } from '../lib/format';
-import { BackArrowIcon, WarningIcon, PencilIcon, ClipboardIcon, FileTextIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, BrainIcon, ShieldIcon, BeakerIcon, LungsIcon, LungsAltIcon, DumbbellIcon, CloseIcon, ScalpelIcon, ChevronRightIcon, CalculatorIcon, ChevronDownIcon, CameraIcon, HeartPulseIcon, VirusIcon } from '../components/icons';
+import { BackArrowIcon, WarningIcon, PencilIcon, ClipboardIcon, FileTextIcon, CpuIcon, PillIcon, BarChartIcon, AppleIcon, DropletIcon, BrainIcon, ShieldIcon, BeakerIcon, LungsIcon, LungsAltIcon, DumbbellIcon, CloseIcon, ScalpelIcon, ChevronRightIcon, CalculatorIcon, ChevronDownIcon, CameraIcon, HeartPulseIcon, VirusIcon, WindIcon } from '../components/icons';
 import { PatientDetailSkeleton } from '../components/SkeletonLoader';
 import { ArchiveModal } from '../components/modals/ArchiveModal';
 import { SecondaryNavigation } from '../components/SecondaryNavigation';
@@ -51,6 +51,8 @@ const KDIGOScale = lazy(() => import('../components/KDIGOScale').then(m => ({ de
 const NPTCalculator = lazy(() => import('../npt/NPTWrapper'));
 const GasometriaCalculator = lazy(() => import('../components/GasometriaCalculator').then(m => ({ default: m.GasometriaCalculator })));
 const PARDSCalculator = lazy(() => import('../components/PARDSCalculator').then(m => ({ default: m.PARDSCalculator })));
+const SuporteRespiratorioTab = lazy(() => import('../components/SuporteRespiratorioTab').then(m => ({ default: m.SuporteRespiratorioTab })));
+const CalculadoraRespiratoria = lazy(() => import('../components/CalculadoraRespiratoria').then(m => ({ default: m.CalculadoraRespiratoria })));
 const HemodinamicoTab = lazy(() => import('../components/HemodinamicoTab').then(m => ({ default: m.HemodinamicoTab })));
 const DiagnosticsSection = lazy(() => import('../components/DiagnosticsSection').then(m => ({ default: m.DiagnosticsSection })));
 const ControlesSaidasSection = lazy(() => import('../components/ControlesSaidasSection').then(m => ({ default: m.ControlesSaidasSection })));
@@ -109,7 +111,7 @@ const PatientDetailScreen: React.FC = () => {
 
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
-    const [mainTab, setMainTab] = useState<'npt' | 'scales' | 'gasometria' | 'hemodinamico' | 'pav' | 'ipcs' | 'pards' | null>(null);
+    const [mainTab, setMainTab] = useState<'npt' | 'scales' | 'gasometria' | 'hemodinamico' | 'pav' | 'ipcs' | 'pards' | 'suporte' | 'calcresp' | null>(null);
     const [notifRefresh, setNotifRefresh] = useState(0);
     const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'scales' | 'pareceres' | 'examesImagem' | 'paPercentis' | 'paineisVirais' | null>(null);
     const [showPAForm, setShowPAForm] = useState(false);
@@ -609,7 +611,7 @@ const PatientDetailScreen: React.FC = () => {
             {/* NPT + Escalas */}
             <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm">
                 <div className={mainTab ? 'border-b border-slate-200 dark:border-slate-800' : ''}>
-                    {/* 7 botões em 3 linhas (3 + 3 + 1) — layout consistente no celular, tablet e desktop */}
+                    {/* 9 botões em 3 linhas (3 + 3 + 3) — layout consistente no celular, tablet e desktop */}
                     <nav className="grid grid-cols-3">
                         {([
                             { id: 'npt' as const, label: 'Calc. NPT', Icon: BeakerIcon },
@@ -619,6 +621,8 @@ const PatientDetailScreen: React.FC = () => {
                             { id: 'pav' as const, label: 'Triagem PAV', Icon: LungsAltIcon },
                             { id: 'ipcs' as const, label: 'Triagem IPCS', Icon: VirusIcon },
                             { id: 'pards' as const, label: 'PARDS', Icon: LungsIcon },
+                            { id: 'suporte' as const, label: 'Oxigenação e Ventilação', Icon: WindIcon },
+                            { id: 'calcresp' as const, label: 'Calc. Respiratória', Icon: CalculatorIcon },
                         ]).map((t, i, arr) => {
                             const cols = 3;
                             const lastRowStart = arr.length - (arr.length % cols === 0 ? cols : arr.length % cols);
@@ -632,7 +636,7 @@ const PatientDetailScreen: React.FC = () => {
                                     className={`py-3 px-2 font-bold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 transition-colors duration-200 text-xs sm:text-base border-slate-200 dark:border-slate-700 ${notLastRow ? 'border-b' : ''} ${hasRight ? 'border-r' : ''} ${active ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                                 >
                                     <t.Icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                                    <span>{t.label}</span>
+                                    <span className="text-center leading-tight">{t.label}</span>
                                     <ChevronDownIcon className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 ${active ? 'rotate-180' : ''}`} />
                                 </button>
                             );
@@ -668,6 +672,23 @@ const PatientDetailScreen: React.FC = () => {
                     <div className="p-4 space-y-6">
                         <Suspense fallback={<LoadingSpinner />}>
                             <PARDSCalculator patientId={patient.id.toString()} />
+                        </Suspense>
+                    </div>
+                )}
+
+                {mainTab === 'suporte' && patient && (
+                    <div className="p-4 space-y-6">
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <SuporteRespiratorioTab patientId={patient.id.toString()} pesoKg={patient.peso ?? null} />
+                        </Suspense>
+                    </div>
+                )}
+
+                {mainTab === 'calcresp' && patient && (
+                    <div className="p-4 space-y-4">
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Calculadora Respiratória</h2>
+                            <CalculadoraRespiratoria patientId={patient.id.toString()} pesoKg={patient.peso ?? null} />
                         </Suspense>
                     </div>
                 )}
