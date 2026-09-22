@@ -688,7 +688,7 @@ const PatientDetailScreen: React.FC = () => {
                     <div className="p-4 space-y-4">
                         <Suspense fallback={<LoadingSpinner />}>
                             <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Calculadora Respiratória</h2>
-                            <CalculadoraRespiratoria patientId={patient.id.toString()} pesoKg={patient.peso ?? null} />
+                            <CalculadoraRespiratoria patientId={patient.id.toString()} pesoKg={patient.peso ?? null} dob={patient.dob ?? null} />
                         </Suspense>
                     </div>
                 )}
