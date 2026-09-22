@@ -290,7 +290,7 @@ const PatientDetailScreen: React.FC = () => {
         }
     };
 
-    // Regra única (lib/exameEvolucao): automático = data do exame nas últimas 24h; marcado manualmente vale 24h;
+    // Regra única (lib/exameEvolucao): automático = data do exame nas últimas 48h; marcado manualmente vale 24h;
     // fixado permanentemente (cadastro/edição) fica sempre. Mesma regra da EvolucaoDiariaScreen.
     const isExamNaEvolucao = (e: Exam) => isExameNaEvolucao(e);
 
