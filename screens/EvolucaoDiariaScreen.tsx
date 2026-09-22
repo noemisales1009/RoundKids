@@ -87,6 +87,7 @@ interface AlertaRecord {
   created_at: string;
   hora_selecionada: string;
   mostrar_evolucao?: boolean;
+  continuo?: boolean;
 }
 
 interface PropedeuticaExameImagem {
@@ -292,6 +293,19 @@ const ESPECIALISTA_TO_SISTEMAS: Record<string, string[]> = {
 // Dia da evolução em Brasília: o dia vira às 7h (a noite antes das 7h ainda é do dia anterior)
 const todayStr = () => turnoEDiaDe(new Date().toISOString()).dia;
 
+const ORDEM_TURNO: Record<Turno, number> = { manha: 0, tarde: 1, noite: 2 };
+
+// Alerta contínuo em aberto continua aparecendo em toda evolução a partir do dia/turno em que foi
+// criado (o mesmo que a tela do paciente faz ao fixá-lo em todas as abas). Sem turno, compara só o dia.
+const criadoAteEvolucao = (diaCriacao: string, turnoCriacao: Turno, dia: string, t?: Turno): boolean =>
+  diaCriacao !== dia ? diaCriacao < dia : (t == null || ORDEM_TURNO[turnoCriacao] <= ORDEM_TURNO[t]);
+
+// Status gravado em alertas_paciente: aberto = nem concluído, nem resolvido, nem arquivado
+const alertaRecordAtivo = (a: { status?: string | null }): boolean => {
+  const st = (a.status || '').toLowerCase();
+  return !st.includes('concluí') && !st.includes('concluido') && !st.includes('resolvido') && !st.includes('arquivado');
+};
+
 const formatAge = (dob: string) => {
   const birth = new Date(dob);
   const now = new Date();
@@ -435,9 +449,26 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   // Recomendações: os mesmos alertas do Round (alertas clínicos + tasks), não só alertas_paciente
   const [recAlertas, setRecAlertas] = useState<Alerta[]>([]);
   const [recLoading, setRecLoading] = useState(false);
-  const alertasDoTurno = (lista: Alerta[], excluidos: Set<string>, t: Turno = turno) => lista.filter(a =>
-    a.mostrar_evolucao !== false && !excluidos.has(`alt_${a.id}`) &&
-    SHIFT_PARA_TURNO[getShiftDoAlerta(a)] === t && turnoEDiaDe(a.created_at).dia === date);
+  // Entram os alertas criados neste dia/turno e, além deles, os contínuos ainda em aberto criados
+  // antes (em qualquer turno ou dia). Contínuos ficam no topo, como na tela do paciente.
+  const alertasDoTurno = (lista: Alerta[], excluidos: Set<string>, t: Turno = turno) => {
+    const continuoAtivo = (a: Alerta) => a.continuo === true && isAlertaAtivo(a);
+    return lista
+      .filter(a => {
+        if (a.mostrar_evolucao === false || excluidos.has(`alt_${a.id}`)) return false;
+        const turnoCriacao = SHIFT_PARA_TURNO[getShiftDoAlerta(a)];
+        const diaCriacao = turnoEDiaDe(a.created_at).dia;
+        if (turnoCriacao === t && diaCriacao === date) return true;
+        return continuoAtivo(a) && criadoAteEvolucao(diaCriacao, turnoCriacao, date, t);
+      })
+      .sort((a, b) => Number(continuoAtivo(b)) - Number(continuoAtivo(a)));
+  };
+  // Alertas de alertas_paciente que entram nas seções por sistema: os do dia da evolução
+  // (dia em Brasília, virando às 7h) e os contínuos em aberto criados antes.
+  const alertaNoDia = (a: AlertaRecord): boolean => {
+    const c = turnoEDiaDe(a.created_at);
+    return c.dia === date || (a.continuo === true && alertaRecordAtivo(a) && criadoAteEvolucao(c.dia, c.turno, date));
+  };
   const [alertasLoading, setAlertasLoading] = useState(false);
   const [examesImagemList, setExamesImagemList] = useState<PropedeuticaExameImagem[]>([]);
   const [pareceresList, setPareceresList] = useState<PropedeuticaParecer[]>([]);
@@ -758,10 +789,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       try {
         const { data } = await supabase
           .from('alertas_paciente')
-          .select('id, alerta_descricao, sistemas, responsavel, status, created_at, hora_selecionada, mostrar_evolucao')
+          .select('id, alerta_descricao, sistemas, responsavel, status, created_at, hora_selecionada, mostrar_evolucao, continuo')
           .eq('patient_id', patientId)
           .is('archived_at', null);
-        type AlertaRow = { id: string; alerta_descricao: string; sistemas: string[] | unknown; responsavel?: string | null; status?: string | null; created_at: string; hora_selecionada?: string | null; mostrar_evolucao?: boolean | null };
+        type AlertaRow = { id: string; alerta_descricao: string; sistemas: string[] | unknown; responsavel?: string | null; status?: string | null; created_at: string; hora_selecionada?: string | null; mostrar_evolucao?: boolean | null; continuo?: boolean | null };
         setAlertasList((data ?? []).map((r: AlertaRow) => ({
           id: r.id,
           alerta_descricao: r.alerta_descricao,
@@ -771,6 +802,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           created_at: r.created_at,
           hora_selecionada: r.hora_selecionada ?? '',
           mostrar_evolucao: r.mostrar_evolucao !== false,
+          continuo: r.continuo === true,
         })));
       } catch (e) {
         console.error('Erro ao carregar alertas:', e);
@@ -1153,7 +1185,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       if (recomendacoes.length > 0) {
         title('RECOMENDAÇÕES');
         recomendacoes.forEach(a => {
-          add(`  ${a.alertaclinico}${isAlertaAtivo(a) ? '' : ' (concluído)'}`);
+          add(`  ${a.alertaclinico}${a.continuo && isAlertaAtivo(a) ? ' (contínuo)' : ''}${isAlertaAtivo(a) ? '' : ' (concluído)'}`);
           const just = textoJustificativa(a.justificativa_motivo, a.justificativa || a.justification);
           if (just) add(`    Justificativa: ${just}`);
         });
@@ -1207,11 +1239,11 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         return sec.id === 'outras_av' && mapped.length === 0;
       });
       const alts  = alertasList.filter(a => {
-        if (a.mostrar_evolucao === false || we.has(`alt_${a.id}`) || a.created_at.split('T')[0] !== date) return false;
+        if (a.mostrar_evolucao === false || we.has(`alt_${a.id}`) || !alertaNoDia(a)) return false;
         if (a.sistemas.some(s => sistemas.includes(s))) return true;
         return sec.id === 'outras_av' && a.sistemas.some(s => !ALL_KNOWN_SISTEMAS.has(s));
       });
-      const activeAlts = alts.filter(a => { const st = (a.status || '').toLowerCase(); return !st.includes('concluí') && !st.includes('concluido') && !st.includes('resolvido') && !st.includes('arquivado'); });
+      const activeAlts = alts.filter(alertaRecordAtivo);
 
       const _allAportesMatch = sec.id === 'nutricional' ? aportesList.filter(a => a.mostrar_evolucao !== false) : [];
       const _aporteMatch = _allAportesMatch.find(a => a.data_referencia >= _cutoff24h) ?? _allAportesMatch[0];
@@ -1331,7 +1363,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       // 8. Condutas
       if (activeAlts.length) {
         apLines.push('  CONDUTAS:');
-        activeAlts.forEach(a => apLines.push(`    ${a.alerta_descricao}`));
+        activeAlts.forEach(a => apLines.push(`    ${a.alerta_descricao}${a.continuo ? ' (contínuo)' : ''}`));
       }
 
       // Cirurgias (específico da avaliação cirúrgica)
@@ -2103,7 +2135,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               <ul className="space-y-2">
                 {recomendacoes.map(a => (
                   <li key={`${a.source}-${a.id}`} className="text-sm text-slate-700 dark:text-slate-200 p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                    {a.alertaclinico}{!isAlertaAtivo(a) && <span className="ml-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">✓ concluído</span>}
+                    {a.alertaclinico}
+                    {a.continuo && isAlertaAtivo(a) && <span className="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-600 text-white">📌 Contínua</span>}
+                    {!isAlertaAtivo(a) && <span className="ml-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">✓ concluído</span>}
                     {(() => {
                       const just = textoJustificativa(a.justificativa_motivo, a.justificativa || a.justification);
                       return just ? <span className="block text-xs text-slate-500 dark:text-slate-400 mt-0.5">Justificativa: {just}</span> : null;
@@ -2159,12 +2193,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                 .filter(ei => ei.mostrar_evolucao !== false && ei.sistema && allNames.includes(ei.sistema));
               const secPareceres = pareceresList
                 .filter(p => p.mostrar_evolucao !== false && (ESPECIALISTA_TO_SISTEMAS[p.especialista] ?? []).some(s => allNames.includes(s)));
-              const secAlertas = alertasList.filter(a => {
-                if (a.mostrar_evolucao === false || a.created_at.split('T')[0] !== date) return false;
-                const st = (a.status || '').toLowerCase();
-                if (st.includes('concluí') || st.includes('concluido') || st.includes('resolvido') || st.includes('arquivado')) return false;
-                return a.sistemas.some(s => allNames.includes(s));
-              });
+              const secAlertas = alertasList.filter(a =>
+                a.mostrar_evolucao !== false && alertaNoDia(a) && alertaRecordAtivo(a) && a.sistemas.some(s => allNames.includes(s)));
 
               const total = secDiags.length + allSecMeds.length + allSecCults.length + allSecPnls.length + secCirurgias.length + secDietas.length + secExames.length + secEscalas.length + secExamesImagem.length + secPareceres.length + secAlertas.length;
               if (total === 0) return null;
@@ -2426,7 +2456,10 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                             const wk = `alt_${a.id}`; const off = wordExcluded.has(wk);
                             return (
                               <div key={a.id} className={`relative p-2 pr-10 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
-                                <p className="text-sm text-slate-700 dark:text-slate-200">{a.alerta_descricao}</p>
+                                <p className="text-sm text-slate-700 dark:text-slate-200">
+                                  {a.alerta_descricao}
+                                  {a.continuo && <span className="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-600 text-white">📌 Contínua</span>}
+                                </p>
                                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{formatDateToBRL(a.created_at)}</p>
                                 <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-primary-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
                               </div>
