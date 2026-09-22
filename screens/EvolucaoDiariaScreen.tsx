@@ -293,6 +293,22 @@ const ESPECIALISTA_TO_SISTEMAS: Record<string, string[]> = {
 // Dia da evolução em Brasília: o dia vira às 7h (a noite antes das 7h ainda é do dia anterior)
 const todayStr = () => turnoEDiaDe(new Date().toISOString()).dia;
 
+// Aporte na Evolução Diária: vale por 48h a partir da data de referência, em Brasília.
+// Passadas as 48h, a seção não exibe nada — nunca repete um aporte antigo.
+// Desmarcar "Exibir na Evolução Diária" tira o aporte antes disso.
+const JANELA_APORTE_H = 48;
+const SP_OFFSET_MS = 3 * 60 * 60 * 1000;
+
+export const aporteVigente = <T extends { data_referencia: string; mostrar_evolucao?: boolean }>(
+  lista: T[], agora: number = Date.now(),
+): T | null => {
+  const corte = new Date(agora - SP_OFFSET_MS - JANELA_APORTE_H * 60 * 60 * 1000).toISOString().split('T')[0];
+  const validos = lista
+    .filter(a => a.mostrar_evolucao !== false && a.data_referencia >= corte)
+    .sort((a, b) => b.data_referencia.localeCompare(a.data_referencia));
+  return validos[0] ?? null;
+};
+
 const ORDEM_TURNO: Record<Turno, number> = { manha: 0, tarde: 1, noite: 2 };
 
 // Alerta contínuo em aberto continua aparecendo em toda evolução a partir do dia/turno em que foi
@@ -1245,8 +1261,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       });
       const activeAlts = alts.filter(alertaRecordAtivo);
 
-      const _allAportesMatch = sec.id === 'nutricional' ? aportesList.filter(a => a.mostrar_evolucao !== false) : [];
-      const _aporteMatch = _allAportesMatch.find(a => a.data_referencia >= _cutoff24h) ?? _allAportesMatch[0];
+      const _aporteMatch = sec.id === 'nutricional' ? aporteVigente(aportesList) : null;
       const secAportes = _aporteMatch ? [_aporteMatch] : [];
       const totalItems = secDiags.length + allSecMeds.length + allSecCults.length + allSecPnls.length + cirgs.length + diets.length + exs.length + scs.length + imgs.length + pars.length + activeAlts.length + secAportes.length;
       if (totalItems === 0) return;
@@ -1996,11 +2011,13 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       <Section title="11. Aportes" id="aportes" open={openSections.has('aportes')} onToggle={() => toggle('aportes')}>
         {aportesLoading ? (
           <div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" /></div>
-        ) : aportesList.length === 0 ? (
-          <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhum aporte registrado.</p>
+        ) : aporteVigente(aportesList) === null ? (
+          <p className="text-sm text-slate-400 dark:text-slate-500 italic">
+            {aportesList.length === 0 ? 'Nenhum aporte registrado.' : 'Nenhum aporte nas últimas 48 horas.'}
+          </p>
         ) : (
           <div className="space-y-2">
-            {[aportesList.find(a => a.data_referencia >= new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]) ?? aportesList[0]].map(a => (
+            {[aporteVigente(aportesList)!].map(a => (
               <div key={a.id} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
                   {new Date(a.data_referencia + 'T12:00:00').toLocaleDateString('pt-BR')}
