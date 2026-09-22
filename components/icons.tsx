@@ -130,6 +130,11 @@ export const LungsAltIcon: React.FC<IconProps> = ({ className }) => (
   <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 4v3"></path><path d="M12 7c-.6 1.1-1.4 1.5-2.5 2"></path><path d="M12 7c.6 1.1 1.4 1.5 2.5 2"></path><path d="M9.5 9C7 10 5 12.5 5 15.5 5 18 6 20 7.8 20 9.2 20 9.5 18.6 9.5 17Z"></path><path d="M14.5 9c2.5 1 4.5 3.5 4.5 6.5 0 2.5-1 4.5-2.8 4.5-1.4 0-1.7-1.4-1.7-3Z"></path></svg>
 );
 
+// Fluxo de ar — usado no bloco Suporte de Oxigenação e Ventilação.
+export const WindIcon: React.FC<IconProps> = ({ className }) => (
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"></path><path d="M9.6 4.6A2 2 0 1 1 11 8H2"></path><path d="M12.6 19.4A2 2 0 1 0 14 16H2"></path></svg>
+);
+
 export const DumbbellIcon: React.FC<IconProps> = ({ className }) => (
   <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.4 14.4 9.6 9.6M18 11.2V6.4a2.4 2.4 0 0 0-2.4-2.4H6.4A2.4 2.4 0 0 0 4 6.4v4.8M6 12.8v4.8a2.4 2.4 0 0 0 2.4 2.4h9.6a2.4 2.4 0 0 0 2.4-2.4v-4.8"></path></svg>
 );
