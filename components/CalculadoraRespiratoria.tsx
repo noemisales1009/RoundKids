@@ -5,9 +5,11 @@ import { num } from '../lib/gasometria';
 import { normalizarFio2 } from '../lib/pards';
 import { DISPOSITIVOS, duracao, type Dispositivo, type Situacao } from '../lib/suporteRespiratorio';
 import {
+  LIMIAR,
   calcularTudo,
   fmt,
   gerarSintese,
+  mapEfetiva,
   memoriaDeCalculo,
   tendencia24h,
   type Aviso,
@@ -15,6 +17,25 @@ import {
   type IndicadorKey,
   type Resultado,
 } from '../lib/calcRespiratoria';
+import {
+  ESVAZIAMENTO,
+  FAIXAS_TAU,
+  calcCiclo,
+  faixaEtariaPorIdade,
+  idadeEmMeses,
+  type CicloEstimado,
+} from '../lib/tempoRespiratorio';
+import {
+  CATEGORIAS_IR,
+  LABEL_NIVEL,
+  REFERENCIA_CATEGORIA,
+  avaliarAlarmes,
+  peepReferencia,
+  resumoAlarmes,
+  type Alarme,
+  type CategoriaIR,
+  type NivelAlarme,
+} from '../lib/alarmesRespiratorios';
 
 // Calculadora respiratória automática do Round (especificação funcional).
 // Importa os dados do último registro do bloco de suporte e da última gasometria,
@@ -24,12 +45,13 @@ import {
 interface Props {
   patientId: string;
   pesoKg?: number | null;
+  dob?: string | null;   // para a referência etária da constante de tempo
 }
 
 type CampoId =
   | 'pesoKg' | 'pesoIdealKg' | 'spo2' | 'fio2Pct' | 'pao2' | 'map'
   | 'paco2' | 'ph' | 'etco2' | 'peco2'
-  | 'pip' | 'pplat' | 'peepProg' | 'peepTotal' | 'vteMl' | 'vazamentoPct' | 'fr' | 'tiSeg' | 'fluxoInspLmin';
+  | 'pip' | 'pplat' | 'peepProg' | 'peepTotal' | 'vteMl' | 'vtiMl' | 'fr' | 'tiSeg' | 'fluxoInspLmin';
 
 type Origem = 'importado' | 'digitado';
 
@@ -56,7 +78,7 @@ const GRUPOS: { titulo: string; campos: { id: CampoId; label: string; unidade: s
     { id: 'peepProg', label: 'PEEP programada', unidade: 'cmH₂O' },
     { id: 'peepTotal', label: 'PEEP total', unidade: 'cmH₂O' },
     { id: 'vteMl', label: 'VTe (volume corrente expirado)', unidade: 'mL' },
-    { id: 'vazamentoPct', label: 'Vazamento', unidade: '%' },
+    { id: 'vtiMl', label: 'VTi (volume corrente inspirado)', unidade: 'mL' },
     { id: 'fr', label: 'Frequência respiratória', unidade: 'irpm' },
     { id: 'tiSeg', label: 'Tempo inspiratório (Ti)', unidade: 's' },
     { id: 'fluxoInspLmin', label: 'Fluxo inspiratório', unidade: 'L/min' },
@@ -74,7 +96,18 @@ const CONDICOES: { id: 'sinalSpo2Ok' | 'contemporaneos' | 'pausaInspOk' | 'pausa
   { id: 'vteConfiavel', texto: 'VTe confiável, com vazamento não relevante.' },
 ];
 
-type Aba = 'oxigenacao' | 'ventilacao' | 'mecanica' | 'protecao' | 'historico';
+type Aba = 'alarmes' | 'oxigenacao' | 'ventilacao' | 'mecanica' | 'protecao' | 'historico';
+
+const COR_NIVEL: Record<NivelAlarme, string> = {
+  critico: 'border-red-400 dark:border-red-700 bg-red-50 dark:bg-red-900/25',
+  atencao: 'border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20',
+  info: 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900',
+};
+const BADGE_NIVEL: Record<NivelAlarme, string> = {
+  critico: 'bg-red-600 text-white',
+  atencao: 'bg-amber-500 text-white',
+  info: 'bg-slate-400 text-white',
+};
 
 const formatDataHora = (iso: string) =>
   new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
@@ -90,7 +123,7 @@ const COR_AVISO: Record<Aviso['nivel'], string> = {
   alerta: 'text-red-700 dark:text-red-400 font-semibold',
 };
 
-export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg }) => {
+export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, dob }) => {
   const { user } = useContext(UserContext)!;
 
   const [loading, setLoading] = useState(true);
@@ -101,7 +134,13 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg }) 
     { episodioId: null, suporte: '', emVmi: false, modo: null, ventiladorEm: null, gasometriaEm: null });
   const [registros, setRegistros] = useState<Record<string, unknown>[]>([]);
   const [erroHistorico, setErroHistorico] = useState('');
-  const [aba, setAba] = useState<Aba>('oxigenacao');
+  const [aba, setAba] = useState<Aba>('alarmes');
+  // Contexto clínico: muda a leitura dos alarmes, mas nunca o cálculo
+  const [categoria, setCategoria] = useState<CategoriaIR | null>(null);
+  const [fluxoZero, setFluxoZero] = useState<'sim' | 'nao' | ''>('');
+  const [estrategiaDeliberada, setEstrategiaDeliberada] = useState(false);
+  const [instabilidade, setInstabilidade] = useState(false);
+  const [prematuroSdr, setPrematuroSdr] = useState(false);
   const [sinteseManual, setSinteseManual] = useState<string | null>(null);
   const [validado, setValidado] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -169,12 +208,46 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg }) 
     pesoKg: num(campos.pesoKg), pesoIdealKg: num(campos.pesoIdealKg), spo2: num(campos.spo2), fio2Pct: num(campos.fio2Pct),
     pao2: num(campos.pao2), paco2: num(campos.paco2), ph: num(campos.ph), etco2: num(campos.etco2), peco2: num(campos.peco2),
     pip: num(campos.pip), pplat: num(campos.pplat), peepProg: num(campos.peepProg), peepTotal: num(campos.peepTotal),
-    map: num(campos.map), vteMl: num(campos.vteMl), vazamentoPct: num(campos.vazamentoPct), fr: num(campos.fr),
+    map: num(campos.map), vteMl: num(campos.vteMl), vtiMl: num(campos.vtiMl), fr: num(campos.fr),
     tiSeg: num(campos.tiSeg), fluxoInspLmin: num(campos.fluxoInspLmin), modo: fonte.modo, emVmi: fonte.emVmi, ...cond,
   }), [campos, cond, fonte]);
 
   const calc = useMemo(() => calcularTudo(entrada), [entrada]);
   const todos = useMemo(() => [...calc.oxigenacao, ...calc.ventilacao, ...calc.mecanica], [calc]);
+  const mapUsada = useMemo(() => mapEfetiva(entrada), [entrada]);
+
+  // Constante de tempo e ciclo, a partir da mecânica medida (a idade é só referência)
+  const ciclo: CicloEstimado = useMemo(() => {
+    const achaValor = (k: IndicadorKey) => [...calc.mecanica].find(r => r.key === k)?.valor ?? null;
+    return calcCiclo(achaValor('raw'), achaValor('cstat'), entrada.fr, { ovai: categoria === 'ovai' });
+  }, [calc, entrada.fr, categoria]);
+
+  const faixaEtaria = useMemo(() => faixaEtariaPorIdade(idadeEmMeses(dob), prematuroSdr), [dob, prematuroSdr]);
+  const refEtaria = useMemo(() => FAIXAS_TAU.find(f => f.key === faixaEtaria) ?? null, [faixaEtaria]);
+
+  // Último cálculo validado, para as regras de tendência
+  const anterior = useMemo(() => {
+    const r = registros[0];
+    if (!r) return null;
+    const n = (k: string) => (typeof r[k] === 'number' ? (r[k] as number) : null);
+    return { vte_kg: n('vte_kg'), cstat: n('cstat'), raw: n('raw'), io: n('io'), is_osi: n('is_osi'), spo2: n('spo2'), etco2: n('etco2') };
+  }, [registros]);
+
+  const difFontesMin = useMemo(() => {
+    if (!fonte.ventiladorEm || !fonte.gasometriaEm) return null;
+    return Math.abs(new Date(fonte.ventiladorEm).getTime() - new Date(fonte.gasometriaEm).getTime()) / 60000;
+  }, [fonte]);
+
+  const alarmes: Alarme[] = useMemo(() => avaliarAlarmes(entrada, calc, ciclo, {
+    categoria,
+    fluxoExpRetornaZero: fluxoZero === '' ? null : fluxoZero === 'sim',
+    estrategiaDeliberada,
+    instabilidadeHemodinamica: instabilidade,
+    difFontesMin,
+    anterior,
+  }), [entrada, calc, ciclo, categoria, fluxoZero, estrategiaDeliberada, instabilidade, difFontesMin, anterior]);
+  const contagem = useMemo(() => resumoAlarmes(alarmes), [alarmes]);
+  const refPeep = useMemo(() => peepReferencia(entrada.fio2Pct), [entrada.fio2Pct]);
   const achar = (k: IndicadorKey) => todos.find(r => r.key === k);
   const algumCalculado = todos.some(r => r.valor != null);
   const sinteseGerada = useMemo(() => gerarSintese(entrada, calc, fonte.suporte || 'suporte respiratório não registrado'), [entrada, calc, fonte.suporte]);
@@ -222,8 +295,11 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg }) 
       peso_kg: entrada.pesoKg ?? null, peso_ideal_kg: entrada.pesoIdealKg ?? null,
       spo2: entrada.spo2 ?? null, fio2, pao2: entrada.pao2 ?? null, paco2: entrada.paco2 ?? null, ph: entrada.ph ?? null,
       etco2: entrada.etco2 ?? null, peco2: entrada.peco2 ?? null, pip: entrada.pip ?? null, pplat: entrada.pplat ?? null,
-      peep_programada: entrada.peepProg ?? null, peep_total: entrada.peepTotal ?? null, map: entrada.map ?? null,
-      vte_ml: entrada.vteMl ?? null, vazamento_pct: entrada.vazamentoPct ?? null, fr: entrada.fr ?? null,
+      peep_programada: entrada.peepProg ?? null, peep_total: entrada.peepTotal ?? null, map: mapUsada?.valor ?? null,
+      // Colunas de ALTER_CALC_RESP_ADD_VTI_MAP.sql: só vão quando têm valor, para o insert não quebrar antes do script
+      ...(mapUsada?.estimada ? { map_estimada: true } : {}),
+      ...(entrada.vtiMl != null ? { vti_ml: entrada.vtiMl, vazamento_ml: v('vazamento_ml') } : {}),
+      vte_ml: entrada.vteMl ?? null, vazamento_pct: v('vazamento_pct'), fr: entrada.fr ?? null,
       ti_seg: entrada.tiSeg ?? null, fluxo_insp_lmin: entrada.fluxoInspLmin ?? null,
       sinal_spo2_ok: cond.sinalSpo2Ok, contemporaneos: cond.contemporaneos, pausa_insp_ok: cond.pausaInspOk,
       pausa_exp_ok: cond.pausaExpOk, vte_confiavel: cond.vteConfiavel,
@@ -234,7 +310,15 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg }) 
       raw: v('raw'), tau_seg: v('tau'), auto_peep: v('auto_peep'),
       origem_dados: origem,
       memoria_calculo: memoriaDeCalculo(calc),
-      alertas: [...calc.protecao, ...todos.flatMap(r => r.avisos.filter(a => a.nivel !== 'info'))].map(a => a.texto),
+      // Alarmes avaliados no momento da validação, com valor e referência (itens 8.5 e 13 das specs)
+      alertas: [
+        ...alarmes.map(a => ({ id: a.id, nivel: a.nivel, titulo: a.titulo, valor: a.valor, meta: a.meta })),
+        ...todos.flatMap(r => r.avisos.filter(a => a.nivel !== 'info')).map(a => ({ nivel: a.nivel, titulo: a.texto })),
+      ],
+      // Colunas de ALTER_CALC_RESP_ADD_CONTEXTO.sql: só vão quando têm valor
+      ...(categoria ? { categoria_ir: categoria } : {}),
+      ...(ciclo.tiEstimado != null ? { ti_estimado_seg: ciclo.tiEstimado } : {}),
+      ...(fluxoZero ? { fluxo_exp_retorna_zero: fluxoZero === 'sim' } : {}),
       sintese: sintese.trim() || null,
     });
     setSaving(false);
@@ -274,15 +358,16 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg }) 
 
   const vteKg = achar('vte_kg');
   const painel: [string, string][] = [
-    ['VTe', entrada.vteMl != null ? `${fmt(entrada.vteMl, 0)} mL` : '—'],
+    ['VTe (volume corrente expirado)', entrada.vteMl != null ? `${fmt(entrada.vteMl, 0)} mL` : '—'],
     ['VTe/kg', vteKg?.valor != null ? vteKg.exibicao : '—'],
+    ['Vazamento', achar('vazamento_pct')?.valor != null ? `${achar('vazamento_ml')!.exibicao} (${achar('vazamento_pct')!.exibicao})` : '—'],
     ['PIP', entrada.pip != null ? `${fmt(entrada.pip)} cmH₂O` : '—'],
     ['Pplat', entrada.pplat != null ? `${fmt(entrada.pplat)} cmH₂O` : '—'],
     ['PEEP programada', entrada.peepProg != null ? `${fmt(entrada.peepProg)} cmH₂O` : '—'],
     ['PEEP total', entrada.peepTotal != null ? `${fmt(entrada.peepTotal)} cmH₂O` : '—'],
     ['Auto-PEEP', achar('auto_peep')?.exibicao ?? '—'],
     ['Driving pressure', achar('dp')?.exibicao ?? '—'],
-    ['MAP', entrada.map != null ? `${fmt(entrada.map)} cmH₂O` : '—'],
+    ['MAP', mapUsada ? `${fmt(mapUsada.valor)} cmH₂O${mapUsada.estimada ? ' (estimada)' : ''}` : '—'],
     ['FiO₂', entrada.fio2Pct != null ? `${fmt(entrada.fio2Pct, 0)}%` : '—'],
     ['SpO₂', entrada.spo2 != null ? `${fmt(entrada.spo2, 0)}%` : '—'],
     ['Modo', fonte.modo ?? '—'],
@@ -318,11 +403,62 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg }) 
                   />
                   {c.unidade && <span className={unidadeCls}>{c.unidade}</span>}
                 </div>
+                {c.id === 'fio2Pct' && entrada.fio2Pct != null && normalizarFio2(entrada.fio2Pct) != null && (
+                  <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">No cálculo: {fmt(normalizarFio2(entrada.fio2Pct) as number, 2)} (fração decimal)</p>
+                )}
+                {c.id === 'map' && !campos.map && mapUsada?.estimada && (
+                  <p className="mt-1 text-[11px] text-amber-700 dark:text-amber-400">Em branco: usada a MAP estimada de {fmt(mapUsada.valor)} cmH₂O. Prefira a medida no ventilador.</p>
+                )}
               </div>
             ))}
           </div>
         </div>
       ))}
+
+      {/* Contexto clínico: muda a leitura dos alarmes, nunca o cálculo */}
+      <div className={cardBase}>
+        <div className={cardTitulo}>Contexto clínico</div>
+        <div className="p-4 space-y-3">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Categoria da insuficiência respiratória</label>
+            <select value={categoria ?? ''} onChange={e => setCategoria((e.target.value || null) as CategoriaIR | null)} disabled={saving}
+              className={`${inputCls} rounded-lg border-slate-300 dark:border-slate-600`}>
+              <option value="">Não classificada</option>
+              {CATEGORIAS_IR.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+            </select>
+            {categoria && (
+              <div className="mt-2 text-xs text-slate-600 dark:text-slate-400 space-y-0.5">
+                <p>{CATEGORIAS_IR.find(c => c.key === categoria)?.descricao}</p>
+                <p><strong>I:E de referência:</strong> {REFERENCIA_CATEGORIA[categoria].ie}</p>
+                <p><strong>PEEP:</strong> {REFERENCIA_CATEGORIA[categoria].peep}</p>
+                <p><strong>Ti:</strong> {REFERENCIA_CATEGORIA[categoria].ti}</p>
+              </div>
+            )}
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Fluxo expiratório retorna a zero antes do próximo ciclo?</label>
+            <select value={fluxoZero} onChange={e => setFluxoZero(e.target.value as 'sim' | 'nao' | '')} disabled={saving}
+              className={`${inputCls} rounded-lg border-slate-300 dark:border-slate-600 sm:max-w-xs`}>
+              <option value="">Não observado</option>
+              <option value="sim">Sim, retorna a zero</option>
+              <option value="nao">Não retorna a zero</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            {[
+              { on: estrategiaDeliberada, set: setEstrategiaDeliberada, texto: 'Estratégia deliberada, monitorada e registrada (volume fora da faixa ou relação I:E invertida intencional).' },
+              { on: instabilidade, set: setInstabilidade, texto: 'Instabilidade hemodinâmica no momento da avaliação.' },
+              { on: prematuroSdr, set: setPrematuroSdr, texto: 'Prematuro com síndrome do desconforto respiratório e baixa complacência.' },
+            ].map(c => (
+              <label key={c.texto} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
+                <input type="checkbox" className="mt-0.5 accent-primary-600" checked={c.on} disabled={saving}
+                  onChange={ev => { c.set(ev.target.checked); setValidado(false); setMsgOk(''); }} />
+                {c.texto}
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* Condições de validade: sem confirmação, o cálculo correspondente fica bloqueado */}
       <div className={cardBase}>
@@ -342,6 +478,11 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg }) 
       {/* Item 1: as quatro abas da calculadora */}
       <div className={cardBase}>
         <div className="flex gap-1 px-2 border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
+          <button className={tabBtn(aba === 'alarmes')} onClick={() => setAba('alarmes')}>
+            Alarmes
+            {contagem.critico > 0 && <span className="ml-1 px-1.5 rounded-full bg-red-600 text-white text-[10px] font-bold">{contagem.critico}</span>}
+            {contagem.atencao > 0 && <span className="ml-1 px-1.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">{contagem.atencao}</span>}
+          </button>
           <button className={tabBtn(aba === 'oxigenacao')} onClick={() => setAba('oxigenacao')}>Oxigenação</button>
           <button className={tabBtn(aba === 'ventilacao')} onClick={() => setAba('ventilacao')}>Ventilação</button>
           <button className={tabBtn(aba === 'mecanica')} onClick={() => setAba('mecanica')}>Mecânica respiratória</button>
@@ -349,9 +490,43 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg }) 
           <button className={tabBtn(aba === 'historico')} onClick={() => setAba('historico')}>Histórico{registros.length ? ` (${registros.length})` : ''}</button>
         </div>
         <div className="p-4 space-y-2">
+          {aba === 'alarmes' && (
+            <>
+              {alarmes.length === 0 ? (
+                <p className="text-sm text-slate-500 dark:text-slate-400 py-2">Nenhum alarme ativo com os dados informados. Preencha os parâmetros e o contexto clínico para a avaliação ficar completa.</p>
+              ) : alarmes.map(a => (
+                <div key={a.id} className={`p-3 rounded-lg border ${COR_NIVEL[a.nivel]}`}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${BADGE_NIVEL[a.nivel]}`}>{LABEL_NIVEL[a.nivel]}</span>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{a.titulo}</p>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-700 dark:text-slate-300"><strong>Valor:</strong> {a.valor} · <strong>Referência:</strong> {a.meta}</p>
+                  <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">{a.verificar}</p>
+                </div>
+              ))}
+              {refPeep && (
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Referência PEEP–FiO₂ (ARDSNet) para FiO₂ {refPeep.fio2}%: PEEP {refPeep.min === refPeep.max ? fmt(refPeep.min) : `${fmt(refPeep.min)} a ${fmt(refPeep.max)}`} cmH₂O. A tabela é referência inicial e não comanda ajuste.
+                </p>
+              )}
+              <p className="text-xs text-slate-500 dark:text-slate-400">Os alarmes apoiam a avaliação profissional. O sistema nunca altera nem sugere alteração dos parâmetros do ventilador.</p>
+            </>
+          )}
+
           {aba === 'oxigenacao' && (
             <>
               {calc.oxigenacao.map(linhaResultado)}
+              <div className="overflow-x-auto pt-1">
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Classificação pelo PALICC-2 (criança em VMI com PEEP ≥ {LIMIAR.peepMinimaPalicc} cmH₂O)</p>
+                <table className="w-full text-xs text-left text-slate-700 dark:text-slate-300">
+                  <thead><tr className="border-b border-slate-200 dark:border-slate-700">{['Classificação pelo índice', 'IO', 'IS ou OSI'].map(h => <th key={h} className="py-1 pr-3 font-semibold">{h}</th>)}</tr></thead>
+                  <tbody>
+                    <tr className="border-b border-slate-100 dark:border-slate-800"><td className="py-1 pr-3">Sem critério de PARDS pelo índice</td><td className="py-1 pr-3">&lt; {LIMIAR.io.preenche}</td><td className="py-1 pr-3">&lt; {LIMIAR.is.preenche}</td></tr>
+                    <tr className="border-b border-slate-100 dark:border-slate-800"><td className="py-1 pr-3">PARDS leve a moderada</td><td className="py-1 pr-3">{LIMIAR.io.preenche} a &lt; {LIMIAR.io.grave}</td><td className="py-1 pr-3">{LIMIAR.is.preenche} a &lt; {fmt(LIMIAR.is.grave)}</td></tr>
+                    <tr><td className="py-1 pr-3">PARDS grave</td><td className="py-1 pr-3">≥ {LIMIAR.io.grave}</td><td className="py-1 pr-3">≥ {fmt(LIMIAR.is.grave)}</td></tr>
+                  </tbody>
+                </table>
+              </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">A classificação pelo PALICC-2 é apoio à avaliação e não diagnóstico isolado.</p>
             </>
           )}
@@ -359,7 +534,7 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg }) 
           {aba === 'ventilacao' && (
             <>
               <p className="text-sm text-slate-700 dark:text-slate-300">
-                VTe <strong>{entrada.vteMl != null ? fmt(entrada.vteMl, 0) : '___'} mL</strong> | VTe/peso <strong>{vteKg?.valor != null ? fmt(vteKg.valor, 1) : '___'} mL/kg</strong> | Vazamento <strong>{entrada.vazamentoPct != null ? fmt(entrada.vazamentoPct, 0) : '___'}%</strong>
+                VTe (volume corrente expirado) <strong>{entrada.vteMl != null ? fmt(entrada.vteMl, 0) : '___'} mL</strong> | VTe/peso <strong>{vteKg?.valor != null ? fmt(vteKg.valor, 1) : '___'} mL/kg</strong> | Vazamento <strong>{achar('vazamento_pct')?.valor != null ? fmt(achar('vazamento_pct')!.valor as number, 1) : '___'}%</strong>
               </p>
               <p className="text-sm text-slate-700 dark:text-slate-300">
                 PaCO₂ <strong>{entrada.paco2 != null ? fmt(entrada.paco2) : '—'}</strong> mmHg · EtCO₂ <strong>{entrada.etco2 != null ? fmt(entrada.etco2) : '—'}</strong> mmHg · pH <strong>{entrada.ph != null ? fmt(entrada.ph, 2) : '—'}</strong>
@@ -367,21 +542,59 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg }) 
               {gradienteProgressivo && (
                 <p className="text-xs text-amber-700 dark:text-amber-400">Gradiente PaCO₂–EtCO₂ em aumento progressivo nos últimos registros: avaliar espaço morto, relação V/Q e perfusão pulmonar.</p>
               )}
-              {calc.ventilacao.filter(r => r.key !== 'vd_vt').map(linhaResultado)}
-              <details>
-                <summary className="text-xs font-semibold text-primary-600 dark:text-primary-400 cursor-pointer select-none py-1">Cálculo avançado: espaço morto fisiológico</summary>
-                <div className="pt-2">{calc.ventilacao.filter(r => r.key === 'vd_vt').map(linhaResultado)}</div>
-              </details>
+              {calc.ventilacao.map(linhaResultado)}
+              <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs text-slate-600 dark:text-slate-300">
+                <p className="font-bold mb-1">Legenda</p>
+                <p>VTi = volume corrente inspirado · VTe = volume corrente expirado · Vazamento = VTi − VTe · PaCO₂ = CO₂ arterial (gasometria) · EtCO₂ = CO₂ ao fim da expiração (capnografia) · PECO₂ = CO₂ expirado misto · VD/VT = espaço morto fisiológico</p>
+              </div>
             </>
           )}
 
           {aba === 'mecanica' && (
             <>
-              {calc.mecanica.filter(r => ['dp', 'cstat', 'auto_peep'].includes(r.key)).map(linhaResultado)}
-              <details>
-                <summary className="text-xs font-semibold text-primary-600 dark:text-primary-400 cursor-pointer select-none py-1">Cálculos avançados: complacência dinâmica, resistência e constante de tempo</summary>
-                <div className="pt-2 space-y-2">{calc.mecanica.filter(r => ['cdyn', 'raw', 'tau'].includes(r.key)).map(linhaResultado)}</div>
-              </details>
+              {calc.mecanica.map(linhaResultado)}
+
+              {/* Constante de tempo e cálculo do Ti */}
+              <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 space-y-2">
+                <p className="text-sm font-bold text-slate-800 dark:text-slate-100">Constante de tempo e tempo inspiratório</p>
+                {ciclo.tau == null ? (
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    Não calculada. Depende da resistência e da complacência estática.
+                    {refEtaria && ` Referência aproximada para ${refEtaria.label.toLowerCase()}: τ de ${fmt(refEtaria.tauMin, 2)} a ${fmt(refEtaria.tauMax, 2)} s, com Ti de ${fmt(refEtaria.tauMin * 3, 2)} a ${fmt(refEtaria.tauMax * 3, 2)} s.`}
+                  </p>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                      {[
+                        ['τ (constante de tempo)', `${fmt(ciclo.tau, 2)} s`],
+                        ['Ti estimado (3 τ)', ciclo.tiEstimado != null ? `${fmt(ciclo.tiEstimado, 2)} s` : '—'],
+                        ['Tempo total do ciclo', ciclo.tempoTotal != null ? `${fmt(ciclo.tempoTotal, 2)} s` : '—'],
+                        [`Te mínimo (${categoria === 'ovai' ? '4' : '3'} τ)`, ciclo.teMinimo != null ? `${fmt(ciclo.teMinimo, 2)} s` : '—'],
+                      ].map(([r, v]) => (
+                        <div key={r} className="p-2 rounded bg-slate-50 dark:bg-slate-800">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">{r}</p>
+                          <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{v}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      τ = Raw × Cstat, com a complacência convertida para L/cmH₂O. Esvaziamento aproximado: {ESVAZIAMENTO.map(x => `${x.constantes} τ = ${x.pct}%`).join(' · ')}.
+                    </p>
+                    {entrada.tiSeg != null && ciclo.tau > 0 && (
+                      <p className="text-xs text-slate-600 dark:text-slate-400">Ti informado de {fmt(entrada.tiSeg, 2)} s equivale a {fmt(entrada.tiSeg / ciclo.tau, 1)} constantes de tempo.</p>
+                    )}
+                    {ciclo.cabeNoCiclo === false && (
+                      <p className="text-xs font-semibold text-red-700 dark:text-red-400">O Ti estimado não cabe no tempo total do ciclo com a FR atual.</p>
+                    )}
+                    {refEtaria && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Referência aproximada para {refEtaria.label.toLowerCase()}: τ de {fmt(refEtaria.tauMin, 2)} a {fmt(refEtaria.tauMax, 2)} s. A faixa etária é sugestão inicial; vale a constante calculada do paciente.
+                      </p>
+                    )}
+                    <p className="text-xs text-slate-500 dark:text-slate-400">O Ti estimado é referência fisiológica. Confirmar com VTe, fluxo inspiratório, sincronia, pressão, tempo expiratório disponível e resposta clínica.</p>
+                  </>
+                )}
+              </div>
             </>
           )}
 

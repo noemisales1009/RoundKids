@@ -32,7 +32,7 @@ export interface EntradaCalc {
   peepTotal?: number | null;     // cmH₂O (medida com pausa expiratória)
   map?: number | null;           // cmH₂O
   vteMl?: number | null;         // mL (volume corrente expirado)
-  vazamentoPct?: number | null;  // %
+  vtiMl?: number | null;         // mL (volume corrente inspirado) — vazamento = VTi − VTe
   fr?: number | null;            // irpm
   tiSeg?: number | null;         // s
   fluxoInspLmin?: number | null; // L/min (convertido para L/s no cálculo)
@@ -47,8 +47,8 @@ export interface EntradaCalc {
 }
 
 export type IndicadorKey =
-  | 'pf' | 'sf' | 'io' | 'is_osi'
-  | 'vte_kg' | 'vmin' | 'gradiente_co2' | 'te' | 'ie' | 'vd_vt'
+  | 'map_est' | 'pf' | 'sf' | 'io' | 'is_osi'
+  | 'vte_kg' | 'vmin' | 'vazamento_ml' | 'vazamento_pct' | 'gradiente_co2' | 'te' | 'ie' | 'vd_vt'
   | 'dp' | 'cstat' | 'cdyn' | 'raw' | 'tau' | 'auto_peep';
 
 export type Nivel = 'info' | 'atencao' | 'alerta';
@@ -122,6 +122,26 @@ export function pesoDeCalculo(e: EntradaCalc): { kg: number; origem: 'ideal' | '
   return null;
 }
 
+/**
+ * MAP estimada pela onda de pressão: PEEP + (PIP − PEEP) × Ti ÷ Ttotal, com Ttotal = 60 ÷ FR
+ * (anotação da revisão clínica na spec). Usada só quando não há MAP medida no ventilador.
+ */
+export function calcMapEstimada(e: EntradaCalc): { valor: number; valores: string } | null {
+  if (!tem(e.peepProg) || !tem(e.pip) || !tem(e.tiSeg) || !tem(e.fr) || e.fr <= 0) return null;
+  const ttotal = 60 / e.fr;
+  if (e.tiSeg <= 0 || e.tiSeg >= ttotal || e.pip <= e.peepProg) return null;
+  const valor = e.peepProg + (e.pip - e.peepProg) * (e.tiSeg / ttotal);
+  return { valor: arred(valor, 1), valores: `${fmt(e.peepProg)} + (${fmt(e.pip)} − ${fmt(e.peepProg)}) × ${fmt(e.tiSeg, 2)} ÷ ${fmt(ttotal, 2)}` };
+}
+
+/** MAP usada nos índices: a medida no ventilador; sem ela, a estimada. */
+export function mapEfetiva(e: EntradaCalc): { valor: number; estimada: boolean } | null {
+  if (tem(e.map)) return { valor: e.map, estimada: false };
+  const est = calcMapEstimada(e);
+  return est ? { valor: est.valor, estimada: true } : null;
+}
+const AVISO_MAP_EST: Aviso = { nivel: 'atencao', texto: 'MAP estimada pela fórmula PEEP + (PIP − PEEP) × Ti ÷ Ttotal. Prefira a MAP medida no ventilador.' };
+
 /** PEEP total para ΔP e complacências. Sem medida, usa a programada e avisa. */
 function peepParaMecanica(e: EntradaCalc): { valor: number; medida: boolean } | null {
   if (tem(e.peepTotal)) return { valor: e.peepTotal, medida: true };
@@ -141,6 +161,19 @@ function avisosSpo2(e: EntradaCalc): Aviso[] {
 export function calcOxigenacao(e: EntradaCalc): Resultado[] {
   const f = tem(e.fio2Pct) ? normalizarFio2(e.fio2Pct) : null;
   const semFio2 = tem(e.fio2Pct) && f == null ? 'FiO₂ fora da faixa de 21 a 100%.' : null;
+  const m = mapEfetiva(e);
+  const faltaMap = 'MAP (medida no ventilador, ou PEEP, PIP, Ti e FR para estimar)';
+
+  let mapEst = base('map_est', 'MAP estimada', 'PEEP + (PIP − PEEP) × Ti ÷ Ttotal, com Ttotal = 60 ÷ FR');
+  const est = calcMapEstimada(e);
+  if (!est) {
+    const falta = [!tem(e.peepProg) && 'PEEP programada', !tem(e.pip) && 'PIP', !tem(e.tiSeg) && 'Ti', !tem(e.fr) && 'FR'].filter(Boolean) as string[];
+    mapEst = bloqueado(mapEst, falta.length ? faltam(falta) : 'Ti incompatível com a FR, ou PIP não maior que a PEEP.');
+  } else {
+    mapEst = { ...mapEst, valor: est.valor, exibicao: `${fmt(est.valor)} cmH₂O`, valoresUsados: est.valores, avisos: [tem(e.map)
+      ? { nivel: 'info', texto: `Nos índices foi usada a MAP medida no ventilador (${fmt(e.map)} cmH₂O).` }
+      : { nivel: 'info', texto: 'Sem MAP medida: esta estimativa foi usada nos índices IO e IS.' }] };
+  }
 
   let pf = base('pf', 'Relação P/F', 'PaO₂ ÷ FiO₂');
   if (semFio2) pf = bloqueado(pf, semFio2);
@@ -158,28 +191,30 @@ export function calcOxigenacao(e: EntradaCalc): Resultado[] {
 
   let io = base('io', 'Índice de oxigenação (IO)', 'FiO₂ × MAP × 100 ÷ PaO₂');
   if (semFio2) io = bloqueado(io, semFio2);
-  else if (!tem(e.pao2) || !tem(e.map) || f == null) io = bloqueado(io, faltam([f == null && 'FiO₂', !tem(e.map) && 'MAP', !tem(e.pao2) && 'PaO₂'].filter(Boolean) as string[]));
+  else if (!tem(e.pao2) || !m || f == null) io = bloqueado(io, faltam([f == null && 'FiO₂', !m && faltaMap, !tem(e.pao2) && 'PaO₂'].filter(Boolean) as string[]));
   else if (e.pao2 <= 0) io = bloqueado(io, 'PaO₂ deve ser maior que zero.');
   else if (!e.contemporaneos) io = bloqueado(io, 'Confirme que PaO₂, FiO₂ e MAP são do mesmo momento. Não misture gasometria antiga com parâmetros atuais.');
   else {
-    const i = calcIO(f, e.map, e.pao2);
+    const i = calcIO(f, m.valor, e.pao2);
     const avisos: Aviso[] = travaClasse ? [{ nivel: 'info', texto: travaClasse }] : [{ nivel: classificarIndice('io', i.valor) === 'sem_criterio' ? 'info' : 'atencao', texto: TEXTO_CLASSE[classificarIndice('io', i.valor)] }];
-    io = { ...io, valor: arred(i.valor, 1), exibicao: fmt(i.valor, 1), valoresUsados: `${fmt(f, 2)} × ${fmt(e.map)} × 100 ÷ ${fmt(e.pao2)}`, avisos };
+    if (m.estimada) avisos.push(AVISO_MAP_EST);
+    io = { ...io, valor: arred(i.valor, 1), exibicao: fmt(i.valor, 1), valoresUsados: `${fmt(f, 2)} × ${fmt(m.valor)}${m.estimada ? ' (MAP estimada)' : ''} × 100 ÷ ${fmt(e.pao2)}`, avisos };
   }
 
   let is = base('is_osi', 'Índice de saturação (IS ou OSI)', 'FiO₂ × MAP × 100 ÷ SpO₂');
   if (semFio2) is = bloqueado(is, semFio2);
-  else if (!tem(e.spo2) || !tem(e.map) || f == null) is = bloqueado(is, faltam([f == null && 'FiO₂', !tem(e.map) && 'MAP', !tem(e.spo2) && 'SpO₂'].filter(Boolean) as string[]));
+  else if (!tem(e.spo2) || !m || f == null) is = bloqueado(is, faltam([f == null && 'FiO₂', !m && faltaMap, !tem(e.spo2) && 'SpO₂'].filter(Boolean) as string[]));
   else if (e.spo2 <= 0 || e.spo2 > 100) is = bloqueado(is, 'SpO₂ deve estar entre 1 e 100%.');
   else {
-    const i = calcISO(f, e.map, e.spo2);
+    const i = calcISO(f, m.valor, e.spo2);
     const avisos = avisosSpo2(e);
     if (travaClasse) avisos.push({ nivel: 'info', texto: travaClasse });
     else if (spo2Utilizavel(e.spo2)) { const c = classificarIndice('is', i.valor); avisos.push({ nivel: c === 'sem_criterio' ? 'info' : 'atencao', texto: TEXTO_CLASSE[c] }); }
-    is = { ...is, valor: arred(i.valor, 1), exibicao: fmt(i.valor, 1), valoresUsados: `${fmt(f, 2)} × ${fmt(e.map)} × 100 ÷ ${fmt(e.spo2)}`, avisos };
+    if (m.estimada) avisos.push(AVISO_MAP_EST);
+    is = { ...is, valor: arred(i.valor, 1), exibicao: fmt(i.valor, 1), valoresUsados: `${fmt(f, 2)} × ${fmt(m.valor)}${m.estimada ? ' (MAP estimada)' : ''} × 100 ÷ ${fmt(e.spo2)}`, avisos };
   }
 
-  return [pf, sf, io, is];
+  return [mapEst, pf, sf, io, is];
 }
 
 /** Classe PALICC-2 usada na síntese: IO quando disponível; senão IS com SpO₂ ≤ 97%. */
@@ -210,6 +245,23 @@ export function calcVentilacao(e: EntradaCalc): Resultado[] {
   if (!tem(e.vteMl) || !tem(e.fr)) vmin = bloqueado(vmin, faltam([!tem(e.vteMl) && 'VTe', !tem(e.fr) && 'FR'].filter(Boolean) as string[]));
   else { const ml = e.vteMl * e.fr; vmin = { ...vmin, valor: arred(ml / 1000, 2), exibicao: `${fmt(ml / 1000, 2)} L/min (${fmt(ml, 0)} mL/min)`, valoresUsados: `${fmt(e.vteMl)} mL × ${fmt(e.fr)} irpm`, avisos: avisoVte }; }
 
+  // Vazamento a partir do volume inspirado e do expirado (anotação da revisão clínica na spec)
+  let vazMl = base('vazamento_ml', 'Vazamento', 'VTi − VTe');
+  let vazPct = base('vazamento_pct', 'Vazamento (%)', '(VTi − VTe) ÷ VTi × 100');
+  if (!tem(e.vtiMl) || !tem(e.vteMl)) {
+    const msg = faltam([!tem(e.vtiMl) && 'VTi', !tem(e.vteMl) && 'VTe'].filter(Boolean) as string[]);
+    vazMl = bloqueado(vazMl, msg); vazPct = bloqueado(vazPct, msg);
+  } else if (e.vtiMl <= 0) {
+    vazMl = bloqueado(vazMl, 'VTi deve ser maior que zero.'); vazPct = bloqueado(vazPct, 'VTi deve ser maior que zero.');
+  } else if (e.vteMl > e.vtiMl) {
+    vazMl = bloqueado(vazMl, 'VTe maior que VTi: confira a digitação.'); vazPct = bloqueado(vazPct, 'VTe maior que VTi: confira a digitação.');
+  } else {
+    const ml = e.vtiMl - e.vteMl;
+    const pct = (ml / e.vtiMl) * 100;
+    vazMl = { ...vazMl, valor: arred(ml, 0), exibicao: `${fmt(ml, 0)} mL`, valoresUsados: `${fmt(e.vtiMl)} − ${fmt(e.vteMl)}` };
+    vazPct = { ...vazPct, valor: arred(pct, 1), exibicao: `${fmt(pct, 1)}%`, valoresUsados: `(${fmt(e.vtiMl)} − ${fmt(e.vteMl)}) ÷ ${fmt(e.vtiMl)} × 100` };
+  }
+
   let grad = base('gradiente_co2', 'Gradiente PaCO₂–EtCO₂', 'PaCO₂ − EtCO₂');
   if (!tem(e.paco2) || !tem(e.etco2)) grad = bloqueado(grad, faltam([!tem(e.paco2) && 'PaCO₂', !tem(e.etco2) && 'EtCO₂'].filter(Boolean) as string[]));
   else { const g = e.paco2 - e.etco2; grad = { ...grad, valor: arred(g, 1), exibicao: `${fmt(g, 1)} mmHg`, valoresUsados: `${fmt(e.paco2)} − ${fmt(e.etco2)}` }; }
@@ -239,7 +291,7 @@ export function calcVentilacao(e: EntradaCalc): Resultado[] {
   else if (!tem(e.paco2) || e.paco2 <= 0) vdvt = bloqueado(vdvt, faltam(['PaCO₂']));
   else { const v = (e.paco2 - e.peco2) / e.paco2; vdvt = { ...vdvt, valor: arred(v, 2), exibicao: fmt(v, 2), valoresUsados: `(${fmt(e.paco2)} − ${fmt(e.peco2)}) ÷ ${fmt(e.paco2)}` }; }
 
-  return [vteKg, vmin, grad, te, ie, vdvt];
+  return [vteKg, vmin, vazMl, vazPct, grad, te, ie, vdvt];
 }
 
 // ── 6. Mecânica respiratória ────────────────────────────────────────────────
