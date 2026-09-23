@@ -37,17 +37,24 @@ export const ArchiveAporteModal: React.FC<ArchiveAporteModalProps> = ({
         setIsSubmitting(true);
 
         try {
-            const { error } = await supabase
+            // .select() devolve as linhas alteradas: sem ele, uma alteração barrada
+            // pela permissão do banco volta sem erro e o aviso de sucesso seria falso.
+            const { data, error } = await supabase
                 .from('aportes_pacientes')
                 .update({
                     archived_at: new Date().toISOString(),
                     motivo_arquivamento: archiveReason.trim(),
                     updated_by: user.id,
                 })
-                .eq('id', aporteId);
+                .eq('id', aporteId)
+                .select('id');
 
             if (error) {
                 showNotification({ message: `Erro ao arquivar: ${error.message}`, type: 'error' });
+                return;
+            }
+            if (!data || data.length === 0) {
+                showNotification({ message: 'Não foi possível arquivar: seu usuário não tem permissão para alterar este aporte.', type: 'error' });
                 return;
             }
 

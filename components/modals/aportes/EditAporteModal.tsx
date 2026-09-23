@@ -34,7 +34,9 @@ export const EditAporteModal: React.FC<{
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      // .select() devolve as linhas alteradas: sem ele, uma alteração barrada
+      // pela permissão do banco volta sem erro e o aviso de sucesso seria falso.
+      const { data, error } = await supabase
         .from('aportes_pacientes')
         .update({
           data_referencia: dataReferencia,
@@ -42,9 +44,14 @@ export const EditAporteModal: React.FC<{
           hv_npt_ml_kg_h: parseFloat(hvNpt) || 0,
           medicacoes_ml_kg_h: parseFloat(medicacoes) || 0,
         })
-        .eq('id', aporte.id);
+        .eq('id', aporte.id)
+        .select('id');
 
       if (error) throw error;
+      if (!data || data.length === 0) {
+        showNotification({ message: 'Não foi possível salvar: seu usuário não tem permissão para alterar este aporte.', type: 'error' });
+        return;
+      }
 
       showNotification({ message: 'Aporte atualizado com sucesso!', type: 'success' });
       onSuccess();

@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
+import { NotificationContext } from '../contexts';
 import { PencilIcon, CloseIcon } from './icons';
 import { AddAporteModal, EditAporteModal, ArchiveAporteModal } from './modals/aportes';
 
@@ -22,6 +23,7 @@ type AporteRow = {
 };
 
 export const AportesCard: React.FC<AportesCardProps> = ({ patientId, addTrigger }) => {
+  const { showNotification } = useContext(NotificationContext)!;
   const [aportes, setAportes] = useState<AporteRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingAporte, setEditingAporte] = useState<AporteRow | null>(null);
@@ -29,8 +31,18 @@ export const AportesCard: React.FC<AportesCardProps> = ({ patientId, addTrigger 
   const [showAddModal, setShowAddModal] = useState(false);
 
   const toggleMostrarEvolucao = async (aporteId: string, value: boolean) => {
-    await supabase.from('aportes_pacientes').update({ mostrar_evolucao: value }).eq('id', aporteId);
+    // Marca na tela e desfaz se o banco recusar, para a caixa não mentir
     setAportes(prev => prev.map(a => a.id === aporteId ? { ...a, mostrar_evolucao: value } : a));
+    const { data, error } = await supabase
+      .from('aportes_pacientes')
+      .update({ mostrar_evolucao: value })
+      .eq('id', aporteId)
+      .select('id');
+    if (error || !data || data.length === 0) {
+      console.error('Não foi possível alterar a exibição do aporte na Evolução:', error);
+      setAportes(prev => prev.map(a => a.id === aporteId ? { ...a, mostrar_evolucao: !value } : a));
+      showNotification({ message: 'Não foi possível alterar. Seu usuário pode não ter permissão sobre este aporte.', type: 'error' });
+    }
   };
 
   const loadAportes = async () => {
