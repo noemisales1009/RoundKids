@@ -103,6 +103,22 @@ const AddSurgicalProcedureModal = lazy(() => import('../components/modals').then
 const EditSurgicalProcedureModal = lazy(() => import('../components/modals').then(m => ({ default: m.EditSurgicalProcedureModal })));
 
 
+// Os 9 módulos do bloco de cálculos e escalas. Uma lista só, usada no menu e na
+// barra do módulo aberto, para o nome e o ícone nunca saírem de sincronia.
+type ModuloId = 'npt' | 'scales' | 'gasometria' | 'hemodinamico' | 'pav' | 'ipcs' | 'pards' | 'suporte' | 'calcresp';
+
+const MODULOS: { id: ModuloId; label: string; Icon: React.FC<{ className?: string }> }[] = [
+    { id: 'npt', label: 'Calc. NPT', Icon: BeakerIcon },
+    { id: 'scales', label: 'Escalas', Icon: BarChartIcon },
+    { id: 'gasometria', label: 'Gasometria', Icon: DropletIcon },
+    { id: 'hemodinamico', label: 'Hemodinâmico', Icon: HeartPulseIcon },
+    { id: 'pav', label: 'Triagem PAV', Icon: LungsAltIcon },
+    { id: 'ipcs', label: 'Triagem IPCS', Icon: VirusIcon },
+    { id: 'pards', label: 'PARDS', Icon: LungsIcon },
+    { id: 'suporte', label: 'Oxigenação e Ventilação', Icon: WindIcon },
+    { id: 'calcresp', label: 'Calc. Respiratória', Icon: CalculatorIcon },
+];
+
 const PatientDetailScreen: React.FC = () => {
     const { patientId } = useParams<{ patientId: string }>();
     const { patients, addRemovalDateToDevice, deleteDeviceFromPatient, addEndDateToMedication, deleteMedicationFromPatient, toggleMostrarEvolucao, toggleMostrarEvolucaoDispositivo, toggleMostrarEvolucaoExame, toggleMostrarEvolucaoCirurgia, toggleMostrarEvolucaoCultura, toggleMostrarEvolucaoDieta, deleteExamFromPatient, deleteSurgicalProcedureFromPatient, addScaleScoreToPatient, addCultureToPatient, deleteCultureFromPatient, addDietToPatient, updateDietInPatient, deleteDietFromPatient, refreshPatients } = useContext(PatientsContext)!;
@@ -111,7 +127,7 @@ const PatientDetailScreen: React.FC = () => {
 
     useHeader(patient ? `Leito ${patient.bedNumber}` : 'Paciente não encontrado');
 
-    const [mainTab, setMainTab] = useState<'npt' | 'scales' | 'gasometria' | 'hemodinamico' | 'pav' | 'ipcs' | 'pards' | 'suporte' | 'calcresp' | null>(null);
+    const [mainTab, setMainTab] = useState<ModuloId | null>(null);
     const [notifRefresh, setNotifRefresh] = useState(0);
     const [openCategoryModal, setOpenCategoryModal] = useState<'devices' | 'exams' | 'medications' | 'surgical' | 'cultures' | 'diets' | 'aportes' | 'scales' | 'pareceres' | 'examesImagem' | 'paPercentis' | 'paineisVirais' | null>(null);
     const [showPAForm, setShowPAForm] = useState(false);
@@ -159,6 +175,9 @@ const PatientDetailScreen: React.FC = () => {
     const [scaleView, setScaleView] = useState<'list' | 'comfort-b' | 'delirium' | 'glasgow' | 'crs-r' | 'flacc' | 'braden' | 'braden-qd' | 'vni-cnaf' | 'fss' | 'abstinencia' | 'sos-pd' | 'consciousness' | 'respiratory' | 'phoenix-sepsis' | 'avaliacao-respiratoria' | 'kdigo'>('list');
     const [calculationsRefresh, setCalculationsRefresh] = useState(0);
     const scalesSectionRef = useRef<HTMLDivElement>(null);
+    const modulosRef = useRef<HTMLDivElement>(null);
+    const moduloJaMontou = useRef(false);
+    const moduloAberto = MODULOS.find(m => m.id === mainTab) ?? null;
 
     const [extraCounts, setExtraCounts] = useState({ aportes: 0, pareceres: 0, examesImagem: 0, paPercentis: 0, paineisVirais: 0 });
 
@@ -313,6 +332,17 @@ const PatientDetailScreen: React.FC = () => {
             scalesSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }, [scaleView]);
+
+    // Abrir, trocar ou fechar um módulo devolve a pessoa ao bloco dos módulos.
+    // Sem isso, fechar um módulo longo (como a Calc. Respiratória) deixava a
+    // página encolher por baixo do scroll e a pessoa se perdia no meio da tela.
+    useEffect(() => {
+        if (!moduloJaMontou.current) { moduloJaMontou.current = true; return; }  // não mexe ao abrir o paciente
+        const id = requestAnimationFrame(() => {
+            modulosRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        return () => cancelAnimationFrame(id);
+    }, [mainTab]);
 
     useEffect(() => {
         if (!openCategoryModal) {
@@ -609,21 +639,11 @@ const PatientDetailScreen: React.FC = () => {
             </div>
 
             {/* NPT + Escalas */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm">
+            <div ref={modulosRef} className="bg-white dark:bg-slate-900 rounded-xl shadow-sm scroll-mt-4">
                 <div className={mainTab ? 'border-b border-slate-200 dark:border-slate-800' : ''}>
                     {/* 9 botões em 3 linhas (3 + 3 + 3) — layout consistente no celular, tablet e desktop */}
                     <nav className="grid grid-cols-3">
-                        {([
-                            { id: 'npt' as const, label: 'Calc. NPT', Icon: BeakerIcon },
-                            { id: 'scales' as const, label: 'Escalas', Icon: BarChartIcon },
-                            { id: 'gasometria' as const, label: 'Gasometria', Icon: DropletIcon },
-                            { id: 'hemodinamico' as const, label: 'Hemodinâmico', Icon: HeartPulseIcon },
-                            { id: 'pav' as const, label: 'Triagem PAV', Icon: LungsAltIcon },
-                            { id: 'ipcs' as const, label: 'Triagem IPCS', Icon: VirusIcon },
-                            { id: 'pards' as const, label: 'PARDS', Icon: LungsIcon },
-                            { id: 'suporte' as const, label: 'Oxigenação e Ventilação', Icon: WindIcon },
-                            { id: 'calcresp' as const, label: 'Calc. Respiratória', Icon: CalculatorIcon },
-                        ]).map((t, i, arr) => {
+                        {MODULOS.map((t, i, arr) => {
                             const cols = 3;
                             const lastRowStart = arr.length - (arr.length % cols === 0 ? cols : arr.length % cols);
                             const notLastRow = i < lastRowStart;                     // divisor horizontal entre as linhas
@@ -633,6 +653,7 @@ const PatientDetailScreen: React.FC = () => {
                                 <button
                                     key={t.id}
                                     onClick={() => setMainTab(active ? null : t.id)}
+                                    aria-expanded={active}
                                     className={`py-3 px-2 font-bold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 transition-colors duration-200 text-xs sm:text-base border-slate-200 dark:border-slate-700 ${notLastRow ? 'border-b' : ''} ${hasRight ? 'border-r' : ''} ${active ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                                 >
                                     <t.Icon className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -643,6 +664,25 @@ const PatientDetailScreen: React.FC = () => {
                         })}
                     </nav>
                 </div>
+
+                {/* Barra do módulo aberto: acompanha a rolagem, diz onde você está
+                    e deixa o "Fechar" sempre à mão nos módulos compridos. */}
+                {moduloAberto && (
+                    <div className="sticky top-0 z-[5] flex items-center justify-between gap-2 sm:gap-3 px-3 sm:px-4 py-2 bg-primary-50/95 dark:bg-primary-900/80 backdrop-blur border-b border-primary-200 dark:border-primary-800">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <moduloAberto.Icon className="w-5 h-5 shrink-0 text-primary-600 dark:text-primary-400" />
+                            <p className="font-bold text-xs sm:text-sm text-primary-800 dark:text-primary-200 truncate">{moduloAberto.label}</p>
+                        </div>
+                        <button
+                            onClick={() => setMainTab(null)}
+                            aria-label={`Fechar ${moduloAberto.label}`}
+                            className="shrink-0 flex items-center gap-1.5 min-h-[40px] text-xs sm:text-sm font-bold px-3 sm:px-4 rounded-lg bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition"
+                        >
+                            <CloseIcon className="w-3.5 h-3.5" />
+                            Fechar
+                        </button>
+                    </div>
+                )}
 
                 {mainTab === 'npt' && patient && (
                     <div className="p-4">
@@ -688,7 +728,13 @@ const PatientDetailScreen: React.FC = () => {
                     <div className="p-4 space-y-4">
                         <Suspense fallback={<LoadingSpinner />}>
                             <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Calculadora Respiratória</h2>
-                            <CalculadoraRespiratoria patientId={patient.id.toString()} pesoKg={patient.peso ?? null} dob={patient.dob ?? null} />
+                            <CalculadoraRespiratoria
+                                patientId={patient.id.toString()}
+                                pesoKg={patient.peso ?? null}
+                                pesoSecoKg={patient.pesoSeco ?? null}
+                                estaturaCm={patient.estatura ?? null}
+                                dob={patient.dob ?? null}
+                            />
                         </Suspense>
                     </div>
                 )}
@@ -788,6 +834,19 @@ const PatientDetailScreen: React.FC = () => {
                         {scaleView === 'phoenix-sepsis' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><PhoenixSepsisCalculator patientId={patient.id.toString()} onClose={() => setScaleView('list')} /></Suspense></div></div>)}
                         {scaleView === 'avaliacao-respiratoria' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><AvaliacaoRespiratoriaScale patientId={patient.id.toString()} /></Suspense></div></div>)}
                         {scaleView === 'kdigo' && (<div className='bg-white dark:bg-slate-800 rounded-xl overflow-hidden -m-4'><button onClick={() => setScaleView('list')} className="flex items-center gap-2 text-sm text-primary-500 dark:text-primary-400 font-semibold mb-4 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left"><BackArrowIcon className="w-4 h-4" />Voltar para Escalas</button><div className="p-4 pt-0"><Suspense fallback={<LoadingSpinner />}><KDIGOScale onSaveScore={handleSaveScaleScore} /></Suspense></div></div>)}
+                    </div>
+                )}
+
+                {/* Fim do módulo: fecha e devolve para o menu, sem precisar rolar tudo de volta */}
+                {moduloAberto && (
+                    <div className="px-3 sm:px-4 pb-4">
+                        <button
+                            onClick={() => setMainTab(null)}
+                            className="w-full flex items-center justify-center gap-2 px-3 py-3 min-h-[48px] rounded-lg font-bold text-xs sm:text-sm text-center leading-tight bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-[0.98] transition"
+                        >
+                            <BackArrowIcon className="w-4 h-4 shrink-0" />
+                            <span>Fechar {moduloAberto.label} e voltar ao menu</span>
+                        </button>
                     </div>
                 )}
             </div>

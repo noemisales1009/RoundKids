@@ -4,6 +4,7 @@ import { UserContext } from '../contexts';
 import { num } from '../lib/gasometria';
 import { normalizarFio2 } from '../lib/pards';
 import { DISPOSITIVOS, duracao, type Dispositivo, type Situacao } from '../lib/suporteRespiratorio';
+import { TendenciaRespiratoria } from './TendenciaRespiratoria';
 import {
   LIMIAR,
   calcularTudo,
@@ -26,15 +27,20 @@ import {
   type CicloEstimado,
 } from '../lib/tempoRespiratorio';
 import {
+  ASSINCRONIAS,
   CATEGORIAS_IR,
   LABEL_NIVEL,
+  LIMIARES,
   REFERENCIA_CATEGORIA,
+  SINAIS_VNI,
   avaliarAlarmes,
   peepReferencia,
   resumoAlarmes,
   type Alarme,
+  type Assincronia,
   type CategoriaIR,
   type NivelAlarme,
+  type SinalVni,
 } from '../lib/alarmesRespiratorios';
 
 // Calculadora respiratória automática do Round (especificação funcional).
@@ -45,7 +51,9 @@ import {
 interface Props {
   patientId: string;
   pesoKg?: number | null;
-  dob?: string | null;   // para a referência etária da constante de tempo
+  pesoSecoKg?: number | null;   // cadastro do paciente: base do peso ideal quando houver
+  estaturaCm?: number | null;   // cadastro do paciente: referência para o peso predito
+  dob?: string | null;          // para a referência etária da constante de tempo
 }
 
 type CampoId =
@@ -88,6 +96,37 @@ const GRUPOS: { titulo: string; campos: { id: CampoId; label: string; unidade: s
 const TODOS: CampoId[] = GRUPOS.flatMap(g => g.campos.map(c => c.id));
 const VAZIO = Object.fromEntries(TODOS.map(k => [k, ''])) as Record<CampoId, string>;
 
+// Metas individuais e dados do ventilador que não entram em nenhuma fórmula:
+// servem de referência para os alarmes (specs 2 §8 e 3 §13).
+type ExtraId =
+  | 'metaSpo2Min' | 'metaSpo2Max' | 'metaPeepMin' | 'metaPeepMax' | 'metaVminLmin'
+  | 'vtProgramadoMl' | 'ieInformada' | 'rawExpCmH2OLs';
+
+// A meta de SpO₂ não aparece aqui de propósito: ela pertence ao bloco de
+// Oxigenação e Ventilação e é só importada, para não existirem duas fontes.
+const EXTRAS: { id: ExtraId; label: string; unidade: string; dica?: string }[] = [
+  { id: 'metaPeepMin', label: 'PEEP individual (mínima)', unidade: 'cmH₂O', dica: 'Faixa combinada para este paciente ou PEEP de sustentação na malácia.' },
+  { id: 'metaPeepMax', label: 'PEEP individual (máxima)', unidade: 'cmH₂O' },
+  { id: 'metaVminLmin', label: 'Meta de ventilação minuto', unidade: 'L/min' },
+  { id: 'vtProgramadoMl', label: 'Volume corrente programado', unidade: 'mL', dica: 'Usado para o alarme de VTe abaixo de 80% do programado.' },
+  { id: 'ieInformada', label: 'I:E informada no ventilador (1:x)', unidade: '', dica: 'Só o número depois do 1: — ex.: 2,5 para 1:2,5.' },
+  { id: 'rawExpCmH2OLs', label: 'Resistência expiratória medida', unidade: 'cmH₂O/L/s', dica: 'Em branco, a τ expiratória usa a resistência inspiratória.' },
+];
+
+const IDS_EXTRA: ExtraId[] = ['metaSpo2Min', 'metaSpo2Max', ...EXTRAS.map(e => e.id)];
+const VAZIO_EXTRA = Object.fromEntries(IDS_EXTRA.map(k => [k, ''])) as Record<ExtraId, string>;
+
+// Observações de beira-leito que mudam a leitura dos alarmes (nunca o cálculo)
+const OBSERVACOES: { id: 'interrupcaoFluxoInsp' | 'pipNoLimite' | 'tauIncompativel' | 'obstrucaoPersistente' | 'apneia' | 'backupFrequente' | 'reavaliacaoRegistrada'; texto: string }[] = [
+  { id: 'interrupcaoFluxoInsp', texto: 'Fluxo inspiratório interrompido precocemente.' },
+  { id: 'pipNoLimite', texto: 'PIP atinge repetidamente o limite máximo configurado.' },
+  { id: 'tauIncompativel', texto: 'Constante de tempo calculada não corresponde às curvas ou à mecânica medida.' },
+  { id: 'obstrucaoPersistente', texto: 'Obstrução persistente: estridor importante ou dificuldade de ventilação.' },
+  { id: 'apneia', texto: 'Apneia ou ausência de disparo além do tempo configurado.' },
+  { id: 'backupFrequente', texto: 'Ativação frequente da ventilação de backup.' },
+  { id: 'reavaliacaoRegistrada', texto: 'Reavaliação clínica e ventilatória já registrada após a última mudança de parâmetro.' },
+];
+
 const CONDICOES: { id: 'sinalSpo2Ok' | 'contemporaneos' | 'pausaInspOk' | 'pausaExpOk' | 'vteConfiavel'; texto: string }[] = [
   { id: 'sinalSpo2Ok', texto: 'Curva pletismográfica e qualidade do sinal da oximetria conferidas.' },
   { id: 'contemporaneos', texto: 'PaO₂, FiO₂ e MAP são do mesmo momento (gasometria e parâmetros contemporâneos).' },
@@ -123,7 +162,7 @@ const COR_AVISO: Record<Aviso['nivel'], string> = {
   alerta: 'text-red-700 dark:text-red-400 font-semibold',
 };
 
-export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, dob }) => {
+export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, pesoSecoKg, estaturaCm, dob }) => {
   const { user } = useContext(UserContext)!;
 
   const [loading, setLoading] = useState(true);
@@ -141,6 +180,16 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, do
   const [estrategiaDeliberada, setEstrategiaDeliberada] = useState(false);
   const [instabilidade, setInstabilidade] = useState(false);
   const [prematuroSdr, setPrematuroSdr] = useState(false);
+  const [mostrarCampos, setMostrarCampos] = useState(false);
+  const [extras, setExtras] = useState<Record<ExtraId, string>>(VAZIO_EXTRA);
+  const [origemExtra, setOrigemExtra] = useState<Partial<Record<ExtraId, Origem>>>({});
+  const [ovasTipo, setOvasTipo] = useState<'fixa' | 'dinamica' | ''>('');
+  const [obs, setObs] = useState({
+    interrupcaoFluxoInsp: false, pipNoLimite: false, tauIncompativel: false,
+    obstrucaoPersistente: false, apneia: false, backupFrequente: false, reavaliacaoRegistrada: false,
+  });
+  const [assincronias, setAssincronias] = useState<Assincronia[]>([]);
+  const [sinaisVni, setSinaisVni] = useState<SinalVni[]>([]);
   const [sinteseManual, setSinteseManual] = useState<string | null>(null);
   const [validado, setValidado] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -154,7 +203,13 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, do
     const novos: Record<CampoId, string> = { ...VAZIO };
     const orig: Partial<Record<CampoId, Origem>> = {};
     const por = (id: CampoId, v: unknown, casas = 2) => { const t = textoNum(v, casas); if (t) { novos[id] = t; orig[id] = 'importado'; } };
+    // Cadastro do paciente: peso atual e, quando houver, peso seco como base do
+    // peso ideal. Continua editável — peso seco não é peso predito.
     por('pesoKg', pesoKg, 2);
+    por('pesoIdealKg', pesoSecoKg, 2);
+    const novosExtras: Record<ExtraId, string> = { ...VAZIO_EXTRA };
+    const origExtra: Partial<Record<ExtraId, Origem>> = {};
+    const porExtra = (id: ExtraId, v: unknown, casas = 0) => { const t = textoNum(v, casas); if (t) { novosExtras[id] = t; origExtra[id] = 'importado'; } };
 
     const f = { episodioId: null as string | null, suporte: '', emVmi: false, modo: null as string | null, ventiladorEm: null as string | null, gasometriaEm: null as string | null };
 
@@ -167,15 +222,20 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, do
       f.emVmi = situacao === 'vmi';
       f.suporte = situacao === 'vmi' ? 'VPM invasiva' : situacao === 'ar_ambiente' ? 'ar ambiente' : disp?.texto ?? '';
       const { data: p } = await supabase.from('suporte_resp_parametros')
-        .select('registrado_em, modo, spo2, fio2, map, pip, peep, fr, ti_seg, vc_ml')
+        .select('registrado_em, modo, spo2, spo2_meta_min, spo2_meta_max, fio2, map, pip, peep, epap, fr, ti_seg, vc_ml')
         .eq('episodio_id', ep.id).order('registrado_em', { ascending: false }).limit(1).maybeSingle();
       if (p) {
         f.ventiladorEm = p.registrado_em;
         f.modo = p.modo;
         por('spo2', p.spo2, 0);
         por('fio2Pct', p.fio2 != null ? Number(p.fio2) * 100 : null, 0);
-        por('map', p.map, 1); por('pip', p.pip, 1); por('peepProg', p.peep, 1);
+        por('map', p.map, 1); por('pip', p.pip, 1);
+        // Na VNI a pressão expiratória é o EPAP: é ele que faz o papel da PEEP.
+        por('peepProg', p.peep ?? p.epap, 1);
         por('fr', p.fr, 0); por('tiSeg', p.ti_seg, 2); por('vteMl', p.vc_ml, 0);
+        // Meta individual de SpO₂ registrada no bloco de suporte (specs 2 §8 e 3 §3)
+        porExtra('metaSpo2Min', p.spo2_meta_min, 0);
+        porExtra('metaSpo2Max', p.spo2_meta_max, 0);
       }
     }
 
@@ -185,6 +245,11 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, do
 
     setCampos(novos);
     setOrigem(orig);
+    setExtras(novosExtras);
+    setOrigemExtra(origExtra);
+    // Com dados importados a lista de campos abre recolhida: a tela mostra o
+    // resumo do que já foi registrado, em vez de repetir tudo em formulário.
+    setMostrarCampos(Object.keys(orig).length === 0);
     setFonte(f);
     setCond({ sinalSpo2Ok: false, contemporaneos: false, pausaInspOk: false, pausaExpOk: false, vteConfiavel: false });
     setSinteseManual(null);
@@ -219,8 +284,11 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, do
   // Constante de tempo e ciclo, a partir da mecânica medida (a idade é só referência)
   const ciclo: CicloEstimado = useMemo(() => {
     const achaValor = (k: IndicadorKey) => [...calc.mecanica].find(r => r.key === k)?.valor ?? null;
-    return calcCiclo(achaValor('raw'), achaValor('cstat'), entrada.fr, { ovai: categoria === 'ovai' });
-  }, [calc, entrada.fr, categoria]);
+    return calcCiclo(achaValor('raw'), achaValor('cstat'), entrada.fr, {
+      ovai: categoria === 'ovai',
+      rawExp: num(extras.rawExpCmH2OLs),
+    });
+  }, [calc, entrada.fr, categoria, extras.rawExpCmH2OLs]);
 
   const faixaEtaria = useMemo(() => faixaEtariaPorIdade(idadeEmMeses(dob), prematuroSdr), [dob, prematuroSdr]);
   const refEtaria = useMemo(() => FAIXAS_TAU.find(f => f.key === faixaEtaria) ?? null, [faixaEtaria]);
@@ -229,8 +297,28 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, do
   const anterior = useMemo(() => {
     const r = registros[0];
     if (!r) return null;
-    const n = (k: string) => (typeof r[k] === 'number' ? (r[k] as number) : null);
-    return { vte_kg: n('vte_kg'), cstat: n('cstat'), raw: n('raw'), io: n('io'), is_osi: n('is_osi'), spo2: n('spo2'), etco2: n('etco2') };
+    const n = (k: string) => {
+      const v = r[k];
+      const x = typeof v === 'string' ? Number(v) : v;   // NUMERIC pode voltar como texto
+      return typeof x === 'number' && Number.isFinite(x) ? x : null;
+    };
+    const fio2Ant = n('fio2');   // gravada em fração decimal
+    return {
+      vte_kg: n('vte_kg'), cstat: n('cstat'), raw: n('raw'), io: n('io'), is_osi: n('is_osi'),
+      spo2: n('spo2'), etco2: n('etco2'),
+      pip: n('pip'), pplat: n('pplat'), map: n('map'), dp: n('dp'), auto_peep: n('auto_peep'),
+      vmin: n('vmin_l'), paco2: n('paco2'), gradiente_co2: n('gradiente_co2'), pf: n('pf'),
+      fio2: fio2Ant != null ? fio2Ant * 100 : null,
+      peep_prog: n('peep_programada'), fr: n('fr'), ti: n('ti_seg'),
+    };
+  }, [registros]);
+
+  // Idade do último cálculo validado: acima da janela, as tendências não valem
+  const anteriorHorasAtras = useMemo(() => {
+    const criado = registros[0]?.criado_em;
+    if (!criado) return null;
+    const t = new Date(String(criado)).getTime();
+    return Number.isFinite(t) ? (Date.now() - t) / 3600000 : null;
   }, [registros]);
 
   const difFontesMin = useMemo(() => {
@@ -245,7 +333,19 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, do
     instabilidadeHemodinamica: instabilidade,
     difFontesMin,
     anterior,
-  }), [entrada, calc, ciclo, categoria, fluxoZero, estrategiaDeliberada, instabilidade, difFontesMin, anterior]);
+    anteriorHorasAtras,
+    metas: {
+      spo2Min: num(extras.metaSpo2Min), spo2Max: num(extras.metaSpo2Max),
+      peepMin: num(extras.metaPeepMin), peepMax: num(extras.metaPeepMax),
+      vminLmin: num(extras.metaVminLmin),
+    },
+    vtProgramadoMl: num(extras.vtProgramadoMl),
+    ieInformada: num(extras.ieInformada),
+    ovasFixa: ovasTipo === '' ? null : ovasTipo === 'fixa',
+    ...obs,
+    assincronias,
+    sinaisVni,
+  }), [entrada, calc, ciclo, categoria, fluxoZero, estrategiaDeliberada, instabilidade, difFontesMin, anterior, anteriorHorasAtras, extras, ovasTipo, obs, assincronias, sinaisVni]);
   const contagem = useMemo(() => resumoAlarmes(alarmes), [alarmes]);
   const refPeep = useMemo(() => peepReferencia(entrada.fio2Pct), [entrada.fio2Pct]);
   const achar = (k: IndicadorKey) => todos.find(r => r.key === k);
@@ -319,6 +419,19 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, do
       ...(categoria ? { categoria_ir: categoria } : {}),
       ...(ciclo.tiEstimado != null ? { ti_estimado_seg: ciclo.tiEstimado } : {}),
       ...(fluxoZero ? { fluxo_exp_retorna_zero: fluxoZero === 'sim' } : {}),
+      // Colunas de ALTER_CALC_RESP_ADD_METAS_OBS.sql: só vão quando têm valor
+      ...(num(extras.metaSpo2Min) != null ? { meta_spo2_min: num(extras.metaSpo2Min) } : {}),
+      ...(num(extras.metaSpo2Max) != null ? { meta_spo2_max: num(extras.metaSpo2Max) } : {}),
+      ...(num(extras.metaPeepMin) != null ? { meta_peep_min: num(extras.metaPeepMin) } : {}),
+      ...(num(extras.metaPeepMax) != null ? { meta_peep_max: num(extras.metaPeepMax) } : {}),
+      ...(num(extras.metaVminLmin) != null ? { meta_vmin_l: num(extras.metaVminLmin) } : {}),
+      ...(num(extras.vtProgramadoMl) != null ? { vt_programado_ml: num(extras.vtProgramadoMl) } : {}),
+      ...(num(extras.ieInformada) != null ? { ie_informada: num(extras.ieInformada) } : {}),
+      ...(num(extras.rawExpCmH2OLs) != null ? { raw_exp: num(extras.rawExpCmH2OLs), tau_exp_seg: ciclo.tauExp } : {}),
+      ...(ovasTipo ? { ovas_fixa: ovasTipo === 'fixa' } : {}),
+      ...(assincronias.length ? { assincronias } : {}),
+      ...(sinaisVni.length ? { sinais_vni: sinaisVni } : {}),
+      ...(Object.values(obs).some(Boolean) ? { observacoes_beira_leito: obs } : {}),
       sintese: sintese.trim() || null,
     });
     setSaving(false);
@@ -356,6 +469,34 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, do
 
   if (loading) return <p className="text-center text-slate-500 dark:text-slate-400 py-6">Importando dados...</p>;
 
+  const qtdImportados = [...Object.values(origem), ...Object.values(origemExtra)].filter(o => o === 'importado').length;
+  // Só o que não existe em nenhum outro lugar do app e precisa ser digitado aqui
+  const faltando = ([
+    entrada.pao2 == null && 'PaO₂',
+    entrada.vtiMl == null && 'VTi',
+    entrada.peepTotal == null && 'PEEP total',
+  ].filter(Boolean) as string[]);
+
+  const metaMinTxt = num(extras.metaSpo2Min);
+  const metaMaxTxt = num(extras.metaSpo2Max);
+  const temMeta = metaMinTxt != null || metaMaxTxt != null;
+  // [rótulo, valor, pendente]
+  const resumoEntrada: [string, string, boolean][] = [
+    ['Peso', entrada.pesoKg != null ? `${fmt(entrada.pesoKg, 2)} kg` : 'não informado', entrada.pesoKg == null],
+    ['Peso ideal', entrada.pesoIdealKg != null ? `${fmt(entrada.pesoIdealKg, 2)} kg` : 'não informado', entrada.pesoIdealKg == null],
+    ['Meta SpO₂', temMeta ? `${metaMinTxt != null ? fmt(metaMinTxt, 0) : '—'} a ${metaMaxTxt != null ? fmt(metaMaxTxt, 0) : '—'}%` : 'padrão 92 a 97%', !temMeta],
+    ['SpO₂', entrada.spo2 != null ? `${fmt(entrada.spo2, 0)}%` : '—', entrada.spo2 == null],
+    ['FiO₂', entrada.fio2Pct != null ? `${fmt(entrada.fio2Pct, 0)}%` : '—', entrada.fio2Pct == null],
+    ['PEEP', entrada.peepProg != null ? `${fmt(entrada.peepProg)} cmH₂O` : '—', entrada.peepProg == null],
+    ['PIP', entrada.pip != null ? `${fmt(entrada.pip)} cmH₂O` : '—', false],
+    ['FR', entrada.fr != null ? `${fmt(entrada.fr, 0)} irpm` : '—', entrada.fr == null],
+    ['Ti', entrada.tiSeg != null ? `${fmt(entrada.tiSeg, 2)} s` : '—', false],
+    ['VTe', entrada.vteMl != null ? `${fmt(entrada.vteMl, 0)} mL` : '—', entrada.vteMl == null],
+    ['pH', entrada.ph != null ? fmt(entrada.ph, 2) : '—', false],
+    ['PaCO₂', entrada.paco2 != null ? `${fmt(entrada.paco2, 1)} mmHg` : '—', false],
+    ['PaO₂', entrada.pao2 != null ? `${fmt(entrada.pao2, 1)} mmHg` : 'digitar', entrada.pao2 == null],
+  ];
+
   const vteKg = achar('vte_kg');
   const painel: [string, string][] = [
     ['VTe (volume corrente expirado)', entrada.vteMl != null ? `${fmt(entrada.vteMl, 0)} mL` : '—'],
@@ -387,8 +528,43 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, do
         </div>
       </div>
 
-      {/* Dados de entrada */}
-      {GRUPOS.map(g => (
+      {/* Dados de entrada: vêm do cadastro do paciente, do bloco de Oxigenação e
+          Ventilação e da última gasometria. Ficam recolhidos para a calculadora
+          não repetir em formulário o que já foi registrado. */}
+      <div className={cardBase}>
+        <button
+          type="button" onClick={() => setMostrarCampos(v => !v)} disabled={saving}
+          className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+        >
+          <div className="min-w-0">
+            <p className="font-bold text-sm text-slate-800 dark:text-slate-100">Dados usados no cálculo</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {qtdImportados > 0 ? `${qtdImportados} ${qtdImportados === 1 ? 'campo importado' : 'campos importados'} do paciente, do suporte e da gasometria` : 'Nada importado ainda'}
+              {faltando.length > 0 ? ` · falta ${faltando.join(', ')}` : ''}
+            </p>
+          </div>
+          <span className="shrink-0 text-xs font-bold text-primary-600 dark:text-primary-400">
+            {mostrarCampos ? 'Ocultar ▴' : 'Conferir e completar ▾'}
+          </span>
+        </button>
+
+        {!mostrarCampos && (
+          <div className="px-4 pb-4 flex flex-wrap gap-2">
+            {resumoEntrada.map(([rotulo, valor, pendente]) => (
+              <span
+                key={rotulo}
+                className={`text-xs px-2 py-1 rounded-lg border ${pendente
+                  ? 'border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300'
+                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'}`}
+              >
+                <strong className="font-semibold">{rotulo}</strong> {valor}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {mostrarCampos && GRUPOS.map(g => (
         <div key={g.titulo} className={cardBase}>
           <div className={cardTitulo}>{g.titulo}</div>
           <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -406,6 +582,15 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, do
                 {c.id === 'fio2Pct' && entrada.fio2Pct != null && normalizarFio2(entrada.fio2Pct) != null && (
                   <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">No cálculo: {fmt(normalizarFio2(entrada.fio2Pct) as number, 2)} (fração decimal)</p>
                 )}
+                {c.id === 'pesoIdealKg' && (
+                  <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                    {origem.pesoIdealKg === 'importado' && campos.pesoIdealKg
+                      ? 'Peso seco do cadastro do paciente. Confirme se serve como peso ideal ou predito.'
+                      : estaturaCm != null
+                        ? `Sem peso seco no cadastro. Estatura registrada: ${fmt(estaturaCm, 0)} cm.`
+                        : 'Sem peso seco nem estatura no cadastro do paciente.'}
+                  </p>
+                )}
                 {c.id === 'map' && !campos.map && mapUsada?.estimada && (
                   <p className="mt-1 text-[11px] text-amber-700 dark:text-amber-400">Em branco: usada a MAP estimada de {fmt(mapUsada.valor)} cmH₂O. Prefira a medida no ventilador.</p>
                 )}
@@ -414,6 +599,33 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, do
           </div>
         </div>
       ))}
+
+      {/* Metas individuais e dados de referência: entram nos alarmes, nunca no cálculo */}
+      <div className={cardBase}>
+        <div className={cardTitulo}>Metas individuais e dados de referência</div>
+        <div className={`px-4 pt-3 text-xs ${temMeta ? 'text-slate-600 dark:text-slate-400' : 'text-amber-700 dark:text-amber-400'}`}>
+          <strong className="font-semibold">Meta de SpO₂:</strong>{' '}
+          {temMeta
+            ? `${metaMinTxt != null ? fmt(metaMinTxt, 0) : '—'} a ${metaMaxTxt != null ? fmt(metaMaxTxt, 0) : '—'}% — registrada no bloco de Oxigenação e Ventilação.`
+            : 'não registrada. Os alarmes usam 92 a 97%. Para valer a meta deste paciente, preencha no bloco de Oxigenação e Ventilação.'}
+        </div>
+        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {EXTRAS.map(c => (
+            <div key={c.id}>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{c.label}{extras[c.id] ? badge(origemExtra[c.id]) : null}</label>
+              <div className="flex items-stretch">
+                <input
+                  type="text" inputMode="decimal" value={extras[c.id]} disabled={saving}
+                  onChange={e => { setExtras(prev => ({ ...prev, [c.id]: e.target.value })); setOrigemExtra(prev => ({ ...prev, [c.id]: 'digitado' })); setValidado(false); setMsgOk(''); }}
+                  className={`${inputCls} ${c.unidade ? 'rounded-l-lg' : 'rounded-lg'} ${origemExtra[c.id] === 'importado' && extras[c.id] ? 'border-sky-300 dark:border-sky-700' : 'border-slate-300 dark:border-slate-600'}`}
+                />
+                {c.unidade && <span className={unidadeCls}>{c.unidade}</span>}
+              </div>
+              {c.dica && <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{c.dica}</p>}
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Contexto clínico: muda a leitura dos alarmes, nunca o cálculo */}
       <div className={cardBase}>
@@ -457,6 +669,63 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, do
               </label>
             ))}
           </div>
+
+          {categoria === 'ovas' && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tipo de obstrução de via aérea superior</label>
+              <select value={ovasTipo} onChange={e => { setOvasTipo(e.target.value as 'fixa' | 'dinamica' | ''); setValidado(false); setMsgOk(''); }} disabled={saving}
+                className={`${inputCls} rounded-lg border-slate-300 dark:border-slate-600 sm:max-w-md`}>
+                <option value="">Não classificada</option>
+                <option value="dinamica">Dinâmica (malácia): a PEEP pode sustentar a via aérea</option>
+                <option value="fixa">Fixa (edema, estenose): a PEEP não corrige a obstrução</option>
+              </select>
+            </div>
+          )}
+
+          <div className="space-y-2 pt-1 border-t border-slate-200 dark:border-slate-700">
+            <p className="text-xs font-bold text-slate-700 dark:text-slate-300 pt-2">Observações de beira-leito</p>
+            {OBSERVACOES.map(o => (
+              <label key={o.id} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
+                <input type="checkbox" className="mt-0.5 accent-primary-600" checked={obs[o.id]} disabled={saving}
+                  onChange={ev => { setObs(prev => ({ ...prev, [o.id]: ev.target.checked })); setValidado(false); setMsgOk(''); }} />
+                {o.texto}
+              </label>
+            ))}
+          </div>
+
+          <div className="space-y-2 pt-1 border-t border-slate-200 dark:border-slate-700">
+            <p className="text-xs font-bold text-slate-700 dark:text-slate-300 pt-2">Assincronia paciente–ventilador (item 10 da spec)</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+              {ASSINCRONIAS.map(a => (
+                <label key={a.key} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
+                  <input type="checkbox" className="mt-0.5 accent-primary-600" checked={assincronias.includes(a.key)} disabled={saving}
+                    onChange={ev => {
+                      setAssincronias(prev => ev.target.checked ? [...prev, a.key] : prev.filter(k => k !== a.key));
+                      setValidado(false); setMsgOk('');
+                    }} />
+                  {a.label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {!fonte.emVmi && (
+            <div className="space-y-2 pt-1 border-t border-slate-200 dark:border-slate-700">
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-300 pt-2">Sinais de falha da VNI (item 11 da spec)</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                {SINAIS_VNI.map(s => (
+                  <label key={s.key} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
+                    <input type="checkbox" className="mt-0.5 accent-primary-600" checked={sinaisVni.includes(s.key)} disabled={saving}
+                      onChange={ev => {
+                        setSinaisVni(prev => ev.target.checked ? [...prev, s.key] : prev.filter(k => k !== s.key));
+                        setValidado(false); setMsgOk('');
+                      }} />
+                    {s.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -507,6 +776,11 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, do
               {refPeep && (
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   Referência PEEP–FiO₂ (ARDSNet) para FiO₂ {refPeep.fio2}%: PEEP {refPeep.min === refPeep.max ? fmt(refPeep.min) : `${fmt(refPeep.min)} a ${fmt(refPeep.max)}`} cmH₂O. A tabela é referência inicial e não comanda ajuste.
+                </p>
+              )}
+              {anteriorHorasAtras != null && anteriorHorasAtras <= LIMIARES.tendenciaHoras && registros[0]?.criado_em && (
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Tendências comparadas com a avaliação de {formatDataHora(String(registros[0].criado_em))} (há {fmt(anteriorHorasAtras, anteriorHorasAtras < 1 ? 1 : 0)} h).
                 </p>
               )}
               <p className="text-xs text-slate-500 dark:text-slate-400">Os alarmes apoiam a avaliação profissional. O sistema nunca altera nem sugere alteração dos parâmetros do ventilador.</p>
@@ -564,12 +838,18 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, do
                   </p>
                 ) : (
                   <>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 text-xs">
                       {[
-                        ['τ (constante de tempo)', `${fmt(ciclo.tau, 2)} s`],
+                        ['τ inspiratória', `${fmt(ciclo.tau, 2)} s`],
+                        [`τ expiratória${ciclo.tauExpPropria ? '' : ' (= inspiratória)'}`, ciclo.tauExp != null ? `${fmt(ciclo.tauExp, 2)} s` : '—'],
                         ['Ti estimado (3 τ)', ciclo.tiEstimado != null ? `${fmt(ciclo.tiEstimado, 2)} s` : '—'],
                         ['Tempo total do ciclo', ciclo.tempoTotal != null ? `${fmt(ciclo.tempoTotal, 2)} s` : '—'],
-                        [`Te mínimo (${categoria === 'ovai' ? '4' : '3'} τ)`, ciclo.teMinimo != null ? `${fmt(ciclo.teMinimo, 2)} s` : '—'],
+                        [
+                          `Te mínimo (${categoria === 'ovai' ? '4 a 5' : '3'} τ)`,
+                          ciclo.teMinimo == null ? '—'
+                            : ciclo.teMinimoMax != null ? `${fmt(ciclo.teMinimo, 2)} a ${fmt(ciclo.teMinimoMax, 2)} s`
+                              : `${fmt(ciclo.teMinimo, 2)} s`,
+                        ],
                       ].map(([r, v]) => (
                         <div key={r} className="p-2 rounded bg-slate-50 dark:bg-slate-800">
                           <p className="text-[11px] text-slate-500 dark:text-slate-400">{r}</p>
@@ -631,6 +911,11 @@ export const CalculadoraRespiratoria: React.FC<Props> = ({ patientId, pesoKg, do
             <>
               {erroHistorico && <p className="text-sm text-red-700 dark:text-red-400">{erroHistorico}</p>}
               {!erroHistorico && registros.length === 0 && <p className="text-center text-slate-500 dark:text-slate-400 py-4 text-sm">Nenhum cálculo validado ainda.</p>}
+              {!erroHistorico && registros.length > 0 && (
+                <div className="pb-2 mb-2 border-b border-slate-200 dark:border-slate-700">
+                  <TendenciaRespiratoria registros={registros} />
+                </div>
+              )}
               {registros.map(r => (
                 <div key={String(r.id)} className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300">
                   <p className="font-semibold">{formatDataHora(String(r.criado_em))}{r.validado_por_nome ? ` · validado por ${String(r.validado_por_nome)}` : ''}{r.modo ? ` · modo ${String(r.modo)}` : ''}</p>

@@ -84,19 +84,28 @@ export function calcIE(ti: number | null | undefined, te: number | null | undefi
 }
 
 // ── Item 7: regra para o tempo expiratório ──────────────────────────────────
-/** Te mínimo: 3 τ expiratórias; na OVAI, 4 τ (a spec sugere 4 a 5). */
+/** Te mínimo: 3 τ expiratórias; na OVAI, 4 τ (piso da faixa de 4 a 5 τ da spec). */
 export function teMinimo(tauExp: number | null | undefined, ovai = false): number | null {
   if (!tem(tauExp) || tauExp <= 0) return null;
   return arred((ovai ? 4 : 3) * tauExp, 2);
 }
 
+/** Teto da faixa recomendada na OVAI (5 τ). Fora da OVAI a spec não define teto. */
+export function teMinimoMax(tauExp: number | null | undefined, ovai = false): number | null {
+  if (!ovai || !tem(tauExp) || tauExp <= 0) return null;
+  return arred(5 * tauExp, 2);
+}
+
 export interface CicloEstimado {
   tau: number | null;
+  tauExp: number | null;         // τ expiratória: própria quando há resistência expiratória, senão = τ
+  tauExpPropria: boolean;        // true = calculada com resistência expiratória medida
   tiEstimado: number | null;
   tempoTotal: number | null;
   te: number | null;
   ie: { razao: number; texto: string } | null;
   teMinimo: number | null;
+  teMinimoMax: number | null;    // só na OVAI (5 τ)
   cabeNoCiclo: boolean | null;   // false = Ti estimado não cabe no ciclo da FR atual
 }
 
@@ -111,14 +120,17 @@ export function calcCiclo(
   opts: { ovai?: boolean; rawExp?: number | null } = {},
 ): CicloEstimado {
   const tau = calcTau(raw, cstatMl);
-  const tauExp = opts.rawExp != null ? calcTau(opts.rawExp, cstatMl) : tau;
+  const tauExpPropria = calcTau(opts.rawExp, cstatMl);
+  const tauExp = tauExpPropria ?? tau;
   const ti = tiEstimado(tau);
   const tempoTotal = tempoTotalCiclo(fr);
   const te = calcTe(fr, ti);
   return {
-    tau, tiEstimado: ti, tempoTotal, te,
+    tau, tauExp, tauExpPropria: tauExpPropria != null,
+    tiEstimado: ti, tempoTotal, te,
     ie: calcIE(ti, te),
     teMinimo: teMinimo(tauExp, opts.ovai),
+    teMinimoMax: teMinimoMax(tauExp, opts.ovai),
     cabeNoCiclo: ti != null && tempoTotal != null ? ti < tempoTotal : null,
   };
 }

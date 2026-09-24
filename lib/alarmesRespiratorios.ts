@@ -94,6 +94,41 @@ export function classificarVte(vteKg: number | null | undefined): ClasseVte | nu
   return 'muito_baixo';
 }
 
+// ── Item 10: assincronia paciente–ventilador ────────────────────────────────
+// Observações de curva e de beira-leito. A spec pede uma única mensagem de revisão.
+export type Assincronia =
+  | 'duplo_disparo' | 'empilhamento' | 'esforco_ineficaz' | 'autoacionamento'
+  | 'ciclagem_precoce' | 'ciclagem_tardia' | 'esforco_expiratorio'
+  | 'vte_espontaneo_alto' | 'esforco_clinico';
+
+export const ASSINCRONIAS: { key: Assincronia; label: string }[] = [
+  { key: 'duplo_disparo', label: 'Duplo disparo' },
+  { key: 'empilhamento', label: 'Empilhamento de ciclos' },
+  { key: 'esforco_ineficaz', label: 'Esforço ineficaz' },
+  { key: 'autoacionamento', label: 'Autoacionamento por vazamento' },
+  { key: 'ciclagem_precoce', label: 'Ciclagem precoce' },
+  { key: 'ciclagem_tardia', label: 'Ciclagem tardia' },
+  { key: 'esforco_expiratorio', label: 'Esforço inspiratório persistente durante a expiração' },
+  { key: 'vte_espontaneo_alto', label: 'VTe espontâneo acima da faixa protetora' },
+  { key: 'esforco_clinico', label: 'Aumento da FR, musculatura acessória ou agitação com piora das curvas' },
+];
+
+// ── Item 11: sinais de falha da VNI ─────────────────────────────────────────
+export type SinalVni =
+  | 'sem_melhora_6h' | 'fr_fc_subindo' | 'esforco_pior' | 'sf_caindo'
+  | 'fio2_progressiva' | 'ipap_epap_crescente' | 'apneia_rebaixamento' | 'vazamento_impede';
+
+export const SINAIS_VNI: { key: SinalVni; label: string; critico?: boolean }[] = [
+  { key: 'sem_melhora_6h', label: 'Ausência de melhora clínica nas primeiras seis horas', critico: true },
+  { key: 'fr_fc_subindo', label: 'Aumento da frequência respiratória ou cardíaca' },
+  { key: 'esforco_pior', label: 'Piora do esforço respiratório' },
+  { key: 'sf_caindo', label: 'Queda da relação S/F' },
+  { key: 'fio2_progressiva', label: 'Aumento progressivo da FiO₂' },
+  { key: 'ipap_epap_crescente', label: 'Necessidade crescente de IPAP ou EPAP' },
+  { key: 'apneia_rebaixamento', label: 'Apneias, rebaixamento da consciência ou instabilidade hemodinâmica', critico: true },
+  { key: 'vazamento_impede', label: 'Vazamento excessivo impedindo suporte efetivo' },
+];
+
 // ── Item 5: vazamento ───────────────────────────────────────────────────────
 export function classificarVazamento(pct: number | null | undefined): { nivel: NivelAlarme; texto: string } | null {
   if (!tem(pct)) return null;
@@ -116,7 +151,26 @@ export const LIMIARES = {
   quedaAbruptaPct: 25,    // queda de EtCO₂ ou VTe considerada abrupta
   quedaSpo2Pontos: 5,     // queda de SpO₂ em pontos percentuais
   fontesMin: 60,          // diferença aceitável entre gasometria e parâmetros, em minutos
+  pipDelta: 5,            // variação de PIP relevante, em cmH₂O (item 6)
+  pplatEstavel: 2,        // variação de Pplat considerada estabilidade, em cmH₂O
+  pplatDelta: 3,          // variação de Pplat considerada aumento, em cmH₂O
+  mapDelta: 2,            // variação de MAP relevante, em cmH₂O
+  paco2Delta: 5,          // elevação relevante de PaCO₂ ou do gradiente, em mmHg
+  vteProgramadoPct: 80,   // VTe mínimo aceitável em relação ao volume programado
+  ieDivergencia: 0.3,     // diferença tolerada entre I:E calculada e informada
+  fio2Delta: 5,           // elevação relevante de FiO₂, em pontos percentuais
+  peepDelta: 1,           // elevação relevante de PEEP, em cmH₂O
+  tendenciaHoras: 12,     // idade máxima do último cálculo validado para comparar tendência
 };
+
+/** Meta individual registrada para o paciente; substitui o padrão quando informada. */
+export interface MetasIndividuais {
+  spo2Min?: number | null;
+  spo2Max?: number | null;
+  peepMin?: number | null;
+  peepMax?: number | null;
+  vminLmin?: number | null;   // meta de ventilação minuto
+}
 
 /** Valores do último cálculo validado, para as regras de tendência. */
 export interface RegistroAnterior {
@@ -127,6 +181,20 @@ export interface RegistroAnterior {
   is_osi?: number | null;
   spo2?: number | null;
   etco2?: number | null;
+  // Ampliado para as tendências de pressão, CO₂ e parâmetros (specs 2 e 3)
+  pip?: number | null;
+  pplat?: number | null;
+  map?: number | null;
+  dp?: number | null;
+  auto_peep?: number | null;
+  vmin?: number | null;
+  paco2?: number | null;
+  gradiente_co2?: number | null;
+  pf?: number | null;
+  fio2?: number | null;         // %
+  peep_prog?: number | null;
+  fr?: number | null;
+  ti?: number | null;
 }
 
 /** Observações de beira-leito que não são números, mas mudam a leitura dos alarmes. */
@@ -137,6 +205,25 @@ export interface ContextoAlarmes {
   instabilidadeHemodinamica?: boolean;
   difFontesMin?: number | null;           // minutos entre gasometria e parâmetros
   anterior?: RegistroAnterior | null;
+  // Idade do último cálculo validado. Acima de LIMIARES.tendenciaHoras as regras
+  // de tendência não valem: "queda abrupta" contra um valor de três dias atrás
+  // não descreve nada. Sem este dado, a comparação é feita como antes.
+  anteriorHorasAtras?: number | null;
+  // Metas individuais e dados do ventilador que não entram em fórmula
+  metas?: MetasIndividuais;
+  vtProgramadoMl?: number | null;         // volume corrente programado
+  ieInformada?: number | null;            // Te ÷ Ti mostrado no ventilador
+  // Observações de beira-leito das specs 2 e 3
+  ovasFixa?: boolean | null;              // true = obstrução fixa; false = dinâmica (malácia)
+  obstrucaoPersistente?: boolean;         // estridor importante ou dificuldade de ventilação
+  apneia?: boolean;                       // apneia ou ausência de disparo
+  backupFrequente?: boolean;              // ativação frequente da ventilação de backup
+  interrupcaoFluxoInsp?: boolean;         // fluxo inspiratório interrompido precocemente
+  pipNoLimite?: boolean;                  // PIP atinge repetidamente o limite máximo
+  tauIncompativel?: boolean;              // constante calculada não corresponde às curvas
+  assincronias?: Assincronia[];
+  sinaisVni?: SinalVni[];
+  reavaliacaoRegistrada?: boolean;        // mudança de parâmetro já justificada nesta avaliação
 }
 
 const ORDEM: Record<NivelAlarme, number> = { critico: 0, atencao: 1, info: 2 };
@@ -160,25 +247,43 @@ export function avaliarAlarmes(
     return r?.valor ?? null;
   };
   const cat = ctx.categoria ?? null;
+  // Tendência só vale contra um cálculo recente. Fora da janela, o registro
+  // anterior é ignorado por todas as regras de comparação (a0 fica nulo).
+  const horasAnterior = ctx.anteriorHorasAtras;
+  const anteriorForaDaJanela = ctx.anterior != null && tem(horasAnterior) && horasAnterior > LIMIARES.tendenciaHoras;
+  const a0 = anteriorForaDaJanela ? null : (ctx.anterior ?? null);
   const ehOvai = cat === 'ovai';
   const ehTecido = cat === 'tecido' || cat === 'misto';
 
   // ── SpO₂ e FiO₂ (item 3) ──────────────────────────────────────────────────
+  // A meta individual registrada no bloco de suporte tem precedência sobre o padrão.
   const spo2 = e.spo2;
   const fio2 = e.fio2Pct;
-  const foraMeta = tem(spo2) && (spo2 < LIMIARES.spo2.metaMin || spo2 > LIMIARES.spo2.metaMax);
+  const metaMin = tem(ctx.metas?.spo2Min) ? ctx.metas!.spo2Min! : LIMIARES.spo2.metaMin;
+  const metaMax = tem(ctx.metas?.spo2Max) ? ctx.metas!.spo2Max! : LIMIARES.spo2.metaMax;
+  const metaIndividual = tem(ctx.metas?.spo2Min) || tem(ctx.metas?.spo2Max);
+  const textoMeta = `${fmt(metaMin, 0)} a ${fmt(metaMax, 0)}%${metaIndividual ? ' (meta individual)' : ''}`;
+  const foraMeta = tem(spo2) && (spo2 < metaMin || spo2 > metaMax);
   if (tem(spo2) && spo2 < LIMIARES.spo2.criticoAbaixo) {
-    add({ id: 'spo2_critica', nivel: 'critico', titulo: 'SpO₂ abaixo de 88%', valor: `${fmt(spo2, 0)}%`, meta: `${LIMIARES.spo2.metaMin} a ${LIMIARES.spo2.metaMax}%`, verificar: 'Evitar períodos prolongados abaixo de 88%. Avaliar suporte, curvas e perfusão.' });
-  } else if (tem(spo2) && spo2 < LIMIARES.spo2.metaMin) {
-    add({ id: 'spo2_baixa', nivel: 'atencao', titulo: 'SpO₂ abaixo da meta', valor: `${fmt(spo2, 0)}%`, meta: `${LIMIARES.spo2.metaMin} a ${LIMIARES.spo2.metaMax}%`, verificar: 'Em PARDS grave, pode-se aceitar SpO₂ abaixo de 92% após otimizar a PEEP. Conferir a meta individual.' });
+    add({ id: 'spo2_critica', nivel: 'critico', titulo: 'SpO₂ abaixo de 88%', valor: `${fmt(spo2, 0)}%`, meta: textoMeta, verificar: 'Evitar períodos prolongados abaixo de 88%. Avaliar suporte, curvas e perfusão.' });
+  } else if (tem(spo2) && spo2 < metaMin) {
+    add({ id: 'spo2_baixa', nivel: 'atencao', titulo: 'SpO₂ abaixo da meta', valor: `${fmt(spo2, 0)}%`, meta: textoMeta, verificar: metaIndividual ? 'Abaixo da meta registrada para este paciente.' : 'Em PARDS grave, pode-se aceitar SpO₂ abaixo de 92% após otimizar a PEEP. Registre a meta individual no bloco de suporte.' });
   }
-  if (tem(spo2) && spo2 > LIMIARES.spo2.metaMax && tem(fio2) && fio2 > LIMIARES.fio2.arAmbiente) {
-    add({ id: 'spo2_hiperoxia', nivel: 'atencao', titulo: 'SpO₂ acima de 97% com oxigênio suplementar', valor: `SpO₂ ${fmt(spo2, 0)}% com FiO₂ ${fmt(fio2, 0)}%`, meta: `SpO₂ ${LIMIARES.spo2.metaMin} a ${LIMIARES.spo2.metaMax}%`, verificar: 'Possível hiperóxia. Reavaliar a FiO₂.' });
+  if (tem(spo2) && spo2 > metaMax && tem(fio2) && fio2 > LIMIARES.fio2.arAmbiente) {
+    add({ id: 'spo2_hiperoxia', nivel: 'atencao', titulo: `SpO₂ acima de ${fmt(metaMax, 0)}% com oxigênio suplementar`, valor: `SpO₂ ${fmt(spo2, 0)}% com FiO₂ ${fmt(fio2, 0)}%`, meta: `SpO₂ ${textoMeta}`, verificar: 'Possível hiperóxia. Reavaliar a FiO₂.' });
+  }
+  if (tem(spo2) && !e.sinalSpo2Ok) {
+    add({ id: 'sinal_spo2', nivel: 'atencao', titulo: 'Qualidade do sinal da oximetria não conferida', valor: `SpO₂ ${fmt(spo2, 0)}%`, meta: 'Curva pletismográfica e sinal conferidos', verificar: 'Confirmar a curva pletismográfica antes de usar a SpO₂ nos índices e nas metas.' });
   }
   if (tem(fio2) && fio2 >= LIMIARES.fio2.critico && foraMeta) {
-    add({ id: 'fio2_critica', nivel: 'critico', titulo: 'FiO₂ igual ou acima de 80% com SpO₂ fora da meta', valor: `FiO₂ ${fmt(fio2, 0)}% · SpO₂ ${tem(spo2) ? `${fmt(spo2, 0)}%` : '—'}`, meta: `SpO₂ ${LIMIARES.spo2.metaMin} a ${LIMIARES.spo2.metaMax}%`, verificar: 'Revisar recrutamento, estratégia ventilatória e hemodinâmica.' });
+    add({ id: 'fio2_critica', nivel: 'critico', titulo: 'FiO₂ igual ou acima de 80% com SpO₂ fora da meta', valor: `FiO₂ ${fmt(fio2, 0)}% · SpO₂ ${tem(spo2) ? `${fmt(spo2, 0)}%` : '—'}`, meta: `SpO₂ ${textoMeta}`, verificar: 'Revisar recrutamento, estratégia ventilatória e hemodinâmica.' });
   } else if (tem(fio2) && fio2 >= LIMIARES.fio2.atencao) {
     add({ id: 'fio2_alta', nivel: 'atencao', titulo: 'FiO₂ igual ou acima de 60%', valor: `${fmt(fio2, 0)}%`, meta: 'Manter com justificativa e plano de redução', verificar: 'Registrar justificativa ou plano de redução da FiO₂.' });
+  }
+  // FiO₂ subindo para manter a mesma SpO₂ (item 3)
+  if (tem(fio2) && tem(a0?.fio2) && fio2 - a0!.fio2! >= LIMIARES.fio2Delta
+      && tem(spo2) && tem(a0?.spo2) && spo2 <= a0!.spo2! + 1) {
+    add({ id: 'fio2_progressiva', nivel: 'atencao', titulo: 'FiO₂ aumentada sem ganho de saturação', valor: `FiO₂ ${fmt(a0!.fio2!, 0)}% → ${fmt(fio2, 0)}% com SpO₂ ${fmt(spo2, 0)}%`, meta: `SpO₂ ${textoMeta}`, verificar: 'Aumento progressivo da FiO₂ para manter a mesma SpO₂. Avaliar recrutamento, PEEP e evolução da doença.' });
   }
 
   // ── PEEP × FiO₂ (item 2) ──────────────────────────────────────────────────
@@ -198,6 +303,19 @@ export function avaliarAlarmes(
   if (ctx.instabilidadeHemodinamica && tem(e.peepProg)) {
     add({ id: 'peep_hemodinamica', nivel: 'critico', titulo: 'Instabilidade hemodinâmica com PEEP em uso', valor: `PEEP ${fmt(e.peepProg)} cmH₂O`, meta: 'Estabilidade hemodinâmica', verificar: 'Avaliar relação entre PEEP, retorno venoso, perfusão e débito cardíaco.' });
   }
+  // PEEP fora da faixa individual registrada (spec de categorias, itens 5 e 6)
+  const peepMin = ctx.metas?.peepMin;
+  const peepMax = ctx.metas?.peepMax;
+  if (tem(e.peepProg) && ((tem(peepMin) && e.peepProg < peepMin) || (tem(peepMax) && e.peepProg > peepMax))) {
+    add({ id: 'peep_fora_meta', nivel: 'atencao', titulo: 'PEEP fora da faixa individual registrada', valor: `${fmt(e.peepProg)} cmH₂O`, meta: `${tem(peepMin) ? fmt(peepMin) : '—'} a ${tem(peepMax) ? fmt(peepMax) : '—'} cmH₂O`, verificar: 'Registrar a justificativa clínica ou revisar a meta do paciente.' });
+  }
+  // PEEP aumentada sem ganho de volume corrente (OVAI e OVAS)
+  const vteKgAtual = valor('vte_kg');
+  if ((ehOvai || cat === 'ovas') && tem(e.peepProg) && tem(a0?.peep_prog)
+      && e.peepProg - a0!.peep_prog! >= LIMIARES.peepDelta
+      && tem(vteKgAtual) && tem(a0?.vte_kg) && vteKgAtual <= a0!.vte_kg!) {
+    add({ id: 'peep_sem_ganho', nivel: 'atencao', titulo: 'PEEP aumentada sem melhora do volume corrente', valor: `PEEP ${fmt(a0!.peep_prog!)} → ${fmt(e.peepProg)} cmH₂O · VTe ${fmt(vteKgAtual, 1)} mL/kg`, meta: 'Melhora objetiva do VTe, do disparo ou da sincronia', verificar: cat === 'ovas' ? 'Na obstrução fixa, a PEEP não substitui a avaliação da via aérea.' : 'Avaliar disparo, sincronia e hiperinsuflação antes de manter a PEEP elevada.' });
+  }
 
   // ── Volume corrente (item 4) ──────────────────────────────────────────────
   const vteKg = valor('vte_kg');
@@ -211,6 +329,18 @@ export function avaliarAlarmes(
   }
   if (!tem(e.pesoIdealKg) && tem(e.vteMl)) {
     add({ id: 'sem_peso_ideal', nivel: 'atencao', titulo: 'Sem peso ideal ou predito', valor: tem(e.pesoKg) ? `Usado o peso atual de ${fmt(e.pesoKg, 2)} kg` : 'Peso não informado', meta: 'VTe/kg pelo peso ideal ou predito', verificar: 'Informar o peso ideal ou predito, sobretudo com obesidade ou edema importante.' });
+  }
+  // VTe abaixo de 80% do volume programado (item 4)
+  if (tem(e.vteMl) && tem(ctx.vtProgramadoMl) && ctx.vtProgramadoMl > 0) {
+    const pctProg = arred((e.vteMl / ctx.vtProgramadoMl) * 100, 0);
+    if (pctProg < LIMIARES.vteProgramadoPct) {
+      add({ id: 'vte_programado', nivel: 'atencao', titulo: 'VTe abaixo de 80% do volume programado', valor: `${fmt(e.vteMl, 0)} mL de ${fmt(ctx.vtProgramadoMl, 0)} mL programados (${fmt(pctProg, 0)}%)`, meta: `Pelo menos ${LIMIARES.vteProgramadoPct}% do volume programado`, verificar: 'Avaliar vazamento, obstrução, complacência e condições do circuito.' });
+    }
+  }
+  // VTe elevado com esforço espontâneo, duplo disparo ou empilhamento (item 4)
+  const marcou = (a: Assincronia) => (ctx.assincronias ?? []).includes(a);
+  if (tem(vteKg) && vteKg > 8 && (marcou('duplo_disparo') || marcou('empilhamento') || marcou('vte_espontaneo_alto'))) {
+    add({ id: 'vte_esforco', nivel: 'atencao', titulo: 'Volume elevado com esforço espontâneo ou empilhamento', valor: `${fmt(vteKg, 1)} mL/kg`, meta: '6 a 8 mL/kg (faixa protetora geral)', verificar: 'Avaliar sedação, trigger, fluxo e ciclagem. Risco de volutrauma por esforço.' });
   }
 
   // ── Vazamento (item 5) ────────────────────────────────────────────────────
@@ -247,6 +377,34 @@ export function avaliarAlarmes(
     add({ id: 'fluxo_exp', nivel: grave ? 'critico' : 'atencao', titulo: 'Fluxo expiratório não retorna a zero', valor: 'Observado à beira do leito', meta: 'Retorno do fluxo expiratório a zero antes do próximo ciclo', verificar: grave ? 'Associado a instabilidade ou dessaturação: avaliar hiperinsuflação dinâmica.' : 'Avaliar expiração incompleta e aprisionamento aéreo.' });
   }
 
+  // ── Tendência de PIP e MAP (item 6) ───────────────────────────────────────
+  if (a0) {
+    const dPip = tem(e.pip) && tem(a0.pip) ? arred(e.pip - a0.pip, 1) : null;
+    const dPplat = tem(e.pplat) && tem(a0.pplat) ? arred(e.pplat - a0.pplat, 1) : null;
+    const quedaVte = tem(vteKg) && tem(a0.vte_kg) ? pct(vteKg, a0.vte_kg) : null;
+    if (dPip != null && dPip >= LIMIARES.pipDelta && dPplat != null && dPplat >= LIMIARES.pplatDelta) {
+      add({ id: 'pip_pplat_sobem', nivel: 'critico', titulo: 'PIP e Pplat aumentaram juntas', valor: `PIP +${fmt(dPip)} · Pplat +${fmt(dPplat)} cmH₂O`, meta: `Variação até ${LIMIARES.pipDelta} cmH₂O do último validado`, verificar: 'Avaliar redução da complacência: atelectasia, edema, pneumotórax, derrame, distensão abdominal ou assincronia.' });
+    } else if (dPip != null && dPip >= LIMIARES.pipDelta && dPplat != null && Math.abs(dPplat) <= LIMIARES.pplatEstavel) {
+      add({ id: 'pip_resistencia', nivel: 'atencao', titulo: 'PIP aumentou com Pplat estável', valor: `PIP +${fmt(dPip)} cmH₂O · Pplat ${fmt(dPplat, 1)} cmH₂O`, meta: `Variação até ${LIMIARES.pipDelta} cmH₂O`, verificar: 'Avaliar aumento de resistência: secreção, broncoespasmo, tubo dobrado ou água no circuito.' });
+    }
+    if (dPip != null && dPip <= -LIMIARES.pipDelta && quedaVte != null && quedaVte <= -LIMIARES.tendenciaPct) {
+      add({ id: 'pip_queda_vte', nivel: 'critico', titulo: 'PIP caiu com redução do volume corrente', valor: `PIP ${fmt(dPip)} cmH₂O · VTe ${fmt(quedaVte, 0)}%`, meta: 'PIP e VTe estáveis', verificar: 'Considerar desconexão, vazamento ou perda da via aérea.' });
+    }
+    // MAP elevada sem melhora da oxigenação
+    const io = valor('io'); const pf = valor('pf');
+    const mapAtual = tem(e.map) ? e.map : null;
+    if (tem(mapAtual) && tem(a0.map) && mapAtual - a0.map >= LIMIARES.mapDelta) {
+      const ioPiorou = tem(io) && tem(a0.io) && io >= a0.io;
+      const pfPiorou = tem(pf) && tem(a0.pf) && pf <= a0.pf;
+      if (ioPiorou || pfPiorou) {
+        add({ id: 'map_sem_ganho', nivel: 'atencao', titulo: 'MAP elevada sem melhora da oxigenação', valor: `MAP ${fmt(a0.map)} → ${fmt(mapAtual)} cmH₂O · ${ioPiorou ? `IO ${fmt(io as number)}` : `P/F ${fmt(pf as number, 0)}`}`, meta: 'Melhora da oxigenação após elevação da MAP', verificar: 'Avaliar excesso de pressão ou hiperinsuflação.' });
+      }
+    }
+  }
+  if (ctx.pipNoLimite) {
+    add({ id: 'pip_limite', nivel: 'atencao', titulo: 'PIP atinge repetidamente o limite máximo', valor: tem(e.pip) ? `PIP ${fmt(e.pip)} cmH₂O` : 'Observado à beira do leito', meta: 'PIP abaixo do limite configurado', verificar: 'Possível interrupção precoce da inspiração e entrega insuficiente do VTe.' });
+  }
+
   // ── Ventilação e CO₂ (item 7) ─────────────────────────────────────────────
   if (tem(e.ph)) {
     if (e.ph < LIMIARES.ph.critico) {
@@ -260,6 +418,24 @@ export function avaliarAlarmes(
   }
   if (tem(ctx.difFontesMin) && ctx.difFontesMin > LIMIARES.fontesMin) {
     add({ id: 'fontes_incompativeis', nivel: 'atencao', titulo: 'Gasometria e parâmetros em horários incompatíveis', valor: `${fmt(ctx.difFontesMin, 0)} min de diferença`, meta: `Até ${LIMIARES.fontesMin} min`, verificar: 'Não misturar gasometria antiga com parâmetros ventilatórios atuais.' });
+  }
+  // PaCO₂ e gradiente em elevação; ventilação minuto contra a meta individual (item 7)
+  const vmin = valor('vmin');
+  const grad = valor('gradiente_co2');
+  const paco2Subindo = tem(e.paco2) && tem(a0?.paco2) && e.paco2 - a0!.paco2! >= LIMIARES.paco2Delta;
+  if (paco2Subindo) {
+    add({ id: 'paco2_progressiva', nivel: 'atencao', titulo: 'PaCO₂ em elevação', valor: `${fmt(a0!.paco2!)} → ${fmt(e.paco2 as number)} mmHg`, meta: `Variação até ${LIMIARES.paco2Delta} mmHg do último validado`, verificar: 'Avaliar ventilação minuto, espaço morto, mecânica e sedação.' });
+  }
+  if (tem(grad) && tem(a0?.gradiente_co2) && grad - a0!.gradiente_co2! >= LIMIARES.paco2Delta) {
+    add({ id: 'gradiente_crescente', nivel: 'atencao', titulo: 'Gradiente PaCO₂ − EtCO₂ crescente', valor: `${fmt(a0!.gradiente_co2!)} → ${fmt(grad)} mmHg`, meta: `Variação até ${LIMIARES.paco2Delta} mmHg`, verificar: 'Avaliar aumento do espaço morto, débito cardíaco e perfusão pulmonar.' });
+  }
+  const metaVmin = ctx.metas?.vminLmin;
+  if (tem(vmin) && tem(metaVmin) && vmin < metaVmin) {
+    const deterioracao = paco2Subindo || (tem(e.etco2) && tem(a0?.etco2) && e.etco2 - a0!.etco2! >= LIMIARES.paco2Delta);
+    add({ id: 'vmin_baixa', nivel: deterioracao ? 'critico' : 'atencao', titulo: 'Ventilação minuto abaixo da meta', valor: `${fmt(vmin, 2)} L/min`, meta: `Meta de ${fmt(metaVmin, 2)} L/min`, verificar: deterioracao ? 'Associada a elevação de PaCO₂ ou EtCO₂. Avaliar comando respiratório, disparo, fadiga e via aérea.' : 'Avaliar FR, volume corrente, sedação e comando respiratório.' });
+  }
+  if (tem(vmin) && tem(a0?.vmin) && vmin > a0!.vmin! && tem(e.paco2) && tem(a0?.paco2) && e.paco2 >= a0!.paco2!) {
+    add({ id: 'vmin_sem_ganho', nivel: 'atencao', titulo: 'Ventilação minuto aumentada sem melhora da PaCO₂', valor: `VM ${fmt(a0!.vmin!, 2)} → ${fmt(vmin, 2)} L/min · PaCO₂ ${fmt(e.paco2, 1)} mmHg`, meta: 'Queda da PaCO₂ após aumento da ventilação minuto', verificar: 'Avaliar espaço morto, vazamento, distribuição da ventilação e débito cardíaco.' });
   }
 
   // ── Tempo, Ti, Te e I:E (spec de categorias, item 2; spec do Ti, item 8) ──
@@ -275,7 +451,29 @@ export function avaliarAlarmes(
   }
   if (ciclo?.teMinimo != null && tem(te) && te < ciclo.teMinimo) {
     const grave = ehOvai && ctx.fluxoExpRetornaZero === false;
-    add({ id: 'te_curto', nivel: grave ? 'critico' : 'atencao', titulo: `Tempo expiratório abaixo de ${ehOvai ? '4' : '3'} constantes de tempo`, valor: `Te ${fmt(te, 2)} s`, meta: `Mínimo de ${fmt(ciclo.teMinimo, 2)} s`, verificar: grave ? 'Na OVAI, com fluxo expiratório sem retorno a zero: avaliar aprisionamento aéreo.' : 'Avaliar expiração incompleta e auto-PEEP.' });
+    // Na OVAI a spec recomenda de 4 a 5 τ; o alarme dispara no piso da faixa.
+    const metaTe = ehOvai && ciclo.teMinimoMax != null
+      ? `${fmt(ciclo.teMinimo, 2)} a ${fmt(ciclo.teMinimoMax, 2)} s (4 a 5 τ)`
+      : `Mínimo de ${fmt(ciclo.teMinimo, 2)} s`;
+    add({ id: 'te_curto', nivel: grave ? 'critico' : 'atencao', titulo: `Tempo expiratório abaixo de ${ehOvai ? '4' : '3'} constantes de tempo`, valor: `Te ${fmt(te, 2)} s`, meta: metaTe, verificar: grave ? 'Na OVAI, com fluxo expiratório sem retorno a zero: avaliar aprisionamento aéreo.' : 'Avaliar expiração incompleta e auto-PEEP.' });
+  }
+  // I:E do ventilador diferente da calculada (spec de categorias, item 2)
+  if (tem(ie) && tem(ctx.ieInformada) && Math.abs(ie - ctx.ieInformada) > LIMIARES.ieDivergencia) {
+    add({ id: 'ie_divergente', nivel: 'atencao', titulo: 'I:E informada diferente da calculada', valor: `Informada 1:${fmt(ctx.ieInformada, 1)} · calculada 1:${fmt(ie, 1)}`, meta: 'Mesma relação nas duas fontes', verificar: 'Conferir arredondamento, unidade e origem do dado (FR total × FR programada, Ti medido × programado).' });
+  }
+  // Auto-PEEP subindo depois de aumento de FR ou de Ti (item 8 e spec de categorias)
+  if (tem(autoPeep) && tem(a0?.auto_peep) && autoPeep > a0!.auto_peep!
+      && ((tem(e.fr) && tem(a0?.fr) && e.fr > a0!.fr!) || (tem(e.tiSeg) && tem(a0?.ti) && e.tiSeg > a0!.ti!))) {
+    const subiu = tem(e.fr) && tem(a0?.fr) && e.fr > a0!.fr! ? 'FR' : 'Ti';
+    add({ id: 'auto_peep_aumento', nivel: 'atencao', titulo: `Auto-PEEP aumentou depois da elevação do ${subiu}`, valor: `Auto-PEEP ${fmt(a0!.auto_peep!)} → ${fmt(autoPeep)} cmH₂O`, meta: 'Auto-PEEP estável após mudança de parâmetro', verificar: 'O aumento reduziu o tempo expiratório e elevou a PEEP total. Avaliar hiperinsuflação dinâmica.' });
+  }
+  if (ctx.tauIncompativel) {
+    add({ id: 'tau_incompativel', nivel: 'atencao', titulo: 'Constante de tempo incompatível com as curvas', valor: ciclo?.tau != null ? `τ calculada ${fmt(ciclo.tau, 2)} s` : 'Observado à beira do leito', meta: 'Constante calculada compatível com a mecânica medida', verificar: 'Conferir resistência, complacência, pausa e vazamento antes de usar o Ti e o Te estimados.' });
+  }
+  // Ti curto com interrupção do fluxo inspiratório (doença do tecido)
+  if (ehTecido && ctx.interrupcaoFluxoInsp) {
+    const vteBaixo = tem(vteKg) && vteKg < 6;
+    add({ id: 'ti_fluxo_interrompido', nivel: 'atencao', titulo: 'Fluxo inspiratório interrompido precocemente', valor: tem(e.tiSeg) ? `Ti ${fmt(e.tiSeg, 2)} s${vteBaixo ? ` · VTe ${fmt(vteKg as number, 1)} mL/kg` : ''}` : 'Observado à beira do leito', meta: cat ? REFERENCIA_CATEGORIA[cat].ti : 'Ti suficiente para a entrega do VTe', verificar: 'Avaliar se o Ti permite completar a entrega do volume corrente.' });
   }
   if (ciclo?.tau != null && tem(e.tiSeg)) {
     const n = e.tiSeg / ciclo.tau;
@@ -290,13 +488,25 @@ export function avaliarAlarmes(
   }
 
   // ── Complacência e resistência: tendência (item 9) ────────────────────────
-  const ant = ctx.anterior;
+  const ant = a0;
   if (ant) {
     const cstat = valor('cstat');
     if (tem(cstat) && tem(ant.cstat)) {
       const v = pct(cstat, ant.cstat);
       if (v != null && v <= -LIMIARES.tendenciaPct) {
         add({ id: 'cstat_queda', nivel: 'atencao', titulo: 'Queda da complacência estática', valor: `${fmt(cstat)} mL/cmH₂O (${fmt(v, 0)}%)`, meta: `Variação até ${LIMIARES.tendenciaPct}% do último cálculo validado`, verificar: 'Avaliar atelectasia, edema, derrame, distensão abdominal e efeito da PEEP.' });
+      }
+      // Queda da complacência logo após aumento da PEEP (item 9)
+      if (cstat < ant.cstat && tem(e.peepProg) && tem(ant.peep_prog) && e.peepProg - ant.peep_prog >= LIMIARES.peepDelta) {
+        add({ id: 'cstat_pos_peep', nivel: 'atencao', titulo: 'Complacência piorou depois do aumento da PEEP', valor: `PEEP ${fmt(ant.peep_prog)} → ${fmt(e.peepProg)} cmH₂O · Cstat ${fmt(ant.cstat)} → ${fmt(cstat)} mL/cmH₂O`, meta: 'Melhora ou estabilidade da complacência após recrutamento', verificar: 'Avaliar hiperinsuflação e recrutabilidade antes de manter a PEEP.' });
+      }
+      // Piora simultânea de complacência, Pplat e driving pressure (item 9)
+      const dpAgora = valor('dp');
+      const pioraTripla = cstat < ant.cstat
+        && tem(e.pplat) && tem(ant.pplat) && e.pplat > ant.pplat
+        && tem(dpAgora) && tem(ant.dp) && dpAgora > ant.dp;
+      if (pioraTripla) {
+        add({ id: 'piora_simultanea', nivel: 'critico', titulo: 'Piora simultânea de complacência, Pplat e driving pressure', valor: `Cstat ${fmt(cstat)} mL/cmH₂O · Pplat ${fmt(e.pplat as number)} · ΔP ${fmt(dpAgora as number)} cmH₂O`, meta: 'Estabilidade dos três indicadores', verificar: 'Deterioração da mecânica pulmonar. Avaliar causa aguda e estratégia protetora.' });
       }
     }
     const raw = valor('raw');
@@ -332,9 +542,70 @@ export function avaliarAlarmes(
     }
   }
 
+  // ── OVAS: obstrução de vias aéreas superiores (spec de categorias, item 4) ─
+  if (cat === 'ovas') {
+    if (ctx.obstrucaoPersistente) {
+      add({ id: 'ovas_obstrucao', nivel: 'critico', titulo: 'Obstrução persistente de via aérea superior', valor: 'Estridor importante ou dificuldade de ventilação', meta: 'Via aérea pérvia e ventilação efetiva', verificar: 'Considerar problema anatômico ou da via aérea artificial. A PEEP não corrige obstrução fixa.' });
+    }
+    const esforcoMarcado = marcou('esforco_ineficaz') || marcou('esforco_clinico');
+    if (ctx.ovasFixa === false && (esforcoMarcado || (tem(vteKg) && vteKg < 6))) {
+      add({ id: 'ovas_colapso', nivel: 'atencao', titulo: 'Colapso, esforço ou baixo VTe na via aérea colapsável', valor: tem(e.peepProg) ? `PEEP ${fmt(e.peepProg)} cmH₂O${tem(vteKg) ? ` · VTe ${fmt(vteKg, 1)} mL/kg` : ''}` : 'Observado à beira do leito', meta: tem(peepMin) ? `PEEP de sustentação de ${fmt(peepMin)} cmH₂O` : REFERENCIA_CATEGORIA.ovas.peep, verificar: 'Na malácia, titular a PEEP para estabilizar a via aérea e registrar a PEEP de sustentação.' });
+    }
+    if (ctx.ovasFixa === true && tem(e.peepProg) && tem(a0?.peep_prog) && e.peepProg > a0!.peep_prog!) {
+      add({ id: 'ovas_fixa_peep', nivel: 'atencao', titulo: 'PEEP elevada em obstrução fixa', valor: `PEEP ${fmt(a0!.peep_prog!)} → ${fmt(e.peepProg)} cmH₂O`, meta: REFERENCIA_CATEGORIA.ovas.peep, verificar: 'Na obstrução fixa, o aumento progressivo da PEEP não substitui a avaliação da via aérea.' });
+    }
+    if (marcou('ciclagem_precoce') || marcou('ciclagem_tardia')) {
+      add({ id: 'ovas_ciclagem', nivel: 'atencao', titulo: 'Ti inadequado com ciclagem alterada', valor: marcou('ciclagem_precoce') ? 'Ciclagem precoce' : 'Ciclagem tardia', meta: REFERENCIA_CATEGORIA.ovas.ti, verificar: 'Ajustar o Ti para entrega adequada do VTe, sem ciclagem precoce ou tardia.' });
+    }
+  }
+
+  // ── Descontrole da respiração ou falha da bomba (spec de categorias, item 6) ─
+  if (ctx.apneia) {
+    add({ id: 'apneia', nivel: 'critico', titulo: 'Apneia ou ausência de disparo', valor: 'Observado à beira do leito', meta: 'Disparo dentro do tempo configurado', verificar: 'Avaliar comando respiratório central, sedação, fadiga e via aérea.' });
+  }
+  if (ctx.backupFrequente) {
+    add({ id: 'backup_frequente', nivel: 'atencao', titulo: 'Ativação frequente da ventilação de backup', valor: 'Observado à beira do leito', meta: 'Disparo espontâneo efetivo', verificar: 'Avaliar comando respiratório, sensibilidade do disparo e sedação.' });
+  }
+
+  // ── Assincronia paciente–ventilador (item 10) ─────────────────────────────
+  const marcadas = (ctx.assincronias ?? []).filter(k => ASSINCRONIAS.some(a => a.key === k));
+  if (marcadas.length) {
+    const nomes = marcadas.map(k => ASSINCRONIAS.find(a => a.key === k)!.label);
+    add({ id: 'assincronia', nivel: 'atencao', titulo: 'Possível assincronia paciente–ventilador', valor: nomes.join(' · '), meta: 'Ciclos sincrônicos, sem esforço ineficaz', verificar: 'Revisar curvas, esforço respiratório, sedação, trigger, fluxo e ciclagem.' });
+  }
+
   // ── Falha da VNI (item 11): só quando o suporte não é invasivo ────────────
   if (!e.emVmi && tem(fio2) && fio2 >= LIMIARES.fio2.atencao) {
     add({ id: 'vni_fio2', nivel: 'atencao', titulo: 'FiO₂ alta em suporte não invasivo', valor: `${fmt(fio2, 0)}%`, meta: `Abaixo de ${LIMIARES.fio2.atencao}%`, verificar: 'Sinal de possível falha da VNI. Avaliar esforço, FR, S/F e necessidade de escalonamento.' });
+  }
+  if (!e.emVmi) {
+    const sinais = (ctx.sinaisVni ?? []).filter(k => SINAIS_VNI.some(s => s.key === k));
+    if (sinais.length) {
+      const itens = sinais.map(k => SINAIS_VNI.find(s => s.key === k)!);
+      const critico = itens.some(s => s.critico);
+      add({ id: 'vni_falha', nivel: critico ? 'critico' : 'atencao', titulo: `Sinais de falha da VNI (${itens.length})`, valor: itens.map(s => s.label).join(' · '), meta: 'Melhora clínica e das trocas gasosas nas primeiras seis horas', verificar: critico ? 'Avaliação imediata da estratégia e da necessidade de escalonamento.' : 'Avaliar estratégia, interface, parâmetros e necessidade de escalonamento.' });
+    }
+  }
+
+  // ── Mudança de parâmetro sem reavaliação registrada (specs 2 e 3) ─────────
+  if (a0 && !ctx.reavaliacaoRegistrada) {
+    const mudou: string[] = [];
+    const comparar = (rotulo: string, atual: number | null | undefined, antes: number | null | undefined, casas = 1, unidade = '') => {
+      if (tem(atual) && tem(antes) && Math.abs(atual - antes) > 0.001) mudou.push(`${rotulo} ${fmt(antes, casas)} → ${fmt(atual, casas)}${unidade}`);
+    };
+    comparar('FR', e.fr, a0.fr, 0, ' irpm');
+    comparar('Ti', e.tiSeg, a0.ti, 2, ' s');
+    comparar('PEEP', e.peepProg, a0.peep_prog, 1, ' cmH₂O');
+    comparar('FiO₂', fio2, a0.fio2, 0, '%');
+    if (mudou.length) {
+      add({ id: 'sem_reavaliacao', nivel: 'atencao', titulo: 'Parâmetro alterado desde a última avaliação validada', valor: mudou.join(' · '), meta: 'Reavaliação clínica e ventilatória registrada após a mudança', verificar: 'Registrar a reavaliação, a justificativa e o prazo de nova conferência ao validar este cálculo.' });
+    }
+  }
+
+  // Transparência: diz que não há comparação e por quê, em vez de simplesmente
+  // não mostrar nenhuma tendência.
+  if (anteriorForaDaJanela) {
+    add({ id: 'tendencia_antiga', nivel: 'info', titulo: 'Tendências não avaliadas nesta avaliação', valor: `Último cálculo validado há ${fmt(horasAnterior as number, 0)} h`, meta: `Até ${LIMIARES.tendenciaHoras} h para comparar`, verificar: 'Variação de VTe, complacência, resistência, pressões, CO₂ e índices só é comparada com um cálculo recente. Os demais alarmes seguem valendo.' });
   }
 
   return out.sort((a, b) => ORDEM[a.nivel] - ORDEM[b.nivel]);
