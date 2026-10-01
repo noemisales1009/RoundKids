@@ -252,7 +252,7 @@ export interface PatientsContextType {
   updateSurgicalProcedureInPatient: (patientId: number | string, procedureData: SurgicalProcedure) => void;
   deleteSurgicalProcedureFromPatient: (patientId: number | string, procedureId: number | string) => void;
   addScaleScoreToPatient: (patientId: number | string, score: Omit<ScaleScore, 'id'>) => void;
-  updatePatientDetails: (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number; sc?: number; sexo?: string; prontuario?: string; bedNumber?: number; estatura?: number; pc?: number; pa?: number; pesoSeco?: number }) => void;
+  updatePatientDetails: (patientId: number | string, data: { name?: string; motherName?: string; ctd?: string; peso?: number; sc?: number; sexo?: string; prontuario?: string; bedNumber?: number; estatura?: number; pc?: number; pa?: number; pesoSeco?: number }) => void;
   saveChecklistAnswer: (patientId: number | string, categoryId: number, questionId: number, answer: Answer) => Promise<void>;
   addCultureToPatient: (patientId: number | string, culture: Omit<Culture, 'id'>, userId?: string) => Promise<void>;
   deleteCultureFromPatient: (patientId: number | string, cultureId: number | string) => void;

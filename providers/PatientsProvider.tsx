@@ -1027,9 +1027,10 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (!error) refreshPatientPrecautions(patientId);
     };
 
-    const updatePatientDetails = async (patientId: number | string, data: { motherName?: string; ctd?: string; peso?: number; sc?: number; sexo?: string; prontuario?: string; bedNumber?: number; estatura?: number; pc?: number; pa?: number; pesoSeco?: number }) => {
+    const updatePatientDetails = async (patientId: number | string, data: { name?: string; motherName?: string; ctd?: string; peso?: number; sc?: number; sexo?: string; prontuario?: string; bedNumber?: number; estatura?: number; pc?: number; pa?: number; pesoSeco?: number }) => {
         try {
             const updateData: any = {};
+            if (data.name !== undefined) updateData.name = data.name;
             if (data.motherName !== undefined) updateData.mother_name = data.motherName;
             if (data.ctd !== undefined) updateData.diagnosis = data.ctd;
             if (data.sexo !== undefined) updateData.sexo = data.sexo || null;
@@ -1080,6 +1081,7 @@ export const PatientsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 if (p.id.toString() === patientId.toString()) {
                     return {
                         ...p,
+                        name: data.name ?? p.name,
                         motherName: data.motherName ?? p.motherName,
                         ctd: data.ctd ?? p.ctd,
                         peso: data.peso ?? p.peso,
