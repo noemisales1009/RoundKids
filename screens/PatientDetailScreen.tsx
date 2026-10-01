@@ -1537,7 +1537,7 @@ const PatientDetailScreen: React.FC = () => {
             {editingDietRemovalDate && <EditDietRemovalDateModal diet={editingDietRemovalDate} patientId={patient.id} onClose={() => setEditingDietRemovalDate(null)} />}
             {isRemovalModalOpen && <AddRemovalDateModal deviceId={isRemovalModalOpen} patientId={patient.id} onClose={() => setRemovalModalOpen(null)} />}
             {isEndDateModalOpen && <AddEndDateModal medicationId={isEndDateModalOpen} patientId={patient.id} onClose={() => setEndDateModalOpen(null)} />}
-            {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} currentMotherName={patient.motherName} currentWeight={patient.peso} currentSC={patient.sc} currentSexo={patient.sexo} currentProntuario={patient.prontuario} currentBedNumber={patient.bedNumber} currentEstatura={patient.estatura} currentPC={patient.pc} currentPA={patient.pa} currentPesoSeco={patient.pesoSeco} onClose={() => setEditInfoModalOpen(false)} />}
+            {isEditInfoModalOpen && <EditPatientInfoModal patientId={patient.id} currentName={patient.name} currentMotherName={patient.motherName} currentWeight={patient.peso} currentSC={patient.sc} currentSexo={patient.sexo} currentProntuario={patient.prontuario} currentBedNumber={patient.bedNumber} currentEstatura={patient.estatura} currentPC={patient.pc} currentPA={patient.pa} currentPesoSeco={patient.pesoSeco} onClose={() => setEditInfoModalOpen(false)} />}
             {isCreateAlertModalOpen && <CreateAlertModal patientId={patient.id} onClose={() => setCreateAlertModalOpen(false)} />}
             {showRevisaoAlertas && (
                 <RevisaoAlertasModal
