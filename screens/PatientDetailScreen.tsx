@@ -176,7 +176,7 @@ const PatientDetailScreen: React.FC = () => {
     const [calculationsRefresh, setCalculationsRefresh] = useState(0);
     const scalesSectionRef = useRef<HTMLDivElement>(null);
     const modulosRef = useRef<HTMLDivElement>(null);
-    const moduloJaMontou = useRef(false);
+    const mainTabAnterior = useRef(mainTab);
     const moduloAberto = MODULOS.find(m => m.id === mainTab) ?? null;
 
     const [extraCounts, setExtraCounts] = useState({ aportes: 0, pareceres: 0, examesImagem: 0, paPercentis: 0, paineisVirais: 0 });
@@ -337,7 +337,10 @@ const PatientDetailScreen: React.FC = () => {
     // Sem isso, fechar um módulo longo (como a Calc. Respiratória) deixava a
     // página encolher por baixo do scroll e a pessoa se perdia no meio da tela.
     useEffect(() => {
-        if (!moduloJaMontou.current) { moduloJaMontou.current = true; return; }  // não mexe ao abrir o paciente
+        // Só rola quando o módulo realmente mudou — não ao abrir o paciente. Comparar com o valor
+        // anterior (em vez de uma flag "já montou") resiste à dupla execução do StrictMode em dev.
+        if (mainTabAnterior.current === mainTab) return;
+        mainTabAnterior.current = mainTab;
         const id = requestAnimationFrame(() => {
             modulosRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
