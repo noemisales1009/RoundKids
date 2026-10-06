@@ -222,8 +222,9 @@ export const STATIC_DIAGNOSTICO_OPTIONS: StaticDiagnosticOption[] = [
 
 export const DEVICE_TYPES: string[] = [
     'AVP1', 'AVP2', 'CNAF', 'CURATIVO À VÁCUO', 'CVC 1', 'CVC 2', 'CATETER DE SHILLY',
-    'CATETER DE TENCKHOFF', 'DRENO TORÁXICO D', 'DRENO TORÁXICO E', 'DVE', 'GTT',
-    'OUTROS DRENOS', 'PICC1', 'PICC2', 'SNE', 'SNG', 'SVD', 'TOT', 'VENTURY', 'VNI', 'VPM',
+    'CATETER DE TENCKHOFF', 'CATETER NASAL DE O₂', 'DRENO TORÁXICO D', 'DRENO TORÁXICO E', 'DVE', 'GTT',
+    'MÁSCARA COMUM', 'MÁSCARA CONCENTRADORA',
+    'OUTROS DRENOS', 'PICC1', 'PICC2', 'SNE', 'SNG', 'SVD', 'TOT', 'TQT', 'VENTURY', 'VNI', 'VPM',
 ] as const;
 
 export const DEVICE_LOCATIONS: string[] = [
