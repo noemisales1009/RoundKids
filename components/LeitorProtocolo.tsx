@@ -3,7 +3,7 @@ import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import { supabase } from '../supabaseClient';
 import { Protocolo } from '../lib/typesafe/protocolosRelevantes';
-import { CloseIcon, FileTextIcon } from './icons';
+import { JanelaProtocolo, AvisoProtocolo } from './JanelaProtocolo';
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
@@ -65,7 +65,7 @@ export const LeitorProtocolo: React.FC<Props> = ({ protocolo, paginaInicial = 1,
         if (!doc || paginas === 0) return;
         let ativo = true;
         (async () => {
-            const largura = Math.min(areaRef.current?.clientWidth ?? LARGURA_MAX, LARGURA_MAX);
+            const largura = Math.min((areaRef.current?.clientWidth ?? LARGURA_MAX) - 32, LARGURA_MAX);
             const densidade = window.devicePixelRatio || 1;
             try {
                 for (let n = 1; n <= paginas && ativo; n++) {
@@ -95,34 +95,18 @@ export const LeitorProtocolo: React.FC<Props> = ({ protocolo, paginaInicial = 1,
     }, [paginas, paginaInicial, protocolo.arquivo_path]);
 
     return (
-        <div className="fixed inset-0 z-[60] bg-black bg-opacity-70 flex flex-col">
-            <div className="bg-primary-600 dark:bg-primary-700 p-3 sm:p-4 flex justify-between items-center gap-3">
-                <div className="flex items-center gap-2 text-white min-w-0">
-                    <FileTextIcon className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
-                    <h2 className="text-sm sm:text-lg font-bold truncate">{protocolo.titulo}</h2>
-                </div>
-                <button onClick={onClose} aria-label="Fechar" className="text-white/80 hover:text-white bg-primary-800/50 p-1 rounded-full shrink-0">
-                    <CloseIcon className="w-5 h-5" />
-                </button>
+        <JanelaProtocolo titulo={protocolo.titulo} onClose={onClose} areaRef={areaRef}>
+            {estado === 'carregando' && <AvisoProtocolo>Carregando protocolo…</AvisoProtocolo>}
+            {estado === 'erro' && <AvisoProtocolo>Não foi possível abrir o protocolo.</AvisoProtocolo>}
+            <div className="flex flex-col items-center gap-3">
+                {Array.from({ length: paginas }, (_, i) => (
+                    <canvas
+                        key={i}
+                        ref={el => { canvasRefs.current[i] = el; }}
+                        className="max-w-full bg-white shadow-lg"
+                    />
+                ))}
             </div>
-
-            <div
-                ref={areaRef}
-                onContextMenu={e => e.preventDefault()}
-                className="flex-1 overflow-y-auto p-2 sm:p-4 select-none"
-            >
-                {estado === 'carregando' && <p className="text-center text-sm text-slate-200 py-8">Carregando protocolo…</p>}
-                {estado === 'erro' && <p className="text-center text-sm text-slate-200 py-8">Não foi possível abrir o protocolo.</p>}
-                <div className="flex flex-col items-center gap-3">
-                    {Array.from({ length: paginas }, (_, i) => (
-                        <canvas
-                            key={i}
-                            ref={el => { canvasRefs.current[i] = el; }}
-                            className="max-w-full bg-white shadow-lg"
-                        />
-                    ))}
-                </div>
-            </div>
-        </div>
+        </JanelaProtocolo>
     );
 };
