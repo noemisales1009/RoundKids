@@ -10,8 +10,12 @@ import {
 } from '../lib/typesafe/protocolosRelevantes';
 import { FileTextIcon, ChevronRightIcon } from './icons';
 
-// O leitor traz a biblioteca de PDF; só é baixado quando alguém abre um protocolo.
-const LeitorProtocolo = lazy(() => import('./LeitorProtocolo').then(m => ({ default: m.LeitorProtocolo })));
+import { JanelaProtocolo, AvisoProtocolo } from './JanelaProtocolo';
+
+// O leitor traz a biblioteca de PDF, que é pesada: fica fora do pacote principal e começa a
+// ser baixado quando a consulta abre, para já estar pronto na hora do clique.
+const carregarLeitor = () => import('./LeitorProtocolo').then(m => ({ default: m.LeitorProtocolo }));
+const LeitorProtocolo = lazy(carregarLeitor);
 
 interface Props {
     // Pergunta do round em que a consulta foi aberta. Sem ela (tela Protocolos do menu),
@@ -70,6 +74,7 @@ export const ProtocolosConsulta: React.FC<Props> = ({ question, category }) => {
     useEffect(() => {
         let ativo = true;
         carregarTrechos();
+        carregarLeitor().catch(() => undefined);
         (async () => {
             const { data, error } = await supabase
                 .from('protocolos')
@@ -259,7 +264,13 @@ export const ProtocolosConsulta: React.FC<Props> = ({ question, category }) => {
                 </>
             )}
             {lendo && (
-                <Suspense fallback={null}>
+                <Suspense
+                    fallback={
+                        <JanelaProtocolo titulo={lendo.protocolo.titulo} onClose={() => setLendo(null)}>
+                            <AvisoProtocolo>Carregando protocolo…</AvisoProtocolo>
+                        </JanelaProtocolo>
+                    }
+                >
                     <LeitorProtocolo
                         protocolo={lendo.protocolo}
                         paginaInicial={lendo.pagina}
