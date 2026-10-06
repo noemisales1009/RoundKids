@@ -1,10 +1,9 @@
 
 import React, { useState, useContext, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { PatientsContext, PreviewContext, NotificationContext } from '../contexts';
 import { useHeader } from '../hooks/useHeader';
-import { CheckCircleIcon, AlertIcon, WarningIcon } from '../components/icons';
-import { CondutasSemAlerta } from '../components/alerts/CondutasSemAlerta';
+import { CheckCircleIcon, AlertIcon, WarningIcon, BackArrowIcon } from '../components/icons';
 import { formatDateToBRL, ALERT_SYSTEMS, getSistemaForScale } from '../constants';
 import { formatDecimalBR } from '../lib/format';
 import { Patient } from '../types';
@@ -13,6 +12,7 @@ import { isExameNaEvolucao } from '../lib/exameEvolucao';
 import { Turno, turnoAtualSP, turnoEDiaDe, turnoDoRegistro } from '../lib/turno';
 import { alertasService, Alerta, isAlertaAtivo, getShiftDoAlerta } from '../services/alertasService';
 import { textoJustificativa } from '../lib/motivosAlerta';
+import { CondutasSemAlerta } from '../components/alerts/CondutasSemAlerta';
 
 const SHIFT_PARA_TURNO = { morning: 'manha', afternoon: 'tarde', night: 'noite' } as const;
 import { ControlesSaidasSection } from '../components/ControlesSaidasSection';
@@ -310,6 +310,18 @@ export const aporteVigente = <T extends { data_referencia: string; mostrar_evolu
   return validos[0] ?? null;
 };
 
+// Medicações em uso: não arquivadas, marcadas para a Evolução e sem data de fim já passada.
+// Usado na Evolução da tarde e da noite, que não tem a Avaliação por sistema da manhã.
+type MedEmUso = { id: number | string; name: string; startDate: string; endDate?: string; isArchived?: boolean; mostrar_evolucao?: boolean };
+const medicacoesEmUso = <T extends MedEmUso>(meds: T[] | undefined, hoje: Date): T[] =>
+  (meds ?? []).filter(m => !m.isArchived && m.mostrar_evolucao !== false && (!m.endDate || new Date(m.endDate + 'T00:00:00') >= hoje));
+
+// Dia de uso da medicação, no mesmo cálculo da Avaliação por sistema
+const diaDeMedicacao = (m: { startDate: string; endDate?: string }, hoje: Date): number => {
+  const fim = m.endDate ? new Date(m.endDate + 'T00:00:00').getTime() : hoje.getTime();
+  return Math.max(0, Math.floor((fim - new Date(m.startDate + 'T00:00:00').getTime()) / 86400000));
+};
+
 const ORDEM_TURNO: Record<Turno, number> = { manha: 0, tarde: 1, noite: 2 };
 
 // Alerta contínuo em aberto continua aparecendo em toda evolução a partir do dia/turno em que foi
@@ -431,6 +443,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
   const { patients } = useContext(PatientsContext)!;
   const { showNotification } = useContext(NotificationContext)!;
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [patientId, setPatientId] = useState(searchParams.get('patientId') || '');
   const [search, setSearch] = useState('');
@@ -577,7 +590,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
         // Sem repetir opcao_id (principal: todos; secundário: apenas resolvidos)
         const byOpcao = new Map<number, DiagItem>();
         const opcaoToIds = new Map<number, number[]>();
-        type DiagRow = { id: number | string; opcao_id: number; created_at: string; texto_digitado?: string | null; opcao_label?: string | null; status: 'resolvido' | 'nao_resolvido'; sistema?: string | null; data_inicio?: string | null; resolved_at?: string | null };
+        type DiagRow = { id: number | string; opcao_id: number; pergunta_id?: number | null; created_at: string; texto_digitado?: string | null; opcao_label?: string | null; status: 'resolvido' | 'nao_resolvido'; sistema?: string | null; data_inicio?: string | null; resolved_at?: string | null };
         (diagRes.data || [])
           .forEach((d: DiagRow) => {
             const ids = opcaoToIds.get(d.opcao_id) ?? [];
@@ -603,7 +616,8 @@ export const EvolucaoDiariaScreen: React.FC = () => {
                 label: resolvedLabel,
                 texto_digitado: hasInputAndText ? undefined : (d.texto_digitado ?? undefined),
                 status: d.status,
-                tipo: qTipo[opts[d.opcao_id]?.pergunta_id] ?? 'principal',
+                // O tipo vem do registro do paciente (pode ter sido trocado depois de criado); a opção é só reserva
+                tipo: (d.pergunta_id != null ? qTipo[d.pergunta_id] : undefined) ?? qTipo[opts[d.opcao_id]?.pergunta_id] ?? 'principal',
                 sistema: d.sistema ?? undefined,
                 created_at: d.created_at,
                 data_inicio: d.data_inicio,
@@ -1197,7 +1211,13 @@ export const EvolucaoDiariaScreen: React.FC = () => {
     }
 
     if (evolucaoCurta) {
-      // Tarde/Noite: no lugar da AP completa, só as recomendações (alertas em aberto criados neste turno)
+      // Tarde/Noite: medicações em uso (sem dose, como na manhã) e as recomendações do turno
+      const medsTurno = medicacoesEmUso(p.medications, _today).filter(m => !we.has(`med_${m.id}`));
+      if (medsTurno.length > 0) {
+        title('MEDICAÇÕES');
+        medsTurno.forEach(m => add(`  ${m.name}  Início: ${formatDateToBRL(m.startDate)}  Dia ${diaDeMedicacao(m, _today)}`));
+      }
+
       const recomendacoes = alertasDoTurno(recAlertas, we);
       if (recomendacoes.length > 0) {
         title('RECOMENDAÇÕES');
@@ -1606,7 +1626,14 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       <div className="rounded-2xl shadow-lg overflow-hidden border border-primary-500/20 dark:border-primary-400/20">
         <div className="h-1.5 bg-gradient-to-r from-primary-500 via-primary-500 to-purple-500" />
         <div className="bg-white dark:bg-slate-900 p-4 sm:p-5">
-          <div className="flex justify-end mb-3">
+          <div className="flex justify-between items-center gap-2 mb-3">
+            <button
+              onClick={() => navigate(`/patient/${selectedPatient.id}`)}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-500 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-200 bg-primary-50 dark:bg-primary-900/30 px-3 py-1.5 rounded-lg transition"
+            >
+              <BackArrowIcon className="w-4 h-4" />
+              Voltar ao paciente
+            </button>
             <button
               onClick={handleTrocarLeito}
               className="text-xs font-semibold text-primary-500 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-200 bg-primary-50 dark:bg-primary-900/30 px-3 py-1.5 rounded-lg transition"
@@ -2139,6 +2166,33 @@ export const EvolucaoDiariaScreen: React.FC = () => {
           )}
         </div>
       </Section>
+
+      {evolucaoCurta && (() => {
+        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+        const meds = medicacoesEmUso(selectedPatient?.medications, hoje);
+        return (
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Medicações em uso</p>
+            {meds.length === 0 ? (
+              <p className="text-sm text-slate-400 dark:text-slate-500 italic">Nenhuma medicação em uso.</p>
+            ) : (
+              <div className="space-y-1">
+                {meds.map(m => {
+                  const wk = `med_${m.id}`; const off = wordExcluded.has(wk);
+                  return (
+                    <div key={m.id} className={`relative p-2 pr-10 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800 transition-opacity ${off ? 'opacity-40' : ''}`}>
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{m.name}</p>
+                      {m.dosage && <p className="text-xs text-slate-500 dark:text-slate-400">{m.dosage}</p>}
+                      <p className="text-xs text-slate-400 dark:text-slate-500">Início: {formatDateToBRL(m.startDate)} · Dia {diaDeMedicacao(m, hoje)}</p>
+                      <button onClick={() => toggleWordItem(wk)} className="absolute top-1.5 right-1.5 p-0.5 rounded transition-all hover:scale-110" title="Incluir ou tirar do documento"><span className={`material-symbols-rounded text-[20px] ${off ? 'text-slate-400 dark:text-slate-600' : 'text-primary-500'}`}>{off ? 'check_box_outline_blank' : 'check_box'}</span></button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {evolucaoCurta && (
         <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4">
