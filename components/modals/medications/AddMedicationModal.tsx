@@ -4,6 +4,9 @@ import { CloseIcon } from '../../icons';
 import { supabase } from '../../../supabaseClient';
 import { ChevronDownIcon } from '../../icons';
 import { ALERT_SYSTEMS } from '../../../constants';
+import { useSugestaoSistema } from '../../../hooks';
+import { SugestaoCampo } from '../../alerts/SugestaoCampo';
+import { confirmarMedicao } from '../../../lib/typesafe/medicao';
 
 interface Medicamento {
     id: number;
@@ -236,6 +239,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
 
     // Nome final do medicamento
     const finalMedicationName = isOther ? customMedicamento : selectedMedData?.nome || '';
+    const sugestaoSistema = useSugestaoSistema('medicação', finalMedicationName);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -301,6 +305,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                 },
                 user.id
             );
+            confirmarMedicao();
             showNotification({ message: 'Medicação cadastrada com sucesso!', type: 'success' });
             onClose();
         } catch (err: any) {
@@ -525,6 +530,7 @@ export const AddMedicationModal: React.FC<{ patientId: number | string; onClose:
                             </select>
                             <ChevronDownIcon className="absolute right-3 top-3 text-slate-400 pointer-events-none w-4 h-4" />
                         </div>
+                        <SugestaoCampo campo="medicacao.sistema" sugestao={sugestaoSistema} valor={sistema} onAceitar={setSistema} preencher />
                         {sistema === 'Outros' && (
                             <input
                                 type="text"

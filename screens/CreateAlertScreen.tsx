@@ -2,11 +2,17 @@
 import React, { useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PatientsContext, TasksContext, NotificationContext } from '../contexts';
-import { useHeader } from '../hooks';
+import { useHeader, useSugestaoAlerta } from '../hooks';
 import { RESPONSIBLES, ALERT_DEADLINES } from '../constants';
 import { CloseIcon, PencilIcon } from '../components/icons';
 import { Turno, turnoAtualSP } from '../lib/turno';
 import { TurnoReferenciaField } from '../components/alerts/TurnoReferenciaField';
+import { SugestaoCampo } from '../components/alerts/SugestaoCampo';
+import { CampoAlerta } from '../lib/typesafe/sugestaoAlerta';
+import { confirmarMedicao } from '../lib/typesafe/medicao';
+
+// Esta tela não tem campo de sistema: o alerta já nasce dentro de uma categoria
+const CAMPOS_SUGERIDOS: CampoAlerta[] = ['responsavel', 'prazo'];
 
 export const CreateAlertScreen: React.FC = () => {
     const { patientId, categoryId } = useParams<{ patientId: string, categoryId?: string }>();
@@ -27,6 +33,7 @@ export const CreateAlertScreen: React.FC = () => {
     const [saving, setSaving] = useState(false);
     // Turno de referência: começa no turno atual; muda só no registro tardio
     const [turnoRef, setTurnoRef] = useState<Turno>(() => turnoAtualSP());
+    const sugestoes = useSugestaoAlerta(description, CAMPOS_SUGERIDOS);
 
     // Só avisa sucesso e volta depois que o banco confirmar a gravação.
     // Se falhar, mantém o formulário com os dados para tentar de novo.
@@ -50,6 +57,7 @@ export const CreateAlertScreen: React.FC = () => {
         }
 
         if (ok) {
+            confirmarMedicao();
             showNotification({ message: 'Alerta criado com sucesso!', type: 'success' });
             navigate(-1);
         } else {
@@ -95,6 +103,7 @@ export const CreateAlertScreen: React.FC = () => {
                             <option value="" disabled>Selecione...</option>
                             {RESPONSIBLES.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
+                        <SugestaoCampo campo="alerta.responsavel" sugestao={sugestoes.responsavel} valor={responsible} onAceitar={setResponsible} preencher />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Selecione a hora</label>
@@ -102,6 +111,7 @@ export const CreateAlertScreen: React.FC = () => {
                             <option value="" disabled>Selecione...</option>
                             {ALERT_DEADLINES.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
+                        <SugestaoCampo campo="alerta.prazo" sugestao={sugestoes.prazo} valor={deadline} onAceitar={setDeadline} />
                     </div>
                     <TurnoReferenciaField value={turnoRef} onChange={setTurnoRef} disabled={saving} />
 

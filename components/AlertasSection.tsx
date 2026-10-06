@@ -4,6 +4,7 @@ import { NotificationContext, UserContext } from '../contexts';
 import { alertasService, Alerta, isAlertaAtivo, isConcluidoVisivel } from '../services/alertasService';
 import { AlertasDisplay } from './alerts/AlertasDisplay';
 import { JustificativaMotivoFields } from './alerts/JustificativaMotivoFields';
+import { confirmarMedicao } from '../lib/typesafe/medicao';
 
 const ChevronDownIcon = ({ className }: { className?: string }) => (
     <svg className={className} fill="currentColor" viewBox="0 0 20 20">
@@ -155,6 +156,7 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
 
         const ok = await alertasService.updateJustificativa(selectedAlert.id, justificationText, selectedAlert.source, user.id, justificationMotivo);
         if (ok) {
+            confirmarMedicao();
             showNotification({ message: 'Justificativa salva com sucesso!', type: 'success' });
             setShowJustificationModal(false);
             setSelectedAlert(null);
@@ -232,6 +234,7 @@ export const AlertasSection: React.FC<{ patientId: string }> = ({ patientId }) =
                                 descricao={justificationText}
                                 onMotivo={setJustificationMotivo}
                                 onDescricao={setJustificationText}
+                                alerta={selectedAlert.alertaclinico}
                                 autoFocus
                             />
                         </div>

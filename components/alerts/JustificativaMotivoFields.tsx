@@ -1,5 +1,7 @@
 import React from 'react';
 import { MOTIVOS_ALERTA } from '../../lib/motivosAlerta';
+import { useSugestaoMotivo } from '../../hooks';
+import { SugestaoCampo } from './SugestaoCampo';
 
 interface Props {
     motivo: string;
@@ -8,10 +10,13 @@ interface Props {
     onDescricao: (v: string) => void;
     disabled?: boolean;
     autoFocus?: boolean;
+    // Texto do alerta que está sendo justificado: contexto para a sugestão de motivo
+    alerta?: string;
 }
 
-export const JustificativaMotivoFields: React.FC<Props> = ({ motivo, descricao, onMotivo, onDescricao, disabled, autoFocus }) => {
+export const JustificativaMotivoFields: React.FC<Props> = ({ motivo, descricao, onMotivo, onDescricao, disabled, autoFocus, alerta = '' }) => {
     const atual = MOTIVOS_ALERTA.find(m => m.label === motivo);
+    const sugestao = useSugestaoMotivo(alerta, descricao);
     return (
         <div className="space-y-2">
             <div>
@@ -30,6 +35,7 @@ export const JustificativaMotivoFields: React.FC<Props> = ({ motivo, descricao, 
                         <option key={m.label} value={m.label}>{i + 1}. {m.label}</option>
                     ))}
                 </select>
+                <SugestaoCampo campo="justificativa.motivo" sugestao={sugestao} valor={motivo} onAceitar={onMotivo} preencher disabled={disabled} />
                 {atual && (
                     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{atual.orientacao}</p>
                 )}

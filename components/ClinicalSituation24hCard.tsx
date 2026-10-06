@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { sanitizeText } from '../lib/sanitize';
 import { Turno, turnoAtualSP } from '../lib/turno';
+import { CondutasSemAlerta } from './alerts/CondutasSemAlerta';
 
 const TURNOS: { id: Turno; label: string; icon: string }[] = [
   { id: 'manha', label: 'Manhã', icon: '🌅' },
@@ -257,6 +258,9 @@ export const ClinicalSituation24hCard: React.FC<ClinicalSituation24hCardProps> =
         rows={4}
         className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-800 dark:text-slate-200 disabled:opacity-70"
       />
+
+      {/* Só examina o texto já salvo, não o que ainda está sendo digitado */}
+      <CondutasSemAlerta patientId={patientId} texto={activeNote && !editing ? activeNote.situacao_texto : ''} />
 
       {loading && (
         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Carregando avaliação clínica...</p>

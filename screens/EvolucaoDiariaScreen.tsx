@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { PatientsContext, PreviewContext, NotificationContext } from '../contexts';
 import { useHeader } from '../hooks/useHeader';
 import { CheckCircleIcon, AlertIcon, WarningIcon } from '../components/icons';
+import { CondutasSemAlerta } from '../components/alerts/CondutasSemAlerta';
 import { formatDateToBRL, ALERT_SYSTEMS, getSistemaForScale } from '../constants';
 import { formatDecimalBR } from '../lib/format';
 import { Patient } from '../types';
@@ -2547,6 +2548,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       <Section title="15. Condutas Críticas — Próximas 24h" id="condutasCriticas" open={openSections.has('condutasCriticas')} onToggle={() => toggle('condutasCriticas')}>
         <div className="space-y-3">
           <Field label="Condutas Críticas" value={condutasCriticas} onChange={setCondutasCriticas} rows={6} placeholder="Liste as condutas críticas para as próximas 24 horas..." />
+          {patientId && <CondutasSemAlerta patientId={patientId} texto={condutasCriticas} />}
           {condutasCriticas.trim() && (
             <div className="flex flex-col sm:flex-row gap-2">
               <button

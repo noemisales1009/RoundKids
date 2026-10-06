@@ -1,4 +1,6 @@
-import React, { useState, useContext, useEffect, useRef } from 'react';
+import React, { useState, useContext, useEffect, useRef, useCallback } from 'react';
+import { acharDoencaNoCatalogo } from '../lib/typesafe/doencaNoCatalogo';
+import { useSugestaoDigitadaComEstado } from '../hooks/useSugestaoDigitada';
 import { Precaution, DoencaPrecaucao } from '../types';
 import { PlusIcon, PencilIcon, CloseIcon, SaveIcon, ShieldIcon, ChevronDownIcon } from './icons';
 import { PatientsContext, NotificationContext } from '../contexts';
@@ -115,6 +117,17 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
   const doencasFiltradas = doencas.filter(d =>
     d.nome.toLowerCase().includes(doencaSearch.toLowerCase())
   );
+
+  // Quando a busca por texto não acha nada, a IA procura a doença no catálogo com outro
+  // nome (nome popular, sigla, agente). Ela só aponta itens do catálogo: o tipo de
+  // precaução e a duração continuam vindo do protocolo.
+  const buscarNoCatalogo = useCallback(async (texto: string) => {
+    const nomes = await acharDoencaNoCatalogo(texto, doencas.map(d => d.nome));
+    return nomes.map(n => doencas.find(d => d.nome === n)).filter((d): d is DoencaPrecaucao => !!d);
+  }, [doencas]);
+  const semResultado = isAddModalOpen && !selectedDoenca && !isManualMode && doencasFiltradas.length === 0;
+  const { sugestao: achadasPelaIA, buscando: iaBuscando } = useSugestaoDigitadaComEstado(semResultado ? doencaSearch : '', buscarNoCatalogo, 3);
+  const doencasSugeridas = achadasPelaIA ?? [];
 
   const dataFimSugerida = selectedDoenca?.duracao_dias
     ? addDiasToDate(newDataInicio, selectedDoenca.duracao_dias)
@@ -359,6 +372,31 @@ export const PrecautionsCard: React.FC<PrecautionsCardProps> = ({ patientId, pre
                       <p className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
                         Nenhuma doença encontrada na lista.
                       </p>
+                      {iaBuscando && doencasSugeridas.length === 0 && (
+                        <p className="px-3 py-2 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-600">
+                          IA procurando no protocolo com outro nome...
+                        </p>
+                      )}
+                      {doencasSugeridas.length > 0 && (
+                        <div className="border-t border-slate-100 dark:border-slate-600">
+                          <p className="px-3 pt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                            Sugestão da IA: no protocolo pode estar como
+                          </p>
+                          {doencasSugeridas.map(d => (
+                            <button
+                              key={d.id}
+                              type="button"
+                              onMouseDown={() => handleSelecionarDoenca(d)}
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors"
+                            >
+                              <span className="block font-medium text-slate-800 dark:text-slate-100">{d.nome}</span>
+                              <span className="block text-xs text-slate-500 dark:text-slate-400">
+                                {TIPO_CONFIG[d.tipo_precaucao]?.label ?? d.tipo_precaucao}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                       <button
                         type="button"
                         onMouseDown={handleUsarManual}

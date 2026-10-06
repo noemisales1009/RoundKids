@@ -3,6 +3,9 @@ import { supabase } from '../../../supabaseClient';
 import { NotificationContext, UserContext } from '../../../contexts';
 import { CloseIcon, ChevronDownIcon } from '../../icons';
 import { ALERT_SYSTEMS } from '../../../constants';
+import { useSugestaoSistema } from '../../../hooks';
+import { SugestaoCampo } from '../../alerts/SugestaoCampo';
+import { confirmarMedicao } from '../../../lib/typesafe/medicao';
 
 const ESPECIALISTAS = [
     'Alergologia Ped',
@@ -53,6 +56,7 @@ export const AddParecerModal: React.FC<{
     const [parecer, setParecer] = useState('');
     const [sistema, setSistema] = useState('');
     const [sistemaOutros, setSistemaOutros] = useState('');
+    const sugestaoSistema = useSugestaoSistema('parecer de especialista', especialista);
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -83,6 +87,7 @@ export const AddParecerModal: React.FC<{
 
             if (error) throw error;
 
+            confirmarMedicao();
             showNotification({ message: 'Parecer cadastrado com sucesso!', type: 'success' });
             onSuccess();
             onClose();
@@ -157,6 +162,7 @@ export const AddParecerModal: React.FC<{
                             </select>
                             <ChevronDownIcon className="absolute right-3 top-3 text-slate-400 pointer-events-none w-4 h-4" />
                         </div>
+                        <SugestaoCampo campo="parecer.sistema" sugestao={sugestaoSistema} valor={sistema} onAceitar={setSistema} preencher />
                         {sistema === 'Outros' && (
                             <input type="text" value={sistemaOutros} onChange={e => setSistemaOutros(e.target.value)} placeholder="Especifique o sistema..." className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 text-slate-800 dark:text-slate-200" />
                         )}
