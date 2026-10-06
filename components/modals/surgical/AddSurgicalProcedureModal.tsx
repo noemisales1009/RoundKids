@@ -2,6 +2,9 @@ import React, { useState, useContext } from 'react';
 import { PatientsContext, NotificationContext, UserContext } from '../../../contexts';
 import { CloseIcon, ChevronDownIcon } from '../../icons';
 import { ALERT_SYSTEMS } from '../../../constants';
+import { useSugestaoSistema } from '../../../hooks';
+import { SugestaoCampo } from '../../alerts/SugestaoCampo';
+import { confirmarMedicao } from '../../../lib/typesafe/medicao';
 
 const getTodayDateString = () => {
     const today = new Date();
@@ -20,6 +23,7 @@ export const AddSurgicalProcedureModal: React.FC<{ patientId: number | string; o
     const [surgeon, setSurgeon] = useState('');
     const [sistema, setSistema] = useState('');
     const [sistemaOutros, setSistemaOutros] = useState('');
+    const sugestaoSistema = useSugestaoSistema('procedimento cirúrgico', name);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -32,6 +36,7 @@ export const AddSurgicalProcedureModal: React.FC<{ patientId: number | string; o
         }
         
         addSurgicalProcedureToPatient(patientId, { name, date, surgeon, sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined }, user.id);
+        confirmarMedicao();
         showNotification({ message: 'Procedimento cirúrgico cadastrado!', type: 'success' });
         onClose();
     };
@@ -65,6 +70,7 @@ export const AddSurgicalProcedureModal: React.FC<{ patientId: number | string; o
                             </select>
                             <ChevronDownIcon className="absolute right-3 top-3 text-slate-400 pointer-events-none w-4 h-4" />
                         </div>
+                        <SugestaoCampo campo="cirurgia.sistema" sugestao={sugestaoSistema} valor={sistema} onAceitar={setSistema} preencher />
                         {sistema === 'Outros' && (
                             <input type="text" value={sistemaOutros} onChange={e => setSistemaOutros(e.target.value)} placeholder="Especifique o sistema..." className="mt-2 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-slate-800 dark:text-slate-200" />
                         )}

@@ -3,6 +3,9 @@ import { supabase } from '../../../supabaseClient';
 import { NotificationContext, UserContext } from '../../../contexts';
 import { CloseIcon, ChevronDownIcon } from '../../icons';
 import { ALERT_SYSTEMS } from '../../../constants';
+import { useSugestaoSistema } from '../../../hooks';
+import { SugestaoCampo } from '../../alerts/SugestaoCampo';
+import { confirmarMedicao } from '../../../lib/typesafe/medicao';
 
 const EXAMES_POR_CATEGORIA: Record<string, string[]> = {
     'Radiografia (Raio-X)': [
@@ -110,6 +113,7 @@ export const AddExameImagemModal: React.FC<{
     const [resultado, setResultado] = useState('');
     const [sistema, setSistema] = useState('');
     const [sistemaOutros, setSistemaOutros] = useState('');
+    const sugestaoSistema = useSugestaoSistema('exame de imagem', exame);
     const [observacao, setObservacao] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -148,6 +152,7 @@ export const AddExameImagemModal: React.FC<{
 
             if (error) throw error;
 
+            confirmarMedicao();
             showNotification({ message: 'Exame de imagem cadastrado com sucesso!', type: 'success' });
             onSuccess();
             onClose();
@@ -232,6 +237,7 @@ export const AddExameImagemModal: React.FC<{
                             </select>
                             <ChevronDownIcon className="absolute right-3 top-3 text-slate-400 pointer-events-none w-4 h-4" />
                         </div>
+                        <SugestaoCampo campo="exame_imagem.sistema" sugestao={sugestaoSistema} valor={sistema} onAceitar={setSistema} preencher />
                         {sistema === 'Outros' && (
                             <input
                                 type="text"

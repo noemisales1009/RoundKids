@@ -2,6 +2,9 @@ import React, { useState, useContext } from 'react';
 import { PatientsContext, NotificationContext, UserContext } from '../../../contexts';
 import { CloseIcon, ChevronDownIcon } from '../../icons';
 import { ALERT_SYSTEMS } from '../../../constants';
+import { useSugestaoSistema } from '../../../hooks';
+import { SugestaoCampo } from '../../alerts/SugestaoCampo';
+import { confirmarMedicao } from '../../../lib/typesafe/medicao';
 
 const getTodayDateString = () => {
     const today = new Date();
@@ -19,6 +22,7 @@ export const AddExamModal: React.FC<{ patientId: number | string; onClose: () =>
     const [date, setDate] = useState(getTodayDateString());
     const [sistema, setSistema] = useState('');
     const [sistemaOutros, setSistemaOutros] = useState('');
+    const sugestaoSistema = useSugestaoSistema('exame laboratorial', name);
     const [fixarEvolucao, setFixarEvolucao] = useState(false);
 
     const handleSubmit = (e: { preventDefault: () => void }) => {
@@ -31,6 +35,7 @@ export const AddExamModal: React.FC<{ patientId: number | string; onClose: () =>
         }
 
         addExamToPatient(patientId, { name, date, result: 'Pendente', sistema: (sistema === 'Outros' ? sistemaOutros.trim() : sistema) || undefined, mostrar_evolucao: fixarEvolucao ? true : null }, user.id);
+        confirmarMedicao();
         showNotification({ message: 'Exame cadastrado com sucesso!', type: 'success' });
         onClose();
     };
@@ -60,6 +65,7 @@ export const AddExamModal: React.FC<{ patientId: number | string; onClose: () =>
                             </select>
                             <ChevronDownIcon className="absolute right-3 top-3 text-slate-400 pointer-events-none w-4 h-4" />
                         </div>
+                        <SugestaoCampo campo="exame.sistema" sugestao={sugestaoSistema} valor={sistema} onAceitar={setSistema} preencher />
                         {sistema === 'Outros' && (
                             <input
                                 type="text"

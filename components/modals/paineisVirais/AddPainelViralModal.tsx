@@ -3,6 +3,9 @@ import { supabase } from '../../../supabaseClient';
 import { NotificationContext, UserContext } from '../../../contexts';
 import { CloseIcon } from '../../icons';
 import { ALERT_SYSTEMS } from '../../../constants';
+import { useSugestaoSistema } from '../../../hooks';
+import { SugestaoCampo } from '../../alerts/SugestaoCampo';
+import { confirmarMedicao } from '../../../lib/typesafe/medicao';
 import { RESULTADO_OPTIONS } from './EditPainelViralModal';
 
 interface DiagnosticoAtivo {
@@ -134,6 +137,7 @@ export const AddPainelViralModal: React.FC<{
     const [outroTexto, setOutroTexto] = useState('');
     const [sistema, setSistema] = useState('');
     const [sistemaOutros, setSistemaOutros] = useState('');
+    const sugestaoSistema = useSugestaoSistema('painel viral ou sorologia', paineisSelecionados.map(p => p.painel).join(', '));
     const [observacao, setObservacao] = useState('');
     const [loading, setLoading] = useState(false);
     const [diagnosticosAtivos, setDiagnosticosAtivos] = useState<DiagnosticoAtivo[]>([]);
@@ -224,6 +228,7 @@ export const AddPainelViralModal: React.FC<{
                     : `${paineisSelecionados.length} painéis cadastrados com sucesso!`,
                 type: 'success',
             });
+            confirmarMedicao();
             onSuccess();
             onClose();
         } catch (error: any) {
@@ -441,6 +446,7 @@ export const AddPainelViralModal: React.FC<{
                                 <option key={s} value={s}>{s}</option>
                             ))}
                         </select>
+                        <SugestaoCampo campo="painel_viral.sistema" sugestao={sugestaoSistema} valor={sistema} onAceitar={setSistema} preencher />
                         {sistema === 'Outros' && (
                             <input
                                 type="text"

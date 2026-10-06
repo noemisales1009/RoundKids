@@ -4,11 +4,24 @@ import { AlertIcon, CloseIcon, SaveIcon, ChevronDownIcon } from '../../icons';
 import { RESPONSIBLES, ALERT_DEADLINES, ALERT_SYSTEMS } from '../../../constants';
 import { Turno, turnoAtualSP } from '../../../lib/turno';
 import { TurnoReferenciaField } from '../../alerts/TurnoReferenciaField';
+import { SugestaoCampo } from '../../alerts/SugestaoCampo';
+import { useSugestaoAlerta } from '../../../hooks';
+import { CampoAlerta } from '../../../lib/typesafe/sugestaoAlerta';
+import { confirmarMedicao } from '../../../lib/typesafe/medicao';
 
-export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: () => void; }> = ({ patientId, onClose }) => {
+const CAMPOS_SUGERIDOS: CampoAlerta[] = ['sistema', 'responsavel', 'prazo'];
+
+export const CreateAlertModal: React.FC<{
+    patientId: number | string;
+    onClose: () => void;
+    // Texto que já vem na descrição (ex.: conduta apontada num texto livre). Pode ser editado.
+    descricaoInicial?: string;
+    // Chamado só quando o alerta foi gravado, antes de fechar
+    onCriado?: () => void;
+}> = ({ patientId, onClose, descricaoInicial = '', onCriado }) => {
     const { addPatientAlert } = useContext(TasksContext)!;
     const { showNotification } = useContext(NotificationContext)!;
-    const [description, setDescription] = useState('');
+    const [description, setDescription] = useState(descricaoInicial);
     const [responsible, setResponsible] = useState('');
     const [deadline, setDeadline] = useState('');
     const [sistema, setSistema] = useState('');
@@ -16,6 +29,7 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
     const [saving, setSaving] = useState(false);
     // Turno de referência: começa no turno atual; muda só no registro tardio
     const [turnoRef, setTurnoRef] = useState<Turno>(() => turnoAtualSP());
+    const sugestoes = useSugestaoAlerta(description, CAMPOS_SUGERIDOS);
 
     // Só avisa sucesso e fecha depois que o banco confirmar a gravação.
     // Se falhar, mantém o formulário aberto com os dados para tentar de novo.
@@ -40,7 +54,9 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
         }
 
         if (ok) {
+            confirmarMedicao();
             showNotification({ message: 'Alerta criado com sucesso!', type: 'success' });
+            onCriado?.();
             onClose();
         } else {
             setSaving(false);
@@ -83,6 +99,7 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
                                 </select>
                                 <ChevronDownIcon className="absolute right-3 top-3 text-slate-400 pointer-events-none w-4 h-4" />
                             </div>
+                            <SugestaoCampo campo="alerta.sistema" sugestao={sugestoes.sistema} valor={sistema} onAceitar={setSistema} preencher />
                             {sistema === 'Outros' && (
                                 <input
                                     type="text"
@@ -103,6 +120,7 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
                                 </select>
                                 <ChevronDownIcon className="absolute right-3 top-3 text-slate-400 pointer-events-none w-4 h-4" />
                             </div>
+                            <SugestaoCampo campo="alerta.responsavel" sugestao={sugestoes.responsavel} valor={responsible} onAceitar={setResponsible} preencher />
                         </div>
 
                         <div>
@@ -114,6 +132,7 @@ export const CreateAlertModal: React.FC<{ patientId: number | string; onClose: (
                                 </select>
                                 <ChevronDownIcon className="absolute right-3 top-3 text-slate-400 pointer-events-none w-4 h-4" />
                             </div>
+                            <SugestaoCampo campo="alerta.prazo" sugestao={sugestoes.prazo} valor={deadline} onAceitar={setDeadline} />
                         </div>
 
                         <TurnoReferenciaField value={turnoRef} onChange={setTurnoRef} disabled={saving} ringClass="focus:ring-red-500" />

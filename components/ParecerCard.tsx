@@ -3,6 +3,19 @@ import { supabase } from '../supabaseClient';
 import { PencilIcon, CloseIcon, ClipboardIcon } from './icons';
 import { AddParecerModal, EditParecerModal, ArchiveParecerModal } from './modals/pareceres';
 import type { ParecerRow } from './modals/pareceres';
+import { CondutasSemAlerta } from './alerts/CondutasSemAlerta';
+
+// O aviso de recomendação sem alerta só vale para parecer recente (hoje e os 2 dias
+// anteriores): em parecer antigo, o que não virou alerta já foi decidido pela equipe.
+const DIAS_PARECER_RECENTE = 2;
+const ROTULO_RECOMENDACAO = { uma: 'esta recomendação do parecer parece', varias: 'estas recomendações do parecer parecem' };
+
+const parecerRecente = (dataParecer: string): boolean => {
+    const limite = new Date();
+    limite.setHours(0, 0, 0, 0);
+    limite.setDate(limite.getDate() - DIAS_PARECER_RECENTE);
+    return new Date(dataParecer + 'T12:00:00') >= limite;
+};
 
 interface ParecerCardProps {
     patientId: number | string;
@@ -100,6 +113,9 @@ export const ParecerCard: React.FC<ParecerCardProps> = ({ patientId, addTrigger 
                                             <p className="text-sm text-slate-600 dark:text-slate-300 mt-1.5 whitespace-pre-wrap">
                                                 {p.parecer}
                                             </p>
+                                        )}
+                                        {p.parecer && parecerRecente(p.data_parecer) && (
+                                            <CondutasSemAlerta patientId={patientId} texto={p.parecer} rotulo={ROTULO_RECOMENDACAO} />
                                         )}
                                         {p.sistema && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">{p.sistema}</span>}
                                         <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">

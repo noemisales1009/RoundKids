@@ -2,6 +2,9 @@ import React, { useState, useContext, useEffect } from 'react';
 import { PatientsContext, NotificationContext, UserContext } from '../../../contexts';
 import { CloseIcon, ChevronDownIcon } from '../../icons';
 import { getTodayDateString, ALERT_SYSTEMS } from '../../../constants';
+import { useSugestaoSistema } from '../../../hooks';
+import { SugestaoCampo } from '../../alerts/SugestaoCampo';
+import { confirmarMedicao } from '../../../lib/typesafe/medicao';
 import { supabase } from '../../../supabaseClient';
 
 interface DiagnosticoAtivo {
@@ -23,6 +26,7 @@ export const AddCultureModal: React.FC<{ patientId: number | string; onClose: ()
     const [collectionDate, setCollectionDate] = useState(getTodayDateString());
     const [sistema, setSistema] = useState('');
     const [sistemaOutros, setSistemaOutros] = useState('');
+    const sugestaoSistema = useSugestaoSistema('cultura', [site === 'Outros' ? customSite : site, microorganism === 'Outros' ? customMicroorganism : microorganism].filter(Boolean).join(' - '));
     const [diagnosticosAtivos, setDiagnosticosAtivos] = useState<DiagnosticoAtivo[]>([]);
     const [selectedDiagnosticoId, setSelectedDiagnosticoId] = useState<number | ''>('');
 
@@ -118,6 +122,7 @@ export const AddCultureModal: React.FC<{ patientId: number | string; onClose: ()
                 diagnosticoLabel: diagSelecionado?.label,
                 diagnosticoDataInicio: diagSelecionado?.data_inicio || diagSelecionado?.created_at?.split('T')[0],
             }, user.id);
+            confirmarMedicao();
             showNotification({ message: 'Cultura cadastrada com sucesso!', type: 'success' });
             onClose();
         } catch (err: any) {
@@ -236,6 +241,7 @@ export const AddCultureModal: React.FC<{ patientId: number | string; onClose: ()
                                 </select>
                                 <ChevronDownIcon className="absolute right-3 top-3 text-slate-400 pointer-events-none w-4 h-4" />
                             </div>
+                            <SugestaoCampo campo="cultura.sistema" sugestao={sugestaoSistema} valor={sistema} onAceitar={setSistema} preencher />
                             {sistema === 'Outros' && (
                                 <input type="text" value={sistemaOutros} onChange={e => setSistemaOutros(e.target.value)} placeholder="Especifique o sistema..." className="mt-2 w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm text-slate-800 dark:text-slate-200" />
                             )}

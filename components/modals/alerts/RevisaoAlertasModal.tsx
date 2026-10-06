@@ -3,6 +3,7 @@ import { alertasService, Alerta, getShiftDoAlerta } from '../../../services/aler
 import { ShiftType } from '../../../services/shiftFilterService';
 import { NotificationContext, UserContext } from '../../../contexts';
 import { JustificativaMotivoFields } from '../../alerts/JustificativaMotivoFields';
+import { confirmarMedicao } from '../../../lib/typesafe/medicao';
 import { textoJustificativa } from '../../../lib/motivosAlerta';
 
 const SHIFT_INFO: Record<ShiftType, { label: string; icon: string; badge: string }> = {
@@ -81,6 +82,7 @@ export const RevisaoAlertasModal: React.FC<RevisaoAlertasModalProps> = ({
         const ok = await alertasService.updateJustificativa(alerta.id, descricao, alerta.source, user!.id!, motivo);
         setSalvandoId(null);
         if (ok) {
+            confirmarMedicao();
             setJustificados(prev => ({ ...prev, [alerta.id]: textoJustificativa(motivo, descricao) }));
             fecharAcao();
             onAlertaTratado();
@@ -269,6 +271,7 @@ export const RevisaoAlertasModal: React.FC<RevisaoAlertasModalProps> = ({
                                                     descricao={texto}
                                                     onMotivo={setMotivo}
                                                     onDescricao={setTexto}
+                                                    alerta={alerta.alertaclinico}
                                                     disabled={salvando}
                                                     autoFocus
                                                 />
