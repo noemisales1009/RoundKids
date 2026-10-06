@@ -408,6 +408,25 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
     }
   };
 
+  // O tipo fica no pergunta_id do registro do paciente (1 = principal, 2 = secundário)
+  const handleTipoChange = async (tempId: string, novoTipo: 'principal' | 'secundario') => {
+    const diag = workingDiags.find(d => d.tempId === tempId);
+    if (!diag || diag.tipo === novoTipo) return;
+    const perguntaId = novoTipo === 'principal' ? 1 : 2;
+    if (diag.dbId) {
+      const ids = diag.allIds.length > 0 ? diag.allIds : [diag.dbId];
+      const { error } = await supabase.from('paciente_diagnosticos').update({ pergunta_id: perguntaId }).in('id', ids);
+      if (error) {
+        showNotification({ message: 'Erro ao mudar o tipo: ' + error.message, type: 'error' });
+        return;
+      }
+      showNotification({ message: `Diagnóstico movido para ${novoTipo === 'principal' ? 'Principais' : 'Secundários'}.`, type: 'success' });
+    }
+    setWorkingDiags(prev => prev.map(d =>
+      d.tempId === tempId ? { ...d, tipo: novoTipo, perguntaId } : d
+    ));
+  };
+
   const handleResolveClick = async (tempId: string) => {
     const diag = workingDiags.find(d => d.tempId === tempId);
     if (!diag || !diag.dbId) { handleStatusChange(tempId, 'resolvido'); return; }
@@ -803,6 +822,31 @@ export const DiagnosticsSection: React.FC<DiagnosticsSectionProps> = ({ patientI
                 rows={2}
                 className={`${inputCls} resize-none`}
               />
+            </div>
+            <div>
+              <label className={labelCls}>Tipo</label>
+              <div className={`flex rounded-lg overflow-hidden border w-fit text-xs font-semibold ${isDark ? 'border-slate-600' : 'border-slate-200'}`}>
+                <button
+                  onClick={() => handleTipoChange(diag.tempId, 'principal')}
+                  className={`px-3 py-2 transition-colors ${
+                    isPrincipal
+                      ? 'bg-primary-600 text-white'
+                      : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-white text-slate-500 hover:bg-slate-50'
+                  }`}
+                >
+                  Principal
+                </button>
+                <button
+                  onClick={() => handleTipoChange(diag.tempId, 'secundario')}
+                  className={`px-3 py-2 transition-colors ${
+                    !isPrincipal
+                      ? 'bg-violet-600 text-white'
+                      : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-white text-slate-500 hover:bg-slate-50'
+                  }`}
+                >
+                  Secundário
+                </button>
+              </div>
             </div>
             <div className="flex flex-wrap items-end gap-3">
               <div className={`flex rounded-lg overflow-hidden border w-fit text-xs font-semibold ${isDark ? 'border-slate-600' : 'border-slate-200'}`}>
