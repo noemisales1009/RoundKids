@@ -37,6 +37,7 @@ import {
     CreateAlertScreen,
     TaskStatusScreen,
     EvolucaoDiariaScreen,
+    ProtocolosScreen,
 } from './screens';
 import { DashboardAnalyticsScreen } from './screens/DashboardAnalyticsScreen';
 
@@ -231,6 +232,7 @@ const App: React.FC = () => {
                                             <Route path="archived" element={<ErrorBoundary><AdminRoute><Suspense fallback={<LoadingSpinner />}><ArchivedPatientsScreen /></Suspense></AdminRoute></ErrorBoundary>} />
                                             <Route path="admin/usuarios" element={<ErrorBoundary><AdminRoute><Suspense fallback={<LoadingSpinner />}><AdminUsersScreen /></Suspense></AdminRoute></ErrorBoundary>} />
                                             <Route path="evolucao-diaria" element={<ErrorBoundary><EvolucaoDiariaScreen /></ErrorBoundary>} />
+                                            <Route path="protocolos" element={<ErrorBoundary><ProtocolosScreen /></ErrorBoundary>} />
                                             <Route path="settings" element={<ErrorBoundary><SettingsScreen /></ErrorBoundary>} />
                                         </Route>
                                     </Routes>

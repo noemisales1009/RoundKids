@@ -11,6 +11,7 @@ export const BottomNav: React.FC = () => {
         { path: '/patients', label: 'Leitos', icon: BedIcon },
         { path: '/history', label: 'Histórico Geral', icon: FileTextIcon },
         { path: '/evolucao-diaria', label: 'Evolução', icon: EvolucaoIcon },
+        { path: '/protocolos', label: 'Protocolos', icon: ClipboardIcon },
     ];
 
     const activeLinkClass = "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30";

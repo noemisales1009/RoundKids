@@ -10,3 +10,4 @@ export { CreateAlertScreen } from './CreateAlertScreen';
 export { TaskStatusScreen } from './TaskStatusScreen';
 export { EvolucaoDiariaScreen } from './EvolucaoDiariaScreen';
 export { AdminUsersScreen } from './AdminUsersScreen';
+export { ProtocolosScreen } from './ProtocolosScreen';

@@ -4,9 +4,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Answer, Question } from '../types';
 import { PatientsContext, NotificationContext } from '../contexts';
 import { useHeader } from '../hooks';
-import { CheckIcon, AlertIcon, ChevronLeftIcon, ChevronRightIcon } from '../components/icons';
+import { CheckIcon, AlertIcon, ChevronLeftIcon, ChevronRightIcon, FileTextIcon } from '../components/icons';
 
 const AlertModal = lazy(() => import('../components/modals').then(m => ({ default: m.AlertModal })));
+const ProtocolosModal = lazy(() => import('../components/modals').then(m => ({ default: m.ProtocolosModal })));
 
 export const ChecklistScreen: React.FC = () => {
     const { patientId, categoryId, questionIndex } = useParams<{ patientId: string; categoryId: string; questionIndex: string }>();
@@ -17,7 +18,8 @@ export const ChecklistScreen: React.FC = () => {
     const category = categories.find(c => c.id.toString() === categoryId);
 
     const [activeAlertQuestion, setActiveAlertQuestion] = useState<Question | null>(null);
-    const [pending, setPending] = useState<{ qId: number; answer: Answer } | null>(null);
+    const [showProtocolos, setShowProtocolos] = useState(false);
+    const [pending, setPending] =useState<{ qId: number; answer: Answer } | null>(null);
     const [savingAnswer, setSavingAnswer] = useState(false);
 
     // Filter questions based on category using questions from context
@@ -131,6 +133,14 @@ export const ChecklistScreen: React.FC = () => {
                         <AlertIcon className="w-4 h-4" />
                         GERAR ALERTA / INTERVENÇÃO
                     </button>
+
+                    <button
+                        onClick={() => setShowProtocolos(true)}
+                        className="flex items-center gap-2 text-primary-100 hover:text-white bg-primary-800/50 hover:bg-primary-800 px-4 sm:px-5 py-2.5 rounded-full transition text-xs font-bold border border-primary-400/30 tracking-wide"
+                    >
+                        <FileTextIcon className="w-4 h-4" />
+                        CONSULTAR PROTOCOLOS
+                    </button>
                 </div>
 
                 {/* Footer Navigation */}
@@ -158,6 +168,16 @@ export const ChecklistScreen: React.FC = () => {
                         question={activeAlertQuestion}
                         onClose={() => setActiveAlertQuestion(null)}
                         patientId={patientId}
+                    />
+                </Suspense>
+            )}
+
+            {showProtocolos && (
+                <Suspense fallback={null}>
+                    <ProtocolosModal
+                        question={currentQuestion}
+                        category={category}
+                        onClose={() => setShowProtocolos(false)}
                     />
                 </Suspense>
             )}
