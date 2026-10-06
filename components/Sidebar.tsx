@@ -16,6 +16,7 @@ export const Sidebar: React.FC = () => {
         { path: '/patients', label: 'Leitos', icon: BedIcon },
         { path: '/history', label: 'Histórico Geral', icon: FileTextIcon },
         { path: '/evolucao-diaria', label: 'Evolução Diária', icon: EvolucaoIcon },
+        { path: '/protocolos', label: 'Protocolos', icon: ClipboardIcon },
         ...(isAdmin ? [
             { path: '/archived', label: 'Pacientes Arquivados', icon: ClipboardIcon },
             { path: '/admin/usuarios', label: 'Usuários', icon: ShieldIcon },
