@@ -1,7 +1,6 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Question, Category } from '../types';
-import { NotificationContext } from '../contexts';
 import {
     Protocolo,
     Trecho,
@@ -9,7 +8,10 @@ import {
     acharProtocolosDaDuvida,
     acharTrechosDaDuvida,
 } from '../lib/typesafe/protocolosRelevantes';
-import { FileTextIcon, ExternalLinkIcon } from './icons';
+import { FileTextIcon, ChevronRightIcon } from './icons';
+
+// O leitor traz a biblioteca de PDF; só é baixado quando alguém abre um protocolo.
+const LeitorProtocolo = lazy(() => import('./LeitorProtocolo').then(m => ({ default: m.LeitorProtocolo })));
 
 interface Props {
     // Pergunta do round em que a consulta foi aberta. Sem ela (tela Protocolos do menu),
@@ -18,8 +20,6 @@ interface Props {
     category?: Category;
 }
 
-const BUCKET = 'protocolos';
-const VALIDADE_LINK_S = 600;
 const MIN_DUVIDA = 5; // caracteres
 
 // A sugestão depende só da pergunta e da lista de protocolos, então vale para a sessão
@@ -60,12 +60,12 @@ type Resultado = { duvida: string; trechos: Trecho[] } | 'indisponivel';
 // do protocolo que a respondem. A IA só escolhe o que mostrar: o texto exibido é o do
 // protocolo, e a lista completa fica sempre disponível.
 export const ProtocolosConsulta: React.FC<Props> = ({ question, category }) => {
-    const { showNotification } = useContext(NotificationContext)!;
     const [protocolos, setProtocolos] = useState<Protocolo[] | null>(null);
     const [sugeridos, setSugeridos] = useState<string[] | null>(null);
     const [duvida, setDuvida] = useState('');
     const [buscando, setBuscando] = useState(false);
     const [resultado, setResultado] = useState<Resultado | null>(null);
+    const [lendo, setLendo] = useState<{ protocolo: Protocolo; pagina?: number } | null>(null);
 
     useEffect(() => {
         let ativo = true;
@@ -94,20 +94,8 @@ export const ProtocolosConsulta: React.FC<Props> = ({ question, category }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps -- question e category entram pelos campos usados
     }, [question?.id, question?.text, category?.name]);
 
-    const abrir = async (p: Protocolo, pagina?: number) => {
-        // A aba é aberta antes da espera para o navegador não bloquear como pop-up.
-        const aba = window.open('', '_blank');
-        const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(p.arquivo_path, VALIDADE_LINK_S);
-        if (error || !data?.signedUrl) {
-            aba?.close();
-            console.error('[protocolos] não abriu', p.arquivo_path, error);
-            showNotification({ message: 'Não foi possível abrir o protocolo.', type: 'error' });
-            return;
-        }
-        const url = pagina ? `${data.signedUrl}#page=${pagina}` : data.signedUrl;
-        if (aba) aba.location.href = url;
-        else window.location.href = url;
-    };
+    // O protocolo abre num leitor dentro do app, sem baixar o arquivo.
+    const abrir = (protocolo: Protocolo, pagina?: number) => setLendo({ protocolo, pagina });
 
     const buscar = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -164,7 +152,7 @@ export const ProtocolosConsulta: React.FC<Props> = ({ question, category }) => {
                         <span className="block text-xs text-slate-500 dark:text-slate-400 break-words">{p.quando_usar}</span>
                     )}
                 </span>
-                <ExternalLinkIcon className="w-4 h-4 mt-1 shrink-0 text-slate-400" />
+                <ChevronRightIcon className="w-4 h-4 mt-1 shrink-0 text-slate-400" />
             </button>
         </li>
     );
@@ -183,7 +171,7 @@ export const ProtocolosConsulta: React.FC<Props> = ({ question, category }) => {
                         onClick={() => abrir(p, t.pagina)}
                         className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-800 dark:text-primary-300 dark:hover:text-primary-100"
                     >
-                        <ExternalLinkIcon className="w-3.5 h-3.5" /> Conferir no PDF (pág. {t.pagina})
+                        <FileTextIcon className="w-3.5 h-3.5" /> Conferir no protocolo (pág. {t.pagina})
                     </button>
                 )}
             </li>
@@ -239,7 +227,7 @@ export const ProtocolosConsulta: React.FC<Props> = ({ question, category }) => {
                                 <>
                                     <ul className="space-y-3">{resultado.trechos.map(trecho)}</ul>
                                     <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
-                                        Texto transcrito do protocolo; a IA só escolheu os trechos. Confira no PDF antes de aplicar.
+                                        Texto transcrito do protocolo; a IA só escolheu os trechos. Confira no protocolo antes de aplicar.
                                     </p>
                                 </>
                             )}
@@ -269,6 +257,15 @@ export const ProtocolosConsulta: React.FC<Props> = ({ question, category }) => {
                         </section>
                     )}
                 </>
+            )}
+            {lendo && (
+                <Suspense fallback={null}>
+                    <LeitorProtocolo
+                        protocolo={lendo.protocolo}
+                        paginaInicial={lendo.pagina}
+                        onClose={() => setLendo(null)}
+                    />
+                </Suspense>
             )}
         </div>
     );

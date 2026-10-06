@@ -12,6 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "~2.49.4",
     "autoprefixer": "~10.4.23",
+    "pdfjs-dist": "^4.10.38",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
     "react-router-dom": "^7.18.1",
