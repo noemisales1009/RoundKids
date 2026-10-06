@@ -504,7 +504,11 @@ const PatientDetailScreen: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div className="bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
                             <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Idade</p>
-                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 break-words">{formatAge(patient.dob)}</p>
+                            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 break-words">
+                                {patient.dob
+                                    ? <>{formatDateToBRL(patient.dob)} <span className="text-primary-500 dark:text-primary-400 font-bold">· {formatAge(patient.dob)}</span></>
+                                    : formatAge(patient.dob)}
+                            </p>
                         </div>
                         <div className="bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2">
                             <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">Sexo</p>
