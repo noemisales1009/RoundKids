@@ -10,6 +10,7 @@ import { Patient } from '../types';
 import { supabase } from '../supabaseClient';
 import { isExameNaEvolucao } from '../lib/exameEvolucao';
 import { Turno, turnoAtualSP, turnoEDiaDe, turnoDoRegistro } from '../lib/turno';
+import { avisosBhCumulativo } from '../lib/bhCumulativo';
 import { alertasService, Alerta, isAlertaAtivo, getShiftDoAlerta } from '../services/alertasService';
 import { textoJustificativa } from '../lib/motivosAlerta';
 import { CondutasSemAlerta } from '../components/alerts/CondutasSemAlerta';
@@ -203,10 +204,10 @@ const STATUS_CONFIG = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-// BH cumulativo desativado temporariamente a pedido da equipe (2026-08-17):
-// some da seção 9 da tela e do documento gerado. Para reexibir, mude para true.
+// BH cumulativo: ficou desativado de 2026-08-17 a 2026-10-07, a pedido da equipe.
+// Com false, some da seção 9 da tela e do documento gerado.
 // Há a mesma chave no LatestCalculationsCard (cartão da tela do paciente).
-const MOSTRAR_BH_CUMULATIVO = false;
+const MOSTRAR_BH_CUMULATIVO = true;
 
 const SECTION_SISTEMAS: Record<string, string[]> = {
   respiratoria:     ['Avaliação respiratória', 'Sist. respiratório'],
@@ -1975,7 +1976,7 @@ export const EvolucaoDiariaScreen: React.FC = () => {
       </Section>
 
       {!evolucaoCurta && (<>
-      {/* 9. BH Cumulativo — desativado temporariamente (MOSTRAR_BH_CUMULATIVO) */}
+      {/* 9. BH Cumulativo */}
       {MOSTRAR_BH_CUMULATIVO && (
       <Section title="9. BH Cumulativo" id="bhCumulativo" open={openSections.has('bhCumulativo')} onToggle={() => toggle('bhCumulativo')}>
         {bhLoading ? (
@@ -2003,6 +2004,9 @@ export const EvolucaoDiariaScreen: React.FC = () => {
               <p className="text-xs text-slate-600 dark:text-slate-400">
                 Anterior: {historicoAntigo > 0 ? '+' : ''}{historicoAntigo.toFixed(2)}% | 24h: {bhCumul.bh_24h_pct > 0 ? '+' : ''}{bhCumul.bh_24h_pct.toFixed(2)}%
               </p>
+              {avisosBhCumulativo(bhAll).map(aviso => (
+                <p key={aviso} className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-300">⚠️ {aviso}</p>
+              ))}
             </div>
           );
         })()}
