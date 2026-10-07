@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { alertasService, isAlertaAtivo } from '../../services/alertasService';
-import { acharCondutasSemAlerta } from '../../lib/typesafe/condutasSemAlerta';
+import { acharCondutasSemAlerta, acharAchadosSemAlerta } from '../../lib/typesafe/condutasSemAlerta';
 import { useSugestaoDigitada } from '../../hooks/useSugestaoDigitada';
 import { CreateAlertModal } from '../modals/alerts/CreateAlertModal';
 
@@ -10,26 +11,30 @@ interface Props {
     texto: string;
     // Como chamar o que foi achado, no singular e no plural. Padrão: conduta(s).
     rotulo?: { uma: string; varias: string };
+    // Quando o texto é o resultado de um exame de imagem: nome do exame. A busca passa a ser
+    // por achados que pedem conduta, e o alerta já abre com o nome do exame na descrição.
+    exame?: string;
 }
 
 const MIN_CARACTERES = 20;
+const MIN_CARACTERES_ACHADO = 6; // resultado de exame costuma ser curto ("TOT ALTO")
 const ROTULO_PADRAO = { uma: 'esta conduta parece', varias: 'estas condutas parecem' };
 
 // Lê um texto livre e aponta as frases que pedem uma ação da equipe e ainda não têm
 // alerta ativo. É só um aviso: cada frase pode virar alerta (o formulário abre com ela
 // na descrição, para a pessoa conferir e completar) ou ser dispensada.
 // Sem resposta do serviço de sugestão, não mostra nada.
-export const CondutasSemAlerta: React.FC<Props> = ({ patientId, texto, rotulo = ROTULO_PADRAO }) => {
+export const CondutasSemAlerta: React.FC<Props> = ({ patientId, texto, rotulo = ROTULO_PADRAO, exame }) => {
     const [resolvidas, setResolvidas] = useState<string[]>([]);
     const [criando, setCriando] = useState<string | null>(null);
 
     const buscar = useCallback(async (t: string) => {
         const alertas = await alertasService.getAlertas(patientId);
         const ativos = alertas.filter(isAlertaAtivo).map(a => a.alertaclinico).filter(Boolean);
-        return acharCondutasSemAlerta(t, ativos);
-    }, [patientId]);
+        return exame ? acharAchadosSemAlerta(t, ativos, exame) : acharCondutasSemAlerta(t, ativos);
+    }, [patientId, exame]);
 
-    const achadas = useSugestaoDigitada(texto, buscar, MIN_CARACTERES) ?? [];
+    const achadas = useSugestaoDigitada(texto, buscar, exame ? MIN_CARACTERES_ACHADO : MIN_CARACTERES) ?? [];
     const pendentes = achadas.filter(f => !resolvidas.includes(f));
     const resolver = (frase: string) => setResolvidas(prev => [...prev, frase]);
 
@@ -67,13 +72,18 @@ export const CondutasSemAlerta: React.FC<Props> = ({ patientId, texto, rotulo = 
                     </ul>
                 </div>
             )}
-            {criando && (
-                <CreateAlertModal
-                    patientId={patientId}
-                    descricaoInicial={criando}
-                    onCriado={() => resolver(criando)}
-                    onClose={() => setCriando(null)}
-                />
+            {/* Fora do formulário que estiver em volta (portal), e sem deixar o "salvar" do alerta
+                subir para ele: senão criar o alerta salvaria também o cadastro aberto atrás. */}
+            {criando && createPortal(
+                <div onSubmit={e => e.stopPropagation()}>
+                    <CreateAlertModal
+                        patientId={patientId}
+                        descricaoInicial={exame ? `${exame}: ${criando}` : criando}
+                        onCriado={() => resolver(criando)}
+                        onClose={() => setCriando(null)}
+                    />
+                </div>,
+                document.body,
             )}
         </>
     );

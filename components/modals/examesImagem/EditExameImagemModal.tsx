@@ -3,6 +3,11 @@ import { supabase } from '../../../supabaseClient';
 import { NotificationContext, UserContext } from '../../../contexts';
 import { CloseIcon, ChevronDownIcon } from '../../icons';
 import { ALERT_SYSTEMS } from '../../../constants';
+import { SeletorImagensExame } from '../../ImagensExame';
+import { CondutasSemAlerta } from '../../alerts/CondutasSemAlerta';
+
+const ROTULO_ACHADO = { uma: 'este achado parece', varias: 'estes achados parecem' };
+import { enviarImagensDoExame, apagarImagensDoExame } from '../../../lib/examesImagemArquivos';
 
 const EXAMES_POR_CATEGORIA: Record<string, string[]> = {
     'Radiografia (Raio-X)': [
@@ -90,6 +95,7 @@ const EXAMES_POR_CATEGORIA: Record<string, string[]> = {
 
 export type ExameImagemRow = {
     id: string;
+    paciente_id: number | string;
     categoria: string;
     exame: string;
     data_exame: string;
@@ -97,6 +103,7 @@ export type ExameImagemRow = {
     sistema: string | null;
     observacao: string | null;
     mostrar_evolucao?: boolean;
+    imagens?: string[] | null; // caminhos no bucket exames-imagem
     created_by: string;
     created_at: string;
 };
@@ -117,6 +124,9 @@ export const EditExameImagemModal: React.FC<{
     const [sistema, setSistema] = useState(isCustomSistema ? 'Outros' : (exameData.sistema ?? ''));
     const [sistemaOutros, setSistemaOutros] = useState(isCustomSistema ? (exameData.sistema ?? '') : '');
     const [observacao, setObservacao] = useState(exameData.observacao ?? '');
+    const imagensSalvas = exameData.imagens ?? [];
+    const [imagensMantidas, setImagensMantidas] = useState<string[]>(imagensSalvas);
+    const [novasImagens, setNovasImagens] = useState<File[]>([]);
     const [loading, setLoading] = useState(false);
 
     const handleCategoriaChange = (cat: string) => {
@@ -138,7 +148,12 @@ export const EditExameImagemModal: React.FC<{
         }
 
         setLoading(true);
+        const retiradas = imagensSalvas.filter(c => !imagensMantidas.includes(c));
+        const mexeuNasImagens = retiradas.length > 0 || novasImagens.length > 0;
+        // As imagens novas sobem primeiro; se a gravação falhar depois, são apagadas
+        let enviadas: string[] = [];
         try {
+            if (novasImagens.length > 0) enviadas = await enviarImagensDoExame(exameData.paciente_id, novasImagens);
             const { error } = await supabase
                 .from('exames_imagem_pacientes')
                 .update({
@@ -149,15 +164,19 @@ export const EditExameImagemModal: React.FC<{
                     sistema: sistema === 'Outros' ? sistemaOutros.trim() || null : sistema || null,
                     observacao: observacao.trim() || null,
                     updated_by: user.id,
+                    ...(mexeuNasImagens ? { imagens: [...imagensMantidas, ...enviadas] } : {}),
                 })
                 .eq('id', exameData.id);
 
             if (error) throw error;
+            // Só depois de gravado é que os arquivos das imagens retiradas são apagados
+            await apagarImagensDoExame(retiradas);
 
             showNotification({ message: 'Exame de imagem atualizado com sucesso!', type: 'success' });
             onSuccess();
             onClose();
         } catch (error: any) {
+            await apagarImagensDoExame(enviadas);
             showNotification({ message: error?.message || 'Erro ao atualizar exame de imagem', type: 'error' });
         } finally {
             setLoading(false);
@@ -166,7 +185,7 @@ export const EditExameImagemModal: React.FC<{
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-md m-4">
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-md m-4 max-h-[92vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Editar Exame de Imagem</h2>
                     <button onClick={onClose} disabled={loading}>
@@ -260,6 +279,7 @@ export const EditExameImagemModal: React.FC<{
                             placeholder="Descreva o resultado ou laudo do exame..."
                             className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-violet-500 focus:border-violet-500 text-slate-800 dark:text-slate-200 resize-none"
                         />
+                        {exame && <CondutasSemAlerta patientId={exameData.paciente_id} texto={resultado} rotulo={ROTULO_ACHADO} exame={exame} />}
                     </div>
 
                     <div>
@@ -274,6 +294,14 @@ export const EditExameImagemModal: React.FC<{
                             className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-violet-500 focus:border-violet-500 text-slate-800 dark:text-slate-200 resize-none"
                         />
                     </div>
+
+                    <SeletorImagensExame
+                        existentes={imagensMantidas}
+                        onRemoverExistente={c => setImagensMantidas(prev => prev.filter(x => x !== c))}
+                        novas={novasImagens}
+                        onNovasChange={setNovasImagens}
+                        disabled={loading}
+                    />
 
                     <div className="flex flex-col sm:flex-row gap-2 pt-4">
                         <button

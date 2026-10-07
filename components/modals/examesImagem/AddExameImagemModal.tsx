@@ -6,6 +6,11 @@ import { ALERT_SYSTEMS } from '../../../constants';
 import { useSugestaoSistema } from '../../../hooks';
 import { SugestaoCampo } from '../../alerts/SugestaoCampo';
 import { confirmarMedicao } from '../../../lib/typesafe/medicao';
+import { SeletorImagensExame } from '../../ImagensExame';
+import { CondutasSemAlerta } from '../../alerts/CondutasSemAlerta';
+
+const ROTULO_ACHADO = { uma: 'este achado parece', varias: 'estes achados parecem' };
+import { enviarImagensDoExame, apagarImagensDoExame } from '../../../lib/examesImagemArquivos';
 
 const EXAMES_POR_CATEGORIA: Record<string, string[]> = {
     'Radiografia (Raio-X)': [
@@ -115,6 +120,7 @@ export const AddExameImagemModal: React.FC<{
     const [sistemaOutros, setSistemaOutros] = useState('');
     const sugestaoSistema = useSugestaoSistema('exame de imagem', exame);
     const [observacao, setObservacao] = useState('');
+    const [novasImagens, setNovasImagens] = useState<File[]>([]);
     const [loading, setLoading] = useState(false);
 
     const handleCategoriaChange = (cat: string) => {
@@ -136,7 +142,10 @@ export const AddExameImagemModal: React.FC<{
         }
 
         setLoading(true);
+        // As imagens sobem primeiro; se o cadastro falhar depois, são apagadas
+        let imagens: string[] = [];
         try {
+            if (novasImagens.length > 0) imagens = await enviarImagensDoExame(patientId, novasImagens);
             const { error } = await supabase
                 .from('exames_imagem_pacientes')
                 .insert([{
@@ -148,6 +157,7 @@ export const AddExameImagemModal: React.FC<{
                     sistema: sistema === 'Outros' ? sistemaOutros.trim() || null : sistema || null,
                     observacao: observacao.trim() || null,
                     created_by: user.id,
+                    ...(imagens.length > 0 ? { imagens } : {}),
                 }]);
 
             if (error) throw error;
@@ -157,6 +167,7 @@ export const AddExameImagemModal: React.FC<{
             onSuccess();
             onClose();
         } catch (error: any) {
+            await apagarImagensDoExame(imagens);
             showNotification({ message: error?.message || 'Erro ao cadastrar exame de imagem', type: 'error' });
         } finally {
             setLoading(false);
@@ -165,7 +176,7 @@ export const AddExameImagemModal: React.FC<{
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-md m-4">
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-lg shadow-xl w-full max-w-md m-4 max-h-[92vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Novo Exame de Imagem</h2>
                     <button onClick={onClose} disabled={loading}>
@@ -260,6 +271,7 @@ export const AddExameImagemModal: React.FC<{
                             placeholder="Descreva o resultado ou laudo do exame..."
                             className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-violet-500 focus:border-violet-500 text-slate-800 dark:text-slate-200 resize-none"
                         />
+                        {exame && <CondutasSemAlerta patientId={patientId} texto={resultado} rotulo={ROTULO_ACHADO} exame={exame} />}
                     </div>
 
                     <div>
@@ -274,6 +286,8 @@ export const AddExameImagemModal: React.FC<{
                             className="mt-1 block w-full border bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-violet-500 focus:border-violet-500 text-slate-800 dark:text-slate-200 resize-none"
                         />
                     </div>
+
+                    <SeletorImagensExame novas={novasImagens} onNovasChange={setNovasImagens} disabled={loading} />
 
                     <div className="flex flex-col sm:flex-row gap-2 pt-4">
                         <button
