@@ -58,15 +58,18 @@ export const MiniaturasExame: React.FC<{ caminhos: string[] }> = ({ caminhos }) 
 
     return (
         <>
-            <button
-                type="button"
-                onClick={abrir}
-                disabled={abrindo}
-                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white transition disabled:opacity-50"
-            >
-                <CameraIcon className="w-4 h-4" />
-                {abrindo ? 'Abrindo…' : caminhos.length === 1 ? 'Ver imagem' : `Ver imagens (${caminhos.length})`}
-            </button>
+            {/* Em linha própria, para não colar na etiqueta do sistema nem no texto do laudo */}
+            <div className="mt-3">
+                <button
+                    type="button"
+                    onClick={abrir}
+                    disabled={abrindo}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white transition disabled:opacity-50"
+                >
+                    <CameraIcon className="w-4 h-4" />
+                    {abrindo ? 'Abrindo…' : caminhos.length === 1 ? 'Ver imagem' : `Ver imagens (${caminhos.length})`}
+                </button>
+            </div>
             {urls && urls.length === 0 && (
                 <p className="mt-1 text-xs text-red-600 dark:text-red-400">Não foi possível abrir a imagem.</p>
             )}
@@ -95,11 +98,33 @@ export const SeletorImagensExame: React.FC<SeletorProps> = ({ existentes = [], o
     const total = existentes.length + novas.length;
     const cheio = total >= MAX_IMAGENS_POR_EXAME;
 
+    const adicionar = (arquivos: File[]) => {
+        const imagens = arquivos.filter(f => f.type.startsWith('image/'));
+        if (imagens.length === 0) return;
+        onNovasChange([...novas, ...imagens].slice(0, MAX_IMAGENS_POR_EXAME - existentes.length));
+    };
+
     const escolher = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const escolhidas = Array.from(e.target.files ?? []).filter(f => f.type.startsWith('image/'));
-        onNovasChange([...novas, ...escolhidas].slice(0, MAX_IMAGENS_POR_EXAME - existentes.length));
+        adicionar(Array.from(e.target.files ?? []));
         e.target.value = ''; // permite escolher o mesmo arquivo de novo
     };
+
+    // Colar (Ctrl+V) uma imagem em qualquer ponto do formulário aberto também anexa: print de
+    // tela, imagem copiada de outro programa. Colar texto nos campos continua igual, porque
+    // só é tratado aqui o que vem da área de transferência como arquivo de imagem.
+    useEffect(() => {
+        if (disabled) return;
+        const aoColar = (e: ClipboardEvent) => {
+            const imagens = Array.from(e.clipboardData?.files ?? []).filter(f => f.type.startsWith('image/'));
+            if (imagens.length === 0) return;
+            e.preventDefault();
+            adicionar(imagens);
+        };
+        document.addEventListener('paste', aoColar);
+        return () => document.removeEventListener('paste', aoColar);
+        // Sem lista de dependências: o ouvinte é refeito a cada render para enxergar sempre
+        // a lista atual de imagens.
+    });
 
     const botaoTirar = 'absolute -top-1.5 -right-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full p-0.5 shadow';
 
@@ -139,6 +164,9 @@ export const SeletorImagensExame: React.FC<SeletorProps> = ({ existentes = [], o
                     </button>
                 )}
             </div>
+            {!cheio && (
+                <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">Ou cole a imagem com Ctrl+V.</p>
+            )}
             <input ref={inputRef} type="file" accept="image/*" multiple onChange={escolher} className="hidden" />
         </div>
     );
