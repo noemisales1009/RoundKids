@@ -118,6 +118,23 @@ export const saveNPTCalculation = async (calculation: NPTCalculation) => {
 }
 
 /**
+ * Busca os últimos cálculos salvos de um paciente, do mais recente para o mais antigo
+ * (ignora os cancelados). Usado para a calculadora abrir preenchida.
+ */
+export const getUltimosCalculos = async (patientId: string, limit: number = 30) => {
+  const { data, error } = await supabase
+    .from('npt_calculations')
+    .select('*')
+    .eq('patient_id', patientId)
+    .or('status.is.null,status.neq.cancelado')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error) throw error
+  return (data ?? []) as Record<string, unknown>[]
+}
+
+/**
  * Busca todos os cálculos de um paciente
  */
 export const getPatientCalculations = async (patientId: string) => {
