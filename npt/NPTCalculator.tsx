@@ -7,7 +7,7 @@ import {
 } from './components/icons';
 import { PDFReport } from './components/PDFReport';
 import type { AlternativeCalculations, OsmolarityCalculations } from './components/PDFReport';
-import { saveNPTCalculation } from './services/database';
+import { saveNPTCalculation, getUltimosCalculos } from './services/database';
 import { UserContext } from '../contexts';
 import { gramasParaRelacao, metaBanda, type MetaBanda, type Sexo } from './energyTargets';
 
@@ -374,9 +374,11 @@ const NutrientResultCard: React.FC<{ icon: React.ReactNode; title: string; borde
 
 
 const NutrientDetailRow: React.FC<{ label: string; value: string | React.ReactNode; unit: string }> = ({ label, value, unit }) => (
-  <div className="flex justify-between items-baseline gap-2 border-b border-slate-100 py-1.5">
+  // Quando rótulo e valor não cabem lado a lado, o valor desce para a linha de baixo,
+  // alinhado à direita, em vez de sair do cartão
+  <div className="flex flex-wrap justify-between items-baseline gap-x-2 border-b border-slate-100 py-1.5">
     <p className="text-xs sm:text-sm text-slate-600 leading-snug">{label}</p>
-    <p className="text-sm sm:text-base font-semibold text-slate-800 whitespace-nowrap shrink-0">
+    <p className="ml-auto text-sm sm:text-base font-semibold text-slate-800 whitespace-nowrap">
       {value} <span className="text-xs sm:text-sm font-normal text-slate-500">{unit}</span>
     </p>
   </div>
@@ -448,13 +450,14 @@ const ClickToEditInput: React.FC<{
       ) : (
         <div
           onClick={() => setIsEditing(true)}
-          className="w-full h-10 flex items-center bg-white text-slate-800 p-2 border border-slate-300 rounded-md cursor-pointer hover:bg-slate-50 transition-colors duration-200"
+          className="w-full h-10 flex items-center overflow-hidden bg-white text-slate-800 p-2 border border-slate-300 rounded-md cursor-pointer hover:bg-slate-50 transition-colors duration-200"
           role="button"
           tabIndex={0}
           onKeyDown={(e) => { if (e.key === 'Enter') setIsEditing(true);}}
         >
           <span>{value}</span>
-          {unit && <span className="text-xs text-slate-500 ml-2">{unit}</span>}
+          {/* A unidade não se repete quando já está no rótulo; nos demais casos, é cortada com reticências em vez de sair da caixa */}
+          {unit && !label.includes(`(${unit})`) && <span className="text-xs text-slate-500 ml-2 min-w-0 truncate">{unit}</span>}
         </div>
       )}
     </div>
@@ -998,6 +1001,74 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
         }
     }, [initialPatient]);
     
+    // Cálculos já salvos do paciente, do mais recente para o mais antigo. A calculadora abre
+    // com os valores do último, para a pessoa só editar o que mudou, e deixa voltar aos
+    // anteriores. `indiceSalvo` é a posição do cálculo que está servindo de ponto de partida.
+    const [salvos, setSalvos] = useState<Record<string, unknown>[]>([]);
+    const [indiceSalvo, setIndiceSalvo] = useState(0);
+    const patientId = initialPatient?.id;
+    const pesoDoCadastro = initialPatient?.peso ? Number(initialPatient.peso) : null;
+
+    const numero = (v: unknown): number | null =>
+        v == null || v === '' || !Number.isFinite(Number(v)) ? null : Number(v);
+
+    // Põe na tela os valores de um cálculo salvo. O peso é o do cadastro do paciente, quando
+    // existe, porque é o mais atual; o do cálculo só entra se o cadastro não tiver peso.
+    const aplicarCalculoSalvo = (c: Record<string, unknown>) => {
+        const aplicar = (v: unknown, set: (n: number) => void) => { const n = numero(v); if (n != null) set(n); };
+
+        const perfil = (Object.keys(CLINICAL_PROFILES) as ClinicalProfileKey[])
+            .find(k => CLINICAL_PROFILES[k].label === c.clinical_profile) ?? 'estavel_crianca';
+        setClinicalProfile(perfil);
+        // Cálculos antigos não guardam a fase: vale a sugerida pelo perfil
+        const fase = String(c.metabolic_phase ?? '');
+        setMetabolicPhase(fase in METABOLIC_PHASES ? fase as MetabolicPhaseKey : PROFILE_DEFAULT_PHASE[perfil]);
+        setMetaAlvo(numero(c.meta_alvo));
+        setIdealWeight(numero(c.ideal_weight) ?? 0);
+
+        if (pesoDoCadastro == null) aplicar(c.weight, setWeight);
+        aplicar(c.amino_acid_dose, setAminoAcidDose);
+        aplicar(c.lipid_percent, setLipidPercent);
+        aplicar(c.hydration_target, setHydrationTarget);
+        aplicar(c.protein_concentration, setProteinConcentration);
+        aplicar(c.lipid_concentration, setLipidConcentration);
+        const g1 = numero(c.glucose_source_1), g2 = numero(c.glucose_source_2);
+        if (g1 != null && g2 != null) setGlucoseSources([g1, g2]);
+        aplicar(c.sodium_dose, setSodiumDose);
+        aplicar(c.potassium_dose, setPotassiumDose);
+        aplicar(c.calcium_dose, setCalciumDose);
+        aplicar(c.magnesium_dose, setMagnesiumDose);
+        aplicar(c.phosphorus_dose, setPhosphorusDose);
+        if (c.phosphorus_source === 'sodium' || c.phosphorus_source === 'potassium') setPhosphorusSource(c.phosphorus_source);
+        const etapas = numero(c.npt_stages);
+        if (etapas === 1 || etapas === 2 || etapas === 3 || etapas === 4) setNptStages(etapas);
+    };
+
+    // Busca os cálculos salvos. Ao abrir, põe o mais recente na tela; depois de salvar, só
+    // atualiza a lista, sem mexer no que está na tela (o PDF é gerado logo em seguida).
+    const carregarSalvos = async (porNaTela: boolean) => {
+        if (!patientId) return;
+        try {
+            const lista = await getUltimosCalculos(patientId);
+            setSalvos(lista);
+            setIndiceSalvo(0);
+            if (porNaTela && lista.length > 0) aplicarCalculoSalvo(lista[0]);
+        } catch (err) {
+            console.error('Erro ao carregar os cálculos de NPT salvos:', err);
+        }
+    };
+
+    useEffect(() => {
+        carregarSalvos(true);
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- recarrega só quando muda o paciente
+    }, [patientId]);
+
+    const irParaSalvo = (indice: number) => {
+        if (indice < 0 || indice >= salvos.length) return;
+        setIndiceSalvo(indice);
+        aplicarCalculoSalvo(salvos[indice]);
+    };
+
     const activeProfile = CLINICAL_PROFILES[clinicalProfile];
 
     // Ao trocar de perfil, a proteína é mantida dentro da nova faixa, a fase
@@ -1107,7 +1178,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
             const volumePerBag = totalComponentVolume / nptStages;
             const infusionRate = volumePerBag > 0 && infusionHours > 0 ? volumePerBag / infusionHours : 0;
 
-            await saveNPTCalculation({
+            const calculo = {
                 patient_id: initialPatient.id,
                 user_id: user.id,
                 weight,
@@ -1154,7 +1225,20 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                 caloric_dist_protein: caloricDistribution.protein,
                 caloric_dist_lipid: caloricDistribution.lipid,
                 caloric_dist_glucose: caloricDistribution.glucose,
-            } as any);
+            };
+
+            // A fase metabólica e o alvo da meta deixam o próximo cálculo abrir igual a este.
+            // Enquanto as colunas não existirem no banco (ADD_NPT_ULTIMO_CALCULO.sql), o
+            // cálculo é salvo sem elas, como antes.
+            try {
+                await saveNPTCalculation({ ...calculo, metabolic_phase: metabolicPhase, meta_alvo: metaAlvo } as any);
+            } catch (err) {
+                const codigo = (err as { code?: string })?.code;
+                if (codigo !== 'PGRST204' && codigo !== '42703') throw err;
+                await saveNPTCalculation(calculo as any);
+            }
+            // O cálculo recém-salvo passa a ser o mais recente da lista
+            await carregarSalvos(false);
 
             setSaveMessage({ type: 'success', text: '✅ Cálculo salvo com sucesso!' });
             
@@ -1198,7 +1282,9 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
 
     return (
         <div>
-            <div className="min-h-screen bg-slate-100 p-4 sm:p-6 lg:p-8 hide-on-print">
+            {/* A calculadora abre dentro da tela do paciente, mais estreita que a janela: as colunas
+                seguem a largura deste bloco (@container), e não a da janela. */}
+            <div className="@container min-h-screen bg-slate-100 p-3 sm:p-5 hide-on-print">
                 <header className="max-w-7xl mx-auto mb-8 flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -1211,9 +1297,38 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                     </div>
                 </header>
                 
-                <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {salvos.length > 0 && (() => {
+                    const salvo = salvos[indiceSalvo];
+                    const quando = salvo.created_at
+                        ? new Date(String(salvo.created_at)).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                        : 'data não registrada';
+                    const pesoSalvo = numero(salvo.weight);
+                    const botao = 'px-3 py-1.5 rounded-md text-sm font-semibold border border-amber-400 bg-white text-amber-900 hover:bg-amber-100 transition disabled:opacity-40 disabled:cursor-not-allowed';
+                    return (
+                        <div className="max-w-7xl mx-auto mb-6 p-3 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 text-sm flex flex-col sm:flex-row sm:items-center gap-3">
+                            <p className="flex-1">
+                                <strong>Valores do cálculo salvo em {quando}</strong>
+                                {' '}({indiceSalvo === 0 ? 'o mais recente' : `${indiceSalvo + 1}º mais recente`}, de {salvos.length}).
+                                {' '}Confira e edite o que mudou antes de salvar.
+                                {pesoDoCadastro != null && pesoSalvo != null && pesoSalvo !== pesoDoCadastro && (
+                                    <> O peso é o do cadastro do paciente ({pesoDoCadastro} kg); neste cálculo era {pesoSalvo} kg.</>
+                                )}
+                            </p>
+                            <div className="flex gap-2 shrink-0">
+                                <button type="button" onClick={() => irParaSalvo(indiceSalvo + 1)} disabled={indiceSalvo >= salvos.length - 1} className={botao}>
+                                    ◀ Anterior
+                                </button>
+                                <button type="button" onClick={() => irParaSalvo(indiceSalvo - 1)} disabled={indiceSalvo === 0} className={botao}>
+                                    Próximo ▶
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })()}
+
+                <main className="max-w-7xl mx-auto grid grid-cols-1 @3xl:grid-cols-5 @6xl:grid-cols-3 gap-6">
                     {/* Coluna de Controles (Esquerda) */}
-                    <div className="lg:col-span-1 space-y-8">
+                    <div className="@3xl:col-span-2 @6xl:col-span-1 min-w-0 space-y-6">
                         {/* Card: Dados do Paciente */}
                         <div className="bg-white p-6 rounded-xl shadow-sm">
                             <SectionHeader icon={<UserIcon className="w-6 h-6 text-primary-500" />} title="Dados do Paciente" />
@@ -1560,11 +1675,11 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                     </div>
 
                     {/* Coluna de Resultados (Direita) */}
-                    <div className="lg:col-span-2 space-y-8">
+                    <div className="@container @3xl:col-span-3 @6xl:col-span-2 min-w-0 space-y-6">
                         {/* Resumo */}
                         <div className="bg-white p-6 rounded-xl shadow-sm">
                             <SectionHeader icon={<CalculatorIcon className="w-6 h-6 text-primary-500" />} title="Resumo da Prescrição" />
-                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                            <div className="grid grid-cols-1 @sm:grid-cols-2 @2xl:grid-cols-3 gap-3">
                               <SummaryCard icon={<ScaleIcon className="w-7 h-7 text-primary-500" />} label="Superfície Corporal (Haycock)" value={bodySurfaceArea.toFixed(2)} unit="m²"/>
                               <SummaryCard icon={<DropletIcon className="w-7 h-7 text-primary-500" />} label="Meta Hídrica Total" value={hydrationByBSA.toFixed(0)} unit="mL" />
                               <SummaryCard icon={<BeakerIcon className="w-7 h-7 text-primary-500" />} label="Volume a Completar" value={volumeToComplete.toFixed(0)} unit="mL" />
@@ -1698,7 +1813,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                             </div>
                         )}
                         {/* Macronutrientes */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 @md:grid-cols-2 @3xl:grid-cols-3 gap-4">
                             <NutrientResultCard icon={<UserIcon className="w-6 h-6 text-green-500"/>} title="Aminoácidos" borderColor="border-green-500">
                               {idealWeight > 0 && <NutrientDetailRow label="Peso de referência" value={idealWeight} unit="kg" />}
                               <NutrientDetailRow label="Gramas Totais" value={aminoAcidCalculations.totalGrams.toFixed(1)} unit="g" />
@@ -1745,7 +1860,7 @@ const App: React.FC<AppProps> = ({ initialPatient, onChangePatient, onCalculatio
                         {/* Eletrólitos */}
                         <div className="bg-white p-6 rounded-xl shadow-sm">
                           <SectionHeader icon={<SparklesIcon className="w-6 h-6 text-primary-500" />} title="Eletrólitos, Oligoelementos & Vitaminas" />
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
+                          <div className="grid grid-cols-1 @md:grid-cols-2 @3xl:grid-cols-3 gap-x-8 gap-y-4">
                               {/* Fósforo */}
                               <div className="space-y-1">
                                   <h3 className="font-bold text-slate-700">FÓSFORO</h3>
