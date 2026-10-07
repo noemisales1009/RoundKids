@@ -4,6 +4,7 @@ import { formatDateToBRL } from '../constants';
 import { PencilIcon, CloseIcon, CameraIcon } from './icons';
 import { AddExameImagemModal, EditExameImagemModal, ArchiveExameImagemModal } from './modals/examesImagem';
 import type { ExameImagemRow } from './modals/examesImagem';
+import { MiniaturasExame } from './ImagensExame';
 
 interface ExameImagemCardProps {
     patientId: number | string;
@@ -100,6 +101,16 @@ export const ExameImagemCard: React.FC<ExameImagemCardProps> = ({ patientId, add
                                             <p className="text-sm text-slate-500 dark:text-slate-400 italic mt-1 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded">
                                                 💬 {ex.observacao}
                                             </p>
+                                        )}
+                                        <MiniaturasExame caminhos={ex.imagens ?? []} />
+                                        {(ex.imagens ?? []).length === 0 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditingExame(ex)}
+                                                className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400 hover:underline"
+                                            >
+                                                <CameraIcon className="w-4 h-4" /> Anexar imagem
+                                            </button>
                                         )}
                                         <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
                                             <input type="checkbox" checked={ex.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucao(ex.id, e.target.checked)} className="w-3.5 h-3.5 accent-primary-500" />

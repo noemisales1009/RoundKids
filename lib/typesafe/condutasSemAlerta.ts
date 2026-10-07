@@ -41,8 +41,38 @@ const perguntaCoberta = (id: string): PerguntaNoul => ({
     },
 });
 
-export const acharCondutasSemAlerta = async (texto: string, alertasAtivos: string[]): Promise<string[]> => {
-    const frases = cortarEmFrases(texto);
+// Achado de exame de imagem que pede atenção. No laudo digitado os achados costumam vir
+// separados por " / " ou " + " e são curtos ("TOT ALTO"), então o corte é mais fino.
+const MIN_ACHADO = 4; // caracteres
+export const cortarEmAchados = (texto: string): string[] =>
+    texto
+        .split(/\n+|\s+[/+]\s+|(?<!\b[A-Za-z]\.)(?<=[.;!?])\s+/)
+        .map(f => f.replace(/^[\s\-–•*\d.)]+/, '').trim())
+        .filter(f => f.length >= MIN_ACHADO)
+        .slice(0, MAX_FRASES);
+
+const perguntaAchado = (id: string): PerguntaNoul => ({
+    type: 'noul',
+    instructions: `\`frases.${id}\` é um trecho do resultado do exame de imagem \`exame\` de uma criança internada em UTI pediátrica. O trecho descreve um achado anormal que pede uma conduta ou uma reavaliação da equipe, como dispositivo mal posicionado, ar ou líquido onde não deveria haver, coleção, obstrução, piora de uma lesão ou uma suspeita a esclarecer?`,
+    criteria: {
+        true: 'Achado anormal que pede conduta, correção, exame de controle ou reavaliação',
+        false: 'Exame normal, achado sem mudança de conduta, achado crônico já conhecido, ou trecho que só descreve a técnica do exame',
+    },
+});
+
+// Achados do resultado de um exame de imagem que pedem conduta e ainda não têm alerta ativo.
+export const acharAchadosSemAlerta = (texto: string, alertasAtivos: string[], exame: string): Promise<string[]> =>
+    acharSemAlerta(cortarEmAchados(texto), alertasAtivos, perguntaAchado, { exame });
+
+export const acharCondutasSemAlerta = (texto: string, alertasAtivos: string[]): Promise<string[]> =>
+    acharSemAlerta(cortarEmFrases(texto), alertasAtivos, perguntaConduta, {});
+
+const acharSemAlerta = async (
+    frases: string[],
+    alertasAtivos: string[],
+    perguntaAlvo: (id: string) => PerguntaNoul,
+    contexto: Record<string, string>,
+): Promise<string[]> => {
     if (frases.length === 0) return [];
 
     const temAlertas = alertasAtivos.length > 0;
@@ -55,10 +85,11 @@ export const acharCondutasSemAlerta = async (texto: string, alertasAtivos: strin
         const ids = lote.map((_, i) => `f${i + 1}`);
         const perguntas: Record<string, PerguntaNoul> = {};
         ids.forEach(id => {
-            perguntas[`conduta_${id}`] = perguntaConduta(id);
+            perguntas[`conduta_${id}`] = perguntaAlvo(id);
             if (temAlertas) perguntas[`coberta_${id}`] = perguntaCoberta(id);
         });
         const state = {
+            ...contexto,
             frases: Object.fromEntries(ids.map((id, i) => [id, lote[i]])),
             ...(temAlertas ? { alertas_ativos: alertasAtivos } : {}),
         };
