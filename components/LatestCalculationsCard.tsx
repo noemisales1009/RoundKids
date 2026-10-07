@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { DropletIcon } from './icons';
 import { Turno, turnoAtualSP, turnoEDiaDe, turnoDoRegistro } from '../lib/turno';
+import { avisosBhCumulativo } from '../lib/bhCumulativo';
 
 const TURNOS: { id: Turno; label: string; icon: string }[] = [
   { id: 'manha', label: 'Manhã', icon: '🌅' },
@@ -9,9 +10,9 @@ const TURNOS: { id: Turno; label: string; icon: string }[] = [
   { id: 'noite', label: 'Noite', icon: '🌙' },
 ];
 
-// BH cumulativo desativado temporariamente a pedido da equipe (2026-08-17).
-// Para reexibir o cartão, mude para true. Há a mesma chave na EvolucaoDiariaScreen.
-const MOSTRAR_BH_CUMULATIVO = false;
+// BH cumulativo: ficou desativado de 2026-08-17 a 2026-10-07, a pedido da equipe.
+// Para esconder de novo, mude para false. Há a mesma chave na EvolucaoDiariaScreen.
+const MOSTRAR_BH_CUMULATIVO = true;
 
 interface LatestCalculationsCardProps {
   patientId: string | number;
@@ -300,6 +301,11 @@ const LatestCalculationsCard: React.FC<LatestCalculationsCardProps> = ({ patient
                 <div className="text-xs text-slate-600 dark:text-slate-400">
                   24h: {balancoCumulativo.bh_24h_pct > 0 ? '+' : ''}{balancoCumulativo.bh_24h_pct.toFixed(2)}% | Peso: {balancoCumulativo.peso_referencia_kg.toFixed(2)}kg
                 </div>
+                {avisosBhCumulativo(balanceList).map(aviso => (
+                  <p key={aviso} className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-300">
+                    ⚠️ {aviso}
+                  </p>
+                ))}
               </div>
             ) : null}
           </div>
