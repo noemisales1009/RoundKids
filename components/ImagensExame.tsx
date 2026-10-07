@@ -42,34 +42,35 @@ const Ampliada: React.FC<{ urls: string[]; inicial: number; onClose: () => void 
 
 const miniatura = 'w-16 h-16 rounded-md object-cover border border-slate-300 dark:border-slate-600 bg-slate-200 dark:bg-slate-700';
 
-// Imagens de um exame já salvo: botão "Ver imagens" e miniaturas; clicar em qualquer um amplia.
+// Imagens de um exame já salvo: só o botão "Ver imagem". As imagens são buscadas e
+// mostradas apenas quando a pessoa clica.
 export const MiniaturasExame: React.FC<{ caminhos: string[] }> = ({ caminhos }) => {
-    const links = useLinks(caminhos);
-    const [aberta, setAberta] = useState<number | null>(null);
+    const [urls, setUrls] = useState<string[] | null>(null);
+    const [abrindo, setAbrindo] = useState(false);
     if (caminhos.length === 0) return null;
-    const urls = caminhos.map(c => links[c]).filter(Boolean);
-    const abrir = (caminho: string) => setAberta(Math.max(0, urls.indexOf(links[caminho])));
+
+    const abrir = async () => {
+        setAbrindo(true);
+        const links = await linksDasImagens(caminhos);
+        setAbrindo(false);
+        setUrls(caminhos.map(c => links[c]).filter(Boolean));
+    };
+
     return (
         <>
             <button
                 type="button"
-                onClick={() => setAberta(0)}
-                disabled={urls.length === 0}
+                onClick={abrir}
+                disabled={abrindo}
                 className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white transition disabled:opacity-50"
             >
                 <CameraIcon className="w-4 h-4" />
-                {caminhos.length === 1 ? 'Ver imagem' : `Ver imagens (${caminhos.length})`}
+                {abrindo ? 'Abrindo…' : caminhos.length === 1 ? 'Ver imagem' : `Ver imagens (${caminhos.length})`}
             </button>
-            <div className="flex flex-wrap gap-2 mt-2">
-                {caminhos.map(c => links[c] ? (
-                    <button key={c} type="button" onClick={() => abrir(c)} aria-label="Ampliar imagem do exame">
-                        <img src={links[c]} alt="Imagem do exame" className={`${miniatura} hover:opacity-80 transition`} />
-                    </button>
-                ) : (
-                    <div key={c} className={miniatura} />
-                ))}
-            </div>
-            {aberta !== null && urls.length > 0 && <Ampliada urls={urls} inicial={aberta} onClose={() => setAberta(null)} />}
+            {urls && urls.length === 0 && (
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">Não foi possível abrir a imagem.</p>
+            )}
+            {urls && urls.length > 0 && <Ampliada urls={urls} inicial={0} onClose={() => setUrls(null)} />}
         </>
     );
 };

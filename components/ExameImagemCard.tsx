@@ -103,15 +103,6 @@ export const ExameImagemCard: React.FC<ExameImagemCardProps> = ({ patientId, add
                                             </p>
                                         )}
                                         <MiniaturasExame caminhos={ex.imagens ?? []} />
-                                        {(ex.imagens ?? []).length === 0 && (
-                                            <button
-                                                type="button"
-                                                onClick={() => setEditingExame(ex)}
-                                                className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400 hover:underline"
-                                            >
-                                                <CameraIcon className="w-4 h-4" /> Anexar imagem
-                                            </button>
-                                        )}
                                         <label className="flex items-center gap-1.5 mt-2 cursor-pointer select-none w-fit">
                                             <input type="checkbox" checked={ex.mostrar_evolucao !== false} onChange={e => toggleMostrarEvolucao(ex.id, e.target.checked)} className="w-3.5 h-3.5 accent-primary-500" />
                                             <span className="text-xs text-slate-500 dark:text-slate-400">Exibir na Evolução Diária</span>
