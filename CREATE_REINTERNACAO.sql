@@ -13,10 +13,11 @@
 -- reinternação". Um ADMINISTRADOR confere nome completo, data de nascimento e
 -- nome da mãe e decide:
 --   * "É o mesmo paciente" -> a função unir_reinternacao():
---        1. guarda as datas da internação anterior (internacoes_anteriores);
+--        1. guarda as datas e o nome da internação anterior (internacoes_anteriores);
 --        2. passa para o cadastro antigo o que já tiver sido lançado no novo;
---        3. reativa o cadastro antigo, com o leito e a data de internação novos;
---        4. arquiva o cadastro novo como "Duplicado".
+--        3. arquiva o cadastro novo como "Duplicado";
+--        4. reativa o cadastro antigo, com o nome do NIR, o leito e a data de
+--           internação novos.
 --     O paciente volta com TODO o histórico: diagnósticos, medicações,
 --     dispositivos, exames, alertas, escalas, evoluções.
 --   * "Não é o mesmo" -> fica registrado e o aviso não aparece mais para o par.
@@ -45,9 +46,12 @@ CREATE TABLE IF NOT EXISTS public.internacoes_anteriores (
   dt_internacao  DATE,                   -- admissão daquela internação
   dt_saida       TIMESTAMPTZ,            -- quando foi arquivado
   motivo_saida   TEXT,
+  nome_anterior  TEXT,                   -- nome que a ficha tinha antes de receber o do NIR
   registrado_em  TIMESTAMPTZ NOT NULL DEFAULT now(),
   registrado_por UUID DEFAULT auth.uid()
 );
+-- Para quem criou a tabela antes desta coluna existir
+ALTER TABLE public.internacoes_anteriores ADD COLUMN IF NOT EXISTS nome_anterior TEXT;
 CREATE INDEX IF NOT EXISTS idx_internacoes_anteriores_ref ON public.internacoes_anteriores (patient_ref);
 
 -- Decisão tomada sobre um par "cadastro novo x cadastro arquivado"
@@ -126,9 +130,9 @@ BEGIN
     RAISE EXCEPTION 'As datas de nascimento são diferentes';
   END IF;
 
-  -- 1. Guarda as datas da internação anterior
-  INSERT INTO public.internacoes_anteriores (patient_ref, dt_internacao, dt_saida, motivo_saida)
-  VALUES (anterior.id::text, anterior.dt_internacao::date, anterior.archived_at, anterior.motivo_arquivamento);
+  -- 1. Guarda as datas da internação anterior e o nome que a ficha tinha
+  INSERT INTO public.internacoes_anteriores (patient_ref, dt_internacao, dt_saida, motivo_saida, nome_anterior)
+  VALUES (anterior.id::text, anterior.dt_internacao::date, anterior.archived_at, anterior.motivo_arquivamento, anterior.name);
 
   -- 2. Passa para o cadastro antigo o que já foi lançado no novo.
   --    Vale para toda tabela do aplicativo que aponta para o paciente por
@@ -219,7 +223,8 @@ GRANT EXECUTE ON FUNCTION public.unir_reinternacao(TEXT, TEXT) TO authenticated;
 -- A união não é desfeita por um botão. Para um caso específico:
 --   1. Arquivar de novo o cadastro antigo, com a data de saída original:
 --        UPDATE patients SET archived_at = '<dt_saida de internacoes_anteriores>',
---               motivo_arquivamento = '<motivo_saida>', dt_internacao = '<dt_internacao>'
+--               motivo_arquivamento = '<motivo_saida>', dt_internacao = '<dt_internacao>',
+--               name = '<nome_anterior>'
 --        WHERE id = '<anterior_ref>';
 --   2. Reativar o cadastro novo:
 --        UPDATE patients SET archived_at = NULL, motivo_arquivamento = NULL WHERE id = '<novo_ref>';
