@@ -104,7 +104,36 @@ export const AcessosScreen: React.FC = () => {
     }, [acessos, dias]);
 
     const termo = busca.trim().toLowerCase();
-    const historico = (acessos ?? []).filter(a => !termo || nome(a.usuario_id).toLowerCase().includes(termo)).slice(0, MAX_HISTORICO);
+    const filtrados = (acessos ?? []).filter(a => !termo || nome(a.usuario_id).toLowerCase().includes(termo));
+    const historico = filtrados.slice(0, MAX_HISTORICO);
+
+    // Planilha (CSV) com todas as entradas do período, respeitando a busca por nome.
+    // Ponto e vírgula e marca de UTF-8 para o Excel em português abrir direto, com acentos.
+    const baixar = () => {
+        // Texto que começa com =, +, - ou @ seria lido pelo Excel como fórmula
+        const celula = (v: string) => `"${(/^[=+\-@]/.test(v) ? `'${v}` : v).replace(/"/g, '""')}"`;
+        const linhas = [
+            ['Data', 'Hora', 'Pessoa', 'Cargo', 'Como entrou', 'Aparelho'],
+            ...filtrados.map(a => {
+                const d = new Date(a.criado_em);
+                return [
+                    d.toLocaleDateString('pt-BR'),
+                    d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                    nome(a.usuario_id),
+                    pessoas[a.usuario_id]?.role || '',
+                    NOME_TIPO[a.tipo] ?? a.tipo,
+                    a.dispositivo || '',
+                ];
+            }),
+        ];
+        const csv = '\uFEFF' + linhas.map(l => l.map(celula).join(';')).join('\r\n');
+        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `acessos-round-braga-${new Date().toISOString().slice(0, 10)}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+    };
     const maior = Math.max(1, ...resumo.baldes.map(b => b.total));
 
     const cartao = 'bg-white dark:bg-slate-900 rounded-xl shadow-sm p-4 sm:p-5';
@@ -231,15 +260,25 @@ export const AcessosScreen: React.FC = () => {
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
                                 <h2 className={titulo}>Histórico</h2>
-                                <p className={legenda}>As {MAX_HISTORICO} entradas mais recentes do período.</p>
+                                <p className={legenda}>As {MAX_HISTORICO} entradas mais recentes do período. A planilha traz todas.</p>
                             </div>
-                            <input
-                                type="text"
-                                value={busca}
-                                onChange={e => setBusca(e.target.value)}
-                                placeholder="Buscar por nome…"
-                                className="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100"
-                            />
+                            <div className="flex flex-wrap items-center gap-2">
+                                <input
+                                    type="text"
+                                    value={busca}
+                                    onChange={e => setBusca(e.target.value)}
+                                    placeholder="Buscar por nome…"
+                                    className="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={baixar}
+                                    disabled={filtrados.length === 0}
+                                    className="px-3 py-2 rounded-lg text-sm font-semibold bg-primary-600 hover:bg-primary-700 text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Baixar planilha ({filtrados.length})
+                                </button>
+                            </div>
                         </div>
                         <div className="overflow-x-auto mt-3">
                             <table className="w-full">
