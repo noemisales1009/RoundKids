@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Patient } from '../types';
 import { NotificationContext, PatientsContext } from '../contexts';
-import { WarningIcon } from './icons';
+import { ChevronDownIcon, WarningIcon } from './icons';
 import { Modal } from './ui/Modal';
 import {
     CadastroAnterior,
@@ -60,6 +60,9 @@ export const ReinternacaoAviso: React.FC<{ patient: Patient; isAdmin: boolean }>
     const [aberto, setAberto] = useState<CadastroAnterior | null>(null);
     const [conferido, setConferido] = useState(false);
     const [salvando, setSalvando] = useState(false);
+    // As duas faixas começam fechadas, em uma linha; abrem ao clicar
+    const [verCandidatos, setVerCandidatos] = useState(false);
+    const [verAnteriores, setVerAnteriores] = useState(false);
 
     const motherName = patient.motherName && patient.motherName !== '-' ? patient.motherName : '';
 
@@ -109,35 +112,62 @@ export const ReinternacaoAviso: React.FC<{ patient: Patient; isAdmin: boolean }>
     return (
         <>
             {anteriores.length > 0 && (
-                <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg px-4 py-3 mb-4">
-                    <p className="text-sm font-bold text-primary-800 dark:text-primary-200">
-                        Reinternação{anteriores.length > 1 ? ` · ${anteriores.length} internações anteriores` : ''}
-                    </p>
-                    {anteriores.map(i => (
-                        <p key={i.id} className="text-sm text-slate-700 dark:text-slate-300">
-                            Internação anterior: {dataBR(i.dtInternacao)} a {dataBR(i.dtSaida)}{i.motivoSaida ? ` · ${i.motivoSaida}` : ''}
-                        </p>
-                    ))}
+                <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg mb-3">
+                    <button
+                        onClick={() => setVerAnteriores(v => !v)}
+                        aria-expanded={verAnteriores}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-left"
+                    >
+                        <span className="flex-1 text-sm font-bold text-primary-800 dark:text-primary-200">
+                            Reinternação · {anteriores.length} {anteriores.length === 1 ? 'internação anterior' : 'internações anteriores'}
+                        </span>
+                        <ChevronDownIcon className={`w-4 h-4 text-primary-700 dark:text-primary-300 transition-transform ${verAnteriores ? 'rotate-180' : ''}`} />
+                    </button>
+                    {verAnteriores && (
+                        <div className="px-3 pb-2">
+                            {anteriores.map(i => (
+                                <p key={i.id} className="text-sm text-slate-700 dark:text-slate-300">
+                                    {dataBR(i.dtInternacao)} a {dataBR(i.dtSaida)}{i.motivoSaida ? ` · ${i.motivoSaida}` : ''}
+                                </p>
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
 
-            {candidatos.map(c => (
-                <div key={c.id} className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg px-4 py-3 mb-4 flex flex-col sm:flex-row sm:items-center gap-3">
-                    <WarningIcon className="w-6 h-6 text-amber-600 dark:text-amber-400 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-amber-900 dark:text-amber-200">Possível reinternação</p>
-                        <p className="text-sm text-slate-700 dark:text-slate-300 break-words">
-                            Há um cadastro arquivado com a mesma data de nascimento e nome {c.nome === 'igual' ? 'igual' : 'parecido'}: {c.name}, saída em {dataBR(c.arquivadoEm)}.
-                        </p>
-                    </div>
+            {candidatos.length > 0 && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg mb-3">
                     <button
-                        onClick={() => setAberto(c)}
-                        className="shrink-0 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold"
+                        onClick={() => setVerCandidatos(v => !v)}
+                        aria-expanded={verCandidatos}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-left"
                     >
-                        Conferir
+                        <WarningIcon className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+                        <span className="flex-1 text-sm font-bold text-amber-900 dark:text-amber-200">
+                            Possível reinternação · {candidatos.length} {candidatos.length === 1 ? 'cadastro anterior' : 'cadastros anteriores'}
+                        </span>
+                        <span className="text-xs font-semibold text-amber-800 dark:text-amber-300">{verCandidatos ? 'Fechar' : 'Ver'}</span>
+                        <ChevronDownIcon className={`w-4 h-4 text-amber-700 dark:text-amber-300 transition-transform ${verCandidatos ? 'rotate-180' : ''}`} />
                     </button>
+                    {verCandidatos && (
+                        <div className="px-3 pb-2 space-y-2">
+                            {candidatos.map(c => (
+                                <div key={c.id} className="flex items-center gap-3 border-t border-amber-200 dark:border-amber-800 pt-2">
+                                    <p className="flex-1 min-w-0 text-sm text-slate-700 dark:text-slate-300 break-words">
+                                        {c.name} · nome {c.nome === 'igual' ? 'igual' : 'parecido'}, mesma data de nascimento · saída em {dataBR(c.arquivadoEm)}
+                                    </p>
+                                    <button
+                                        onClick={() => setAberto(c)}
+                                        className="shrink-0 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold"
+                                    >
+                                        Conferir
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
-            ))}
+            )}
 
             <Modal isOpen={!!aberto} onClose={fechar} title="Conferir reinternação" size="lg">
                 {aberto && (
