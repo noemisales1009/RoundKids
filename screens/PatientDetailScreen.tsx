@@ -9,6 +9,7 @@ import { BackArrowIcon, WarningIcon, PencilIcon, ClipboardIcon, FileTextIcon, Cp
 import { PatientDetailSkeleton } from '../components/SkeletonLoader';
 import { ArchiveModal } from '../components/modals/ArchiveModal';
 import { SecondaryNavigation } from '../components/SecondaryNavigation';
+import { ReinternacaoAviso } from '../components/ReinternacaoAviso';
 import {
     PatientsContext,
     NotificationContext,
@@ -534,6 +535,9 @@ const PatientDetailScreen: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Reinternação: aviso de cadastro anterior e internações já confirmadas */}
+            <ReinternacaoAviso key={patient.id} patient={patient} isAdmin={user?.access_level === 'adm'} />
 
             {/* Status do Paciente */}
             <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-4 mb-4">

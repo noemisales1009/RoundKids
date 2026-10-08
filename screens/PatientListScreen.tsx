@@ -6,6 +6,7 @@ import { useHeader } from '../hooks/useHeader';
 import { ChevronRightIcon, MapPinIcon } from '../components/icons';
 import { LoadingIndicator } from '../components/LoadingIndicator';
 import { AddPatientModal } from '../components/modals/AddPatientModal';
+import { MarcaReinternacao, buscarMarcasDeReinternacao } from '../lib/reinternacao';
 
 const PatientListScreen: React.FC = () => {
     useHeader('Leitos');
@@ -20,6 +21,18 @@ const PatientListScreen: React.FC = () => {
             setIsLoading(false);
         }
     }, [patients]);
+
+    // Etiqueta de reinternação ao lado do nome. Só refaz a busca quando muda
+    // quem está na lista (id, nome ou nascimento), não a cada atualização.
+    const [marcasReinternacao, setMarcasReinternacao] = useState<Record<string, MarcaReinternacao>>({});
+    const chaveReinternacao = patients.map(p => `${p.id}|${p.name}|${p.dob}`).join(';');
+    useEffect(() => {
+        let ativo = true;
+        buscarMarcasDeReinternacao(patients.map(p => ({ id: p.id, name: p.name, dob: p.dob })))
+            .then(marcas => { if (ativo) setMarcasReinternacao(marcas); });
+        return () => { ativo = false; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [chaveReinternacao]);
 
     const filteredPatients = useMemo(() => {
         return patients
@@ -108,6 +121,16 @@ const PatientListScreen: React.FC = () => {
                                         {patient.status && (
                                             <span className={`text-xs font-bold px-2 py-1 rounded-full ${colors.text} ${colors.bg}`}>
                                                 {statusLabel}
+                                            </span>
+                                        )}
+                                        {marcasReinternacao[String(patient.id)] === 'possivel' && (
+                                            <span className="text-xs font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200">
+                                                Possível reinternação
+                                            </span>
+                                        )}
+                                        {marcasReinternacao[String(patient.id)] === 'confirmada' && (
+                                            <span className="text-xs font-bold px-2 py-1 rounded-full bg-primary-100 text-primary-800 dark:bg-primary-900/60 dark:text-primary-200">
+                                                Reinternação
                                             </span>
                                         )}
                                     </div>
