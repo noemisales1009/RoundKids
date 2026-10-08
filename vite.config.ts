@@ -20,6 +20,11 @@ export default defineConfig(({ mode }) => {
         minify: 'terser',
         rollupOptions: {
           output: {
+            // O servidor do site entrega arquivo .mjs como texto comum, e o navegador se
+            // recusa a executá-lo. O worker do leitor de PDF (pdfjs) vem como .mjs, então
+            // sai daqui com extensão .js.
+            assetFileNames: (info) =>
+              info.name?.endsWith('.mjs') ? 'assets/[name]-[hash].js' : 'assets/[name]-[hash][extname]',
             manualChunks: {
               'vendor': ['react', 'react-dom', 'react-router-dom'],
               'supabase': ['@supabase/supabase-js']
