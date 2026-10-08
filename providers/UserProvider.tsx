@@ -5,6 +5,7 @@ import { User } from '../types';
 import { INITIAL_USER } from '../constants';
 import { supabase, consumeManualSignOut, markManualSignOut } from '../supabaseClient';
 import { sanitizeText } from '../lib/sanitize';
+import { registrarAcesso } from '../lib/registroDeAcessos';
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User>(INITIAL_USER);
@@ -86,6 +87,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                     const dbUser = mapDbUserToAppUser(data);
                     setUser(dbUser);
+                    registrarAcesso(session.user.id);
                 } else if (error) {
                     console.error('[LOADUSER] Erro ao carregar usuário:', error);
                 } else {

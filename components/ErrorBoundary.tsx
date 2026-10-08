@@ -1,4 +1,5 @@
 import React from 'react';
+import { registrarErro } from '../lib/registroDeErros';
 
 interface ErrorBoundaryProps {
     children: React.ReactNode;
@@ -23,6 +24,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
     componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
         console.error('[ErrorBoundary]', error, errorInfo);
+        registrarErro('tela_quebrou', error.message);
         this.props.onError?.(error, errorInfo);
     }
 
