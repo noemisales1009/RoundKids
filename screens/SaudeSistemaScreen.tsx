@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useHeader } from '../hooks';
+import { explicarErro } from '../lib/explicarErro';
 
 // Saúde do sistema, para o administrador: os erros que a equipe teve no uso do aplicativo
 // (tabela app_erros) e quanto cada tabela e cada pasta de arquivos ocupa (função
@@ -155,7 +156,7 @@ export const SaudeSistemaScreen: React.FC = () => {
             <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
                 <div className="flex items-baseline justify-between gap-2">
                     <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{rotulo}</p>
-                    <p className={legenda}>{Math.round(fracao * 100)}% usado</p>
+                    <p className={legenda}>{usado > 0 && fracao < 0.01 ? 'menos de 1% usado' : `${Math.round(fracao * 100)}% usado`}</p>
                 </div>
                 <p className="mt-1 text-3xl font-bold text-slate-800 dark:text-slate-100">
                     {tamanho(Math.max(0, incluido - usado))} <span className="text-base font-semibold text-slate-500 dark:text-slate-400">livres</span>
@@ -295,6 +296,7 @@ export const SaudeSistemaScreen: React.FC = () => {
                                                     <span className="mr-1.5 text-xs font-bold text-red-600 dark:text-red-400">{NOME_ORIGEM[g.origem] ?? g.origem}:</span>
                                                 )}
                                                 {g.mensagem}
+                                                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{explicarErro(g.origem, g.mensagem)}</p>
                                             </td>
                                             <td className={`${td} text-right font-semibold`}>{g.vezes}</td>
                                             <td className={`${td} text-right`}>{g.pessoas.size}</td>
@@ -323,7 +325,10 @@ export const SaudeSistemaScreen: React.FC = () => {
                                             <td className={`${td} whitespace-nowrap`}>{dataHora(e.criado_em)}</td>
                                             <td className={`${td} whitespace-nowrap`}>{NOME_ORIGEM[e.origem] ?? e.origem}</td>
                                             <td className={`${td} text-xs`}>{e.tela}</td>
-                                            <td className={`${td} break-words max-w-sm`}>{e.mensagem}</td>
+                                            <td className={`${td} break-words max-w-sm`}>
+                                                {e.mensagem}
+                                                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{explicarErro(e.origem, e.mensagem)}</p>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -345,7 +350,7 @@ export const SaudeSistemaScreen: React.FC = () => {
                             Comparado ao que o plano {INCLUIDO_NO_PLANO.nome} inclui. Passar do incluído não bloqueia o sistema: gera cobrança adicional.
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-                            {uso('Banco de dados', bancoTotal, INCLUIDO_NO_PLANO.banco, `${tabelas.length} tabelas do aplicativo.`)}
+                            {uso('Banco de dados', bancoTotal, INCLUIDO_NO_PLANO.banco, `${tabelas.length} tabelas no banco, de todos os aplicativos.`)}
                             {uso('Arquivos', soma(arquivos), INCLUIDO_NO_PLANO.arquivos, `${arquivos.length} pastas (fotos, protocolos, imagens).`)}
                         </div>
 
