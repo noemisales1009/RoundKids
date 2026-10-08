@@ -15,7 +15,17 @@ import { JanelaProtocolo, AvisoProtocolo } from './JanelaProtocolo';
 // O leitor traz a biblioteca de PDF, que é pesada: fica fora do pacote principal e começa a
 // ser baixado quando a consulta abre, para já estar pronto na hora do clique.
 const carregarLeitor = () => import('./LeitorProtocolo').then(m => ({ default: m.LeitorProtocolo }));
-const LeitorProtocolo = lazy(carregarLeitor);
+// Se o leitor não puder ser baixado (página aberta desde antes de uma atualização do site,
+// ou conexão caiu), o pop-up abre com a orientação em vez de a tela quebrar.
+const LeitorIndisponivel: React.FC<{ protocolo: Protocolo; onClose: () => void }> = ({ protocolo, onClose }) => (
+    <JanelaProtocolo titulo={protocolo.titulo} onClose={onClose}>
+        <AvisoProtocolo>Não foi possível carregar o leitor. Atualize a página (Ctrl+F5) e tente de novo.</AvisoProtocolo>
+    </JanelaProtocolo>
+);
+const LeitorProtocolo = lazy(() => carregarLeitor().catch(err => {
+    console.error('[protocolos] leitor não carregou', err);
+    return { default: LeitorIndisponivel as React.FC<{ protocolo: Protocolo; paginaInicial?: number; onClose: () => void }> };
+}));
 
 interface Props {
     // Pergunta do round em que a consulta foi aberta. Sem ela (tela Protocolos do menu),

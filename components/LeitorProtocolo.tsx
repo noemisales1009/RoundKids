@@ -25,6 +25,8 @@ const LARGURA_MAX = 900; // px
 export const LeitorProtocolo: React.FC<Props> = ({ protocolo, paginaInicial = 1, onClose }) => {
     const [paginas, setPaginas] = useState(0);
     const [estado, setEstado] = useState<'carregando' | 'pronto' | 'erro'>('carregando');
+    // Motivo técnico da falha, mostrado em letra pequena para ajudar o suporte
+    const [motivo, setMotivo] = useState('');
     const areaRef = useRef<HTMLDivElement>(null);
     const canvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
     const docRef = useRef<pdfjs.PDFDocumentProxy | null>(null);
@@ -38,6 +40,7 @@ export const LeitorProtocolo: React.FC<Props> = ({ protocolo, paginaInicial = 1,
             if (!ativo) return;
             if (error || !data?.signedUrl) {
                 console.error('[protocolos] não abriu', protocolo.arquivo_path, error);
+                setMotivo(`arquivo: ${error?.message ?? 'link não gerado'}`);
                 return setEstado('erro');
             }
             try {
@@ -48,7 +51,10 @@ export const LeitorProtocolo: React.FC<Props> = ({ protocolo, paginaInicial = 1,
                 setPaginas(doc.numPages);
             } catch (err) {
                 console.error('[protocolos] PDF inválido', protocolo.arquivo_path, err);
-                if (ativo) setEstado('erro');
+                if (ativo) {
+                    setMotivo(`leitura: ${err instanceof Error ? err.message : String(err)}`);
+                    setEstado('erro');
+                }
             }
         })();
         return () => {
@@ -87,6 +93,7 @@ export const LeitorProtocolo: React.FC<Props> = ({ protocolo, paginaInicial = 1,
                 // Fechar o leitor no meio do desenho cancela a página em andamento: não é erro.
                 if (ativo) {
                     console.error('[protocolos] falha ao desenhar', protocolo.arquivo_path, err);
+                    setMotivo(`desenho: ${err instanceof Error ? err.message : String(err)}`);
                     setEstado('erro');
                 }
             }
@@ -97,7 +104,12 @@ export const LeitorProtocolo: React.FC<Props> = ({ protocolo, paginaInicial = 1,
     return (
         <JanelaProtocolo titulo={protocolo.titulo} onClose={onClose} areaRef={areaRef}>
             {estado === 'carregando' && <AvisoProtocolo>Carregando protocolo…</AvisoProtocolo>}
-            {estado === 'erro' && <AvisoProtocolo>Não foi possível abrir o protocolo.</AvisoProtocolo>}
+            {estado === 'erro' && (
+                <>
+                    <AvisoProtocolo>Não foi possível abrir o protocolo.</AvisoProtocolo>
+                    <p className="text-center text-xs text-slate-400 break-words px-4">{motivo}</p>
+                </>
+            )}
             <div className="flex flex-col items-center gap-3">
                 {Array.from({ length: paginas }, (_, i) => (
                     <canvas
