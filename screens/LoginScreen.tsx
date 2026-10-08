@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppLogo } from '../components/AppLogo';
 import { UserContext } from '../contexts';
 import { supabase } from '../supabaseClient';
+import { anunciarEntrada } from '../lib/registroDeAcessos';
 
 const ALLOWED_EMAIL_DOMAINS = ['roundikids.com', 'hospital.com.br'];
 
@@ -23,6 +24,7 @@ export const LoginScreen: React.FC = () => {
         const refreshToken = params.get('refresh_token');
         if (accessToken && refreshToken) {
             setLoading(true);
+            anunciarEntrada('vindo_do_sbar');
             supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
                 .then(({ error }) => {
                     if (!error) {
@@ -66,6 +68,7 @@ export const LoginScreen: React.FC = () => {
             return;
         }
 
+        anunciarEntrada('login');
         const { data, error } = await supabase.auth.signInWithPassword({
             email: email.trim(),
             password: password,

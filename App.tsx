@@ -46,6 +46,8 @@ const AlertsHistoryScreen = lazy(() => import('./AlertsHistoryScreen').then(m =>
 const ArchivedPatientsScreen = lazy(() => import('./ArchivedPatientsScreen').then(m => ({ default: m.ArchivedPatientsScreen })));
 const AdminUsersScreen = lazy(() => import('./screens/AdminUsersScreen').then(m => ({ default: m.AdminUsersScreen })));
 const AcertosIAScreen = lazy(() => import('./screens/AcertosIAScreen').then(m => ({ default: m.AcertosIAScreen })));
+const SaudeSistemaScreen = lazy(() => import('./screens/SaudeSistemaScreen').then(m => ({ default: m.SaudeSistemaScreen })));
+const AcessosScreen = lazy(() => import('./screens/AcessosScreen').then(m => ({ default: m.AcessosScreen })));
 
 // --- LOADING COMPONENT ---
 const LoadingSpinner: React.FC = () => (
@@ -233,6 +235,8 @@ const App: React.FC = () => {
                                             <Route path="archived" element={<ErrorBoundary><AdminRoute><Suspense fallback={<LoadingSpinner />}><ArchivedPatientsScreen /></Suspense></AdminRoute></ErrorBoundary>} />
                                             <Route path="admin/usuarios" element={<ErrorBoundary><AdminRoute><Suspense fallback={<LoadingSpinner />}><AdminUsersScreen /></Suspense></AdminRoute></ErrorBoundary>} />
                                             <Route path="admin/ia" element={<ErrorBoundary><AdminRoute><Suspense fallback={<LoadingSpinner />}><AcertosIAScreen /></Suspense></AdminRoute></ErrorBoundary>} />
+                                            <Route path="admin/saude" element={<ErrorBoundary><AdminRoute><Suspense fallback={<LoadingSpinner />}><SaudeSistemaScreen /></Suspense></AdminRoute></ErrorBoundary>} />
+                                            <Route path="admin/acessos" element={<ErrorBoundary><AdminRoute><Suspense fallback={<LoadingSpinner />}><AcessosScreen /></Suspense></AdminRoute></ErrorBoundary>} />
                                             <Route path="evolucao-diaria" element={<ErrorBoundary><EvolucaoDiariaScreen /></ErrorBoundary>} />
                                             <Route path="protocolos" element={<ErrorBoundary><ProtocolosScreen /></ErrorBoundary>} />
                                             <Route path="settings" element={<ErrorBoundary><SettingsScreen /></ErrorBoundary>} />
