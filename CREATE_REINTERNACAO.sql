@@ -156,6 +156,11 @@ BEGIN
     movidos := movidos + n;
   END LOOP;
 
+  -- Paciente com mais de uma internação anterior: as que já estavam registradas
+  -- na ficha de agora seguem para a ficha que vai ficar ativa
+  UPDATE public.internacoes_anteriores SET patient_ref = anterior.id::text
+  WHERE patient_ref = novo.id::text;
+
   -- 3. Arquiva o cadastro novo (não apaga). Vem antes da reativação para os
   --    dois nunca ficarem ativos com o mesmo nome ao mesmo tempo.
   UPDATE public.patients SET
