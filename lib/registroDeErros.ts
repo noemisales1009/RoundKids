@@ -16,10 +16,13 @@ let gravados = 0;
 let indisponivel = false;
 const ultimos = new Map<string, number>();
 
-// Tela em que o erro aconteceu, sem os números da rota: "/patient/123/history" vira
-// "/patient/:id/history". Assim o registro não carrega o identificador do paciente.
+// Tela em que o erro aconteceu, sem o identificador da rota: "/patient/123/history" vira
+// "/patient/:id/history". Vale para número e para código longo (uuid). Assim o registro
+// não carrega o identificador do paciente.
 const telaAtual = (): string =>
-    (window.location.hash.replace(/^#/, '').split('?')[0] || '/').replace(/\/\d+/g, '/:id');
+    (window.location.hash.replace(/^#/, '').split('?')[0] || '/')
+        .replace(/\/[0-9a-f]{8}-[0-9a-f-]{27}(?=\/|$)/gi, '/:id')
+        .replace(/\/\d+(?=\/|$)/g, '/:id');
 
 export const registrarErro = (origem: OrigemDoErro, mensagem: string) => {
     if (indisponivel || gravados >= MAX_POR_SESSAO) return;
