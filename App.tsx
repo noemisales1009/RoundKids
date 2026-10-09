@@ -1,7 +1,8 @@
 import React, { useEffect, lazy, Suspense, useState, useRef } from 'react';
-import { HashRouter, Routes, Route, useParams, useNavigate, useLocation } from 'react-router-dom';
+import { HashRouter, Routes, Route, useParams, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AdminRoute } from './components/AdminRoute';
+import { AdminAbas } from './components/AdminAbas';
 import { AppLayout } from './components/AppLayout';
 import { NetworkBanner } from './components/NetworkBanner';
 import { SessionExpiredScreen } from './components/SessionExpiredScreen';
@@ -232,11 +233,13 @@ const App: React.FC = () => {
                                             <Route path="patient/:patientId/create-alert" element={<ErrorBoundary><CreateAlertScreen /></ErrorBoundary>} />
                                             <Route path="status/:status" element={<ErrorBoundary><TaskStatusScreen /></ErrorBoundary>} />
                                             <Route path="history" element={<ErrorBoundary><Suspense fallback={<LoadingSpinner />}><AlertsHistoryScreen useHeader={useHeader} /></Suspense></ErrorBoundary>} />
-                                            <Route path="archived" element={<ErrorBoundary><AdminRoute><Suspense fallback={<LoadingSpinner />}><ArchivedPatientsScreen /></Suspense></AdminRoute></ErrorBoundary>} />
-                                            <Route path="admin/usuarios" element={<ErrorBoundary><AdminRoute><Suspense fallback={<LoadingSpinner />}><AdminUsersScreen /></Suspense></AdminRoute></ErrorBoundary>} />
-                                            <Route path="admin/ia" element={<ErrorBoundary><AdminRoute><Suspense fallback={<LoadingSpinner />}><AcertosIAScreen /></Suspense></AdminRoute></ErrorBoundary>} />
-                                            <Route path="admin/saude" element={<ErrorBoundary><AdminRoute><Suspense fallback={<LoadingSpinner />}><SaudeSistemaScreen /></Suspense></AdminRoute></ErrorBoundary>} />
-                                            <Route path="admin/acessos" element={<ErrorBoundary><AdminRoute><Suspense fallback={<LoadingSpinner />}><AcessosScreen /></Suspense></AdminRoute></ErrorBoundary>} />
+                                            <Route path="archived" element={<Navigate to="/admin/arquivados" replace />} />
+                                            <Route path="admin/arquivados" element={<ErrorBoundary><AdminRoute><AdminAbas><Suspense fallback={<LoadingSpinner />}><ArchivedPatientsScreen /></Suspense></AdminAbas></AdminRoute></ErrorBoundary>} />
+                                            <Route path="admin" element={<Navigate to="/admin/usuarios" replace />} />
+                                            <Route path="admin/usuarios" element={<ErrorBoundary><AdminRoute><AdminAbas><Suspense fallback={<LoadingSpinner />}><AdminUsersScreen /></Suspense></AdminAbas></AdminRoute></ErrorBoundary>} />
+                                            <Route path="admin/ia" element={<ErrorBoundary><AdminRoute><AdminAbas><Suspense fallback={<LoadingSpinner />}><AcertosIAScreen /></Suspense></AdminAbas></AdminRoute></ErrorBoundary>} />
+                                            <Route path="admin/saude" element={<ErrorBoundary><AdminRoute><AdminAbas><Suspense fallback={<LoadingSpinner />}><SaudeSistemaScreen /></Suspense></AdminAbas></AdminRoute></ErrorBoundary>} />
+                                            <Route path="admin/acessos" element={<ErrorBoundary><AdminRoute><AdminAbas><Suspense fallback={<LoadingSpinner />}><AcessosScreen /></Suspense></AdminAbas></AdminRoute></ErrorBoundary>} />
                                             <Route path="evolucao-diaria" element={<ErrorBoundary><EvolucaoDiariaScreen /></ErrorBoundary>} />
                                             <Route path="protocolos" element={<ErrorBoundary><ProtocolosScreen /></ErrorBoundary>} />
                                             <Route path="settings" element={<ErrorBoundary><SettingsScreen /></ErrorBoundary>} />
